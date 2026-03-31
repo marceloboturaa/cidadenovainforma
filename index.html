@@ -4,13 +4,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <title>Cidade Nova Informa</title>
 
     <!-- SEO -->
     <meta name="description" content="Cidade Nova Informa - CNI">
-    <meta name="keywords" content="html, css, site">
+    <meta name="keywords" content="notícias, cidade, blog">
     <meta name="author" content="Marcelo Botura Souza">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #173557, #1e293b);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #68813c;
+        }
+
+        /* MAIN */
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .card h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        .card p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        /* BOTÃO */
+        .btn {
+            display: inline-block;
+            background: #68813c;
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: #4e612c;
+            transform: scale(1.05);
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+    </style>
 </head>
 
 <body>
@@ -24,16 +128,24 @@
     </header>
 
     <main>
-        <section>
-            <h2>Olá, mundo!</h2>
+        <div class="card">
+            <h1>Cidade Nova Informa</h1>
+            <h2>Estamos chegando 🚀</h2>
+
             <p>
-                Em breve, senhores, estaremos aqui...<br>
-                <a href="https://cidadenovainforma.blogspot.com/" target="_blank">
-                    Ir para o blog Cidade Nova Informa
-                </a>
+                Em breve, senhores, estaremos aqui com notícias,
+                informações e conteúdos atualizados da nossa cidade.
             </p>
-        </section>
+
+            <a href="https://cidadenovainforma.blogspot.com/" target="_blank" class="btn">
+                Acessar o Blog
+            </a>
+        </div>
     </main>
+
+    <footer>
+        © 2026 - Cidade Nova Informa
+    </footer>
 
 </body>
 
