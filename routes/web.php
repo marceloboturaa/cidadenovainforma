@@ -1,0 +1,66 @@
+<?php
+
+use App\Controllers\Admin\CategoryController;
+use App\Controllers\Admin\BackupController;
+use App\Controllers\Admin\DashboardController;
+use App\Controllers\Admin\MenuController;
+use App\Controllers\Admin\NewsController;
+use App\Controllers\Admin\TagController;
+use App\Controllers\Admin\UserController;
+use App\Controllers\AuthController;
+use App\Controllers\PublicController;
+
+$router->get('/', [PublicController::class, 'home']);
+$router->get('/buscar', [PublicController::class, 'search']);
+$router->get('/acervo', [PublicController::class, 'archive']);
+$router->get('/categoria', [PublicController::class, 'category']);
+$router->get('/categoria/{slug}', [PublicController::class, 'category']);
+$router->get('/tag', [PublicController::class, 'tag']);
+$router->get('/tag/{slug}', [PublicController::class, 'tag']);
+$router->get('/noticia', [PublicController::class, 'show']);
+$router->get('/noticia/{slug}', [PublicController::class, 'show']);
+$router->get('/sitemap.xml', [PublicController::class, 'sitemap']);
+$router->get('/robots.txt', [PublicController::class, 'robots']);
+
+$router->get('/login', [AuthController::class, 'showLogin']);
+$router->post('/login', [AuthController::class, 'login']);
+$router->post('/logout', [AuthController::class, 'logout']);
+
+$router->get('/forgot-password', [AuthController::class, 'showForgot']);
+$router->post('/forgot-password', [AuthController::class, 'forgot']);
+$router->get('/reset-password', [AuthController::class, 'showReset']);
+$router->post('/reset-password', [AuthController::class, 'reset']);
+
+$router->get('/admin', [DashboardController::class, 'index']);
+$router->get('/admin/users', [UserController::class, 'index']);
+$router->post('/admin/users', [UserController::class, 'store']);
+
+$router->get('/admin/news', [NewsController::class, 'index']);
+$router->get('/admin/news/create', [NewsController::class, 'create']);
+$router->post('/admin/news', [NewsController::class, 'store']);
+$router->get('/admin/news/edit', [NewsController::class, 'edit']);
+$router->post('/admin/news/update', [NewsController::class, 'update']);
+$router->post('/admin/news/approve', [NewsController::class, 'approve']);
+$router->post('/admin/news/reject', [NewsController::class, 'reject']);
+$router->post('/admin/news/archive', [NewsController::class, 'archive']);
+
+$router->get('/admin/categories', [CategoryController::class, 'index']);
+$router->get('/admin/categories/edit', [CategoryController::class, 'index']);
+$router->post('/admin/categories', [CategoryController::class, 'store']);
+$router->post('/admin/categories/update', [CategoryController::class, 'update']);
+$router->post('/admin/categories/delete', [CategoryController::class, 'delete']);
+
+$router->get('/admin/tags', [TagController::class, 'index']);
+$router->get('/admin/tags/edit', [TagController::class, 'index']);
+$router->post('/admin/tags', [TagController::class, 'store']);
+$router->post('/admin/tags/update', [TagController::class, 'update']);
+$router->post('/admin/tags/delete', [TagController::class, 'delete']);
+
+$router->get('/admin/menu', [MenuController::class, 'index']);
+$router->get('/admin/menu/edit', [MenuController::class, 'index']);
+$router->post('/admin/menu', [MenuController::class, 'store']);
+$router->post('/admin/menu/update', [MenuController::class, 'update']);
+$router->post('/admin/menu/delete', [MenuController::class, 'delete']);
+
+$router->get('/admin/backups', [BackupController::class, 'index']);
+$router->post('/admin/backups/download', [BackupController::class, 'download']);

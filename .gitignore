@@ -1,0 +1,12 @@
+/public/uploads/*
+!/public/uploads/news/
+/public/uploads/news/*
+!/public/uploads/news/.gitkeep
+
+/storage/backups/*
+!/storage/backups/.gitkeep
+/storage/temp/*
+!/storage/temp/.gitkeep
+
+*.zip
+*.log
