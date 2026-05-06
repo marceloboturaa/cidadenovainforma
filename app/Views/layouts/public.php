@@ -1,4 +1,13 @@
 <?php $app = require dirname(__DIR__, 3) . '/config/app.php'; ?>
+<?php
+$navigationItems = array_filter(($menuItems ?? []), function (array $item): bool {
+    $label = mb_strtolower(trim($item['label'] ?? ''), 'UTF-8');
+    $path = '/' . ltrim((string) ($item['url'] ?? ''), '/');
+
+    return !in_array($path, ['/instituicao', '/login'], true)
+        && !in_array($label, ['instituição', 'instituicao', 'entrar', 'entrar no painel'], true);
+});
+?>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -20,17 +29,31 @@
     <header class="site-header">
         <div class="header-top">
             <a class="site-brand" href="<?= e(url('/')) ?>">Cidade Nova Informa</a>
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+                <strong>Menu</strong>
+            </button>
             <form class="search-form" action="<?= e(url('/buscar')) ?>" method="get">
                 <input name="q" value="<?= e($query ?? '') ?>" placeholder="Buscar notícias">
                 <button>Buscar</button>
             </form>
-            <a class="admin-link" href="<?= e(url('/login')) ?>">Entrar</a>
+            <div class="header-actions">
+                <a class="institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
+                <a class="admin-link" href="<?= e(url('/login')) ?>">Entrar</a>
+            </div>
         </div>
-        <nav class="category-nav">
-            <?php foreach (($menuItems ?? []) as $item): ?>
-                <a href="<?= e(str_starts_with($item['url'], 'http') ? $item['url'] : url($item['url'])) ?>"><?= e($item['label']) ?></a>
-            <?php endforeach; ?>
-        </nav>
+        <div class="nav-shell">
+            <nav class="category-nav" id="site-menu">
+                <a href="<?= e(url('/')) ?>">Início</a>
+                <a class="mobile-institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
+                <?php foreach ($navigationItems as $item): ?>
+                    <a href="<?= e(str_starts_with($item['url'], 'http') ? $item['url'] : url($item['url'])) ?>"><?= e($item['label']) ?></a>
+                <?php endforeach; ?>
+                <a class="mobile-login-link" href="<?= e(url('/login')) ?>">Entrar no painel</a>
+            </nav>
+        </div>
     </header>
 
     <main>
@@ -41,5 +64,6 @@
         <strong>Cidade Nova Informa</strong>
         <span>Jornalismo comunitário com qualidade e compromisso.</span>
     </footer>
+    <script src="<?= e(url('/public/assets/js/public-menu.js')) ?>"></script>
 </body>
 </html>

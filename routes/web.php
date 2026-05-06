@@ -11,6 +11,7 @@ use App\Controllers\AuthController;
 use App\Controllers\PublicController;
 
 $router->get('/', [PublicController::class, 'home']);
+$router->get('/instituicao', [PublicController::class, 'institution']);
 $router->get('/buscar', [PublicController::class, 'search']);
 $router->get('/acervo', [PublicController::class, 'archive']);
 $router->get('/categoria', [PublicController::class, 'category']);
@@ -34,6 +35,7 @@ $router->post('/reset-password', [AuthController::class, 'reset']);
 $router->get('/admin', [DashboardController::class, 'index']);
 $router->get('/admin/users', [UserController::class, 'index']);
 $router->post('/admin/users', [UserController::class, 'store']);
+$router->post('/admin/users/reset-password', [UserController::class, 'resetPassword']);
 
 $router->get('/admin/news', [NewsController::class, 'index']);
 $router->get('/admin/news/create', [NewsController::class, 'create']);
@@ -64,3 +66,5 @@ $router->post('/admin/menu/delete', [MenuController::class, 'delete']);
 
 $router->get('/admin/backups', [BackupController::class, 'index']);
 $router->post('/admin/backups/download', [BackupController::class, 'download']);
+$router->post('/admin/backups/news/export', [BackupController::class, 'exportNews']);
+$router->post('/admin/backups/news/import', [BackupController::class, 'importNews']);

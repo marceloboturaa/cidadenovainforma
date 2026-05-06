@@ -55,5 +55,6 @@
             </main>
         </div>
     </div>
+    <script src="<?= e(url('/public/assets/js/password-toggle.js')) ?>"></script>
 </body>
 </html>

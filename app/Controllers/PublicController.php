@@ -43,6 +43,19 @@ class PublicController
         ], 'public');
     }
 
+    public function institution(): void
+    {
+        $this->logAccess();
+
+        View::render('public/institution', [
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => 'Instituição - Cidade Nova Informa',
+            'metaDescription' => 'Conheça a missão, a atuação e o compromisso editorial do Cidade Nova Informa.',
+            'canonicalUrl' => url('/instituicao'),
+        ], 'public');
+    }
+
     public function archive(): void
     {
         $this->logAccess();
@@ -134,6 +147,7 @@ class PublicController
 
         $urls = [
             ['loc' => url('/'), 'priority' => '1.0'],
+            ['loc' => url('/instituicao'), 'priority' => '0.6'],
             ['loc' => url('/buscar'), 'priority' => '0.4'],
             ['loc' => url('/acervo'), 'priority' => '0.7'],
         ];

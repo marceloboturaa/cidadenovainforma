@@ -13,6 +13,13 @@ class User
         return $stmt->fetch() ?: null;
     }
 
+    public static function find(int $id): ?array
+    {
+        $stmt = Database::connection()->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch() ?: null;
+    }
+
     public static function findWithRole(int $id): ?array
     {
         $stmt = Database::connection()->prepare(

@@ -19,7 +19,10 @@
         </label>
         <label>
             Senha
-            <input class="form-control" type="password" name="password" required autocomplete="current-password">
+            <div class="password-field">
+                <input class="form-control" type="password" name="password" required autocomplete="current-password">
+                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+            </div>
         </label>
         <button class="btn btn-primary w-100">Entrar</button>
     </form>

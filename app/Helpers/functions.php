@@ -69,6 +69,10 @@ function checked(bool $value): string
 function clean_article_html(string $html): string
 {
     $html = trim($html);
+    $html = preg_replace('/<\/div>\s*<div[^>]*>/i', '</p><p>', $html) ?? $html;
+    $html = preg_replace('/<div[^>]*>/i', '<p>', $html) ?? $html;
+    $html = preg_replace('/<\/div>/i', '</p>', $html) ?? $html;
+
     $allowed = '<p><br><strong><b><em><i><u><h2><h3><blockquote><ul><ol><li><a><img>';
     $html = strip_tags($html, $allowed);
 
@@ -100,13 +104,22 @@ function clean_article_html(string $html): string
         return '<img src="' . e($url) . '" alt="' . e($alt[2] ?? '') . '" loading="lazy">';
     }, $html) ?? $html;
 
+    $html = preg_replace('/<(p|br|strong|b|em|i|u|h2|h3|blockquote|ul|ol|li)\s+[^>]*>/i', '<$1>', $html) ?? $html;
+    $html = preg_replace('/<p>\s*(?:&nbsp;|\s|<br>)*<\/p>/i', '', $html) ?? $html;
+    $html = preg_replace('/(?:<br>\s*){3,}/i', '<br><br>', $html) ?? $html;
+
     return $html;
 }
 
 function article_html(string $content): string
 {
     if ($content === strip_tags($content)) {
-        return nl2br(e($content));
+        $paragraphs = preg_split('/\R{2,}/', trim($content)) ?: [];
+        $html = array_map(function (string $paragraph): string {
+            return '<p>' . nl2br(e(trim($paragraph))) . '</p>';
+        }, array_filter($paragraphs, fn (string $paragraph): bool => trim($paragraph) !== ''));
+
+        return implode('', $html);
     }
 
     return clean_article_html($content);

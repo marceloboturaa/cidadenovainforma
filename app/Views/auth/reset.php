@@ -13,11 +13,17 @@
         <input type="hidden" name="token" value="<?= e($token) ?>">
         <label>
             Nova senha
-            <input class="form-control" type="password" name="password" required minlength="8" autocomplete="new-password">
+            <div class="password-field">
+                <input class="form-control" type="password" name="password" required minlength="8" autocomplete="new-password">
+                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+            </div>
         </label>
         <label>
             Confirmar senha
-            <input class="form-control" type="password" name="password_confirmation" required minlength="8" autocomplete="new-password">
+            <div class="password-field">
+                <input class="form-control" type="password" name="password_confirmation" required minlength="8" autocomplete="new-password">
+                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+            </div>
         </label>
         <button class="btn btn-primary w-100">Alterar senha</button>
     </form>
