@@ -1,5 +1,4 @@
 <section class="listing-head">
-    <p>Cidade Nova Informa</p>
     <h1><?= e($heading) ?></h1>
 </section>
 

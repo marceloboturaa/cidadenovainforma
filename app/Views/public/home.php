@@ -1,4 +1,7 @@
-<?php $hero = $featured[0] ?? $latest[0] ?? null; ?>
+<?php
+$heroPool = $featured ?: $latest;
+$hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
+?>
 
 <?php if ($urgent): ?>
     <section class="breaking-strip">

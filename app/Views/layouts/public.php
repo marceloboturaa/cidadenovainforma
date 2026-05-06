@@ -24,7 +24,7 @@
                 <input name="q" value="<?= e($query ?? '') ?>" placeholder="Buscar notícias">
                 <button>Buscar</button>
             </form>
-            <a class="admin-link" href="<?= e(url('/login')) ?>">Painel</a>
+            <a class="admin-link" href="<?= e(url('/login')) ?>">Entrar</a>
         </div>
         <nav class="category-nav">
             <?php foreach (($menuItems ?? []) as $item): ?>

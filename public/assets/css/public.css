@@ -70,7 +70,19 @@ a {
 }
 
 .admin-link {
-    border-radius: 6px;
+    justify-self: end;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: white;
+    color: var(--muted);
+    padding: 8px 13px;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.admin-link:hover {
+    border-color: var(--brand);
+    color: var(--brand);
 }
 
 .category-nav {
@@ -229,20 +241,25 @@ main {
     line-height: 1.25;
 }
 
-.listing-head,
 .empty-public {
     border-radius: 8px;
 }
 
 .listing-head {
-    margin-bottom: 20px;
-    padding: 0 0 14px;
-    border-bottom: 2px solid var(--brand);
+    margin: 0 0 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .listing-head h1 {
-    margin: 4px 0 0;
-    font-size: 1.8rem;
+    display: inline-block;
+    margin: 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--brand);
+    font-size: 1.45rem;
+    line-height: 1.2;
 }
 
 .empty-public {
@@ -408,12 +425,14 @@ main {
 
     .search-form {
         grid-column: 1 / -1;
+        grid-row: 2;
     }
 
     .admin-link {
+        grid-column: 2;
+        grid-row: 1;
         justify-self: end;
-        padding: 9px 11px;
-        font-size: 0.88rem;
+        align-self: center;
     }
 
     .home-grid {
