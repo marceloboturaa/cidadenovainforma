@@ -2,8 +2,8 @@
 
 return [
     'name' => 'Cidade Nova Informa',
-    'base_url' => getenv('APP_URL') ?: 'http://localhost/cidadenovainforma',
-    'env' => getenv('APP_ENV') ?: 'local',
-    'debug' => (bool) (getenv('APP_DEBUG') ?: true),
+    'base_url' => getenv('APP_URL') ?: 'https://cidadenovainforma.com.br',
+    'env' => getenv('APP_ENV') ?: 'production',
+    'debug' => filter_var(getenv('APP_DEBUG') ?: false, FILTER_VALIDATE_BOOLEAN),
     'session_name' => 'cni_session',
 ];

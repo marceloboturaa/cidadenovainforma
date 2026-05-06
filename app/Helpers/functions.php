@@ -12,7 +12,16 @@ function e(?string $value): string
 function url(string $path = ''): string
 {
     $config = require dirname(__DIR__, 2) . '/config/app.php';
-    return rtrim($config['base_url'], '/') . '/' . ltrim($path, '/');
+    $baseUrl = $config['base_url'];
+
+    if (!$baseUrl) {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $basePath = trim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
+        $baseUrl = $scheme . '://' . $host . ($basePath ? '/' . $basePath : '');
+    }
+
+    return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
 }
 
 function redirect(string $path): never

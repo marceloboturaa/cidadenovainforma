@@ -34,8 +34,11 @@ class News
         }
 
         if (!empty($filters['q'])) {
-            $sql .= ' AND (news.title LIKE :q OR news.summary LIKE :q OR news.content LIKE :q)';
-            $params['q'] = '%' . $filters['q'] . '%';
+            $sql .= ' AND (news.title LIKE :q_title OR news.summary LIKE :q_summary OR news.content LIKE :q_content)';
+            $term = '%' . $filters['q'] . '%';
+            $params['q_title'] = $term;
+            $params['q_summary'] = $term;
+            $params['q_content'] = $term;
         }
 
         if (array_key_exists('is_archive', $filters) && $filters['is_archive'] !== '') {
@@ -103,8 +106,21 @@ class News
         }
 
         if (!empty($filters['q'])) {
-            $sql .= ' AND (news.title LIKE :q OR news.summary LIKE :q OR news.content LIKE :q OR categories.name LIKE :q OR tags.name LIKE :q OR users.name LIKE :q)';
-            $params['q'] = '%' . $filters['q'] . '%';
+            $sql .= ' AND (
+                news.title LIKE :q_title
+                OR news.summary LIKE :q_summary
+                OR news.content LIKE :q_content
+                OR categories.name LIKE :q_category
+                OR tags.name LIKE :q_tag
+                OR users.name LIKE :q_author
+            )';
+            $term = '%' . $filters['q'] . '%';
+            $params['q_title'] = $term;
+            $params['q_summary'] = $term;
+            $params['q_content'] = $term;
+            $params['q_category'] = $term;
+            $params['q_tag'] = $term;
+            $params['q_author'] = $term;
         }
 
         if (!empty($filters['featured'])) {
