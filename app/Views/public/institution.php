@@ -35,16 +35,24 @@
             <p>Ética, transparência, participação, respeito, valorização da comunidade e preservação da memória local.</p>
         </article>
     </section>
-
-    <section class="institution-story" id="historia">
-        <div>
-            <span>História</span>
-            <h2>Nossa trajetória</h2>
-        </div>
-        <p>
-            A história do Cidade Nova Informa nasce da necessidade de dar visibilidade aos acontecimentos do território, organizar informações úteis e valorizar registros importantes para os moradores. Com o tempo, o portal passou a integrar jornalismo, memória local e projetos de participação comunitária.
-        </p>
-    </section>
+<section class="institution-story" id="historia">
+    <div class="institution-story-header">
+        <span>História</span>
+        <h2>Nossa trajetória</h2>
+    </div>
+<p class="institution-story-text">
+    A história do Cidade Nova Informa nasce da necessidade de dar visibilidade aos acontecimentos do território, organizar informações úteis e valorizar registros importantes para os moradores. Com o tempo, o portal passou a integrar jornalismo, memória local e projetos de participação comunitária.
+    
+    
+     <span> <a 
+        href="https://cidadenovainforma.blogspot.com/p/historia.html" 
+        target="_blank"
+        class="institution-read-more"
+    >
+        Ver mais
+    </a></span>
+</p>
+</section>
 
     <section class="institution-values institution-organization" aria-label="Diretoria e organização">
         <article>
@@ -78,15 +86,5 @@
         </div>
     </section>
 
-    <section class="institution-downloads">
-        <div class="institution-section-head">
-            <span>Identidade oficial</span>
-            <h2>Logos e canais institucionais</h2>
-        </div>
-        <div class="institution-download-grid">
-            <a href="<?= e(url('/public/assets/img/logo-cidade-nova-informa.svg')) ?>" download>Baixar logo oficial</a>
-            <a href="mailto:contato@cidadenovainforma.com.br">Contatos e redes sociais</a>
-            <a href="<?= e(url('/acervo')) ?>">Acervo do portal</a>
-        </div>
-    </section>
+    
 </article>
