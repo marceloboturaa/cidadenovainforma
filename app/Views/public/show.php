@@ -75,8 +75,8 @@
 
     <?php if ($tags): ?>
         <footer class="article-tags">
-            <?php foreach (array_map('trim', explode(',', $tags)) as $tag): ?>
-                <span>#<?= e($tag) ?></span>
+            <?php foreach ($tags as $tag): ?>
+                <a href="<?= e(url('/tag/' . $tag['slug'])) ?>">#<?= e($tag['name']) ?></a>
             <?php endforeach; ?>
         </footer>
     <?php endif; ?>

@@ -128,4 +128,18 @@ class Tag
 
         return implode(', ', array_column($stmt->fetchAll(), 'name'));
     }
+
+    public static function publicForNews(int $newsId): array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT tags.name, tags.slug
+             FROM tags
+             INNER JOIN news_tags ON news_tags.tag_id = tags.id
+             WHERE news_tags.news_id = :news_id
+             ORDER BY tags.name ASC'
+        );
+        $stmt->execute(['news_id' => $newsId]);
+
+        return $stmt->fetchAll();
+    }
 }

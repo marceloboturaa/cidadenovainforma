@@ -7,16 +7,19 @@
     </div>
 </div>
 
-<section class="panel">
-    <h2><?= $isEdit ? 'Editar categoria' : 'Nova categoria' ?></h2>
-    <form method="post" action="<?= e($isEdit ? url('/admin/categories/update?id=' . $editing['id']) : url('/admin/categories')) ?>" class="row g-3">
+<section class="panel category-editor-panel">
+    <div>
+        <h2><?= $isEdit ? 'Editar categoria' : 'Nova categoria' ?></h2>
+        <p><i class="bi bi-info-circle" aria-hidden="true"></i> Categorias aparecem no site e ajudam a organizar as matérias.</p>
+    </div>
+    <form method="post" action="<?= e($isEdit ? url('/admin/categories/update?id=' . $editing['id']) : url('/admin/categories')) ?>" class="category-editor-form">
         <?= csrf_field() ?>
-        <div class="col-md-3">
-            <label class="form-label">Nome</label>
+        <label class="form-label">
+            <span>Nome</span>
             <input class="form-control" name="name" value="<?= e($editing['name'] ?? '') ?>" required>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Categoria pai</label>
+        </label>
+        <label class="form-label">
+            <span>Categoria pai</span>
             <select class="form-select" name="parent_id">
                 <option value="">Nenhuma</option>
                 <?php foreach ($parents as $parent): ?>
@@ -26,58 +29,61 @@
                     </option>
                 <?php endforeach; ?>
             </select>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Descrição</label>
+        </label>
+        <label class="form-label category-description-field">
+            <span>Descrição</span>
             <input class="form-control" name="description" value="<?= e($editing['description'] ?? '') ?>">
-        </div>
-        <div class="col-md-2 d-flex align-items-end gap-2">
+        </label>
+        <div class="category-check-cell">
             <label class="form-check mb-2">
                 <input class="form-check-input" type="checkbox" name="active" <?= checked((bool) ($editing['active'] ?? true)) ?>>
                 <span class="form-check-label">Ativa</span>
             </label>
         </div>
-        <div class="col-12 d-flex gap-2">
-            <button class="btn btn-primary"><?= $isEdit ? 'Atualizar' : 'Criar' ?></button>
+        <div class="split-actions category-actions">
+            <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i><?= $isEdit ? 'Atualizar categoria' : 'Criar categoria' ?></button>
             <?php if ($isEdit): ?>
-                <a class="btn btn-outline-secondary" href="<?= e(url('/admin/categories')) ?>">Cancelar</a>
+                <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/categories')) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
             <?php endif; ?>
         </div>
     </form>
 </section>
 
 <section class="panel">
-    <h2>Categorias cadastradas</h2>
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Slug</th>
-                    <th>Pai</th>
-                    <th>Notícias</th>
-                    <th>Status</th>
-                    <th class="text-end">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($categories as $category): ?>
-                    <tr>
-                        <td><?= e($category['name']) ?></td>
-                        <td><?= e($category['slug']) ?></td>
-                        <td><?= e($category['parent_name'] ?? '-') ?></td>
-                        <td><?= e((string) $category['news_count']) ?></td>
-                        <td><?= $category['active'] ? 'Ativa' : 'Inativa' ?></td>
-                        <td class="text-end">
-                            <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/categories/edit?id=' . $category['id'])) ?>">Editar</a>
-                            <form class="inline-form" method="post" action="<?= e(url('/admin/categories/delete?id=' . $category['id'])) ?>">
-                                <?= csrf_field() ?>
-                                <button class="btn btn-sm btn-outline-danger">Remover</button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+    <div class="section-heading">
+        <h2><i class="bi bi-folder2-open" aria-hidden="true"></i> Categorias cadastradas</h2>
+        <span><?= e((string) count($categories)) ?> categoria(s)</span>
+    </div>
+    <div class="category-card-grid">
+        <?php foreach ($categories as $category): ?>
+            <article class="category-card">
+                <div class="category-card-main">
+                    <div>
+                        <div class="admin-list-title-row">
+                            <strong><?= e($category['name']) ?></strong>
+                            <span class="state-pill <?= $category['active'] ? 'is-active' : 'is-muted' ?>"><?= $category['active'] ? 'Ativa' : 'Inativa' ?></span>
+                        </div>
+                        <span><?= e($category['slug']) ?></span>
+                    </div>
+                    <div class="tag-count">
+                        <strong><?= e((string) $category['news_count']) ?></strong>
+                        <span>notícia(s)</span>
+                    </div>
+                </div>
+                <dl class="category-card-meta">
+                    <div>
+                        <dt>Categoria pai</dt>
+                        <dd><?= e($category['parent_name'] ?? '-') ?></dd>
+                    </div>
+                </dl>
+                <div class="tag-card-actions">
+                    <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/categories/edit?id=' . $category['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar</a>
+                    <form class="inline-form" method="post" action="<?= e(url('/admin/categories/delete?id=' . $category['id'])) ?>">
+                        <?= csrf_field() ?>
+                        <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Remover</button>
+                    </form>
+                </div>
+            </article>
+        <?php endforeach; ?>
     </div>
 </section>

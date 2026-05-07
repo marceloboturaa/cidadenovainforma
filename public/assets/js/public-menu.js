@@ -1,7 +1,7 @@
 (function () {
     const header = document.querySelector('.site-header');
     const button = document.querySelector('.menu-toggle');
-    const menu = document.getElementById('site-menu');
+    const menu = document.getElementById('site-menu-panel');
 
     if (!header || !button || !menu) {
         return;

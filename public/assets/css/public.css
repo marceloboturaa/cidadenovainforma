@@ -31,12 +31,12 @@ a {
 
 .header-top {
     display: grid;
-    grid-template-columns: minmax(260px, 1fr) minmax(320px, 520px) auto;
+    grid-template-columns: minmax(260px, 1fr) auto;
     gap: 16px;
     align-items: center;
     max-width: 1180px;
     margin: 0 auto;
-    padding: 16px 20px 14px;
+    padding: 16px 20px 12px;
 }
 
 .site-brand {
@@ -52,20 +52,60 @@ a {
 
 .search-form {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(180px, 1fr) auto;
+    width: min(100%, 420px);
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 999px;
     overflow: hidden;
+    justify-self: end;
 }
 
 .search-form input {
     min-width: 0;
     border: 0;
-    padding: 11px 12px;
-    font-size: 1rem;
+    padding: 9px 14px;
+    font-size: 0.95rem;
+    outline: 0;
 }
 
-.search-form button,
+.search-form button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 44px;
+    border: 0;
+    background: var(--brand);
+    color: white;
+    padding: 9px 14px;
+    font-weight: 700;
+}
+
+.search-form button strong {
+    display: none;
+}
+
+.search-icon {
+    position: relative;
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-radius: 999px;
+}
+
+.search-icon::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    bottom: -4px;
+    width: 7px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    transform: rotate(45deg);
+}
+
 .admin-link,
 .institution-link {
     border: 0;
@@ -111,14 +151,20 @@ a {
 
 .nav-shell {
     border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+    gap: 18px;
+    align-items: center;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 20px 12px;
 }
 
 .category-nav {
     display: flex;
     gap: 6px;
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 10px 20px 12px;
+    min-width: 0;
+    padding: 0;
     overflow-x: auto;
 }
 
@@ -143,7 +189,8 @@ a {
 }
 
 .category-nav .mobile-login-link,
-.category-nav .mobile-institution-link {
+.category-nav .mobile-institution-link,
+.mobile-actions {
     display: none;
 }
 
@@ -463,12 +510,18 @@ main {
     margin-top: 28px;
 }
 
-.article-tags span {
+.article-tags a {
     padding: 7px 10px;
+    border: 1px solid transparent;
     border-radius: 999px;
     background: var(--soft);
     color: var(--brand);
     font-weight: 800;
+}
+
+.article-tags a:hover {
+    border-color: #fecaca;
+    background: #fff1f2;
 }
 
 .institution-page {
@@ -524,16 +577,20 @@ main {
         gap: 12px;
     }
 
-    .search-form {
-        grid-column: 1 / -1;
-        grid-row: 2;
-    }
-
     .header-actions {
         grid-column: 2;
         grid-row: 1;
         justify-self: end;
         align-self: center;
+    }
+
+    .nav-shell {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .search-form {
+        width: 100%;
     }
 
     .category-nav {
@@ -617,9 +674,8 @@ main {
     }
 
     .search-form {
-        grid-column: 1 / -1;
-        grid-row: 2;
         border-radius: 8px;
+        order: -1;
     }
 
     .search-form input {
@@ -628,29 +684,53 @@ main {
     }
 
     .search-form button {
+        width: auto;
         padding: 10px 12px;
+    }
+
+    .search-form button strong {
+        display: inline;
     }
 
     .header-actions {
         display: none;
     }
 
-    .category-nav {
+    .nav-shell {
         display: none;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
         max-height: calc(100vh - 120px);
         margin: 0;
-        padding: 4px 14px 14px;
+        padding: 0 14px 14px;
         overflow-y: auto;
         background: white;
+        border-top: 1px solid var(--line);
+    }
+
+    .site-header.menu-open .nav-shell {
+        display: grid;
+        gap: 10px;
+    }
+
+    .category-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .mobile-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
     }
 
     .site-header.menu-open .category-nav {
         display: grid;
     }
 
-    .category-nav a {
+    .category-nav a,
+    .mobile-actions a {
         display: flex;
         align-items: center;
         min-height: 42px;
@@ -669,8 +749,7 @@ main {
         background: #fff1f2;
     }
 
-    .category-nav .mobile-login-link,
-    .category-nav .mobile-institution-link {
+    .mobile-actions a {
         display: flex;
         grid-column: 1 / -1;
         justify-content: center;
@@ -678,7 +757,7 @@ main {
         color: var(--muted);
     }
 
-    .category-nav .mobile-institution-link {
+    .mobile-actions .mobile-institution-link {
         border-color: #fecaca;
         background: #fff1f2;
         color: var(--brand);

@@ -15,67 +15,81 @@ $status = $newsItem['status'] ?? 'draft';
     <?= csrf_field() ?>
 
     <section class="panel editor-main">
-        <label class="form-label">Título</label>
-        <input class="form-control form-control-lg" name="title" value="<?= e($newsItem['title'] ?? '') ?>" required maxlength="220">
+        <div class="editor-section">
+            <h2>Texto da matéria</h2>
+            <label class="form-label">Título</label>
+            <input class="form-control form-control-lg" name="title" value="<?= e($newsItem['title'] ?? '') ?>" required maxlength="220" placeholder="Título principal da matéria">
 
-        <label class="form-label mt-3">Resumo</label>
-        <textarea class="form-control" name="summary" rows="3" maxlength="320"><?= e($newsItem['summary'] ?? '') ?></textarea>
-
-        <label class="form-label mt-3">Conteúdo</label>
-        <div class="rich-toolbar" aria-label="Ferramentas do editor">
-            <button type="button" data-command="formatBlock" data-value="h2">Título</button>
-            <button type="button" data-command="bold"><strong>B</strong></button>
-            <button type="button" data-command="italic"><em>I</em></button>
-            <button type="button" data-command="underline"><u>U</u></button>
-            <button type="button" data-command="insertUnorderedList">Lista</button>
-            <button type="button" data-command="formatBlock" data-value="blockquote">Citação</button>
-            <button type="button" data-action="link">Link</button>
-            <button type="button" data-action="image">Imagem</button>
-            <button type="button" data-command="removeFormat">Limpar</button>
+            <label class="form-label mt-3">Resumo</label>
+            <textarea class="form-control" name="summary" rows="3" maxlength="320" placeholder="Resumo curto para a capa e compartilhamento"><?= e($newsItem['summary'] ?? '') ?></textarea>
         </div>
-        <input type="hidden" name="content" id="news-content" value="<?= e($newsItem['content'] ?? '') ?>">
-        <div class="rich-editor" contenteditable="true" data-target="news-content">
-            <?= article_html($newsItem['content'] ?? '') ?>
+
+        <div class="editor-section">
+            <div class="editor-label-row">
+                <label class="form-label">Conteúdo</label>
+                <button class="btn btn-sm btn-outline-secondary editor-focus-toggle" type="button" data-editor-focus>Foco</button>
+            </div>
+            <div class="rich-toolbar" aria-label="Ferramentas do editor">
+                <button type="button" data-command="formatBlock" data-value="h2">Título</button>
+                <button type="button" data-command="bold"><strong>B</strong></button>
+                <button type="button" data-command="italic"><em>I</em></button>
+                <button type="button" data-command="underline"><u>U</u></button>
+                <button type="button" data-command="insertUnorderedList">Lista</button>
+                <button type="button" data-command="formatBlock" data-value="blockquote">Citação</button>
+                <button type="button" data-action="link">Link</button>
+                <button type="button" data-action="image">Imagem</button>
+                <button type="button" data-command="removeFormat">Limpar</button>
+            </div>
+            <input type="hidden" name="content" id="news-content" value="<?= e($newsItem['content'] ?? '') ?>">
+            <div class="rich-editor" contenteditable="true" data-target="news-content">
+                <?= article_html($newsItem['content'] ?? '') ?>
+            </div>
         </div>
     </section>
 
     <aside class="panel editor-side">
         <h2>Configuração</h2>
 
-        <label class="form-label">Categoria</label>
-        <select class="form-select" name="category_id">
-            <option value="">Sem categoria</option>
-            <?php foreach ($categories as $category): ?>
-                <option value="<?= e((string) $category['id']) ?>" <?= selected((string) ($newsItem['category_id'] ?? ''), (string) $category['id']) ?>>
-                    <?= e($category['name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
+        <div class="config-block">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" name="category_id">
+                <option value="">Sem categoria</option>
+                <?php foreach ($categories as $category): ?>
+                    <option value="<?= e((string) $category['id']) ?>" <?= selected((string) ($newsItem['category_id'] ?? ''), (string) $category['id']) ?>>
+                        <?= e($category['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
 
-        <label class="form-label mt-3">Tipo</label>
-        <select class="form-select" name="type">
-            <?php foreach (['noticia' => 'Notícia', 'reportagem' => 'Reportagem', 'artigo' => 'Artigo', 'coluna' => 'Coluna'] as $key => $label): ?>
-                <option value="<?= e($key) ?>" <?= selected($newsItem['type'] ?? 'noticia', $key) ?>><?= e($label) ?></option>
-            <?php endforeach; ?>
-        </select>
+            <label class="form-label mt-3">Tipo</label>
+            <select class="form-select" name="type">
+                <?php foreach (['noticia' => 'Notícia', 'reportagem' => 'Reportagem', 'artigo' => 'Artigo', 'coluna' => 'Coluna'] as $key => $label): ?>
+                    <option value="<?= e($key) ?>" <?= selected($newsItem['type'] ?? 'noticia', $key) ?>><?= e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
 
-        <label class="form-label mt-3">Tags</label>
-        <input class="form-control" name="tags" value="<?= e($tags) ?>" placeholder="cidade, saúde, bairro">
+            <label class="form-label mt-3">Tags</label>
+            <input class="form-control" name="tags" value="<?= e($tags) ?>" placeholder="cidade, saúde, bairro">
+        </div>
 
-        <label class="form-label mt-3">Imagem de capa</label>
-        <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp">
-        <?php if (!empty($newsItem['cover_image'])): ?>
-            <img class="cover-preview" src="<?= e(url($newsItem['cover_image'])) ?>" alt="">
-        <?php endif; ?>
+        <div class="config-block">
+            <label class="form-label">Imagem de capa</label>
+            <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp">
+            <?php if (!empty($newsItem['cover_image'])): ?>
+                <img class="cover-preview" src="<?= e(url($newsItem['cover_image'])) ?>" alt="">
+            <?php endif; ?>
+        </div>
 
         <?php if (\App\Core\Auth::can('news.manage')): ?>
-            <div class="form-check mt-3">
-                <input class="form-check-input" type="checkbox" name="featured" id="featured" <?= checked((bool) ($newsItem['featured'] ?? false)) ?>>
-                <label class="form-check-label" for="featured">Destaque na home</label>
-            </div>
-            <div class="form-check mt-2">
-                <input class="form-check-input" type="checkbox" name="urgent" id="urgent" <?= checked((bool) ($newsItem['urgent'] ?? false)) ?>>
-                <label class="form-check-label" for="urgent">Notícia urgente</label>
+            <div class="config-block compact-checks">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="featured" id="featured" <?= checked((bool) ($newsItem['featured'] ?? false)) ?>>
+                    <label class="form-check-label" for="featured">Destaque na home</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="urgent" id="urgent" <?= checked((bool) ($newsItem['urgent'] ?? false)) ?>>
+                    <label class="form-check-label" for="urgent">Notícia urgente</label>
+                </div>
             </div>
         <?php endif; ?>
 

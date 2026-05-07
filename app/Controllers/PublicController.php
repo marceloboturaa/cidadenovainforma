@@ -130,7 +130,7 @@ class PublicController
 
         View::render('public/show', [
             'news' => $news,
-            'tags' => Tag::namesForNews((int) $news['id']),
+            'tags' => Tag::publicForNews((int) $news['id']),
             'related' => News::publicList(['category_id' => $news['category_id']], 4),
             'menuItems' => MenuItem::visible(),
             'pageTitle' => $news['title'] . ' - Cidade Nova Informa',

@@ -55,58 +55,58 @@
 </div>
 
 <section class="panel">
-    <h2>Notícias recentes</h2>
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Título</th>
-                    <th>Autor</th>
-                    <th>Status</th>
-                    <th>Atualização</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($stats['recent_news'] as $item): ?>
-                    <tr>
-                        <td><a href="<?= e(url('/admin/news/edit?id=' . $item['id'])) ?>"><?= e($item['title']) ?></a></td>
-                        <td><?= e($item['author_name']) ?></td>
-                        <td><span class="status-pill status-<?= e($item['status']) ?>"><?= e(\App\Models\News::STATUS_LABELS[$item['status']] ?? $item['status']) ?></span></td>
-                        <td><?= e($item['updated_at']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php if (!$stats['recent_news']): ?>
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">Nenhuma notícia cadastrada ainda.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+    <div class="section-heading">
+        <h2>Notícias recentes</h2>
+        <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/news')) ?>">Ver todas</a>
+    </div>
+    <div class="admin-card-list">
+        <?php foreach ($stats['recent_news'] as $item): ?>
+            <article class="admin-list-card">
+                <div class="admin-list-main">
+                    <a class="admin-list-title" href="<?= e(url('/admin/news/edit?id=' . $item['id'])) ?>"><?= e($item['title']) ?></a>
+                    <dl class="admin-list-meta">
+                        <div>
+                            <dt>Autor</dt>
+                            <dd><?= e($item['author_name']) ?></dd>
+                        </div>
+                        <div>
+                            <dt>Atualização</dt>
+                            <dd><?= e($item['updated_at']) ?></dd>
+                        </div>
+                    </dl>
+                </div>
+                <span class="status-pill status-<?= e($item['status']) ?>"><?= e(\App\Models\News::STATUS_LABELS[$item['status']] ?? $item['status']) ?></span>
+            </article>
+        <?php endforeach; ?>
+        <?php if (!$stats['recent_news']): ?>
+            <div class="empty-state">Nenhuma notícia cadastrada ainda.</div>
+        <?php endif; ?>
     </div>
 </section>
 
 <section class="panel">
     <h2>Logs recentes</h2>
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Usuário</th>
-                    <th>Ação</th>
-                    <th>Descrição</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($stats['logs'] as $log): ?>
-                    <tr>
-                        <td><?= e($log['created_at']) ?></td>
-                        <td><?= e($log['user_name'] ?? 'Sistema') ?></td>
-                        <td><?= e($log['action']) ?></td>
-                        <td><?= e($log['description']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+    <div class="admin-card-list compact-list">
+        <?php foreach ($stats['logs'] as $log): ?>
+            <article class="admin-list-card">
+                <div class="admin-list-main">
+                    <strong class="admin-list-title"><?= e($log['action']) ?></strong>
+                    <p class="admin-list-description"><?= e($log['description']) ?></p>
+                    <dl class="admin-list-meta">
+                        <div>
+                            <dt>Data</dt>
+                            <dd><?= e($log['created_at']) ?></dd>
+                        </div>
+                        <div>
+                            <dt>Usuário</dt>
+                            <dd><?= e($log['user_name'] ?? 'Sistema') ?></dd>
+                        </div>
+                    </dl>
+                </div>
+            </article>
+        <?php endforeach; ?>
+        <?php if (!$stats['logs']): ?>
+            <div class="empty-state">Nenhum log recente.</div>
+        <?php endif; ?>
     </div>
 </section>
