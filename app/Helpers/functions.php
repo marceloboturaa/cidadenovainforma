@@ -24,6 +24,25 @@ function url(string $path = ''): string
     return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
 }
 
+function media_url(string $path = ''): string
+{
+    $path = trim($path);
+
+    if ($path === '') {
+        return '';
+    }
+
+    if (preg_match('#^https?://#i', $path)) {
+        return $path;
+    }
+
+    if (str_starts_with($path, '//')) {
+        return 'https:' . $path;
+    }
+
+    return url($path);
+}
+
 function redirect(string $path): never
 {
     header('Location: ' . url($path));
@@ -64,6 +83,29 @@ function selected(string $current, string $expected): string
 function checked(bool $value): string
 {
     return $value ? 'checked' : '';
+}
+
+function link_line(string $value): array
+{
+    $value = trim($value);
+
+    if ($value === '') {
+        return ['label' => '', 'url' => null];
+    }
+
+    if (preg_match('/^(.+?)\s*\|\s*(https?:\/\/\S+)$/i', $value, $match)) {
+        return ['label' => trim($match[1]), 'url' => trim($match[2])];
+    }
+
+    if (preg_match('/^(https?:\/\/\S+)$/i', $value, $match)) {
+        return ['label' => preg_replace('#^https?://#i', '', rtrim($match[1], '/')), 'url' => $match[1]];
+    }
+
+    if (preg_match('/^(https?:\/\/\S+)\s+(.+)$/i', $value, $match)) {
+        return ['label' => trim($match[2]), 'url' => trim($match[1])];
+    }
+
+    return ['label' => $value, 'url' => null];
 }
 
 function clean_article_html(string $html): string

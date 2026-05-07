@@ -3,6 +3,7 @@
 <?php $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/admin', PHP_URL_PATH) ?: '/admin'; ?>
 <?php $adminCssVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/css/admin.css'); ?>
 <?php $adminJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/admin.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/admin.js') : time(); ?>
+<?php $institutionPageAccess = $user ? \App\Models\InstitutionPage::manageableForUser((int) $user['id'], ($user['role_slug'] ?? '') === 'master') : []; ?>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -31,6 +32,9 @@
                 <?php endif; ?>
                 <?php if (\App\Core\Auth::can('tags.manage')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/tags') ? 'active' : '' ?>" href="<?= e(url('/admin/tags')) ?>"><i class="bi bi-tags" aria-hidden="true"></i>Tags</a>
+                <?php endif; ?>
+                <?php if ($institutionPageAccess): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/institution-pages') ? 'active' : '' ?>" href="<?= e(url('/admin/institution-pages')) ?>"><i class="bi bi-building" aria-hidden="true"></i>Instituição</a>
                 <?php endif; ?>
                 <?php if (($user['role_slug'] ?? '') === 'master'): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/menu') ? 'active' : '' ?>" href="<?= e(url('/admin/menu')) ?>"><i class="bi bi-list-ul" aria-hidden="true"></i>Menu</a>

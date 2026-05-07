@@ -59,6 +59,10 @@ class Router
             return;
         }
 
+        if ($path === '/admin' || str_starts_with($path, '/admin/')) {
+            Middleware::auth();
+        }
+
         [$controller, $action] = $handler;
         (new $controller())->{$action}();
     }

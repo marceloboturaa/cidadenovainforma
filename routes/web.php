@@ -3,6 +3,7 @@
 use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\BackupController;
 use App\Controllers\Admin\DashboardController;
+use App\Controllers\Admin\InstitutionPageController;
 use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\NewsController;
 use App\Controllers\Admin\TagController;
@@ -12,6 +13,7 @@ use App\Controllers\PublicController;
 
 $router->get('/', [PublicController::class, 'home']);
 $router->get('/instituicao', [PublicController::class, 'institution']);
+$router->get('/instituicao/{slug}', [PublicController::class, 'institutionArea']);
 $router->get('/buscar', [PublicController::class, 'search']);
 $router->get('/acervo', [PublicController::class, 'archive']);
 $router->get('/categoria', [PublicController::class, 'category']);
@@ -25,6 +27,8 @@ $router->get('/robots.txt', [PublicController::class, 'robots']);
 
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
+$router->get('/register', [AuthController::class, 'showRegister']);
+$router->post('/register', [AuthController::class, 'register']);
 $router->post('/logout', [AuthController::class, 'logout']);
 
 $router->get('/forgot-password', [AuthController::class, 'showForgot']);
@@ -35,7 +39,14 @@ $router->post('/reset-password', [AuthController::class, 'reset']);
 $router->get('/admin', [DashboardController::class, 'index']);
 $router->get('/admin/users', [UserController::class, 'index']);
 $router->post('/admin/users', [UserController::class, 'store']);
+$router->post('/admin/users/registrations', [UserController::class, 'toggleRegistrations']);
+$router->post('/admin/users/approve', [UserController::class, 'approve']);
+$router->post('/admin/users/responsibilities', [UserController::class, 'responsibilities']);
 $router->post('/admin/users/reset-password', [UserController::class, 'resetPassword']);
+
+$router->get('/admin/institution-pages', [InstitutionPageController::class, 'index']);
+$router->get('/admin/institution-pages/edit', [InstitutionPageController::class, 'edit']);
+$router->post('/admin/institution-pages/update', [InstitutionPageController::class, 'update']);
 
 $router->get('/admin/news', [NewsController::class, 'index']);
 $router->get('/admin/news/create', [NewsController::class, 'create']);

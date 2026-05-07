@@ -65,6 +65,38 @@ CREATE TABLE IF NOT EXISTS password_resets (
     CONSTRAINT fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS site_settings (
+    name VARCHAR(120) PRIMARY KEY,
+    value TEXT NULL,
+    updated_at TIMESTAMP NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS institution_pages (
+    slug VARCHAR(80) PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    kicker VARCHAR(180) NOT NULL,
+    summary TEXT NOT NULL,
+    description TEXT NOT NULL,
+    team_json TEXT NULL,
+    materials_json TEXT NULL,
+    photos_json TEXT NULL,
+    galleries_json TEXT NULL,
+    search_terms VARCHAR(255) NOT NULL,
+    related_tags_json TEXT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS institution_page_users (
+    page_slug VARCHAR(80) NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    PRIMARY KEY (page_slug, user_id),
+    CONSTRAINT fk_institution_page_users_page FOREIGN KEY (page_slug) REFERENCES institution_pages(slug) ON DELETE CASCADE,
+    CONSTRAINT fk_institution_page_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS categories (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     parent_id BIGINT UNSIGNED NULL,

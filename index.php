@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 require __DIR__ . '/app/Helpers/functions.php';
 
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+
 spl_autoload_register(function (string $class): void {
     $prefix = 'App\\';
     $baseDir = __DIR__ . '/app/';

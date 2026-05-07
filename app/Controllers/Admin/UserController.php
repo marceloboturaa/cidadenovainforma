@@ -7,7 +7,9 @@ use App\Core\Logger;
 use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\InstitutionPage;
 use App\Models\Role;
+use App\Models\SiteSetting;
 use App\Models\User;
 
 class UserController
@@ -15,8 +17,14 @@ class UserController
     public function index(): void
     {
         Middleware::permission('users.manage');
+        $users = User::all();
+
         View::render('admin/users/index', [
-            'users' => User::all(),
+            'users' => $users,
+            'pendingUsers' => User::pending(),
+            'registrationEnabled' => SiteSetting::registrationEnabled(),
+            'institutionPages' => InstitutionPage::all(),
+            'userResponsibilities' => $this->userResponsibilities($users),
             'roles' => Role::all(),
         ]);
     }
@@ -51,6 +59,64 @@ class UserController
 
         Logger::info('users.created', 'Usuário criado.', current_user()['id'] ?? null);
         Session::flash('success', 'Usuário criado com sucesso. ID: ' . $userId);
+        redirect('/admin/users');
+    }
+
+    public function toggleRegistrations(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $enabled = ($_POST['enabled'] ?? '') === '1';
+        SiteSetting::setRegistrationEnabled($enabled);
+
+        Logger::info(
+            'users.registration_toggle',
+            $enabled ? 'Novos cadastros autorizados.' : 'Novos cadastros bloqueados.',
+            current_user()['id'] ?? null
+        );
+        Session::flash('success', $enabled ? 'Novos cadastros foram autorizados.' : 'Novos cadastros foram bloqueados.');
+        redirect('/admin/users');
+    }
+
+    public function approve(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $user = $id ? User::find($id) : null;
+
+        if (!$user) {
+            Session::flash('error', 'Usuário não encontrado.');
+            redirect('/admin/users');
+        }
+
+        User::activate((int) $user['id']);
+        Logger::info('users.approved', 'Cadastro aprovado: ' . $user['email'], current_user()['id'] ?? null);
+        Session::flash('success', 'Cadastro aprovado para ' . $user['name'] . '.');
+        redirect('/admin/users');
+    }
+
+    public function responsibilities(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $user = $id ? User::find($id) : null;
+
+        if (!$user) {
+            Session::flash('error', 'Usuário não encontrado.');
+            redirect('/admin/users');
+        }
+
+        InstitutionPage::syncUserResponsibilities((int) $user['id'], $_POST['pages'] ?? []);
+        Logger::info('users.institution_responsibilities', 'Responsabilidades institucionais atualizadas: ' . $user['email'], current_user()['id'] ?? null);
+        Session::flash('success', 'Responsabilidades atualizadas para ' . $user['name'] . '.');
         redirect('/admin/users');
     }
 
@@ -95,5 +161,16 @@ class UserController
             View::render('errors/403');
             exit;
         }
+    }
+
+    private function userResponsibilities(array $users): array
+    {
+        $result = [];
+
+        foreach ($users as $user) {
+            $result[(int) $user['id']] = InstitutionPage::userResponsibilities((int) $user['id']);
+        }
+
+        return $result;
     }
 }

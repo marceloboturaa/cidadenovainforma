@@ -44,6 +44,19 @@ class User
         return $stmt->fetchAll();
     }
 
+    public static function pending(): array
+    {
+        $stmt = Database::connection()->query(
+            'SELECT users.id, users.name, users.email, users.created_at, roles.name AS role_name
+             FROM users
+             INNER JOIN roles ON roles.id = users.role_id
+             WHERE users.active = 0
+             ORDER BY users.created_at ASC'
+        );
+
+        return $stmt->fetchAll();
+    }
+
     public static function create(array $data): int
     {
         $stmt = Database::connection()->prepare(
@@ -116,6 +129,13 @@ class User
             'id' => $userId,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         ]);
+    }
+
+    public static function activate(int $id): void
+    {
+        Database::connection()
+            ->prepare('UPDATE users SET active = 1, updated_at = NOW() WHERE id = :id')
+            ->execute(['id' => $id]);
     }
 
     public static function markResetUsed(int $resetId): void

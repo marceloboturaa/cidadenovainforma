@@ -4,6 +4,8 @@
     const overlay = document.querySelector('[data-admin-menu-close]');
     const sidebarLinks = document.querySelectorAll('.sidebar nav a');
     const focusButtons = document.querySelectorAll('[data-editor-focus]');
+    const galleryList = document.querySelector('[data-gallery-list]');
+    const galleryAdd = document.querySelector('[data-gallery-add]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -33,6 +35,40 @@
             setFocusButtonText(isFocused);
         });
     });
+
+    if (galleryList && galleryAdd) {
+        galleryAdd.addEventListener('click', () => {
+            const firstCard = galleryList.querySelector('[data-gallery-card]');
+            if (!firstCard) {
+                return;
+            }
+
+            const clone = firstCard.cloneNode(true);
+            clone.querySelectorAll('input').forEach((input) => {
+                input.value = '';
+            });
+            galleryList.appendChild(clone);
+        });
+
+        galleryList.addEventListener('click', (event) => {
+            const removeButton = event.target.closest('[data-gallery-remove]');
+            if (!removeButton) {
+                return;
+            }
+
+            const cards = galleryList.querySelectorAll('[data-gallery-card]');
+            const card = removeButton.closest('[data-gallery-card]');
+
+            if (cards.length === 1) {
+                card.querySelectorAll('input').forEach((input) => {
+                    input.value = '';
+                });
+                return;
+            }
+
+            card.remove();
+        });
+    }
 
     function closeMenu() {
         body.classList.remove('admin-menu-open');

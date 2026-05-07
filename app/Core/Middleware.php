@@ -9,6 +9,8 @@ class Middleware
         if (!Auth::check()) {
             redirect('/login');
         }
+
+        self::adminHeaders();
     }
 
     public static function permission(string $permission): void
@@ -20,5 +22,12 @@ class Middleware
             View::render('errors/403');
             exit;
         }
+    }
+
+    private static function adminHeaders(): void
+    {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
     }
 }

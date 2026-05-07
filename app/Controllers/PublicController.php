@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\View;
 use App\Models\Category;
+use App\Models\InstitutionPage;
 use App\Models\MenuItem;
 use App\Models\News;
 use App\Models\Tag;
@@ -48,11 +49,38 @@ class PublicController
         $this->logAccess();
 
         View::render('public/institution', [
+            'areas' => $this->institutionAreas(),
             'menuItems' => MenuItem::visible(),
             'query' => '',
             'pageTitle' => 'Instituição - Cidade Nova Informa',
             'metaDescription' => 'Conheça a missão, a atuação e o compromisso editorial do Cidade Nova Informa.',
             'canonicalUrl' => url('/instituicao'),
+        ], 'public');
+    }
+
+    public function institutionArea(): void
+    {
+        $areas = $this->institutionAreas();
+        $slug = $_GET['slug'] ?? '';
+        $area = $areas[$slug] ?? null;
+        $this->logAccess();
+
+        if (!$area) {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        View::render('public/institution-area', [
+            'area' => $area,
+            'areas' => $areas,
+            'photos' => $area['photos'],
+            'relatedNews' => News::relatedToInstitutionPage($area, 6),
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => $area['name'] . ' - Instituição - Cidade Nova Informa',
+            'metaDescription' => $area['summary'],
+            'canonicalUrl' => url('/instituicao/' . $area['slug']),
         ], 'public');
     }
 
@@ -152,6 +180,10 @@ class PublicController
             ['loc' => url('/acervo'), 'priority' => '0.7'],
         ];
 
+        foreach ($this->institutionAreas() as $area) {
+            $urls[] = ['loc' => url('/instituicao/' . $area['slug']), 'priority' => '0.6'];
+        }
+
         foreach (Category::active() as $category) {
             $urls[] = ['loc' => url('/categoria/' . $category['slug']), 'priority' => '0.7'];
         }
@@ -208,5 +240,28 @@ class PublicController
             'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
             'path' => substr($_SERVER['REQUEST_URI'] ?? '/', 0, 255),
         ]);
+    }
+
+    private function institutionAreas(): array
+    {
+        $areas = InstitutionPage::all();
+
+        return array_column($areas, null, 'slug');
+    }
+
+    private function institutionPhotos(string $slug): array
+    {
+        $files = glob(dirname(__DIR__, 2) . '/public/uploads/news/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: [];
+        $files = array_values(array_filter($files, 'is_file'));
+        sort($files);
+
+        $offsets = ['biblioteca' => 0, 'horta' => 2, 'radio' => 4];
+        $offset = $offsets[$slug] ?? 0;
+        $selected = array_slice(array_values(array_unique(array_merge(array_slice($files, $offset), $files))), 0, 4);
+
+        return array_map(
+            fn (string $file): string => '/public/uploads/news/' . basename($file),
+            $selected
+        );
     }
 }

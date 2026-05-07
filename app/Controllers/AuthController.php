@@ -7,6 +7,8 @@ use App\Core\Csrf;
 use App\Core\Logger;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Role;
+use App\Models\SiteSetting;
 use App\Models\User;
 
 class AuthController
@@ -38,8 +40,70 @@ class AuthController
         redirect('/admin');
     }
 
+    public function showRegister(): void
+    {
+        if (Auth::check()) {
+            redirect('/admin');
+        }
+
+        View::render('auth/register', [
+            'registrationEnabled' => SiteSetting::registrationEnabled(),
+        ], 'auth');
+    }
+
+    public function register(): void
+    {
+        if (!SiteSetting::registrationEnabled()) {
+            Session::flash('error', 'Novos cadastros estão bloqueados no momento.');
+            redirect('/register');
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('error', 'Sessão expirada. Tente novamente.');
+            redirect('/register');
+        }
+
+        $name = trim($_POST['name'] ?? '');
+        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+        $password = $_POST['password'] ?? '';
+        $confirmation = $_POST['password_confirmation'] ?? '';
+
+        if ($name === '' || !$email || strlen($password) < 8 || $password !== $confirmation) {
+            Session::flash('error', 'Preencha nome, e-mail e senha com confirmação igual.');
+            redirect('/register');
+        }
+
+        if (User::findByEmail($email)) {
+            Session::flash('error', 'Este e-mail já possui cadastro.');
+            redirect('/register');
+        }
+
+        $role = Role::findBySlug('jornalista');
+        if (!$role) {
+            Session::flash('error', 'Não foi possível criar o cadastro agora.');
+            redirect('/register');
+        }
+
+        $userId = User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => $password,
+            'role_id' => $role['id'],
+            'active' => 0,
+        ]);
+
+        Logger::info('users.registration_requested', 'Novo cadastro aguardando aprovação: ' . $email, $userId);
+        Session::flash('success', 'Cadastro enviado. Aguarde aprovação do administrador master para acessar o painel.');
+        redirect('/login');
+    }
+
     public function logout(): void
     {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('error', 'Sessão expirada. Tente novamente.');
+            redirect('/login');
+        }
+
         Auth::logout();
         redirect('/login');
     }

@@ -28,4 +28,5 @@
     </form>
 
     <a class="auth-link" href="<?= e(url('/forgot-password')) ?>">Esqueci minha senha</a>
+    <a class="auth-link secondary-auth-link" href="<?= e(url('/register')) ?>">Criar novo cadastro</a>
 </section>

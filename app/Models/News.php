@@ -148,6 +148,42 @@ class News
         return $stmt->fetchAll();
     }
 
+    public static function relatedToInstitutionPage(array $area, int $limit = 6): array
+    {
+        $tagSlugs = array_values(array_filter(array_unique(array_map('slugify', $area['related_tags'] ?? []))));
+
+        if (!$tagSlugs) {
+            return [];
+        }
+
+        $params = [];
+        $placeholders = [];
+
+        foreach ($tagSlugs as $index => $slug) {
+            $key = 'tag_' . $index;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $slug;
+        }
+
+        $sql = 'SELECT news.*, users.name AS author_name, categories.name AS category_name, categories.slug AS category_slug,
+                    COUNT(DISTINCT tags.id) AS relation_score
+                FROM news
+                INNER JOIN users ON users.id = news.author_id
+                LEFT JOIN categories ON categories.id = news.category_id
+                INNER JOIN news_tags ON news_tags.news_id = news.id
+                INNER JOIN tags ON tags.id = news_tags.tag_id
+                WHERE news.status = "published"
+                  AND tags.slug IN (' . implode(', ', $placeholders) . ')
+                GROUP BY news.id
+                ORDER BY relation_score DESC, news.published_at DESC, news.created_at DESC
+                LIMIT ' . max(1, min(20, $limit));
+
+        $stmt = Database::connection()->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
     public static function popular(int $limit = 5): array
     {
         $stmt = Database::connection()->prepare(

@@ -38,6 +38,69 @@
     </form>
 </section>
 
+<?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
+    <section class="panel">
+        <div class="registration-control">
+            <div>
+                <h2>Novos cadastros</h2>
+                <p>Status atual: <strong><?= ($registrationEnabled ?? true) ? 'autorizados' : 'bloqueados' ?></strong></p>
+            </div>
+            <form method="post" action="<?= e(url('/admin/users/registrations')) ?>">
+                <?= csrf_field() ?>
+                <?php if ($registrationEnabled ?? true): ?>
+                    <input type="hidden" name="enabled" value="0">
+                    <button class="btn btn-outline-danger">Bloquear novos cadastros</button>
+                <?php else: ?>
+                    <input type="hidden" name="enabled" value="1">
+                    <button class="btn btn-success">Autorizar novos cadastros</button>
+                <?php endif; ?>
+            </form>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="section-heading">
+            <h2>Cadastros aguardando aprovação</h2>
+            <span><?= e((string) count($pendingUsers ?? [])) ?> pendente(s)</span>
+        </div>
+        <div class="admin-card-list">
+            <?php foreach (($pendingUsers ?? []) as $item): ?>
+                <article class="admin-list-card user-card">
+                    <div class="admin-list-main">
+                        <div class="admin-list-title-row">
+                            <strong class="admin-list-title"><?= e($item['name']) ?></strong>
+                            <span class="state-pill is-pending">Aguardando</span>
+                        </div>
+                        <dl class="admin-list-meta">
+                            <div>
+                                <dt>E-mail</dt>
+                                <dd><?= e($item['email']) ?></dd>
+                            </div>
+                            <div>
+                                <dt>Cargo inicial</dt>
+                                <dd><?= e($item['role_name']) ?></dd>
+                            </div>
+                            <div>
+                                <dt>Solicitado em</dt>
+                                <dd><?= e($item['created_at']) ?></dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="admin-list-actions">
+                        <form method="post" action="<?= e(url('/admin/users/approve?id=' . $item['id'])) ?>" class="inline-form">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-sm btn-success">Aprovar cadastro</button>
+                        </form>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+            <?php if (empty($pendingUsers)): ?>
+                <div class="empty-state">Nenhum cadastro aguardando aprovação.</div>
+            <?php endif; ?>
+        </div>
+    </section>
+<?php endif; ?>
+
 <section class="panel">
     <div class="section-heading">
         <h2>Usuários cadastrados</h2>
@@ -68,6 +131,19 @@
                 </div>
                 <div class="admin-list-actions">
                     <?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
+                        <form method="post" action="<?= e(url('/admin/users/responsibilities?id=' . $item['id'])) ?>" class="responsibility-form">
+                            <?= csrf_field() ?>
+                            <strong>Páginas responsáveis</strong>
+                            <div class="responsibility-options">
+                                <?php foreach (($institutionPages ?? []) as $page): ?>
+                                    <label>
+                                        <input type="checkbox" name="pages[]" value="<?= e($page['slug']) ?>" <?= checked(in_array($page['slug'], $userResponsibilities[(int) $item['id']] ?? [], true)) ?>>
+                                        <span><?= e($page['name']) ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary">Salvar páginas</button>
+                        </form>
                         <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="password-reset-row">
                             <?= csrf_field() ?>
                             <div class="password-field">

@@ -1,26 +1,92 @@
-<article class="institution-page">
+<article class="institution-page institution-modern">
     <header class="institution-hero">
-        <span>Instituição</span>
-        <h1>Quem é Cidade Nova Informa</h1>
+        <span>Portal institucional</span>
+        <h1>Cidade Nova Informa</h1>
         <p>
-            O Cidade Nova Informa é um portal jornalístico comunitário dedicado a registrar, organizar e divulgar os acontecimentos que impactam Cidade Nova e a região.
+            Bem-vindo ao espaço oficial do Cidade Nova Informa. Esta página apresenta a instituição, sua história e os projetos que fazem parte da atuação comunitária do portal.
         </p>
+        <div class="institution-hero-actions">
+            <a href="#projetos">Ver áreas</a>
+            <a href="#historia">Nossa história</a>
+        </div>
     </header>
 
-    <section class="institution-content">
-        <h2>Nossa atuação</h2>
+    <section class="institution-intro">
+        <div>
+            <span>Apresentação</span>
+            <h2>Comunicação local com responsabilidade e presença comunitária</h2>
+        </div>
         <p>
-            Trabalhamos para aproximar a população das notícias locais, valorizando pautas de interesse público, serviços, cultura, educação, saúde, esporte, política e histórias da comunidade.
+            O Cidade Nova Informa atua na produção e organização de conteúdos de interesse público, com atenção à vida do bairro, aos serviços essenciais, aos projetos comunitários e às histórias que fazem parte da rotina local.
         </p>
+    </section>
 
-        <h2>Compromisso editorial</h2>
-        <p>
-            Nosso compromisso é publicar informações com responsabilidade, clareza e respeito aos leitores. O portal também preserva reportagens de acervo para manter viva a memória jornalística da comunidade.
-        </p>
+    <section class="institution-values" aria-label="Missão, visão e valores">
+        <article>
+            <span>Missão</span>
+            <p>Informar a comunidade com responsabilidade, clareza e compromisso social, fortalecendo o acesso a notícias, serviços e registros da vida local.</p>
+        </article>
+        <article>
+            <span>Visão</span>
+            <p>Ser uma referência comunitária em comunicação, memória e utilidade pública para Cidade Nova e região.</p>
+        </article>
+        <article>
+            <span>Valores</span>
+            <p>Ética, transparência, participação, respeito, valorização da comunidade e preservação da memória local.</p>
+        </article>
+    </section>
 
-        <h2>Participação da comunidade</h2>
+    <section class="institution-story" id="historia">
+        <div>
+            <span>História</span>
+            <h2>Nossa trajetória</h2>
+        </div>
         <p>
-            Moradores, lideranças, instituições e colaboradores podem sugerir pautas, enviar informações e contribuir para que o Cidade Nova Informa continue sendo um canal útil, acessível e conectado com a realidade local.
+            A história do Cidade Nova Informa nasce da necessidade de dar visibilidade aos acontecimentos do território, organizar informações úteis e valorizar registros importantes para os moradores. Com o tempo, o portal passou a integrar jornalismo, memória local e projetos de participação comunitária.
         </p>
+    </section>
+
+    <section class="institution-values institution-organization" aria-label="Diretoria e organização">
+        <article>
+            <span>Diretoria</span>
+            <p>Coordenação institucional, direção editorial e responsáveis por projetos atuam de forma integrada na organização das frentes do portal.</p>
+        </article>
+        <article>
+            <span>Notas públicas</span>
+            <p>Comunicados oficiais, avisos institucionais e posicionamentos públicos são publicados nas áreas correspondentes do Cidade Nova Informa.</p>
+        </article>
+        <article>
+            <span>Contatos</span>
+            <p>Os canais digitais e redes sociais concentram o atendimento, sugestões de pauta e comunicação com leitores, parceiros e colaboradores.</p>
+        </article>
+    </section>
+
+    <section class="institution-projects" id="projetos">
+        <div class="institution-section-head">
+            <span>Setores e projetos</span>
+            <h2>Áreas institucionais</h2>
+        </div>
+        <div class="institution-project-grid">
+            <?php foreach ($areas as $area): ?>
+                <article class="institution-project-card">
+                    <span><?= e($area['kicker']) ?></span>
+                    <h3><?= e($area['name']) ?></h3>
+                    <p><?= e($area['summary']) ?></p>
+                    <a href="<?= e(url('/instituicao/' . $area['slug'])) ?>">Abrir página</a>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <section class="institution-downloads">
+        <div class="institution-section-head">
+            <span>Identidade oficial</span>
+            <h2>Logos e canais institucionais</h2>
+        </div>
+        <div class="institution-download-grid">
+            <a href="<?= e(url('/public/assets/img/logo-cidade-nova-informa.svg')) ?>" download>Baixar logo oficial</a>
+            <a href="mailto:contato@cidadenovainforma.com.br">Contatos e redes sociais</a>
+            <a href="<?= e(url('/acervo')) ?>">Acervo do portal</a>
+        </div>
     </section>
 </article>
