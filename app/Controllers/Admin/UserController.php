@@ -29,6 +29,40 @@ class UserController
         ]);
     }
 
+    public function password(): void
+    {
+        View::render('admin/users/password');
+    }
+
+    public function updatePassword(): void
+    {
+        $this->validateCsrf('/admin/password');
+
+        $user = current_user();
+        $currentPassword = $_POST['current_password'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $confirmation = $_POST['password_confirmation'] ?? '';
+
+        if (!$user) {
+            redirect('/login');
+        }
+
+        if (!password_verify($currentPassword, $user['password_hash'] ?? '')) {
+            Session::flash('error', 'Senha atual incorreta.');
+            redirect('/admin/password');
+        }
+
+        if (strlen($password) < 8 || $password !== $confirmation) {
+            Session::flash('error', 'A nova senha precisa ter no mínimo 8 caracteres e confirmação igual.');
+            redirect('/admin/password');
+        }
+
+        User::updatePassword((int) $user['id'], $password);
+        Logger::info('users.password_changed', 'Senha alterada pelo próprio usuário.', (int) $user['id']);
+        Session::flash('success', 'Senha alterada com sucesso.');
+        redirect('/admin/password');
+    }
+
     public function store(): void
     {
         Middleware::permission('users.manage');
@@ -128,6 +162,7 @@ class UserController
 
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         $password = $_POST['password'] ?? '';
+        $confirmation = $_POST['password_confirmation'] ?? '';
         $user = $id ? User::find($id) : null;
 
         if (!$user) {
@@ -135,8 +170,8 @@ class UserController
             redirect('/admin/users');
         }
 
-        if (strlen($password) < 8) {
-            Session::flash('error', 'A nova senha precisa ter no mínimo 8 caracteres.');
+        if (strlen($password) < 8 || $password !== $confirmation) {
+            Session::flash('error', 'A nova senha precisa ter no mínimo 8 caracteres e confirmação igual.');
             redirect('/admin/users');
         }
 
@@ -146,11 +181,11 @@ class UserController
         redirect('/admin/users');
     }
 
-    private function validateCsrf(): void
+    private function validateCsrf(string $redirectTo = '/admin/users'): void
     {
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             Session::flash('error', 'Sessão expirada. Tente novamente.');
-            redirect('/admin/users');
+            redirect($redirectTo);
         }
     }
 

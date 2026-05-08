@@ -11,6 +11,11 @@ class DashboardController
     public function index(): void
     {
         Middleware::auth();
-        View::render('admin/dashboard', ['stats' => Stats::dashboard()]);
+        $user = current_user();
+
+        View::render('admin/dashboard', [
+            'stats' => Stats::dashboard($user),
+            'showsAllLogs' => ($user['role_slug'] ?? '') === 'master',
+        ]);
     }
 }

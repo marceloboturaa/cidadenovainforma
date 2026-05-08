@@ -40,6 +40,7 @@
                     <a class="<?= str_starts_with($currentPath, '/admin/menu') ? 'active' : '' ?>" href="<?= e(url('/admin/menu')) ?>"><i class="bi bi-list-ul" aria-hidden="true"></i>Menu</a>
                     <a class="<?= str_starts_with($currentPath, '/admin/backups') ? 'active' : '' ?>" href="<?= e(url('/admin/backups')) ?>"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i>Backups</a>
                 <?php endif; ?>
+                <a class="<?= $currentPath === '/admin/password' ? 'active' : '' ?>" href="<?= e(url('/admin/password')) ?>"><i class="bi bi-key" aria-hidden="true"></i>Minha senha</a>
             </nav>
         </aside>
         <div class="main-panel">

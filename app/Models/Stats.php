@@ -7,9 +7,10 @@ use App\Models\News;
 
 class Stats
 {
-    public static function dashboard(): array
+    public static function dashboard(?array $user = null): array
     {
         $db = Database::connection();
+        $logs = self::recentLogs($user);
 
         return [
             'users' => (int) $db->query('SELECT COUNT(*) FROM users')->fetchColumn(),
@@ -33,13 +34,34 @@ class Stats
                  GROUP BY DATE(created_at)
                  ORDER BY day ASC'
             )->fetchAll(),
-            'logs' => $db->query(
+            'logs' => $logs,
+        ];
+    }
+
+    private static function recentLogs(?array $user): array
+    {
+        $db = Database::connection();
+
+        if (($user['role_slug'] ?? '') === 'master') {
+            return $db->query(
                 'SELECT logs.*, users.name AS user_name
                  FROM logs
                  LEFT JOIN users ON users.id = logs.user_id
                  ORDER BY logs.created_at DESC
                  LIMIT 8'
-            )->fetchAll(),
-        ];
+            )->fetchAll();
+        }
+
+        $stmt = $db->prepare(
+            'SELECT logs.*, users.name AS user_name
+             FROM logs
+             LEFT JOIN users ON users.id = logs.user_id
+             WHERE logs.user_id = :user_id
+             ORDER BY logs.created_at DESC
+             LIMIT 8'
+        );
+        $stmt->execute(['user_id' => (int) ($user['id'] ?? 0)]);
+
+        return $stmt->fetchAll();
     }
 }

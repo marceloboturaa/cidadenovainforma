@@ -85,7 +85,7 @@
 </section>
 
 <section class="panel">
-    <h2>Logs recentes</h2>
+    <h2><?= ($showsAllLogs ?? false) ? 'Logs recentes' : 'Meus logs recentes' ?></h2>
     <div class="admin-card-list compact-list">
         <?php foreach ($stats['logs'] as $log): ?>
             <article class="admin-list-card">

@@ -37,6 +37,8 @@ $router->get('/reset-password', [AuthController::class, 'showReset']);
 $router->post('/reset-password', [AuthController::class, 'reset']);
 
 $router->get('/admin', [DashboardController::class, 'index']);
+$router->get('/admin/password', [UserController::class, 'password']);
+$router->post('/admin/password', [UserController::class, 'updatePassword']);
 $router->get('/admin/users', [UserController::class, 'index']);
 $router->post('/admin/users', [UserController::class, 'store']);
 $router->post('/admin/users/registrations', [UserController::class, 'toggleRegistrations']);

@@ -150,6 +150,10 @@
                                 <input class="form-control form-control-sm" name="password" type="password" minlength="8" placeholder="Nova senha" required>
                                 <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
                             </div>
+                            <div class="password-field">
+                                <input class="form-control form-control-sm" name="password_confirmation" type="password" minlength="8" placeholder="Confirmar senha" required>
+                                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+                            </div>
                             <button class="btn btn-sm btn-outline-secondary">Resetar</button>
                         </form>
                     <?php else: ?>
