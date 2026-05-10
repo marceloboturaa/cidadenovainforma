@@ -39,6 +39,7 @@ class Mailer
         $username = (string) ($config['username'] ?? '');
         $password = (string) ($config['password'] ?? '');
         $encryption = strtolower((string) ($config['encryption'] ?? 'tls'));
+        $password = self::normalizedPassword($host, $password);
 
         if ($host === '' || $username === '' || $password === '') {
             throw new \RuntimeException('Configuração SMTP incompleta.');
@@ -48,7 +49,7 @@ class Mailer
         $socket = stream_socket_client($transportHost . ':' . $port, $errno, $errstr, 20, STREAM_CLIENT_CONNECT);
 
         if (!$socket) {
-            throw new \RuntimeException('Falha ao conectar ao SMTP: ' . $errstr);
+            throw new \RuntimeException('Falha ao conectar ao SMTP: ' . $errstr . ' (' . $errno . ')');
         }
 
         stream_set_timeout($socket, 20);
@@ -139,6 +140,15 @@ class Mailer
     private static function cleanEmail(string $email): string
     {
         return str_replace(["\r", "\n", '<', '>'], '', trim($email));
+    }
+
+    private static function normalizedPassword(string $host, string $password): string
+    {
+        if (strtolower($host) === 'smtp.gmail.com') {
+            return preg_replace('/\s+/', '', $password) ?? $password;
+        }
+
+        return $password;
     }
 
     private static function encodedSubject(string $subject): string
