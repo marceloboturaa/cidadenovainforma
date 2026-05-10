@@ -40,6 +40,16 @@ $pdo->exec(
     ) ENGINE=InnoDB'
 );
 
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS user_presence (
+        user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+        last_seen_at DATETIME NOT NULL,
+        ip_address VARCHAR(45) NULL,
+        user_agent VARCHAR(255) NULL,
+        CONSTRAINT fk_user_presence_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB'
+);
+
 $pdo->prepare('INSERT IGNORE INTO site_settings (name, value, updated_at) VALUES (?, ?, NOW())')
     ->execute(['registration_enabled', '1']);
 

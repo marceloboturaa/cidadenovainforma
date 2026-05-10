@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Logger;
+use App\Core\Mailer;
 use App\Core\Session;
 use App\Core\View;
 use App\Models\Role;
@@ -93,7 +94,7 @@ class AuthController
         ]);
 
         Logger::info('users.registration_requested', 'Novo cadastro aguardando aprovação: ' . $email, $userId);
-        Session::flash('success', 'Cadastro enviado. Aguarde aprovação do administrador master para acessar o painel.');
+        Session::flash('success', 'Obrigado pelo cadastro. Sua solicitação está sendo averiguada e em breve retornaremos.');
         redirect('/login');
     }
 
@@ -128,9 +129,12 @@ class AuthController
             User::storeResetToken((int) $user['id'], hash('sha256', $token), date('Y-m-d H:i:s', strtotime('+1 hour')));
             Logger::info('auth.password_reset_requested', 'Token de recuperação gerado.', (int) $user['id']);
 
+            $resetLink = url('/reset-password?token=' . urlencode($token));
+            $this->sendPasswordResetEmail($user, $resetLink);
+
             $config = require dirname(__DIR__, 2) . '/config/app.php';
             if (($config['env'] ?? 'production') !== 'production' || !empty($config['debug'])) {
-                Session::flash('reset_link', url('/reset-password?token=' . urlencode($token)));
+                Session::flash('reset_link', $resetLink);
             }
         }
 
@@ -166,5 +170,28 @@ class AuthController
 
         Session::flash('success', 'Senha alterada. Faça login para continuar.');
         redirect('/login');
+    }
+
+    private function sendPasswordResetEmail(array $user, string $resetLink): void
+    {
+        $name = trim((string) ($user['name'] ?? ''));
+        $greeting = $name !== '' ? 'Olá, ' . $name . '.' : 'Olá.';
+        $html = '<p>' . e($greeting) . '</p>'
+            . '<p>Recebemos uma solicitação para alterar a senha do seu acesso ao Cidade Nova Informa.</p>'
+            . '<p><a href="' . e($resetLink) . '">Clique aqui para criar uma nova senha</a>.</p>'
+            . '<p>Este link expira em 1 hora. Se você não solicitou a alteração, ignore este e-mail.</p>';
+        $text = $greeting . "\n\n"
+            . "Recebemos uma solicitação para alterar a senha do seu acesso ao Cidade Nova Informa.\n\n"
+            . "Acesse o link abaixo para criar uma nova senha:\n"
+            . $resetLink . "\n\n"
+            . "Este link expira em 1 hora. Se você não solicitou a alteração, ignore este e-mail.";
+
+        try {
+            if (Mailer::send((string) $user['email'], 'Alteração de senha - Cidade Nova Informa', $html, $text)) {
+                Logger::info('auth.password_reset_email_sent', 'E-mail de recuperação enviado.', (int) $user['id']);
+            }
+        } catch (\Throwable $exception) {
+            Logger::info('auth.password_reset_email_failed', 'Falha ao enviar e-mail de recuperação: ' . $exception->getMessage(), (int) $user['id']);
+        }
     }
 }

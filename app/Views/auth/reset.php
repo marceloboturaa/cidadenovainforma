@@ -2,6 +2,7 @@
     <div class="auth-title">
         <span>Nova senha</span>
         <h1>Atualizar acesso</h1>
+        <p>Crie uma senha nova com pelo menos 8 caracteres.</p>
     </div>
 
     <?php if ($message = flash('error')): ?>
@@ -25,6 +26,6 @@
                 <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
             </div>
         </label>
-        <button class="btn btn-primary w-100">Alterar senha</button>
+        <button class="btn btn-primary w-100 auth-submit">Alterar senha</button>
     </form>
 </section>

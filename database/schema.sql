@@ -65,6 +65,14 @@ CREATE TABLE IF NOT EXISTS password_resets (
     CONSTRAINT fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS user_presence (
+    user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    last_seen_at DATETIME NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    CONSTRAINT fk_user_presence_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS site_settings (
     name VARCHAR(120) PRIMARY KEY,
     value TEXT NULL,

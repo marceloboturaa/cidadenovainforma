@@ -2,6 +2,7 @@
     <div class="auth-title">
         <span>Solicitar acesso</span>
         <h1>Criar cadastro</h1>
+        <p>Preencha seus dados para que o master avalie a liberação do painel.</p>
     </div>
 
     <?php if ($message = flash('success')): ?>
@@ -36,11 +37,11 @@
                     <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
                 </div>
             </label>
-            <button class="btn btn-primary w-100">Enviar cadastro</button>
+            <button class="btn btn-primary w-100 auth-submit">Enviar cadastro</button>
         </form>
     <?php else: ?>
         <div class="alert alert-warning">Novos cadastros estão bloqueados no momento.</div>
     <?php endif; ?>
 
-    <a class="auth-link" href="<?= e(url('/login')) ?>">Já tenho cadastro</a>
+    <a class="auth-link auth-back-link" href="<?= e(url('/login')) ?>">Já tenho cadastro</a>
 </section>

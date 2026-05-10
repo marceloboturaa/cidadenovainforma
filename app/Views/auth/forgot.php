@@ -2,6 +2,7 @@
     <div class="auth-title">
         <span>Recuperação</span>
         <h1>Redefinir senha</h1>
+        <p>Informe o e-mail cadastrado para receber o link de alteração de senha.</p>
     </div>
 
     <?php if ($message = flash('success')): ?>
@@ -22,8 +23,8 @@
             E-mail cadastrado
             <input class="form-control" type="email" name="email" required autocomplete="email">
         </label>
-        <button class="btn btn-primary w-100">Gerar recuperação</button>
+        <button class="btn btn-primary w-100 auth-submit">Enviar link</button>
     </form>
 
-    <a class="auth-link" href="<?= e(url('/login')) ?>">Voltar ao login</a>
+    <a class="auth-link auth-back-link" href="<?= e(url('/login')) ?>">Voltar ao login</a>
 </section>

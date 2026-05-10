@@ -22,6 +22,12 @@
         <span>Comentários</span>
         <strong><?= e((string) $stats['comments']) ?></strong>
     </article>
+    <?php if ($showsAllLogs ?? false): ?>
+        <article class="metric-card">
+            <span>Online agora</span>
+            <strong><?= e((string) ($stats['online_users_count'] ?? 0)) ?></strong>
+        </article>
+    <?php endif; ?>
 </div>
 
 <div class="dashboard-grid">
@@ -83,6 +89,42 @@
         <?php endif; ?>
     </div>
 </section>
+
+<?php if ($showsAllLogs ?? false): ?>
+    <section class="panel">
+        <div class="section-heading">
+            <h2>Usuários online</h2>
+            <span>Ativos nos últimos <?= e((string) ($stats['online_window_minutes'] ?? 5)) ?> minutos</span>
+        </div>
+        <div class="admin-card-list compact-list">
+            <?php foreach (($stats['online_users'] ?? []) as $onlineUser): ?>
+                <article class="admin-list-card online-user-card">
+                    <div class="admin-list-main">
+                        <strong class="admin-list-title"><?= e($onlineUser['name']) ?></strong>
+                        <dl class="admin-list-meta">
+                            <div>
+                                <dt>E-mail</dt>
+                                <dd><?= e($onlineUser['email']) ?></dd>
+                            </div>
+                            <div>
+                                <dt>Cargo</dt>
+                                <dd><?= e($onlineUser['role_name']) ?></dd>
+                            </div>
+                            <div>
+                                <dt>Última atividade</dt>
+                                <dd><?= e(date('d/m/Y H:i:s', strtotime($onlineUser['last_seen_at']))) ?></dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <span class="state-pill is-online">Online</span>
+                </article>
+            <?php endforeach; ?>
+            <?php if (empty($stats['online_users'])): ?>
+                <div class="empty-state">Nenhum usuário online agora.</div>
+            <?php endif; ?>
+        </div>
+    </section>
+<?php endif; ?>
 
 <section class="panel">
     <h2><?= ($showsAllLogs ?? false) ? 'Logs recentes' : 'Meus logs recentes' ?></h2>

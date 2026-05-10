@@ -11,6 +11,7 @@ use App\Models\InstitutionPage;
 use App\Models\Role;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Models\UserPresence;
 
 class UserController
 {
@@ -18,9 +19,11 @@ class UserController
     {
         Middleware::permission('users.manage');
         $users = User::all();
+        $onlineUserIds = (current_user()['role_slug'] ?? '') === 'master' ? UserPresence::onlineUserIds() : [];
 
         View::render('admin/users/index', [
             'users' => $users,
+            'onlineUserIds' => $onlineUserIds,
             'pendingUsers' => User::pending(),
             'registrationEnabled' => SiteSetting::registrationEnabled(),
             'institutionPages' => InstitutionPage::all(),

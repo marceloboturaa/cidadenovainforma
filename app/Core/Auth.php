@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Models\User;
+use App\Models\UserPresence;
 
 class Auth
 {
@@ -85,7 +86,9 @@ class Auth
             return null;
         }
 
-        if (!User::findWithRole((int) $userId)) {
+        $user = User::findWithRole((int) $userId);
+
+        if (!$user) {
             Logger::info('auth.session_invalid_user', 'Sessão encerrada porque o usuário está inativo ou não existe.', (int) $userId);
             Session::forget('user_id');
             Session::forget('auth_login_at');
@@ -95,6 +98,22 @@ class Auth
             Session::flash('error', 'Sua conta não está ativa. Fale com o administrador.');
             return null;
         }
+
+        $loginAt = (int) Session::get('auth_login_at', $now);
+        $userUpdatedAt = strtotime((string) ($user['updated_at'] ?? '')) ?: 0;
+
+        if ($userUpdatedAt > $loginAt) {
+            Logger::info('auth.session_password_changed', 'Sessão encerrada após alteração de senha ou dados de acesso.', (int) $userId);
+            Session::forget('user_id');
+            Session::forget('auth_login_at');
+            Session::forget('auth_last_activity');
+            Session::forget('auth_last_regenerated');
+            Session::regenerate();
+            Session::flash('error', 'Sua senha ou seus dados de acesso foram alterados. Entre novamente.');
+            return null;
+        }
+
+        UserPresence::touch((int) $userId);
 
         $lastRegenerated = (int) Session::get('auth_last_regenerated', $now);
         $regenerateInterval = max(300, (int) ($config['session_regenerate_interval'] ?? 600));

@@ -116,6 +116,9 @@
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($item['name']) ?></strong>
                         <span class="state-pill <?= $item['active'] ? 'is-active' : 'is-muted' ?>"><?= $item['active'] ? 'Ativo' : 'Inativo' ?></span>
+                        <?php if (in_array((int) $item['id'], $onlineUserIds ?? [], true)): ?>
+                            <span class="state-pill is-online">Online</span>
+                        <?php endif; ?>
                     </div>
                     <p><?= e($item['email']) ?></p>
                     <div class="user-role-line">

@@ -10,6 +10,16 @@
 </head>
 <body class="auth-page">
     <main class="auth-shell">
+        <aside class="auth-intro">
+            <a class="auth-logo" href="<?= e(url('/')) ?>">
+                <img src="<?= e(url('/public/assets/img/logo-cidade-nova-informa.svg')) ?>" alt="<?= e($app['name']) ?>">
+            </a>
+            <div>
+                <span>Painel editorial</span>
+                <h1>Cidade Nova Informa</h1>
+                <p>Gestão de notícias, documentos e conteúdos institucionais em um ambiente restrito para a equipe.</p>
+            </div>
+        </aside>
         <?= $content ?>
     </main>
     <script src="<?= e(url('/public/assets/js/password-toggle.js')) ?>"></script>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Core\Database;
 use App\Models\News;
+use App\Models\UserPresence;
 
 class Stats
 {
@@ -11,9 +12,13 @@ class Stats
     {
         $db = Database::connection();
         $logs = self::recentLogs($user);
+        $onlineUsers = ($user['role_slug'] ?? '') === 'master' ? UserPresence::onlineUsers() : [];
 
         return [
             'users' => (int) $db->query('SELECT COUNT(*) FROM users')->fetchColumn(),
+            'online_users_count' => count($onlineUsers),
+            'online_users' => $onlineUsers,
+            'online_window_minutes' => UserPresence::onlineWindowMinutes(),
             'news' => (int) $db->query('SELECT COUNT(*) FROM news')->fetchColumn(),
             'pending_news' => (int) $db->query("SELECT COUNT(*) FROM news WHERE status = 'pending'")->fetchColumn(),
             'comments' => (int) $db->query('SELECT COUNT(*) FROM comments')->fetchColumn(),
