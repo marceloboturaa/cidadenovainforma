@@ -13,13 +13,24 @@ function url(string $path = ''): string
 {
     $config = require dirname(__DIR__, 2) . '/config/app.php';
     $baseUrl = $config['base_url'];
+    $requestHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+    $configuredHost = is_string($baseUrl) && $baseUrl !== '' ? (parse_url($baseUrl, PHP_URL_HOST) ?: '') : '';
+    $configuredIsLocal = in_array(strtolower($configuredHost), ['localhost', '127.0.0.1'], true);
+    $requestIsLocal = in_array(strtolower(preg_replace('/:\d+$/', '', $requestHost) ?: ''), ['localhost', '127.0.0.1'], true);
+
+    if ($baseUrl && $configuredIsLocal && $requestHost !== '' && !$requestIsLocal) {
+        $baseUrl = '';
+    }
 
     if (!$baseUrl) {
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+        $host = $requestHost ?: 'localhost';
         $trustedHosts = $config['trusted_hosts'] ?? [];
+        $normalizedTrustedHosts = array_map('strtolower', $trustedHosts);
+        $trustedHostsAreLocalOnly = $normalizedTrustedHosts
+            && !array_diff($normalizedTrustedHosts, ['localhost', '127.0.0.1']);
 
-        if ($trustedHosts && !in_array(strtolower(preg_replace('/:\d+$/', '', $host) ?: ''), array_map('strtolower', $trustedHosts), true)) {
+        if ($trustedHosts && !$trustedHostsAreLocalOnly && !in_array(strtolower(preg_replace('/:\d+$/', '', $host) ?: ''), $normalizedTrustedHosts, true)) {
             $host = $trustedHosts[0] ?? 'localhost';
         }
 
@@ -27,7 +38,8 @@ function url(string $path = ''): string
             $host = 'localhost';
         }
 
-        $basePath = trim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        $basePath = in_array($scriptDir, ['.', '/'], true) ? '' : trim($scriptDir, '/');
         $baseUrl = $scheme . '://' . $host . ($basePath ? '/' . $basePath : '');
     }
 

@@ -4,6 +4,7 @@ require_once __DIR__ . '/env.php';
 
 return [
     'name' => 'Cidade Nova Informa',
+    'description' => 'Cidade Nova Informa traz notícias, serviços, cultura e informações de interesse público para os moradores de Cidade Nova e região.',
     'base_url' => getenv('APP_URL') ?: '',
     'env' => getenv('APP_ENV') ?: 'production',
     'debug' => filter_var(getenv('APP_DEBUG') ?: false, FILTER_VALIDATE_BOOLEAN),

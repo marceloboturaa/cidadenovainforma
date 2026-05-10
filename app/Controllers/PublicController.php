@@ -24,7 +24,6 @@ class PublicController
             'popular' => News::popular(5),
             'menuItems' => MenuItem::visible(),
             'pageTitle' => 'Cidade Nova Informa',
-            'metaDescription' => 'Notícias de Cidade Nova, bairro e região.',
             'canonicalUrl' => url('/'),
         ], 'public');
     }

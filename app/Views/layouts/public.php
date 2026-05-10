@@ -9,6 +9,8 @@ $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool
     return !in_array($path, ['/instituicao', '/login'], true)
         && !in_array($label, ['instituição', 'instituicao', 'entrar', 'entrar no painel'], true);
 });
+$currentUrl = $canonicalUrl ?? url('/');
+$description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa traz notícias, serviços, cultura e informações de interesse público para os moradores de Cidade Nova e região.');
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -16,15 +18,19 @@ $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($pageTitle ?? $app['name']) ?></title>
-    <meta name="description" content="<?= e($metaDescription ?? 'Notícias de Cidade Nova e região.') ?>">
+    <meta name="description" content="<?= e($description) ?>">
     <link rel="canonical" href="<?= e($canonicalUrl ?? ((!empty($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/'))) ?>">
     <meta property="og:title" content="<?= e($pageTitle ?? $app['name']) ?>">
-    <meta property="og:description" content="<?= e($metaDescription ?? 'Notícias de Cidade Nova e região.') ?>">
+    <meta property="og:description" content="<?= e($description) ?>">
     <meta property="og:type" content="<?= e($ogType ?? 'website') ?>">
+    <meta name="twitter:description" content="<?= e($description) ?>">
     <?php if (!empty($ogImage)): ?>
         <meta property="og:image" content="<?= e($ogImage) ?>">
+        <meta property="og:image:secure_url" content="<?= e(preg_replace('#^http://#i', 'https://', $ogImage)) ?>">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:image" content="<?= e($ogImage) ?>">
     <?php endif; ?>
-    <meta property="og:url" content="<?= e((!empty($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/')) ?>">
+    <meta property="og:url" content="<?= e($currentUrl) ?>">
     <link href="<?= e(url('/public/assets/css/public.css') . '?v=' . $publicCssVersion) ?>" rel="stylesheet">
 </head>
 <body>
