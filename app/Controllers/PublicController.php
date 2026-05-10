@@ -214,7 +214,7 @@ class PublicController
             'metaDescription' => $news['summary'] ?: substr(strip_tags($news['content']), 0, 150),
             'canonicalUrl' => url('/noticia/' . $news['slug']),
             'ogType' => 'article',
-            'ogImage' => media_available($news['cover_image'] ?? null) ? media_url($news['cover_image']) : null,
+            'ogImage' => ($publicImage = news_public_image($news)) ? media_url($publicImage) : null,
         ], 'public');
     }
 

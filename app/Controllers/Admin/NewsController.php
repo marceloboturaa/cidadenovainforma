@@ -68,7 +68,9 @@ class NewsController
         $data['status'] = $this->requestedStatus();
         $data['published_at'] = $this->publishedAtFromRequest();
         $data['cover_image'] = $this->uploadCover();
-        $data['content'] .= $this->uploadContentMediaHtml();
+        $contentMedia = $this->uploadContentMedia();
+        $data['content'] .= $contentMedia['html'];
+        $data['cover_image'] = $data['cover_image'] ?: $contentMedia['first_image'];
 
         $newsId = News::create($data);
         Tag::syncForNews($newsId, $_POST['tags'] ?? '');
@@ -107,7 +109,9 @@ class NewsController
         $data['status'] = $this->nextStatusAfterEdit($newsItem);
         $data['published_at'] = $this->publishedAtFromRequest() ?: $newsItem['published_at'];
         $data['cover_image'] = $this->coverImageFromRequest($newsItem['cover_image']);
-        $data['content'] .= $this->uploadContentMediaHtml();
+        $contentMedia = $this->uploadContentMedia();
+        $data['content'] .= $contentMedia['html'];
+        $data['cover_image'] = $data['cover_image'] ?: $contentMedia['first_image'];
 
         News::update((int) $newsItem['id'], $data);
         Tag::syncForNews((int) $newsItem['id'], $_POST['tags'] ?? '');
@@ -344,10 +348,10 @@ class NewsController
         return $this->uploadCover() ?: $existing;
     }
 
-    private function uploadContentMediaHtml(): string
+    private function uploadContentMedia(): array
     {
         if (empty($_FILES['content_media']['name']) || !is_array($_FILES['content_media']['name'])) {
-            return '';
+            return ['html' => '', 'first_image' => null];
         }
 
         $allowed = [
@@ -369,6 +373,7 @@ class NewsController
         }
 
         $html = [];
+        $firstImage = null;
         foreach ($_FILES['content_media']['name'] as $index => $name) {
             if (($_FILES['content_media']['error'][$index] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
                 continue;
@@ -395,6 +400,7 @@ class NewsController
 
             $path = '/public/uploads/news/' . $filename;
             if ($type === 'image') {
+                $firstImage ??= $path;
                 $html[] = '<p><img src="' . e($path) . '" alt=""></p>';
             } elseif ($type === 'video') {
                 $html[] = '<p><video controls src="' . e($path) . '"></video></p>';
@@ -403,7 +409,10 @@ class NewsController
             }
         }
 
-        return $html ? "\n" . implode("\n", $html) : '';
+        return [
+            'html' => $html ? "\n" . implode("\n", $html) : '',
+            'first_image' => $firstImage,
+        ];
     }
 
     private function externalMediaUrl(string $url, string $type): ?string

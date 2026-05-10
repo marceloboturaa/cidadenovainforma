@@ -36,7 +36,7 @@ function url(string $path = ''): string
 
 function media_url(string $path = ''): string
 {
-    $path = trim($path);
+    $path = normalize_media_path($path) ?? '';
 
     if ($path === '') {
         return '';
@@ -71,7 +71,7 @@ function media_available(?string $path): bool
         return false;
     }
 
-    $localPath = str_replace('\\', '/', rawurldecode($localPath));
+    $localPath = normalize_media_path(str_replace('\\', '/', rawurldecode($localPath))) ?? '';
 
     if (str_contains($localPath, '../')) {
         return false;
@@ -137,6 +137,19 @@ function normalize_media_path(?string $path): ?string
 
     if (preg_match('#^(https?:)?//#i', $path)) {
         return $path;
+    }
+
+    $config = require dirname(__DIR__, 2) . '/config/app.php';
+    $basePath = parse_url($config['base_url'] ?? '', PHP_URL_PATH);
+    if (is_string($basePath) && $basePath !== '' && $basePath !== '/') {
+        $basePath = '/' . trim($basePath, '/');
+        if ($path === $basePath) {
+            return '/';
+        }
+
+        if (str_starts_with($path, $basePath . '/')) {
+            $path = substr($path, strlen($basePath));
+        }
     }
 
     if (str_starts_with($path, 'public/uploads/')) {
