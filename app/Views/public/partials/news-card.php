@@ -1,7 +1,8 @@
 <article class="news-card">
     <a href="<?= e(url('/noticia/' . $item['slug'])) ?>">
-        <?php if (media_available($item['cover_image'] ?? null)): ?>
-            <img src="<?= e(media_url($item['cover_image'])) ?>" alt="<?= e($item['title']) ?>" loading="lazy" onerror="this.remove()">
+        <?php $publicImage = news_public_image($item); ?>
+        <?php if ($publicImage): ?>
+            <img src="<?= e(media_url($publicImage)) ?>" alt="<?= e($item['title']) ?>" loading="lazy" onerror="this.remove()">
         <?php endif; ?>
         <span><?= e($item['category_name'] ?? 'Geral') ?></span>
         <?php if (!empty($item['is_archive'])): ?>

@@ -19,8 +19,9 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
         <?php if ($hero): ?>
             <article class="lead-story">
                 <a href="<?= e(url('/noticia/' . $hero['slug'])) ?>">
-                    <?php if (media_available($hero['cover_image'] ?? null)): ?>
-                        <img src="<?= e(media_url($hero['cover_image'])) ?>" alt="<?= e($hero['title']) ?>" onerror="this.remove()">
+                    <?php $heroImage = news_public_image($hero); ?>
+                    <?php if ($heroImage): ?>
+                        <img src="<?= e(media_url($heroImage)) ?>" alt="<?= e($hero['title']) ?>" onerror="this.remove()">
                     <?php endif; ?>
                     <span><?= e($hero['category_name'] ?? 'Destaque') ?></span>
                     <h1><?= e($hero['title']) ?></h1>

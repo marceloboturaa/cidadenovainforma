@@ -44,9 +44,10 @@
         </section>
     <?php endif; ?>
 
+    <?php $publicImage = news_public_image($news); ?>
     <?php $hasCoverImage = media_available($news['cover_image'] ?? null); ?>
-    <?php if ($hasCoverImage): ?>
-        <img class="article-cover" src="<?= e(media_url($news['cover_image'])) ?>" alt="<?= e($news['title']) ?>" onerror="this.remove()">
+    <?php if ($hasCoverImage && $publicImage): ?>
+        <img class="article-cover" src="<?= e(media_url($publicImage)) ?>" alt="<?= e($news['title']) ?>" onerror="this.remove()">
     <?php endif; ?>
 
     <div class="article-content">
@@ -70,7 +71,7 @@
                 'name' => 'Cidade Nova Informa',
             ],
             'mainEntityOfPage' => url('/noticia/' . $news['slug']),
-            'image' => $hasCoverImage ? media_url($news['cover_image']) : null,
+            'image' => $publicImage ? media_url($publicImage) : null,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
     </script>
 

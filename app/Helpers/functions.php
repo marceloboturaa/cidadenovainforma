@@ -55,7 +55,7 @@ function media_url(string $path = ''): string
 
 function media_available(?string $path): bool
 {
-    $path = trim((string) $path);
+    $path = normalize_media_path($path) ?? '';
 
     if ($path === '') {
         return false;
@@ -91,6 +91,63 @@ function media_available(?string $path): bool
     }
 
     return false;
+}
+
+function first_article_image(?string $content): ?string
+{
+    $content = (string) $content;
+
+    if ($content === '') {
+        return null;
+    }
+
+    if (!preg_match_all('/<img\b[^>]*\bsrc\s*=\s*("|\')([^"\']+)\1/i', $content, $matches)) {
+        return null;
+    }
+
+    foreach ($matches[2] as $src) {
+        $src = normalize_media_path($src);
+
+        if ($src !== null && media_available($src)) {
+            return $src;
+        }
+    }
+
+    return null;
+}
+
+function news_public_image(array $news): ?string
+{
+    $cover = normalize_media_path($news['cover_image'] ?? null);
+
+    if ($cover !== null && media_available($cover)) {
+        return $cover;
+    }
+
+    return first_article_image($news['content'] ?? '');
+}
+
+function normalize_media_path(?string $path): ?string
+{
+    $path = trim((string) $path);
+
+    if ($path === '') {
+        return null;
+    }
+
+    if (preg_match('#^(https?:)?//#i', $path)) {
+        return $path;
+    }
+
+    if (str_starts_with($path, 'public/uploads/')) {
+        return '/' . $path;
+    }
+
+    if (str_starts_with($path, 'uploads/')) {
+        return '/public/' . $path;
+    }
+
+    return $path;
 }
 
 function redirect(string $path): never
@@ -226,7 +283,7 @@ function clean_article_html(string $html): string
         $attrs = $matches[1];
         preg_match('/src\s*=\s*("|\')([^"\']+)\1/i', $attrs, $src);
         preg_match('/alt\s*=\s*("|\')([^"\']*)\1/i', $attrs, $alt);
-        $url = $src[2] ?? '';
+        $url = normalize_media_path($src[2] ?? '') ?? '';
 
         if (!preg_match('#^(https?://|/)#i', $url)) {
             return '';
