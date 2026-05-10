@@ -86,7 +86,14 @@ class BackupController
             redirect('/admin/backups');
         }
 
-        $backupPath = $this->createNewsExport();
+        $selectedIds = $this->selectedNewsIdsFromRequest();
+
+        if (($_POST['export_scope'] ?? '') === 'selected' && !$selectedIds) {
+            Session::flash('error', 'Selecione pelo menos uma notícia para exportar.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/news');
+        }
+
+        $backupPath = $this->createNewsExport($selectedIds ?: null);
         $filename = basename($backupPath);
 
         header('Content-Type: application/zip');
@@ -181,7 +188,7 @@ class BackupController
         return $zipPath;
     }
 
-    private function createNewsExport(): string
+    private function createNewsExport(?array $newsIds = null): string
     {
         $root = dirname(__DIR__, 3);
         $backupDir = $root . '/storage/backups';
@@ -190,7 +197,7 @@ class BackupController
             mkdir($backupDir, 0775, true);
         }
 
-        $payload = $this->newsExportPayload();
+        $payload = $this->newsExportPayload($newsIds);
         $zipPath = $backupDir . '/cni-noticias-' . date('Ymd-His') . '.zip';
         $zip = new \ZipArchive();
 
@@ -223,17 +230,33 @@ class BackupController
         return $zipPath;
     }
 
-    private function newsExportPayload(): array
+    private function newsExportPayload(?array $newsIds = null): array
     {
         Tag::ensureSchema();
 
         $db = Database::connection();
-        $newsRows = $db->query(
+        $params = [];
+        $where = '';
+
+        if ($newsIds) {
+            $placeholders = [];
+            foreach ($newsIds as $index => $id) {
+                $key = 'id_' . $index;
+                $placeholders[] = ':' . $key;
+                $params[$key] = $id;
+            }
+            $where = ' WHERE news.id IN (' . implode(', ', $placeholders) . ')';
+        }
+
+        $stmt = $db->prepare(
             'SELECT news.*, categories.name AS category_name, categories.slug AS category_slug
              FROM news
-             LEFT JOIN categories ON categories.id = news.category_id
-             ORDER BY news.created_at ASC, news.id ASC'
-        )->fetchAll();
+             LEFT JOIN categories ON categories.id = news.category_id' .
+            $where .
+            ' ORDER BY news.created_at ASC, news.id ASC'
+        );
+        $stmt->execute($params);
+        $newsRows = $stmt->fetchAll();
 
         $tagsStmt = $db->prepare(
             'SELECT tags.name, COALESCE(NULLIF(tags.display_name, ""), tags.name) AS display_name, tags.slug
@@ -258,6 +281,20 @@ class BackupController
             'news_count' => count($newsRows),
             'news' => $newsRows,
         ];
+    }
+
+    private function selectedNewsIdsFromRequest(): array
+    {
+        $ids = $_POST['news_ids'] ?? [];
+
+        if (!is_array($ids)) {
+            return [];
+        }
+
+        $ids = array_map('intval', $ids);
+        $ids = array_values(array_unique(array_filter($ids, fn (int $id): bool => $id > 0)));
+
+        return array_slice($ids, 0, 200);
     }
 
     private function restoreNewsExport(string $uploadedFile, bool $updateExisting): array

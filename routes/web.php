@@ -62,6 +62,7 @@ $router->post('/admin/news/approve', [NewsController::class, 'approve']);
 $router->post('/admin/news/reject', [NewsController::class, 'reject']);
 $router->post('/admin/news/archive', [NewsController::class, 'archive']);
 $router->post('/admin/news/delete', [NewsController::class, 'delete']);
+$router->post('/admin/news/bulk', [NewsController::class, 'bulk']);
 
 $router->get('/admin/categories', [CategoryController::class, 'index']);
 $router->get('/admin/categories/edit', [CategoryController::class, 'index']);

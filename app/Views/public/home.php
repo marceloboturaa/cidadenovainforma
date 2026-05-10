@@ -25,7 +25,7 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
                     <?php endif; ?>
                     <span><?= e($hero['category_name'] ?? 'Destaque') ?></span>
                     <h1><?= e($hero['title']) ?></h1>
-                    <p><?= e($hero['summary'] ?: substr(strip_tags($hero['content']), 0, 170)) ?></p>
+                    <p><?= e(text_excerpt($hero['summary'] ?: $hero['content'], 170)) ?></p>
                 </a>
             </article>
         <?php else: ?>
@@ -54,8 +54,51 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
     <h2>Últimas notícias</h2>
 </section>
 
-<section class="news-grid">
-    <?php foreach ($latest as $item): ?>
+<section class="news-grid" data-latest-grid data-page-size="9">
+    <?php foreach ($latest as $index => $item): ?>
+        <?php $hiddenClass = $index >= 9 ? ' is-hidden' : ''; ?>
         <?php require dirname(__DIR__) . '/public/partials/news-card.php'; ?>
     <?php endforeach; ?>
 </section>
+
+<?php if (count($latest) > 9): ?>
+    <div class="news-load-sentinel" data-latest-sentinel aria-hidden="true"></div>
+<?php endif; ?>
+
+<script>
+(() => {
+    const grid = document.querySelector('[data-latest-grid]');
+    const sentinel = document.querySelector('[data-latest-sentinel]');
+    if (!grid || !sentinel) {
+        return;
+    }
+
+    const pageSize = Number(grid.dataset.pageSize || 9);
+    let observer = null;
+    const revealNext = () => {
+        const hidden = Array.from(grid.querySelectorAll('.news-card.is-hidden')).slice(0, pageSize);
+        hidden.forEach((card) => card.classList.remove('is-hidden'));
+        if (!grid.querySelector('.news-card.is-hidden')) {
+            sentinel.remove();
+            if (observer) {
+                observer.disconnect();
+            }
+        }
+    };
+
+    if (!('IntersectionObserver' in window)) {
+        while (grid.querySelector('.news-card.is-hidden')) {
+            revealNext();
+        }
+        return;
+    }
+
+    observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+            revealNext();
+        }
+    }, { rootMargin: '320px 0px' });
+
+    observer.observe(sentinel);
+})();
+</script>

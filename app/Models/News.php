@@ -212,6 +212,8 @@ class News
 
     public static function create(array $data): int
     {
+        self::ensureSchema();
+
         $stmt = Database::connection()->prepare(
             'INSERT INTO news
                 (author_id, category_id, title, slug, summary, content, cover_image, type, status, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, published_at, created_at, updated_at)
@@ -225,6 +227,8 @@ class News
 
     public static function update(int $id, array $data): void
     {
+        self::ensureSchema();
+
         $payload = self::payload($data);
         $payload['id'] = $id;
 
@@ -314,6 +318,24 @@ class News
             ->fetchAll();
 
         return array_column($rows, 'total', 'status');
+    }
+
+    public static function ensureSchema(): void
+    {
+        static $ensured = false;
+
+        if ($ensured) {
+            return;
+        }
+
+        $ensured = true;
+        $column = Database::connection()
+            ->query("SHOW COLUMNS FROM news LIKE 'summary'")
+            ->fetch();
+
+        if ($column && stripos((string) ($column['Type'] ?? ''), 'text') === false) {
+            Database::connection()->exec('ALTER TABLE news MODIFY summary TEXT NULL');
+        }
     }
 
     private static function payload(array $data): array

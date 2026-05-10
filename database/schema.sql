@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS news (
     region_id BIGINT UNSIGNED NULL,
     title VARCHAR(220) NOT NULL,
     slug VARCHAR(240) NOT NULL UNIQUE,
-    summary VARCHAR(320) NULL,
+    summary TEXT NULL,
     content LONGTEXT NOT NULL,
     cover_image VARCHAR(255) NULL,
     type ENUM('noticia','reportagem','artigo','coluna') NOT NULL DEFAULT 'noticia',

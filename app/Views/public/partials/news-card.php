@@ -1,4 +1,4 @@
-<article class="news-card">
+<article class="news-card<?= e($hiddenClass ?? '') ?>">
     <a href="<?= e(url('/noticia/' . $item['slug'])) ?>">
         <?php $publicImage = news_public_image($item); ?>
         <?php if ($publicImage): ?>
@@ -9,6 +9,6 @@
             <span class="archive-badge"><i aria-hidden="true"></i>Acervo</span>
         <?php endif; ?>
         <h2><?= e($item['title']) ?></h2>
-        <p><?= e($item['summary'] ?: substr(strip_tags($item['content']), 0, 140)) ?></p>
+        <p><?= e(text_excerpt($item['summary'] ?: $item['content'], 140)) ?></p>
     </a>
 </article>

@@ -20,7 +20,7 @@ class PublicController
         View::render('public/home', [
             'featured' => News::publicList(['featured' => true], 5),
             'urgent' => News::publicList(['urgent' => true], 4),
-            'latest' => News::publicList([], 12),
+            'latest' => News::publicList([], 50),
             'popular' => News::popular(5),
             'menuItems' => MenuItem::visible(),
             'pageTitle' => 'Cidade Nova Informa',
@@ -210,7 +210,7 @@ class PublicController
             'related' => News::publicList(['category_id' => $news['category_id']], 4),
             'menuItems' => MenuItem::visible(),
             'pageTitle' => $news['title'] . ' - Cidade Nova Informa',
-            'metaDescription' => $news['summary'] ?: substr(strip_tags($news['content']), 0, 150),
+            'metaDescription' => text_excerpt($news['summary'] ?: $news['content'], 150),
             'canonicalUrl' => url('/noticia/' . $news['slug']),
             'ogType' => 'article',
             'ogImage' => ($publicImage = news_public_image($news)) ? media_url($publicImage) : null,

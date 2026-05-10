@@ -17,11 +17,16 @@ $status = $newsItem['status'] ?? 'draft';
     <section class="panel editor-main">
         <div class="editor-section">
             <h2>Texto da matéria</h2>
-            <label class="form-label">Título</label>
-            <input class="form-control form-control-lg" name="title" value="<?= e($newsItem['title'] ?? '') ?>" required maxlength="220" placeholder="Título principal da matéria">
+            <div class="editor-title-row">
+                <label class="form-label" for="news-title">Título</label>
+                <input class="form-control form-control-lg" id="news-title" name="title" value="<?= e($newsItem['title'] ?? '') ?>" required maxlength="220" placeholder="Título principal da matéria">
+            </div>
 
-            <label class="form-label mt-3">Resumo</label>
-            <textarea class="form-control" name="summary" rows="3" maxlength="320" placeholder="Resumo curto para a capa e compartilhamento"><?= e($newsItem['summary'] ?? '') ?></textarea>
+            <div class="editor-summary-row">
+                <label class="form-label mt-3" for="news-summary">Resumo</label>
+                <textarea class="form-control" id="news-summary" name="summary" rows="5" maxlength="1200" placeholder="Resumo para a capa, compartilhamento e contexto da matéria"><?= e($newsItem['summary'] ?? '') ?></textarea>
+                <p class="field-hint">O resumo completo aparece na notícia; capas e listas usam uma versão curta automaticamente.</p>
+            </div>
         </div>
 
         <div class="editor-section">
@@ -40,10 +45,16 @@ $status = $newsItem['status'] ?? 'draft';
                 </div>
 
                 <div class="toolbar-group">
-                    <button type="button" class="toolbar-text-button" data-block-format="P">Normal</button>
-                    <button type="button" class="toolbar-text-button" data-block-format="H2">Título</button>
-                    <button type="button" class="toolbar-text-button" data-block-format="H3">Subtítulo</button>
-                    <button type="button" class="toolbar-text-button" data-block-format="BLOCKQUOTE">Citação</button>
+                    <div class="rich-menu">
+                        <button type="button" class="toolbar-icon" data-menu-toggle title="Estilo do texto"><i class="bi bi-type" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                        <div class="rich-menu-popover">
+                            <span class="rich-menu-label">Estilo do texto</span>
+                            <button type="button" data-block-format="P"><i class="bi bi-text-paragraph" aria-hidden="true"></i>Normal</button>
+                            <button type="button" data-block-format="H2"><i class="bi bi-type-h2" aria-hidden="true"></i>Título</button>
+                            <button type="button" data-block-format="H3"><i class="bi bi-type-h3" aria-hidden="true"></i>Subtítulo</button>
+                            <button type="button" data-block-format="BLOCKQUOTE"><i class="bi bi-quote" aria-hidden="true"></i>Citação</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="toolbar-group">
@@ -71,8 +82,19 @@ $status = $newsItem['status'] ?? 'draft';
                     <div class="rich-menu">
                         <button type="button" class="toolbar-icon" data-menu-toggle title="Imagem"><i class="bi bi-image" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
                         <div class="rich-menu-popover">
+                            <span class="rich-menu-label">Inserir imagem</span>
                             <button type="button" data-upload-target="content-media-input"><i class="bi bi-cloud-upload" aria-hidden="true"></i>Fazer upload do computador</button>
                             <button type="button" data-action="image"><i class="bi bi-link-45deg" aria-hidden="true"></i>Por URL</button>
+                            <span class="rich-menu-label">Tamanho</span>
+                            <button type="button" data-image-size="small"><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i>Pequena</button>
+                            <button type="button" data-image-size="medium"><i class="bi bi-aspect-ratio" aria-hidden="true"></i>Média</button>
+                            <button type="button" data-image-size="large"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>Grande</button>
+                            <button type="button" data-image-size="full"><i class="bi bi-fullscreen" aria-hidden="true"></i>Largura total</button>
+                            <span class="rich-menu-label">Posição</span>
+                            <button type="button" data-image-align="left"><i class="bi bi-text-left" aria-hidden="true"></i>À esquerda</button>
+                            <button type="button" data-image-align="center"><i class="bi bi-text-center" aria-hidden="true"></i>Centralizada</button>
+                            <button type="button" data-image-align="right"><i class="bi bi-text-right" aria-hidden="true"></i>À direita</button>
+                            <button type="button" data-image-align="justify"><i class="bi bi-justify" aria-hidden="true"></i>Justificada</button>
                         </div>
                     </div>
                     <div class="rich-menu">
@@ -92,16 +114,27 @@ $status = $newsItem['status'] ?? 'draft';
                 </div>
 
                 <div class="toolbar-group">
-                    <button type="button" class="toolbar-icon" data-command="justifyLeft" title="Alinhar à esquerda"><i class="bi bi-text-left" aria-hidden="true"></i></button>
-                    <button type="button" class="toolbar-icon" data-command="justifyCenter" title="Centralizar"><i class="bi bi-text-center" aria-hidden="true"></i></button>
-                    <button type="button" class="toolbar-icon" data-command="justifyRight" title="Alinhar à direita"><i class="bi bi-text-right" aria-hidden="true"></i></button>
-                    <button type="button" class="toolbar-icon" data-command="justifyFull" title="Justificar"><i class="bi bi-justify" aria-hidden="true"></i></button>
+                    <div class="rich-menu">
+                        <button type="button" class="toolbar-icon" data-menu-toggle title="Alinhamento"><i class="bi bi-text-left" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                        <div class="rich-menu-popover">
+                            <span class="rich-menu-label">Alinhamento</span>
+                            <button type="button" data-command="justifyLeft"><i class="bi bi-text-left" aria-hidden="true"></i>À esquerda</button>
+                            <button type="button" data-command="justifyCenter"><i class="bi bi-text-center" aria-hidden="true"></i>Centralizado</button>
+                            <button type="button" data-command="justifyRight"><i class="bi bi-text-right" aria-hidden="true"></i>À direita</button>
+                            <button type="button" data-command="justifyFull"><i class="bi bi-justify" aria-hidden="true"></i>Justificado</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="toolbar-group">
-                    <button type="button" class="toolbar-icon" data-command="insertUnorderedList" title="Lista"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
-                    <button type="button" class="toolbar-icon" data-command="insertOrderedList" title="Lista numerada"><i class="bi bi-list-ol" aria-hidden="true"></i></button>
-                    <button type="button" class="toolbar-icon" data-command="formatBlock" data-value="blockquote" title="Citação"><i class="bi bi-quote" aria-hidden="true"></i></button>
+                    <div class="rich-menu">
+                        <button type="button" class="toolbar-icon" data-menu-toggle title="Listas"><i class="bi bi-list-ul" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                        <div class="rich-menu-popover">
+                            <span class="rich-menu-label">Listas</span>
+                            <button type="button" data-command="insertUnorderedList"><i class="bi bi-list-ul" aria-hidden="true"></i>Lista com pontos</button>
+                            <button type="button" data-command="insertOrderedList"><i class="bi bi-list-ol" aria-hidden="true"></i>Lista numerada</button>
+                        </div>
+                    </div>
                     <button type="button" class="toolbar-icon" data-command="insertHorizontalRule" title="Linha divisória"><i class="bi bi-dash-lg" aria-hidden="true"></i></button>
                     <button type="button" class="toolbar-icon" data-action="clear-format" title="Limpar formatação"><i class="bi bi-eraser" aria-hidden="true"></i></button>
                 </div>
@@ -111,13 +144,25 @@ $status = $newsItem['status'] ?? 'draft';
                 <?= article_html($newsItem['content'] ?? '') ?>
             </div>
             <textarea class="html-editor" data-html-editor hidden spellcheck="false"></textarea>
+            <input class="content-media-hidden" id="content-media-input" name="content_media[]" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,audio/mpeg,audio/mp3,audio/ogg,audio/wav" multiple>
         </div>
     </section>
 
     <aside class="panel editor-side">
-        <h2>Configuração</h2>
+        <div class="editor-side-head">
+            <div>
+                <span>Configuração</span>
+                <h2>Publicação</h2>
+            </div>
+            <?php if ($isEdit): ?>
+                <div class="current-status">
+                    <?= e(\App\Models\News::STATUS_LABELS[$status] ?? $status) ?>
+                </div>
+            <?php endif; ?>
+        </div>
 
         <div class="config-block">
+            <h3>Organização</h3>
             <?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
                 <label class="form-label">Criador da notícia</label>
                 <select class="form-select" name="author_id">
@@ -154,23 +199,20 @@ $status = $newsItem['status'] ?? 'draft';
         </div>
 
         <div class="config-block">
+            <h3>Imagem de capa</h3>
             <label class="form-label">Imagem de capa</label>
             <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp">
             <label class="form-label mt-3">Ou link externo da capa</label>
             <input class="form-control" name="cover_image_url" value="<?= !empty($newsItem['cover_image']) && preg_match('#^https?://#i', $newsItem['cover_image']) ? e($newsItem['cover_image']) : '' ?>" placeholder="https://site.com/imagem.jpg">
+            <p class="field-hint">A capa aparece nas listagens e no compartilhamento. Imagens do corpo ficam no menu Imagem do editor.</p>
             <?php if (!empty($newsItem['cover_image'])): ?>
                 <img class="cover-preview" src="<?= e(media_url($newsItem['cover_image'])) ?>" alt="" onerror="this.remove()">
             <?php endif; ?>
         </div>
 
-        <div class="config-block">
-            <label class="form-label">Mídias para inserir no corpo</label>
-            <input class="form-control" id="content-media-input" name="content_media[]" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,audio/mpeg,audio/mp3,audio/ogg,audio/wav" multiple>
-            <p class="field-hint">Imagens, vídeos e áudios enviados aqui entram no fim do texto ao salvar. Links externos podem ser inseridos pelos botões do editor.</p>
-        </div>
-
         <?php if (\App\Core\Auth::can('news.manage')): ?>
             <div class="config-block compact-checks">
+                <h3>Destaques</h3>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="featured" id="featured" <?= checked((bool) ($newsItem['featured'] ?? false)) ?>>
                     <label class="form-check-label" for="featured">Destaque na home</label>
@@ -183,6 +225,7 @@ $status = $newsItem['status'] ?? 'draft';
         <?php endif; ?>
 
         <div class="archive-box">
+            <h3>Acervo</h3>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="is_archive" id="is_archive" <?= checked((bool) ($newsItem['is_archive'] ?? false)) ?>>
                 <label class="form-check-label" for="is_archive">Matéria de acervo</label>
@@ -203,12 +246,6 @@ $status = $newsItem['status'] ?? 'draft';
             <label class="form-label mt-3">Observação editorial</label>
             <textarea class="form-control" name="archive_note" rows="3" placeholder="Ex.: As informações refletem o contexto da época."><?= e($newsItem['archive_note'] ?? '') ?></textarea>
         </div>
-
-        <?php if ($isEdit): ?>
-            <div class="current-status">
-                Status atual: <strong><?= e(\App\Models\News::STATUS_LABELS[$status] ?? $status) ?></strong>
-            </div>
-        <?php endif; ?>
 
         <div class="editor-actions">
             <button class="btn btn-outline-secondary w-100" name="intent" value="draft">Salvar rascunho</button>

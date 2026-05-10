@@ -230,6 +230,33 @@ function checked(bool $value): string
     return $value ? 'checked' : '';
 }
 
+function text_excerpt(?string $value, int $limit = 160): string
+{
+    $text = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)) ?? '');
+
+    if ($text === '' || $limit <= 0) {
+        return '';
+    }
+
+    if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+        if (mb_strlen($text, 'UTF-8') <= $limit) {
+            return $text;
+        }
+
+        $excerpt = rtrim(mb_substr($text, 0, $limit - 1, 'UTF-8'));
+    } else {
+        if (strlen($text) <= $limit) {
+            return $text;
+        }
+
+        $excerpt = rtrim(substr($text, 0, $limit - 1));
+    }
+
+    $excerpt = preg_replace('/\s+\S*$/', '', $excerpt) ?: $excerpt;
+
+    return rtrim($excerpt, ' .,;:') . '...';
+}
+
 function link_line(string $value): array
 {
     $value = trim($value);
@@ -269,13 +296,16 @@ function clean_article_html(string $html): string
     $html = preg_replace_callback('/<a\s+([^>]+)>/i', function (array $matches): string {
         $attrs = $matches[1];
         preg_match('/href\s*=\s*("|\')([^"\']+)\1/i', $attrs, $href);
+        preg_match('/title\s*=\s*("|\')([^"\']*)\1/i', $attrs, $title);
         $url = $href[2] ?? '#';
 
         if (!preg_match('#^(https?://|mailto:|/)#i', $url)) {
             $url = '#';
         }
 
-        return '<a href="' . e($url) . '" target="_blank" rel="noopener">';
+        $titleAttribute = trim($title[2] ?? '') !== '' ? ' title="' . e(trim($title[2])) . '"' : '';
+
+        return '<a href="' . e($url) . '"' . $titleAttribute . ' target="_blank" rel="noopener">';
     }, $html) ?? $html;
 
     $html = preg_replace_callback('/<span\s+([^>]*)>/i', function (array $matches): string {
@@ -308,6 +338,7 @@ function clean_article_html(string $html): string
         $attrs = $matches[1];
         preg_match('/src\s*=\s*("|\')([^"\']+)\1/i', $attrs, $src);
         preg_match('/alt\s*=\s*("|\')([^"\']*)\1/i', $attrs, $alt);
+        preg_match('/class\s*=\s*("|\')([^"\']+)\1/i', $attrs, $class);
         $url = normalize_media_path($src[2] ?? '') ?? '';
 
         if (!preg_match('#^(https?://|/)#i', $url)) {
@@ -318,7 +349,21 @@ function clean_article_html(string $html): string
             return '';
         }
 
-        return '<img src="' . e($url) . '" alt="' . e($alt[2] ?? '') . '" loading="lazy" onerror="this.remove()">';
+        $classes = preg_split('/\s+/', trim($class[2] ?? '')) ?: [];
+        $allowedClasses = [
+            'image-size-small',
+            'image-size-medium',
+            'image-size-large',
+            'image-size-full',
+            'image-align-left',
+            'image-align-center',
+            'image-align-right',
+            'image-align-justify',
+        ];
+        $safeClasses = array_values(array_intersect($classes, $allowedClasses));
+        $classAttribute = $safeClasses ? ' class="' . e(implode(' ', $safeClasses)) . '"' : '';
+
+        return '<img src="' . e(media_url($url)) . '" alt="' . e($alt[2] ?? '') . '"' . $classAttribute . ' loading="lazy" onerror="this.remove()">';
     }, $html) ?? $html;
 
     $html = preg_replace_callback('/<iframe\s+([^>]*)>\s*<\/iframe>/i', function (array $matches): string {
@@ -346,7 +391,7 @@ function clean_article_html(string $html): string
 
         $playsInline = $tag === 'video' ? ' playsinline' : '';
 
-        return '<' . $tag . ' controls' . $playsInline . ' src="' . e($url) . '"></' . $tag . '>';
+        return '<' . $tag . ' controls' . $playsInline . ' src="' . e(media_url($url)) . '"></' . $tag . '>';
     }, $html) ?? $html;
 
     $html = preg_replace('/<(br|strong|b|em|i|u|ul|ol)\s+[^>]*>/i', '<$1>', $html) ?? $html;
