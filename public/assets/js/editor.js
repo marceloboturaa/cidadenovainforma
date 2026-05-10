@@ -1,13 +1,24 @@
 (function () {
-    const editor = document.querySelector('.rich-editor[data-target]');
-    if (!editor) {
+    const editors = document.querySelectorAll('.rich-editor[data-target]');
+    if (!editors.length) {
         return;
     }
 
+    editors.forEach(initRichEditor);
+
+    function initRichEditor(editor) {
     const input = document.getElementById(editor.dataset.target);
     const form = editor.closest('form');
+    if (!input || !form) {
+        return;
+    }
+
     const htmlEditor = form.querySelector('[data-html-editor]');
     const toolbar = form.querySelector('.rich-toolbar');
+    if (!toolbar) {
+        return;
+    }
+
     let htmlMode = false;
     let savedRange = null;
 
@@ -16,10 +27,20 @@
     }
 
     toolbar.addEventListener('mousedown', (event) => {
+        saveSelection();
         if (event.target.closest('button')) {
             event.preventDefault();
         }
+    });
+
+    toolbar.addEventListener('touchstart', () => {
         saveSelection();
+    }, { passive: true });
+
+    toolbar.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeMenus();
+        }
     });
 
     toolbar.addEventListener('click', (event) => {
@@ -51,6 +72,7 @@
             editor.focus();
             document.execCommand('foreColor', false, button.dataset.color);
             syncFromVisual();
+            closeMenus();
             return;
         }
 
@@ -64,6 +86,9 @@
         }
 
         if (button.dataset.action === 'html-toggle') {
+            if (!htmlEditor) {
+                return;
+            }
             toggleHtmlMode(button);
             return;
         }
@@ -191,12 +216,63 @@
         const wasOpen = menu.classList.contains('is-open');
         closeMenus();
         menu.classList.toggle('is-open', !wasOpen);
+        if (!wasOpen) {
+            positionMenu(menu);
+        }
     }
 
     function closeMenus() {
         toolbar.querySelectorAll('.rich-menu.is-open').forEach((menu) => {
             menu.classList.remove('is-open');
+            resetMenuPosition(menu);
         });
+    }
+
+    function positionMenu(menu) {
+        const popover = menu.querySelector('.rich-menu-popover');
+        if (!popover) {
+            return;
+        }
+
+        resetMenuPosition(menu);
+
+        if (window.matchMedia('(max-width: 560px)').matches) {
+            const buttonRect = menu.getBoundingClientRect();
+            const preferredTop = buttonRect.bottom + 8;
+            const top = preferredTop > window.innerHeight - 160 ? 12 : preferredTop;
+
+            popover.style.position = 'fixed';
+            popover.style.top = `${top}px`;
+            popover.style.left = '12px';
+            popover.style.right = '12px';
+            popover.style.maxWidth = 'none';
+            popover.style.maxHeight = `${Math.max(160, window.innerHeight - top - 12)}px`;
+            popover.style.overflowY = 'auto';
+            return;
+        }
+
+        const rect = popover.getBoundingClientRect();
+        const margin = 12;
+
+        if (rect.right > window.innerWidth - margin) {
+            popover.style.left = 'auto';
+            popover.style.right = '0';
+        }
+    }
+
+    function resetMenuPosition(menu) {
+        const popover = menu.querySelector('.rich-menu-popover');
+        if (!popover) {
+            return;
+        }
+
+        popover.style.position = '';
+        popover.style.top = '';
+        popover.style.left = '';
+        popover.style.right = '';
+        popover.style.maxWidth = '';
+        popover.style.maxHeight = '';
+        popover.style.overflowY = '';
     }
 
     function syncFromVisual() {
@@ -525,5 +601,6 @@
 
     function escapeAttribute(value) {
         return escapeHtml(value).replace(/"/g, '&quot;');
+    }
     }
 })();

@@ -218,4 +218,5 @@ $status = $newsItem['status'] ?? 'draft';
         </div>
     </aside>
 </form>
-<script src="<?= e(url('/public/assets/js/editor.js')) ?>"></script>
+<?php $editorJsVersion = file_exists(dirname(__DIR__, 4) . '/public/assets/js/editor.js') ? filemtime(dirname(__DIR__, 4) . '/public/assets/js/editor.js') : time(); ?>
+<script src="<?= e(url('/public/assets/js/editor.js') . '?v=' . $editorJsVersion) ?>"></script>
