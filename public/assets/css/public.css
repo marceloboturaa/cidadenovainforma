@@ -44,6 +44,7 @@ a {
     font-size: 1.62rem;
     font-weight: 900;
     line-height: 1.1;
+    letter-spacing: 0;
 }
 
 .menu-toggle {
@@ -1230,6 +1231,7 @@ main {
 
 .site-footer {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
     max-width: 1180px;
@@ -1237,6 +1239,13 @@ main {
     padding: 28px 20px;
     border-top: 1px solid var(--line);
     color: var(--muted);
+}
+
+.site-footer strong {
+    color: var(--brand);
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: 0;
 }
 
 @media (max-width: 900px) {

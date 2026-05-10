@@ -1,6 +1,7 @@
 <?php $app = require dirname(__DIR__, 3) . '/config/app.php'; ?>
 <?php $publicCssVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/css/public.css'); ?>
 <?php $publicJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/public-menu.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/public-menu.js') : time(); ?>
+<?php $faviconVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/favicon-primary.svg'); ?>
 <?php
 $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool {
     $label = mb_strtolower(trim($item['label'] ?? ''), 'UTF-8');
@@ -9,6 +10,16 @@ $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool
     return !in_array($path, ['/instituicao', '/login'], true)
         && !in_array($label, ['instituição', 'instituicao', 'entrar', 'entrar no painel'], true);
 });
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$basePath = trim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
+if ($basePath && str_starts_with($requestPath, '/' . $basePath)) {
+    $requestPath = substr($requestPath, strlen('/' . $basePath)) ?: '/';
+}
+$secondaryPublicPaths = ['/instituicao', '/documentos'];
+$faviconPath = in_array($requestPath, $secondaryPublicPaths, true)
+    || str_starts_with($requestPath, '/instituicao/')
+    ? '/public/assets/img/favicon-secondary.svg'
+    : '/public/assets/img/favicon-primary.svg';
 $currentUrl = $canonicalUrl ?? url('/');
 $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa traz notícias, serviços, cultura e informações de interesse público para os moradores de Cidade Nova e região.');
 ?>
@@ -18,6 +29,7 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($pageTitle ?? $app['name']) ?></title>
+    <link rel="icon" type="image/svg+xml" href="<?= e(url($faviconPath) . '?v=' . $faviconVersion) ?>">
     <meta name="description" content="<?= e($description) ?>">
     <link rel="canonical" href="<?= e($canonicalUrl ?? ((!empty($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/'))) ?>">
     <meta property="og:title" content="<?= e($pageTitle ?? $app['name']) ?>">

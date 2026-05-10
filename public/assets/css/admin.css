@@ -30,10 +30,7 @@ body.editor-focus-mode {
     display: grid;
     place-items: center;
     padding: 28px;
-    background:
-        linear-gradient(rgba(17, 24, 39, 0.62), rgba(17, 24, 39, 0.62)),
-        url("../img/logo-cidade-nova-informa.svg") center 42px / 520px auto no-repeat,
-        #f3f4f6;
+    background: #f1f5f9;
 }
 
 .auth-shell {
@@ -45,7 +42,7 @@ body.editor-focus-mode {
     border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 8px;
     background: #ffffff;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.16);
 }
 
 .auth-card,
@@ -95,13 +92,33 @@ body.editor-focus-mode {
 }
 
 .auth-intro {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: 28px;
     padding: 42px;
-    background: #18181b;
+    background:
+        linear-gradient(rgba(24, 24, 27, 0.88), rgba(24, 24, 27, 0.88)),
+        linear-gradient(135deg, #991b1b 0%, #18181b 58%, #0f172a 100%);
     color: #ffffff;
+    overflow: hidden;
+}
+
+.auth-intro::after {
+    content: "";
+    position: absolute;
+    right: -70px;
+    bottom: -90px;
+    width: 230px;
+    height: 230px;
+    border: 22px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+}
+
+.auth-intro > * {
+    position: relative;
+    z-index: 1;
 }
 
 .auth-intro span {
@@ -111,35 +128,30 @@ body.editor-focus-mode {
     text-transform: uppercase;
 }
 
-.auth-intro h1 {
-    margin: 6px 0 12px;
-    font-size: 2.35rem;
-    font-weight: 900;
-    line-height: 1.05;
-}
-
 .auth-intro p {
+    margin: 10px 0 0;
     max-width: 340px;
-    margin: 0;
     color: #d1d5db;
     line-height: 1.65;
 }
 
-.auth-logo {
+.auth-modern-brand {
     display: inline-flex;
-    width: 150px;
-    height: 150px;
+    width: min(100%, 360px);
+    min-height: 116px;
     align-items: center;
     justify-content: center;
-    padding: 18px;
+    padding: 18px 22px;
     border-radius: 8px;
-    background: #ffffff;
+   
+    text-decoration: none;
 }
 
-.auth-logo img {
+.auth-modern-brand img {
     display: block;
     width: 100%;
-    height: auto;
+    max-height: 84px;
+    object-fit: contain;
 }
 
 .stack-form {
@@ -602,9 +614,10 @@ body.editor-focus-mode {
 .brand {
     display: block;
     margin-bottom: 28px;
-    color: white;
-    font-size: 1.1rem;
-    font-weight: 800;
+    color: #ffffff;
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1.12;
     text-decoration: none;
 }
 
