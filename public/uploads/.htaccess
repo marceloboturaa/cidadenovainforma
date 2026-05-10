@@ -1,0 +1,14 @@
+Options -Indexes
+
+<FilesMatch "\.(php|phtml|phar|cgi|pl|asp|aspx|jsp|shtml|sh|bat|cmd|exe|dll|so|htaccess)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule \.(php|phtml|phar|cgi|pl|asp|aspx|jsp|shtml|sh|bat|cmd|exe|dll|so)$ - [F,L]
+</IfModule>

@@ -24,12 +24,20 @@
         <?= csrf_field() ?>
         <button class="btn btn-primary">Baixar backup agora</button>
     </form>
+
+    <form method="post" action="<?= e(url('/admin/backups/import')) ?>" enctype="multipart/form-data" class="import-form mt-4">
+        <?= csrf_field() ?>
+        <label class="form-label" for="full_backup">Importar backup completo (.zip)</label>
+        <input class="form-control" id="full_backup" name="full_backup" type="file" accept=".zip,application/zip" required>
+        <p class="small text-muted m-0">Atualiza o banco pelo `database.sql` do backup e copia os arquivos de `public/uploads`.</p>
+        <button class="btn btn-outline-danger">Importar backup completo</button>
+    </form>
 </section>
 
 <section class="panel backup-panel">
     <h2>Exportar e importar notícias</h2>
     <p>
-        Gere um pacote somente com as matérias, categorias, tags e imagens de capa. Use essa opção para transferir notícias entre instalações sem substituir o banco inteiro.
+        Gere um pacote somente com as matérias, categorias, tags e imagens usadas nas matérias. Use essa opção para transferir notícias entre instalações sem substituir o banco inteiro.
     </p>
 
     <div class="backup-actions">

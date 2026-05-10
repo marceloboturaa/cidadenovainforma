@@ -128,8 +128,10 @@ class AuthController
             User::storeResetToken((int) $user['id'], hash('sha256', $token), date('Y-m-d H:i:s', strtotime('+1 hour')));
             Logger::info('auth.password_reset_requested', 'Token de recuperação gerado.', (int) $user['id']);
 
-            // Em produção, envie este link por e-mail. Em ambiente local, ele fica visível para teste.
-            Session::flash('reset_link', url('/reset-password?token=' . $token));
+            $config = require dirname(__DIR__, 2) . '/config/app.php';
+            if (($config['env'] ?? 'production') !== 'production' || !empty($config['debug'])) {
+                Session::flash('reset_link', url('/reset-password?token=' . urlencode($token)));
+            }
         }
 
         Session::flash('success', 'Se o e-mail existir, enviaremos instruções de recuperação.');
@@ -138,7 +140,7 @@ class AuthController
 
     public function showReset(): void
     {
-        View::render('auth/reset', ['token' => $_GET['token'] ?? ''], 'auth');
+        View::render('auth/reset', ['token' => trim($_GET['token'] ?? '')], 'auth');
     }
 
     public function reset(): void
@@ -148,7 +150,7 @@ class AuthController
             redirect('/reset-password?token=' . urlencode($_POST['token'] ?? ''));
         }
 
-        $token = $_POST['token'] ?? '';
+        $token = trim($_POST['token'] ?? '');
         $password = $_POST['password'] ?? '';
         $confirmation = $_POST['password_confirmation'] ?? '';
         $reset = User::findValidReset($token);

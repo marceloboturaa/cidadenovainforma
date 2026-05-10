@@ -15,7 +15,7 @@
     <?php if (!empty($news['is_archive'])): ?>
         <section class="archive-notice">
             <div class="archive-head">
-                <span>Acervo</span>
+                <span class="archive-badge archive-badge-lg"><i aria-hidden="true"></i>Acervo</span>
                 <strong>Reportagem republicada</strong>
             </div>
             <div class="archive-meta-line">
@@ -44,8 +44,9 @@
         </section>
     <?php endif; ?>
 
-    <?php if (!empty($news['cover_image'])): ?>
-        <img class="article-cover" src="<?= e(url($news['cover_image'])) ?>" alt="<?= e($news['title']) ?>">
+    <?php $hasCoverImage = media_available($news['cover_image'] ?? null); ?>
+    <?php if ($hasCoverImage): ?>
+        <img class="article-cover" src="<?= e(media_url($news['cover_image'])) ?>" alt="<?= e($news['title']) ?>" onerror="this.remove()">
     <?php endif; ?>
 
     <div class="article-content">
@@ -69,14 +70,14 @@
                 'name' => 'Cidade Nova Informa',
             ],
             'mainEntityOfPage' => url('/noticia/' . $news['slug']),
-            'image' => !empty($news['cover_image']) ? url($news['cover_image']) : null,
+            'image' => $hasCoverImage ? media_url($news['cover_image']) : null,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
     </script>
 
     <?php if ($tags): ?>
         <footer class="article-tags">
             <?php foreach ($tags as $tag): ?>
-                <a href="<?= e(url('/tag/' . $tag['slug'])) ?>">#<?= e($tag['name']) ?></a>
+                <a href="<?= e(url('/tag/' . $tag['slug'])) ?>">#<?= e($tag['display_name'] ?? $tag['name']) ?></a>
             <?php endforeach; ?>
         </footer>
     <?php endif; ?>

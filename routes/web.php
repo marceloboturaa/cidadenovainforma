@@ -3,6 +3,7 @@
 use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\BackupController;
 use App\Controllers\Admin\DashboardController;
+use App\Controllers\Admin\DocumentController;
 use App\Controllers\Admin\InstitutionPageController;
 use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\NewsController;
@@ -14,6 +15,8 @@ use App\Controllers\PublicController;
 $router->get('/', [PublicController::class, 'home']);
 $router->get('/instituicao', [PublicController::class, 'institution']);
 $router->get('/instituicao/{slug}', [PublicController::class, 'institutionArea']);
+$router->get('/documentos', [PublicController::class, 'documents']);
+$router->get('/documentos/download', [PublicController::class, 'downloadDocument']);
 $router->get('/buscar', [PublicController::class, 'search']);
 $router->get('/acervo', [PublicController::class, 'archive']);
 $router->get('/categoria', [PublicController::class, 'category']);
@@ -58,6 +61,7 @@ $router->post('/admin/news/update', [NewsController::class, 'update']);
 $router->post('/admin/news/approve', [NewsController::class, 'approve']);
 $router->post('/admin/news/reject', [NewsController::class, 'reject']);
 $router->post('/admin/news/archive', [NewsController::class, 'archive']);
+$router->post('/admin/news/delete', [NewsController::class, 'delete']);
 
 $router->get('/admin/categories', [CategoryController::class, 'index']);
 $router->get('/admin/categories/edit', [CategoryController::class, 'index']);
@@ -79,5 +83,12 @@ $router->post('/admin/menu/delete', [MenuController::class, 'delete']);
 
 $router->get('/admin/backups', [BackupController::class, 'index']);
 $router->post('/admin/backups/download', [BackupController::class, 'download']);
+$router->post('/admin/backups/import', [BackupController::class, 'importFull']);
 $router->post('/admin/backups/news/export', [BackupController::class, 'exportNews']);
 $router->post('/admin/backups/news/import', [BackupController::class, 'importNews']);
+
+$router->get('/admin/documents', [DocumentController::class, 'index']);
+$router->post('/admin/documents', [DocumentController::class, 'store']);
+$router->get('/admin/documents/download', [DocumentController::class, 'download']);
+$router->post('/admin/documents/access', [DocumentController::class, 'access']);
+$router->post('/admin/documents/delete', [DocumentController::class, 'delete']);

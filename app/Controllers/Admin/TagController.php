@@ -25,19 +25,21 @@ class TagController
     {
         Middleware::permission('tags.manage');
         $this->validateCsrf();
-        $name = trim($_POST['name'] ?? '');
+        $displayName = trim($_POST['name'] ?? '');
+        $slug = slugify($displayName);
 
-        if ($name === '') {
+        if ($displayName === '' || $slug === '') {
             Session::flash('error', 'Informe o nome da tag.');
             redirect('/admin/tags');
         }
 
         Tag::create([
-            'name' => $name,
-            'slug' => Tag::uniqueSlug($name),
+            'name' => $slug,
+            'display_name' => $displayName,
+            'slug' => Tag::uniqueSlug($displayName),
         ]);
 
-        Logger::info('tags.created', 'Tag criada: ' . $name, current_user()['id']);
+        Logger::info('tags.created', 'Tag criada: ' . $displayName, current_user()['id']);
         Session::flash('success', 'Tag criada.');
         redirect('/admin/tags');
     }
@@ -47,19 +49,21 @@ class TagController
         Middleware::permission('tags.manage');
         $this->validateCsrf();
         $tag = $this->tagFromQuery();
-        $name = trim($_POST['name'] ?? '');
+        $displayName = trim($_POST['name'] ?? '');
+        $slug = slugify($displayName);
 
-        if ($name === '') {
+        if ($displayName === '' || $slug === '') {
             Session::flash('error', 'Informe o nome da tag.');
             redirect('/admin/tags/edit?id=' . $tag['id']);
         }
 
         Tag::update((int) $tag['id'], [
-            'name' => $name,
-            'slug' => Tag::uniqueSlug($name, (int) $tag['id']),
+            'name' => $slug,
+            'display_name' => $displayName,
+            'slug' => Tag::uniqueSlug($displayName, (int) $tag['id']),
         ]);
 
-        Logger::info('tags.updated', 'Tag atualizada: ' . $name, current_user()['id']);
+        Logger::info('tags.updated', 'Tag atualizada: ' . $displayName, current_user()['id']);
         Session::flash('success', 'Tag atualizada.');
         redirect('/admin/tags');
     }
@@ -71,7 +75,7 @@ class TagController
         $tag = $this->tagFromQuery();
 
         Tag::delete((int) $tag['id']);
-        Logger::info('tags.deleted', 'Tag removida: ' . $tag['name'], current_user()['id']);
+        Logger::info('tags.deleted', 'Tag removida: ' . ($tag['display_name'] ?? $tag['name']), current_user()['id']);
         Session::flash('success', 'Tag removida.');
         redirect('/admin/tags');
     }

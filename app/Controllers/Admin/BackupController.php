@@ -7,10 +7,12 @@ use App\Core\Csrf;
 use App\Core\Database;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Tag;
 
 class BackupController
 {
     private const NEWS_EXPORT_FILE = 'cni-news-export.json';
+    private const FULL_BACKUP_SIGNATURE_FILE = 'signature.json';
 
     public function index(): void
     {
@@ -18,7 +20,7 @@ class BackupController
 
         View::render('admin/backups/index', [
             'canZip' => class_exists('ZipArchive'),
-            'canShell' => function_exists('shell_exec'),
+            'canShell' => function_exists('shell_exec') || function_exists('exec'),
         ]);
     }
 
@@ -48,6 +50,30 @@ class BackupController
         readfile($backupPath);
         unlink($backupPath);
         exit;
+    }
+
+    public function importFull(): void
+    {
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        if (!class_exists('ZipArchive')) {
+            Session::flash('error', 'A extensão ZipArchive do PHP não está habilitada.');
+            redirect('/admin/backups');
+        }
+
+        if (empty($_FILES['full_backup']['name']) || $_FILES['full_backup']['error'] !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Envie um arquivo de backup completo.');
+            redirect('/admin/backups');
+        }
+
+        $result = $this->restoreFullBackup($_FILES['full_backup']['tmp_name']);
+
+        Session::flash(
+            'success',
+            'Backup completo importado: banco de dados atualizado e ' . $result['files'] . ' arquivo(s) de upload copiado(s).'
+        );
+        redirect('/admin/backups');
     }
 
     public function exportNews(): void
@@ -120,12 +146,14 @@ class BackupController
 
         $manifest = [
             'app' => 'Cidade Nova Informa',
+            'type' => 'full-backup',
+            'version' => 2,
             'created_at' => date('c'),
-            'contains' => ['database.sql', 'public/uploads'],
+            'contains' => ['database.sql', 'public/uploads/news', 'storage/documents'],
             'restore_order' => [
                 '1. Envie os arquivos do projeto para a hospedagem.',
                 '2. Importe database.sql no MySQL da hospedagem.',
-                '3. Envie a pasta public/uploads para o mesmo caminho no servidor.',
+                '3. Envie a pasta public/uploads/news e storage/documents para o mesmo caminho no servidor.',
                 '4. Ajuste config/database.php com os dados do banco online.',
             ],
         ];
@@ -143,7 +171,9 @@ class BackupController
 
         $zip->addFile($sqlPath, 'database.sql');
         $zip->addFile($tempDir . '/manifest.json', 'manifest.json');
-        $this->addDirectoryToZip($zip, $root . '/public/uploads', 'public/uploads');
+        $this->addDirectoryToZip($zip, $root . '/public/uploads/news', 'public/uploads/news', fn (string $entry): bool => $this->isSafeNewsUploadEntry($entry));
+        $this->addDirectoryToZip($zip, $root . '/storage/documents', 'storage/documents', fn (string $entry): bool => $this->isSafeDocumentStorageEntry($entry));
+        $zip->addFromString(self::FULL_BACKUP_SIGNATURE_FILE, json_encode($this->fullBackupSignature($sqlPath), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         $zip->close();
 
         $this->removeDirectory($tempDir);
@@ -174,14 +204,17 @@ class BackupController
             json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
 
+        $assetPaths = [];
         foreach ($payload['news'] as $news) {
-            if (empty($news['cover_image'])) {
-                continue;
+            foreach ($this->newsAssetPaths($news) as $assetPath) {
+                $assetPaths[$assetPath] = true;
             }
+        }
 
-            $coverPath = $this->publicUploadPath($news['cover_image']);
-            if ($coverPath && is_file($coverPath)) {
-                $zip->addFile($coverPath, ltrim($news['cover_image'], '/'));
+        foreach (array_keys($assetPaths) as $assetPath) {
+            $localPath = $this->publicUploadPath($assetPath);
+            if ($localPath && is_file($localPath)) {
+                $zip->addFile($localPath, ltrim($assetPath, '/'));
             }
         }
 
@@ -192,6 +225,8 @@ class BackupController
 
     private function newsExportPayload(): array
     {
+        Tag::ensureSchema();
+
         $db = Database::connection();
         $newsRows = $db->query(
             'SELECT news.*, categories.name AS category_name, categories.slug AS category_slug
@@ -201,11 +236,11 @@ class BackupController
         )->fetchAll();
 
         $tagsStmt = $db->prepare(
-            'SELECT tags.name, tags.slug
+            'SELECT tags.name, COALESCE(NULLIF(tags.display_name, ""), tags.name) AS display_name, tags.slug
              FROM tags
              INNER JOIN news_tags ON news_tags.tag_id = tags.id
              WHERE news_tags.news_id = :news_id
-             ORDER BY tags.name ASC'
+             ORDER BY display_name ASC'
         );
 
         foreach ($newsRows as &$news) {
@@ -265,7 +300,7 @@ class BackupController
                     continue;
                 }
 
-                $this->copyCoverFromZip($zip, $news['cover_image'] ?? null);
+                $this->copyNewsAssetsFromZip($zip, $news);
                 $categoryId = $this->categoryIdForImport($news);
                 $newsId = $existingId
                     ? $this->updateImportedNews($existingId, $news, $categoryId)
@@ -390,25 +425,35 @@ class BackupController
 
     private function syncImportedTags(int $newsId, array $tags): void
     {
+        Tag::ensureSchema();
+
         $db = Database::connection();
         $db->prepare('DELETE FROM news_tags WHERE news_id = :news_id')->execute(['news_id' => $newsId]);
 
         $findTag = $db->prepare('SELECT id FROM tags WHERE slug = :slug LIMIT 1');
-        $insertTag = $db->prepare('INSERT INTO tags (name, slug, created_at) VALUES (:name, :slug, NOW())');
+        $insertTag = $db->prepare('INSERT INTO tags (name, display_name, slug, created_at) VALUES (:name, :display_name, :slug, NOW())');
         $attachTag = $db->prepare('INSERT IGNORE INTO news_tags (news_id, tag_id) VALUES (:news_id, :tag_id)');
 
         foreach ($tags as $tag) {
-            if (empty($tag['name']) || empty($tag['slug'])) {
+            if (empty($tag['slug']) && empty($tag['name']) && empty($tag['display_name'])) {
                 continue;
             }
 
-            $findTag->execute(['slug' => $tag['slug']]);
+            $slug = trim((string) ($tag['slug'] ?: slugify((string) ($tag['display_name'] ?? $tag['name']))));
+            if ($slug === '') {
+                continue;
+            }
+
+            $displayName = trim((string) ($tag['display_name'] ?? $tag['name'] ?? $slug));
+
+            $findTag->execute(['slug' => $slug]);
             $tagId = $findTag->fetchColumn();
 
             if (!$tagId) {
                 $insertTag->execute([
-                    'name' => trim((string) $tag['name']),
-                    'slug' => trim((string) $tag['slug']),
+                    'name' => $slug,
+                    'display_name' => $displayName,
+                    'slug' => $slug,
                 ]);
                 $tagId = $db->lastInsertId();
             }
@@ -426,19 +471,257 @@ class BackupController
         return $id ? (int) $id : null;
     }
 
-    private function copyCoverFromZip(\ZipArchive $zip, ?string $cover): void
+    private function restoreFullBackup(string $uploadedFile): array
     {
-        $cover = $this->cleanImportedCover($cover);
-        if (!$cover) {
+        $root = dirname(__DIR__, 3);
+        $tempDir = $root . '/storage/temp/full-restore-' . date('Ymd-His') . '-' . bin2hex(random_bytes(4));
+
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0775, true);
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($uploadedFile) !== true) {
+            $this->removeDirectory($tempDir);
+            Session::flash('error', 'Não foi possível abrir o arquivo ZIP enviado.');
+            redirect('/admin/backups');
+        }
+
+        if ($zip->locateName('database.sql') === false) {
+            $zip->close();
+            $this->removeDirectory($tempDir);
+            Session::flash('error', 'Este ZIP não contém database.sql.');
+            redirect('/admin/backups');
+        }
+
+        if (!$this->fullBackupSignatureIsValid($zip)) {
+            $zip->close();
+            $this->removeDirectory($tempDir);
+            Session::flash('error', 'Backup recusado: assinatura inválida ou ausente. Gere um novo backup neste sistema antes de importar.');
+            redirect('/admin/backups');
+        }
+
+        $sqlPath = $tempDir . '/database.sql';
+        $sql = $zip->getFromName('database.sql');
+
+        if ($sql === false) {
+            $zip->close();
+            $this->removeDirectory($tempDir);
+            Session::flash('error', 'Não foi possível ler database.sql dentro do ZIP.');
+            redirect('/admin/backups');
+        }
+
+        file_put_contents($sqlPath, $sql);
+
+        $this->importSqlFile($sqlPath);
+        $files = $this->copySafeContentFromZip($zip);
+
+        $zip->close();
+        $this->removeDirectory($tempDir);
+
+        return ['files' => $files];
+    }
+
+    private function importSqlFile(string $sqlPath): void
+    {
+        $config = require dirname(__DIR__, 3) . '/config/database.php';
+        $mysql = is_file('C:/xampp/mysql/bin/mysql.exe')
+            ? 'C:/xampp/mysql/bin/mysql.exe'
+            : 'mysql';
+
+        if (!function_exists('exec')) {
+            Session::flash('error', 'Importação recusada: a função exec está desabilitada. Habilite o cliente mysql para importar backup completo com segurança.');
+            redirect('/admin/backups');
+        }
+
+        $command = escapeshellarg($mysql)
+            . ' --default-character-set=utf8mb4'
+            . ' --host=' . escapeshellarg($config['host'])
+            . ' --port=' . escapeshellarg((string) $config['port'])
+            . ' --user=' . escapeshellarg($config['username']);
+
+        if ($config['password'] !== '') {
+            $command .= ' --password=' . escapeshellarg($config['password']);
+        }
+
+        $command .= ' ' . escapeshellarg($config['database'])
+            . ' < ' . escapeshellarg($sqlPath) . ' 2>&1';
+
+        $output = [];
+        $exitCode = 0;
+        exec($command, $output, $exitCode);
+
+        if ($exitCode !== 0) {
+            $message = trim(implode("\n", $output));
+            $firstLine = strtok($message, "\n") ?: 'código ' . $exitCode;
+            Session::flash('error', 'Falha ao importar o banco: ' . $firstLine);
+            redirect('/admin/backups');
+        }
+    }
+
+    private function copySafeContentFromZip(\ZipArchive $zip): int
+    {
+        $root = dirname(__DIR__, 3);
+        $count = 0;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entry = str_replace('\\', '/', $zip->getNameIndex($i));
+
+            if (str_ends_with($entry, '/') || str_contains($entry, '../')) {
+                continue;
+            }
+
+            if (!$this->isSafeNewsUploadEntry($entry) && !$this->isSafeDocumentStorageEntry($entry)) {
+                continue;
+            }
+
+            $target = $root . '/' . $entry;
+            $directory = dirname($target);
+
+            if (!is_dir($directory)) {
+                mkdir($directory, 0775, true);
+            }
+
+            $source = $zip->getStream($entry);
+            if (!$source) {
+                continue;
+            }
+
+            $destination = fopen($target, 'wb');
+            if ($destination) {
+                stream_copy_to_stream($source, $destination);
+                fclose($destination);
+                $count++;
+            }
+
+            fclose($source);
+        }
+
+        return $count;
+    }
+
+    private function fullBackupSignature(string $sqlPath): array
+    {
+        $root = dirname(__DIR__, 3);
+        $entries = [
+            'database.sql' => hash_file('sha256', $sqlPath),
+        ];
+
+        foreach ([
+            $root . '/public/uploads/news' => 'public/uploads/news',
+            $root . '/storage/documents' => 'storage/documents',
+        ] as $directory => $zipBase) {
+            if (!is_dir($directory)) {
+                continue;
+            }
+
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS)
+            );
+
+            foreach ($files as $file) {
+                if (!$file->isFile()) {
+                    continue;
+                }
+
+                $entry = $zipBase . '/' . str_replace('\\', '/', substr($file->getPathname(), strlen($directory) + 1));
+
+                if ($this->isSafeNewsUploadEntry($entry) || $this->isSafeDocumentStorageEntry($entry)) {
+                    $entries[$entry] = hash_file('sha256', $file->getPathname());
+                }
+            }
+        }
+
+        ksort($entries);
+
+        return [
+            'algorithm' => 'sha256-hmac',
+            'created_at' => date('c'),
+            'entries' => $entries,
+            'signature' => hash_hmac('sha256', json_encode($entries, JSON_UNESCAPED_SLASHES), $this->backupKey()),
+        ];
+    }
+
+    private function fullBackupSignatureIsValid(\ZipArchive $zip): bool
+    {
+        $json = $zip->getFromName(self::FULL_BACKUP_SIGNATURE_FILE);
+        if ($json === false) {
+            return false;
+        }
+
+        $signature = json_decode($json, true);
+        if (!is_array($signature) || !isset($signature['entries'], $signature['signature']) || !is_array($signature['entries'])) {
+            return false;
+        }
+
+        $entries = $signature['entries'];
+        if (!isset($entries['database.sql'])) {
+            return false;
+        }
+
+        ksort($entries);
+        $expected = hash_hmac('sha256', json_encode($entries, JSON_UNESCAPED_SLASHES), $this->backupKey());
+
+        if (!hash_equals($expected, (string) $signature['signature'])) {
+            return false;
+        }
+
+        foreach ($entries as $entry => $hash) {
+            if ($entry === self::FULL_BACKUP_SIGNATURE_FILE || str_contains($entry, '../')) {
+                return false;
+            }
+
+            if ($entry !== 'database.sql' && !$this->isSafeNewsUploadEntry($entry) && !$this->isSafeDocumentStorageEntry($entry)) {
+                return false;
+            }
+
+            $content = $zip->getFromName($entry);
+            if ($content === false || !hash_equals((string) $hash, hash('sha256', $content))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function backupKey(): string
+    {
+        $config = require dirname(__DIR__, 3) . '/config/app.php';
+        return (string) ($config['backup_key'] ?? '');
+    }
+
+    private function isSafeNewsUploadEntry(string $entry): bool
+    {
+        return (bool) preg_match('#^public/uploads/news/[A-Za-z0-9._/-]+\.(jpe?g|png|webp|gif)$#i', $entry)
+            && !str_contains($entry, '../');
+    }
+
+    private function isSafeDocumentStorageEntry(string $entry): bool
+    {
+        return (bool) preg_match('#^storage/documents/[A-Za-z0-9._/-]+\.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|txt|zip)$#i', $entry)
+            && !str_contains($entry, '../');
+    }
+
+    private function copyNewsAssetsFromZip(\ZipArchive $zip, array $news): void
+    {
+        foreach ($this->newsAssetPaths($news) as $assetPath) {
+            $this->copyUploadFromZip($zip, $assetPath);
+        }
+    }
+
+    private function copyUploadFromZip(\ZipArchive $zip, ?string $assetPath): void
+    {
+        $assetPath = $this->cleanImportedUpload($assetPath);
+        if (!$assetPath) {
             return;
         }
 
-        $entry = ltrim($cover, '/');
+        $entry = ltrim($assetPath, '/');
         if ($zip->locateName($entry) === false) {
             return;
         }
 
-        $target = $this->publicUploadPath($cover);
+        $target = $this->publicUploadPath($assetPath);
         if (!$target) {
             return;
         }
@@ -462,23 +745,66 @@ class BackupController
         fclose($source);
     }
 
+    private function newsAssetPaths(array $news): array
+    {
+        $paths = [];
+        $cover = $this->cleanImportedUpload($news['cover_image'] ?? null);
+
+        if ($cover) {
+            $paths[] = $cover;
+        }
+
+        preg_match_all('/<img\s+[^>]*src\s*=\s*("|\')([^"\']+)\1/i', (string) ($news['content'] ?? ''), $matches);
+
+        foreach ($matches[2] ?? [] as $src) {
+            $path = $this->cleanImportedUpload($src);
+
+            if ($path) {
+                $paths[] = $path;
+            }
+        }
+
+        return array_values(array_unique($paths));
+    }
+
     private function cleanImportedCover(?string $cover): ?string
     {
-        if (!$cover) {
+        return $this->cleanImportedUpload($cover, true);
+    }
+
+    private function cleanImportedUpload(?string $path, bool $coverOnly = false): ?string
+    {
+        if (!$path) {
             return null;
         }
 
-        $cover = str_replace('\\', '/', $cover);
-        if (!preg_match('#^/public/uploads/news/[A-Za-z0-9._-]+\.(jpe?g|png|webp)$#i', $cover)) {
+        $path = trim(str_replace('\\', '/', $path));
+        $path = parse_url($path, PHP_URL_PATH) ?: '';
+        $path = rawurldecode($path);
+
+        $uploadPosition = strpos($path, '/public/uploads/news/');
+        if ($uploadPosition !== false) {
+            $path = substr($path, $uploadPosition);
+        }
+
+        if ($path === '' || str_contains($path, '../')) {
             return null;
         }
 
-        return $cover;
+        $pattern = $coverOnly
+            ? '#^/public/uploads/news/[A-Za-z0-9._-]+\.(jpe?g|png|webp)$#i'
+            : '#^/public/uploads/news/[A-Za-z0-9._/-]+\.(jpe?g|png|webp|gif)$#i';
+
+        if (!preg_match($pattern, $path)) {
+            return null;
+        }
+
+        return $path;
     }
 
     private function publicUploadPath(string $publicPath): ?string
     {
-        $publicPath = $this->cleanImportedCover($publicPath);
+        $publicPath = $this->cleanImportedUpload($publicPath);
         if (!$publicPath) {
             return null;
         }
@@ -518,7 +844,7 @@ class BackupController
         }
     }
 
-    private function addDirectoryToZip(\ZipArchive $zip, string $directory, string $zipBase): void
+    private function addDirectoryToZip(\ZipArchive $zip, string $directory, string $zipBase, ?callable $allowEntry = null): void
     {
         if (!is_dir($directory)) {
             return;
@@ -535,7 +861,7 @@ class BackupController
 
             if ($file->isDir()) {
                 $zip->addEmptyDir($relative);
-            } else {
+            } elseif (!$allowEntry || $allowEntry($relative)) {
                 $zip->addFile($path, $relative);
             }
         }

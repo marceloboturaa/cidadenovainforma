@@ -39,6 +39,7 @@ $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool
             </button>
             <div class="header-actions">
                 <a class="institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
+                <a class="institution-link" href="<?= e(url('/documentos')) ?>">Documentos</a>
                 <a class="admin-link" href="<?= e(url('/login')) ?>">Entrar</a>
             </div>
         </div>
@@ -58,6 +59,7 @@ $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool
             </form>
             <nav class="mobile-actions" aria-label="Ações rápidas">
                 <a class="mobile-institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
+                <a class="mobile-institution-link" href="<?= e(url('/documentos')) ?>">Documentos</a>
                 <a class="mobile-login-link" href="<?= e(url('/login')) ?>">Entrar no painel</a>
             </nav>
         </div>

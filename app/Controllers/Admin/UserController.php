@@ -25,7 +25,7 @@ class UserController
             'registrationEnabled' => SiteSetting::registrationEnabled(),
             'institutionPages' => InstitutionPage::all(),
             'userResponsibilities' => $this->userResponsibilities($users),
-            'roles' => Role::all(),
+            'roles' => $this->assignableRoles(),
         ]);
     }
 
@@ -73,9 +73,15 @@ class UserController
         $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
         $password = $_POST['password'] ?? '';
         $roleId = filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT);
+        $role = $roleId ? Role::find($roleId) : null;
 
-        if ($name === '' || !$email || strlen($password) < 8 || !$roleId) {
+        if ($name === '' || !$email || strlen($password) < 8 || !$role) {
             Session::flash('error', 'Preencha nome, e-mail, cargo e senha com no minimo 8 caracteres.');
+            redirect('/admin/users');
+        }
+
+        if (!$this->canAssignRole($role)) {
+            Session::flash('error', 'Você não pode criar usuário com este cargo.');
             redirect('/admin/users');
         }
 
@@ -207,5 +213,21 @@ class UserController
         }
 
         return $result;
+    }
+
+    private function assignableRoles(): array
+    {
+        return array_values(array_filter(Role::all(), fn (array $role): bool => $this->canAssignRole($role)));
+    }
+
+    private function canAssignRole(array $role): bool
+    {
+        $current = current_user();
+
+        if (($current['role_slug'] ?? '') !== 'master') {
+            return false;
+        }
+
+        return ($role['slug'] ?? '') !== 'master';
     }
 }

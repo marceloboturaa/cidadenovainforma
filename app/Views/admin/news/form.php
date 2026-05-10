@@ -30,20 +30,87 @@ $status = $newsItem['status'] ?? 'draft';
                 <button class="btn btn-sm btn-outline-secondary editor-focus-toggle" type="button" data-editor-focus>Foco</button>
             </div>
             <div class="rich-toolbar" aria-label="Ferramentas do editor">
-                <button type="button" data-command="formatBlock" data-value="h2">Título</button>
-                <button type="button" data-command="bold"><strong>B</strong></button>
-                <button type="button" data-command="italic"><em>I</em></button>
-                <button type="button" data-command="underline"><u>U</u></button>
-                <button type="button" data-command="insertUnorderedList">Lista</button>
-                <button type="button" data-command="formatBlock" data-value="blockquote">Citação</button>
-                <button type="button" data-action="link">Link</button>
-                <button type="button" data-action="image">Imagem</button>
-                <button type="button" data-command="removeFormat">Limpar</button>
+                <div class="toolbar-group">
+                    <button type="button" class="toolbar-icon" data-action="html-toggle" title="Visualização em HTML"><i class="bi bi-code" aria-hidden="true"></i></button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="toolbar-icon" data-command="undo" title="Desfazer"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-command="redo" title="Refazer"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="toolbar-text-button" data-block-format="P">Normal</button>
+                    <button type="button" class="toolbar-text-button" data-block-format="H2">Título</button>
+                    <button type="button" class="toolbar-text-button" data-block-format="H3">Subtítulo</button>
+                    <button type="button" class="toolbar-text-button" data-block-format="BLOCKQUOTE">Citação</button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="toolbar-icon" data-command="bold" title="Negrito"><strong>B</strong></button>
+                    <button type="button" class="toolbar-icon" data-command="italic" title="Itálico"><em>I</em></button>
+                    <button type="button" class="toolbar-icon" data-command="underline" title="Sublinhado"><u>U</u></button>
+                    <button type="button" class="toolbar-icon" data-command="strikeThrough" title="Riscado"><i class="bi bi-type-strikethrough" aria-hidden="true"></i></button>
+                    <div class="rich-menu">
+                        <button type="button" class="toolbar-icon" data-menu-toggle title="Cor do texto"><i class="bi bi-palette" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                        <div class="rich-menu-popover color-popover">
+                            <button type="button" class="color-swatch" data-color="#111827" style="--swatch:#111827" title="Preto"></button>
+                            <button type="button" class="color-swatch" data-color="#6b7280" style="--swatch:#6b7280" title="Cinza"></button>
+                            <button type="button" class="color-swatch" data-color="#b91c1c" style="--swatch:#b91c1c" title="Vermelho"></button>
+                            <button type="button" class="color-swatch" data-color="#c2410c" style="--swatch:#c2410c" title="Laranja"></button>
+                            <button type="button" class="color-swatch" data-color="#a16207" style="--swatch:#a16207" title="Dourado"></button>
+                            <button type="button" class="color-swatch" data-color="#15803d" style="--swatch:#15803d" title="Verde"></button>
+                            <button type="button" class="color-swatch" data-color="#0f766e" style="--swatch:#0f766e" title="Verde azulado"></button>
+                            <button type="button" class="color-swatch" data-color="#2563eb" style="--swatch:#2563eb" title="Azul"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="toolbar-icon" data-action="link" title="Link"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+                    <div class="rich-menu">
+                        <button type="button" class="toolbar-icon" data-menu-toggle title="Imagem"><i class="bi bi-image" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                        <div class="rich-menu-popover">
+                            <button type="button" data-upload-target="content-media-input"><i class="bi bi-cloud-upload" aria-hidden="true"></i>Fazer upload do computador</button>
+                            <button type="button" data-action="image"><i class="bi bi-link-45deg" aria-hidden="true"></i>Por URL</button>
+                        </div>
+                    </div>
+                    <div class="rich-menu">
+                        <button type="button" class="toolbar-icon" data-menu-toggle title="Vídeo"><i class="bi bi-camera-video" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                        <div class="rich-menu-popover">
+                            <button type="button" data-upload-target="content-media-input"><i class="bi bi-cloud-upload" aria-hidden="true"></i>Fazer upload do computador</button>
+                            <button type="button" data-action="video"><i class="bi bi-youtube" aria-hidden="true"></i>YouTube, Vimeo ou URL</button>
+                        </div>
+                    </div>
+                    <div class="rich-menu">
+                        <button type="button" class="toolbar-icon" data-menu-toggle title="Áudio"><i class="bi bi-volume-up" aria-hidden="true"></i><i class="bi bi-caret-down-fill" aria-hidden="true"></i></button>
+                        <div class="rich-menu-popover">
+                            <button type="button" data-upload-target="content-media-input"><i class="bi bi-cloud-upload" aria-hidden="true"></i>Fazer upload do computador</button>
+                            <button type="button" data-action="audio"><i class="bi bi-link-45deg" aria-hidden="true"></i>Por URL</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="toolbar-icon" data-command="justifyLeft" title="Alinhar à esquerda"><i class="bi bi-text-left" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-command="justifyCenter" title="Centralizar"><i class="bi bi-text-center" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-command="justifyRight" title="Alinhar à direita"><i class="bi bi-text-right" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-command="justifyFull" title="Justificar"><i class="bi bi-justify" aria-hidden="true"></i></button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="toolbar-icon" data-command="insertUnorderedList" title="Lista"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-command="insertOrderedList" title="Lista numerada"><i class="bi bi-list-ol" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-command="formatBlock" data-value="blockquote" title="Citação"><i class="bi bi-quote" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-command="insertHorizontalRule" title="Linha divisória"><i class="bi bi-dash-lg" aria-hidden="true"></i></button>
+                    <button type="button" class="toolbar-icon" data-action="clear-format" title="Limpar formatação"><i class="bi bi-eraser" aria-hidden="true"></i></button>
+                </div>
             </div>
             <input type="hidden" name="content" id="news-content" value="<?= e($newsItem['content'] ?? '') ?>">
             <div class="rich-editor" contenteditable="true" data-target="news-content">
                 <?= article_html($newsItem['content'] ?? '') ?>
             </div>
+            <textarea class="html-editor" data-html-editor hidden spellcheck="false"></textarea>
         </div>
     </section>
 
@@ -51,6 +118,17 @@ $status = $newsItem['status'] ?? 'draft';
         <h2>Configuração</h2>
 
         <div class="config-block">
+            <?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
+                <label class="form-label">Criador da notícia</label>
+                <select class="form-select" name="author_id">
+                    <?php foreach (($users ?? []) as $user): ?>
+                        <option value="<?= e((string) $user['id']) ?>" <?= selected((string) ($newsItem['author_id'] ?? current_user()['id']), (string) $user['id']) ?>>
+                            <?= e($user['name']) ?> · <?= e($user['role_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+
             <label class="form-label">Categoria</label>
             <select class="form-select" name="category_id">
                 <option value="">Sem categoria</option>
@@ -70,14 +148,25 @@ $status = $newsItem['status'] ?? 'draft';
 
             <label class="form-label mt-3">Tags</label>
             <input class="form-control" name="tags" value="<?= e($tags) ?>" placeholder="cidade, saúde, bairro">
+
+            <label class="form-label mt-3">Data de publicação</label>
+            <input class="form-control" type="datetime-local" name="published_at" value="<?= !empty($newsItem['published_at']) ? e(date('Y-m-d\TH:i', strtotime($newsItem['published_at']))) : '' ?>">
         </div>
 
         <div class="config-block">
             <label class="form-label">Imagem de capa</label>
             <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp">
+            <label class="form-label mt-3">Ou link externo da capa</label>
+            <input class="form-control" name="cover_image_url" value="<?= !empty($newsItem['cover_image']) && preg_match('#^https?://#i', $newsItem['cover_image']) ? e($newsItem['cover_image']) : '' ?>" placeholder="https://site.com/imagem.jpg">
             <?php if (!empty($newsItem['cover_image'])): ?>
-                <img class="cover-preview" src="<?= e(url($newsItem['cover_image'])) ?>" alt="">
+                <img class="cover-preview" src="<?= e(media_url($newsItem['cover_image'])) ?>" alt="" onerror="this.remove()">
             <?php endif; ?>
+        </div>
+
+        <div class="config-block">
+            <label class="form-label">Mídias para inserir no corpo</label>
+            <input class="form-control" id="content-media-input" name="content_media[]" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,audio/mpeg,audio/mp3,audio/ogg,audio/wav" multiple>
+            <p class="field-hint">Imagens, vídeos e áudios enviados aqui entram no fim do texto ao salvar. Links externos podem ser inseridos pelos botões do editor.</p>
         </div>
 
         <?php if (\App\Core\Auth::can('news.manage')): ?>

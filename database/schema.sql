@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS menu_items (
 CREATE TABLE IF NOT EXISTS tags (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(80) NOT NULL,
+    display_name VARCHAR(120) NULL,
     slug VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP NULL
 ) ENGINE=InnoDB;
@@ -182,6 +183,30 @@ CREATE TABLE IF NOT EXISTS media (
     created_at TIMESTAMP NULL,
     CONSTRAINT fk_media_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE,
     CONSTRAINT fk_media_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS team_documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    uploaded_by BIGINT UNSIGNED NOT NULL,
+    title VARCHAR(180) NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(120) NOT NULL,
+    original_name VARCHAR(190) NOT NULL,
+    size_bytes BIGINT UNSIGNED NOT NULL,
+    is_public TINYINT(1) NOT NULL DEFAULT 0,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_team_documents_user FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS team_document_users (
+    document_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    PRIMARY KEY (document_id, user_id),
+    CONSTRAINT fk_team_document_users_document FOREIGN KEY (document_id) REFERENCES team_documents(id) ON DELETE CASCADE,
+    CONSTRAINT fk_team_document_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS comments (

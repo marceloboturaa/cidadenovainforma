@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\View;
 use App\Models\Category;
+use App\Models\Document;
 use App\Models\InstitutionPage;
 use App\Models\MenuItem;
 use App\Models\News;
@@ -84,6 +85,52 @@ class PublicController
         ], 'public');
     }
 
+    public function documents(): void
+    {
+        $this->logAccess();
+
+        View::render('public/documents', [
+            'documents' => Document::publicAll(),
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => 'Documentos - Cidade Nova Informa',
+            'metaDescription' => 'Documentos públicos disponibilizados pelo Cidade Nova Informa.',
+            'canonicalUrl' => url('/documentos'),
+        ], 'public');
+    }
+
+    public function downloadDocument(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $document = $id ? Document::find($id) : null;
+
+        if (!$document || empty($document['is_public'])) {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        $path = Document::absolutePath($document);
+        if (!$path || !is_file($path)) {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        $downloadName = str_replace(['"', "\r", "\n"], '', basename($document['original_name']));
+
+        header('X-Content-Type-Options: nosniff');
+        header('X-Download-Options: noopen');
+        header('Content-Type: ' . $this->safeMimeType((string) $document['mime_type']));
+        header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+        header('Content-Length: ' . filesize($path));
+        header('Pragma: public');
+        header('Cache-Control: must-revalidate');
+
+        readfile($path);
+        exit;
+    }
+
     public function archive(): void
     {
         $this->logAccess();
@@ -132,13 +179,15 @@ class PublicController
             return;
         }
 
+        $tagDisplayName = $tag['display_name'] ?? $tag['name'];
+
         View::render('public/list', [
-            'heading' => '#' . $tag['name'],
+            'heading' => '#' . $tagDisplayName,
             'news' => News::publicList(['tag_id' => $tag['id']], 20),
             'menuItems' => MenuItem::visible(),
             'query' => '',
-            'pageTitle' => $tag['name'] . ' - Cidade Nova Informa',
-            'metaDescription' => 'Notícias marcadas com ' . $tag['name'],
+            'pageTitle' => $tagDisplayName . ' - Cidade Nova Informa',
+            'metaDescription' => 'Notícias marcadas com ' . $tagDisplayName,
             'canonicalUrl' => url('/tag/' . $tag['slug']),
         ], 'public');
     }
@@ -165,7 +214,7 @@ class PublicController
             'metaDescription' => $news['summary'] ?: substr(strip_tags($news['content']), 0, 150),
             'canonicalUrl' => url('/noticia/' . $news['slug']),
             'ogType' => 'article',
-            'ogImage' => !empty($news['cover_image']) ? url($news['cover_image']) : null,
+            'ogImage' => media_available($news['cover_image'] ?? null) ? media_url($news['cover_image']) : null,
         ], 'public');
     }
 
@@ -240,6 +289,13 @@ class PublicController
             'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
             'path' => substr($_SERVER['REQUEST_URI'] ?? '/', 0, 255),
         ]);
+    }
+
+    private function safeMimeType(string $mime): string
+    {
+        return preg_match('/^[A-Za-z0-9.+-]+\/[A-Za-z0-9.+-]+$/', $mime)
+            ? $mime
+            : 'application/octet-stream';
     }
 
     private function institutionAreas(): array

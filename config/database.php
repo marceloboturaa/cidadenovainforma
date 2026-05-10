@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/env.php';
+
 return [
     'driver' => 'mysql',
     'host' => getenv('DB_HOST') ?: '127.0.0.1',

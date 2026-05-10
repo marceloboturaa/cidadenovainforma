@@ -86,6 +86,8 @@ class News
 
     public static function publicList(array $filters = [], int $limit = 12): array
     {
+        Tag::ensureSchema();
+
         $sql = 'SELECT DISTINCT news.*, users.name AS author_name, categories.name AS category_name, categories.slug AS category_slug
                 FROM news
                 INNER JOIN users ON users.id = news.author_id
@@ -112,6 +114,7 @@ class News
                 OR news.content LIKE :q_content
                 OR categories.name LIKE :q_category
                 OR tags.name LIKE :q_tag
+                OR tags.display_name LIKE :q_tag_display
                 OR users.name LIKE :q_author
             )';
             $term = '%' . $filters['q'] . '%';
@@ -120,6 +123,7 @@ class News
             $params['q_content'] = $term;
             $params['q_category'] = $term;
             $params['q_tag'] = $term;
+            $params['q_tag_display'] = $term;
             $params['q_author'] = $term;
         }
 
@@ -226,6 +230,7 @@ class News
 
         $stmt = Database::connection()->prepare(
             'UPDATE news SET
+                author_id = :author_id,
                 category_id = :category_id,
                 title = :title,
                 slug = :slug,
@@ -246,14 +251,12 @@ class News
                 updated_at = NOW()
              WHERE id = :id'
         );
-
-        unset($payload['author_id']);
         $stmt->execute($payload);
     }
 
     public static function changeStatus(int $id, string $status, ?int $approvedBy = null): void
     {
-        $publishedAt = $status === 'published' ? 'NOW()' : 'published_at';
+        $publishedAt = $status === 'published' ? 'COALESCE(published_at, NOW())' : 'published_at';
         $stmt = Database::connection()->prepare(
             "UPDATE news
              SET status = :status,
@@ -267,6 +270,13 @@ class News
             'status' => $status,
             'approved_by' => $approvedBy,
         ]);
+    }
+
+    public static function delete(int $id): void
+    {
+        Database::connection()
+            ->prepare('DELETE FROM news WHERE id = :id')
+            ->execute(['id' => $id]);
     }
 
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string

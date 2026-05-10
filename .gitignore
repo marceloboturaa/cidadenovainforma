@@ -1,10 +1,19 @@
+/.env
+!/.env.example
+
 /public/uploads/*
+!/public/uploads/.htaccess
 !/public/uploads/news/
 /public/uploads/news/*
 !/public/uploads/news/.gitkeep
+!/public/uploads/documents/
+/public/uploads/documents/*
+!/public/uploads/documents/.htaccess
 
 /storage/backups/*
 !/storage/backups/.gitkeep
+/storage/documents/*
+!/storage/documents/.gitkeep
 /storage/temp/*
 !/storage/temp/.gitkeep
 

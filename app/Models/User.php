@@ -36,11 +36,24 @@ class User
     public static function all(): array
     {
         $stmt = Database::connection()->query(
-            'SELECT users.id, users.name, users.email, users.active, users.created_at, roles.name AS role_name
+            'SELECT users.id, users.name, users.email, users.active, users.created_at, roles.name AS role_name, roles.slug AS role_slug
              FROM users
              INNER JOIN roles ON roles.id = users.role_id
              ORDER BY users.created_at DESC'
         );
+        return $stmt->fetchAll();
+    }
+
+    public static function activeForAccessLists(): array
+    {
+        $stmt = Database::connection()->query(
+            'SELECT users.id, users.name, users.email, roles.name AS role_name, roles.slug AS role_slug
+             FROM users
+             INNER JOIN roles ON roles.id = users.role_id
+             WHERE users.active = 1
+             ORDER BY roles.level DESC, users.name ASC'
+        );
+
         return $stmt->fetchAll();
     }
 
@@ -97,6 +110,10 @@ class User
 
     public static function storeResetToken(int $userId, string $tokenHash, string $expiresAt): void
     {
+        Database::connection()
+            ->prepare('UPDATE password_resets SET used_at = NOW() WHERE user_id = :user_id AND used_at IS NULL')
+            ->execute(['user_id' => $userId]);
+
         $stmt = Database::connection()->prepare(
             'INSERT INTO password_resets (user_id, token_hash, expires_at, created_at)
              VALUES (:user_id, :token_hash, :expires_at, NOW())'
@@ -110,6 +127,12 @@ class User
 
     public static function findValidReset(string $token): ?array
     {
+        $token = trim($token);
+
+        if ($token === '') {
+            return null;
+        }
+
         $hash = hash('sha256', $token);
         $stmt = Database::connection()->prepare(
             'SELECT * FROM password_resets

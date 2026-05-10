@@ -128,7 +128,7 @@
             <?php foreach (($tags ?? []) as $tag): ?>
                 <label>
                     <input type="checkbox" name="related_tags[]" value="<?= e($tag['slug']) ?>" <?= checked(in_array($tag['slug'], $page['related_tags'] ?? [], true)) ?>>
-                    <span><?= e($tag['name']) ?></span>
+                    <span><?= e($tag['display_name'] ?? $tag['name']) ?></span>
                 </label>
             <?php endforeach; ?>
             <?php if (empty($tags)): ?>

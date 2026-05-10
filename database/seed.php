@@ -44,12 +44,20 @@ $pdo->prepare('INSERT IGNORE INTO site_settings (name, value, updated_at) VALUES
     ->execute(['registration_enabled', '1']);
 
 $institutionTags = [
-    ['Biblioteca', 'biblioteca'],
-    ['Horta', 'horta'],
-    ['Rádio', 'radio'],
+    ['biblioteca', 'Biblioteca', 'biblioteca'],
+    ['horta', 'Horta', 'horta'],
+    ['radio', 'Rádio', 'radio'],
 ];
 
-$stmt = $pdo->prepare('INSERT IGNORE INTO tags (name, slug, created_at) VALUES (?, ?, NOW())');
+$tagColumns = $pdo->query('SHOW COLUMNS FROM tags')->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array('display_name', $tagColumns, true)) {
+    $pdo->exec('ALTER TABLE tags ADD COLUMN display_name VARCHAR(120) NULL AFTER name');
+    $pdo->exec('UPDATE tags SET display_name = name WHERE display_name IS NULL OR display_name = ""');
+}
+$pdo->exec('UPDATE tags SET display_name = name WHERE display_name IS NULL OR display_name = ""');
+$pdo->exec('UPDATE tags SET name = slug WHERE slug IS NOT NULL AND slug <> "" AND name <> slug');
+
+$stmt = $pdo->prepare('INSERT IGNORE INTO tags (name, display_name, slug, created_at) VALUES (?, ?, ?, NOW())');
 foreach ($institutionTags as $tag) {
     $stmt->execute($tag);
 }
@@ -84,6 +92,44 @@ $pdo->exec(
     ) ENGINE=InnoDB'
 );
 
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS team_documents (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        uploaded_by BIGINT UNSIGNED NOT NULL,
+        title VARCHAR(180) NOT NULL,
+        path VARCHAR(255) NOT NULL,
+        mime_type VARCHAR(120) NOT NULL,
+        original_name VARCHAR(190) NOT NULL,
+        size_bytes BIGINT UNSIGNED NOT NULL,
+        is_public TINYINT(1) NOT NULL DEFAULT 0,
+        active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at TIMESTAMP NULL,
+        updated_at TIMESTAMP NULL,
+        CONSTRAINT fk_team_documents_user FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB'
+);
+
+$teamDocumentColumns = $pdo->query('SHOW COLUMNS FROM team_documents')->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array('is_public', $teamDocumentColumns, true)) {
+    $pdo->exec('ALTER TABLE team_documents ADD COLUMN is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes');
+}
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS team_document_users (
+        document_id BIGINT UNSIGNED NOT NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
+        created_at TIMESTAMP NULL,
+        PRIMARY KEY (document_id, user_id),
+        CONSTRAINT fk_team_document_users_document FOREIGN KEY (document_id) REFERENCES team_documents(id) ON DELETE CASCADE,
+        CONSTRAINT fk_team_document_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB'
+);
+
+$storageDocumentsDir = dirname(__DIR__) . '/storage/documents';
+if (!is_dir($storageDocumentsDir)) {
+    mkdir($storageDocumentsDir, 0775, true);
+}
+
 $columns = [
     'is_archive' => "ALTER TABLE news ADD COLUMN is_archive TINYINT(1) NOT NULL DEFAULT 0 AFTER urgent",
     'original_published_at' => "ALTER TABLE news ADD COLUMN original_published_at DATE NULL AFTER is_archive",
@@ -105,6 +151,7 @@ $roles = [
     ['ADMIN', 'admin', 80],
     ['ADMIN LOCAL', 'admin-local', 60],
     ['JORNALISTA', 'jornalista', 40],
+    ['EQUIPE', 'equipe', 20],
 ];
 
 $permissions = [
@@ -120,6 +167,8 @@ $permissions = [
     ['Gerenciar publicidade', 'ads.manage'],
     ['Gerenciar regiões', 'regions.manage'],
     ['Gerenciar menu', 'menu.manage'],
+    ['Ver documentos', 'documents.view'],
+    ['Gerenciar documentos', 'documents.manage'],
 ];
 
 $stmt = $pdo->prepare('INSERT IGNORE INTO roles (name, slug, level, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())');
@@ -147,6 +196,7 @@ $grants = [
     'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage'],
     'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage'],
     'jornalista' => ['news.create'],
+    'equipe' => ['documents.view'],
 ];
 
 $stmt = $pdo->prepare('INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)');

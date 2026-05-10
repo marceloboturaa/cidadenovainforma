@@ -11,6 +11,7 @@ use App\Core\View;
 use App\Models\Category;
 use App\Models\News;
 use App\Models\Tag;
+use App\Models\User;
 
 class NewsController
 {
@@ -49,6 +50,7 @@ class NewsController
         View::render('admin/news/form', [
             'newsItem' => null,
             'categories' => Category::active(),
+            'users' => $this->authorOptions(),
             'tags' => '',
             'action' => url('/admin/news'),
             'title' => 'Nova notícia',
@@ -61,10 +63,12 @@ class NewsController
         $this->validateRequest('/admin/news/create');
 
         $data = $this->validatedData();
-        $data['author_id'] = current_user()['id'];
+        $data['author_id'] = $this->authorIdFromRequest((int) current_user()['id']);
         $data['slug'] = News::uniqueSlug($data['title']);
         $data['status'] = $this->requestedStatus();
+        $data['published_at'] = $this->publishedAtFromRequest();
         $data['cover_image'] = $this->uploadCover();
+        $data['content'] .= $this->uploadContentMediaHtml();
 
         $newsId = News::create($data);
         Tag::syncForNews($newsId, $_POST['tags'] ?? '');
@@ -83,6 +87,7 @@ class NewsController
         View::render('admin/news/form', [
             'newsItem' => $newsItem,
             'categories' => Category::active(),
+            'users' => $this->authorOptions(),
             'tags' => Tag::namesForNews((int) $newsItem['id']),
             'action' => url('/admin/news/update?id=' . $newsItem['id']),
             'title' => 'Editar notícia',
@@ -97,10 +102,12 @@ class NewsController
         $this->validateRequest('/admin/news/edit?id=' . $newsItem['id']);
 
         $data = $this->validatedData();
+        $data['author_id'] = $this->authorIdFromRequest((int) $newsItem['author_id']);
         $data['slug'] = News::uniqueSlug($data['title'], (int) $newsItem['id']);
         $data['status'] = $this->nextStatusAfterEdit($newsItem);
-        $data['published_at'] = $newsItem['published_at'];
-        $data['cover_image'] = $this->uploadCover() ?: $newsItem['cover_image'];
+        $data['published_at'] = $this->publishedAtFromRequest() ?: $newsItem['published_at'];
+        $data['cover_image'] = $this->coverImageFromRequest($newsItem['cover_image']);
+        $data['content'] .= $this->uploadContentMediaHtml();
 
         News::update((int) $newsItem['id'], $data);
         Tag::syncForNews((int) $newsItem['id'], $_POST['tags'] ?? '');
@@ -155,6 +162,24 @@ class NewsController
         redirect('/admin/news');
     }
 
+    public function delete(): void
+    {
+        Middleware::auth();
+        $this->validateRequest('/admin/news');
+        $newsItem = $this->newsFromQuery();
+
+        if ((current_user()['role_slug'] ?? '') !== 'master') {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+
+        News::delete((int) $newsItem['id']);
+        Logger::info('news.deleted', 'Matéria excluída: ' . $newsItem['title'], current_user()['id']);
+        Session::flash('success', 'Matéria excluída permanentemente.');
+        redirect('/admin/news');
+    }
+
     private function validateRequest(string $fallback): void
     {
         if (!Csrf::validate($_POST['_token'] ?? null)) {
@@ -168,7 +193,9 @@ class NewsController
         $title = trim($_POST['title'] ?? '');
         $content = clean_article_html($_POST['content'] ?? '');
 
-        if ($title === '' || trim(strip_tags($content)) === '') {
+        $hasMedia = (bool) preg_match('/<(img|iframe|video|audio)\b/i', $content);
+        $hasUploadedMedia = !empty($_FILES['content_media']['name'][0]);
+        if ($title === '' || (trim(strip_tags($content)) === '' && !$hasMedia && !$hasUploadedMedia)) {
             Session::flash('error', 'Título e conteúdo são obrigatórios.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/news');
         }
@@ -190,6 +217,23 @@ class NewsController
         ];
     }
 
+    private function authorOptions(): array
+    {
+        return (current_user()['role_slug'] ?? '') === 'master' ? User::activeForAccessLists() : [];
+    }
+
+    private function authorIdFromRequest(int $fallback): int
+    {
+        if ((current_user()['role_slug'] ?? '') !== 'master') {
+            return $fallback;
+        }
+
+        $authorId = filter_input(INPUT_POST, 'author_id', FILTER_VALIDATE_INT);
+        $author = $authorId ? User::findWithRole($authorId) : null;
+
+        return $author ? (int) $author['id'] : $fallback;
+    }
+
     private function requestedStatus(): string
     {
         if (($_POST['intent'] ?? '') === 'submit') {
@@ -209,7 +253,24 @@ class NewsController
             return $newsItem['status'];
         }
 
+        if ($newsItem['status'] === 'published') {
+            return 'pending';
+        }
+
         return 'draft';
+    }
+
+    private function publishedAtFromRequest(): ?string
+    {
+        $value = trim($_POST['published_at'] ?? '');
+
+        if ($value === '') {
+            return null;
+        }
+
+        $date = \DateTime::createFromFormat('Y-m-d\TH:i', $value);
+
+        return $date ? $date->format('Y-m-d H:i:s') : null;
     }
 
     private function newsFromQuery(): array
@@ -236,7 +297,7 @@ class NewsController
             Middleware::permission('news.manage');
         }
 
-        if (in_array($newsItem['status'], ['published', 'archived'], true)) {
+        if ($newsItem['status'] === 'archived') {
             http_response_code(403);
             View::render('errors/403');
             exit;
@@ -245,6 +306,11 @@ class NewsController
 
     private function uploadCover(): ?string
     {
+        $externalCover = $this->externalMediaUrl($_POST['cover_image_url'] ?? '', 'image');
+        if ($externalCover) {
+            return $externalCover;
+        }
+
         if (empty($_FILES['cover_image']['name']) || $_FILES['cover_image']['error'] !== UPLOAD_ERR_OK) {
             return null;
         }
@@ -252,7 +318,7 @@ class NewsController
         $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
         $mime = mime_content_type($_FILES['cover_image']['tmp_name']);
 
-        if (!isset($allowed[$mime]) || $_FILES['cover_image']['size'] > 3 * 1024 * 1024) {
+        if (!isset($allowed[$mime]) || $_FILES['cover_image']['size'] > 3 * 1024 * 1024 || !getimagesize($_FILES['cover_image']['tmp_name'])) {
             Session::flash('error', 'Imagem invalida. Use JPG, PNG ou WEBP com ate 3MB.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/news');
         }
@@ -271,5 +337,89 @@ class NewsController
         }
 
         return '/public/uploads/news/' . $filename;
+    }
+
+    private function coverImageFromRequest(?string $existing): ?string
+    {
+        return $this->uploadCover() ?: $existing;
+    }
+
+    private function uploadContentMediaHtml(): string
+    {
+        if (empty($_FILES['content_media']['name']) || !is_array($_FILES['content_media']['name'])) {
+            return '';
+        }
+
+        $allowed = [
+            'image/jpeg' => ['jpg', 'image'],
+            'image/png' => ['png', 'image'],
+            'image/webp' => ['webp', 'image'],
+            'video/mp4' => ['mp4', 'video'],
+            'video/webm' => ['webm', 'video'],
+            'audio/mpeg' => ['mp3', 'audio'],
+            'audio/mp3' => ['mp3', 'audio'],
+            'audio/ogg' => ['ogg', 'audio'],
+            'audio/wav' => ['wav', 'audio'],
+        ];
+        $maxSize = 25 * 1024 * 1024;
+        $directory = dirname(__DIR__, 3) . '/public/uploads/news';
+
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        $html = [];
+        foreach ($_FILES['content_media']['name'] as $index => $name) {
+            if (($_FILES['content_media']['error'][$index] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                continue;
+            }
+
+            $tmpName = $_FILES['content_media']['tmp_name'][$index] ?? '';
+            $size = (int) ($_FILES['content_media']['size'][$index] ?? 0);
+            $mime = $tmpName ? (mime_content_type($tmpName) ?: '') : '';
+
+            if (!isset($allowed[$mime]) || $size <= 0 || $size > $maxSize) {
+                continue;
+            }
+
+            [$extension, $type] = $allowed[$mime];
+            if ($type === 'image' && !getimagesize($tmpName)) {
+                continue;
+            }
+
+            $filename = bin2hex(random_bytes(16)) . '.' . $extension;
+            $target = $directory . '/' . $filename;
+            if (!move_uploaded_file($tmpName, $target)) {
+                continue;
+            }
+
+            $path = '/public/uploads/news/' . $filename;
+            if ($type === 'image') {
+                $html[] = '<p><img src="' . e($path) . '" alt=""></p>';
+            } elseif ($type === 'video') {
+                $html[] = '<p><video controls src="' . e($path) . '"></video></p>';
+            } elseif ($type === 'audio') {
+                $html[] = '<p><audio controls src="' . e($path) . '"></audio></p>';
+            }
+        }
+
+        return $html ? "\n" . implode("\n", $html) : '';
+    }
+
+    private function externalMediaUrl(string $url, string $type): ?string
+    {
+        $url = trim($url);
+        if ($url === '' || !preg_match('#^https?://#i', $url)) {
+            return null;
+        }
+
+        $path = parse_url($url, PHP_URL_PATH) ?: '';
+        $patterns = [
+            'image' => '#^.+$#',
+            'video' => '#\.(mp4|webm)$#i',
+            'audio' => '#\.(mp3|ogg|wav)$#i',
+        ];
+
+        return preg_match($patterns[$type] ?? '#a\A#', $path) ? $url : null;
     }
 }

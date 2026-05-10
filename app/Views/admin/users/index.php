@@ -1,12 +1,15 @@
 <div class="page-heading">
     <div>
         <p>Controle de acesso</p>
-        <h1>Usuários e cargos</h1>
+        <h1>Equipe e acessos</h1>
     </div>
 </div>
 
-<section class="panel">
-    <h2>Novo usuário</h2>
+<section class="panel user-create-panel">
+    <div class="section-heading">
+        <h2>Novo membro da equipe</h2>
+        <span>Crie o login e defina o cargo inicial</span>
+    </div>
     <form method="post" action="<?= e(url('/admin/users')) ?>" class="admin-form-grid users-form-grid">
         <?= csrf_field() ?>
         <div>
@@ -103,59 +106,60 @@
 
 <section class="panel">
     <div class="section-heading">
-        <h2>Usuários cadastrados</h2>
-        <span><?= e((string) count($users)) ?> usuário(s)</span>
+        <h2>Equipe cadastrada</h2>
+        <span><?= e((string) count($users)) ?> membro(s)</span>
     </div>
-    <div class="admin-card-list">
+    <div class="user-directory">
         <?php foreach ($users as $item): ?>
-            <article class="admin-list-card user-card">
-                <div class="admin-list-main">
+            <article class="user-directory-card">
+                <div class="user-profile-block">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($item['name']) ?></strong>
                         <span class="state-pill <?= $item['active'] ? 'is-active' : 'is-muted' ?>"><?= $item['active'] ? 'Ativo' : 'Inativo' ?></span>
                     </div>
-                    <dl class="admin-list-meta">
-                        <div>
-                            <dt>E-mail</dt>
-                            <dd><?= e($item['email']) ?></dd>
-                        </div>
-                        <div>
-                            <dt>Cargo</dt>
-                            <dd><?= e($item['role_name']) ?></dd>
-                        </div>
-                        <div>
-                            <dt>Criado em</dt>
-                            <dd><?= e($item['created_at']) ?></dd>
-                        </div>
-                    </dl>
+                    <p><?= e($item['email']) ?></p>
+                    <div class="user-role-line">
+                        <span><?= e($item['role_name']) ?></span>
+                        <?php if (($item['role_slug'] ?? '') === 'equipe'): ?>
+                            <strong>Acesso a documentos liberados</strong>
+                        <?php endif; ?>
+                    </div>
+                    <small>Criado em <?= e($item['created_at']) ?></small>
                 </div>
-                <div class="admin-list-actions">
+                <div class="user-management-block">
                     <?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
-                        <form method="post" action="<?= e(url('/admin/users/responsibilities?id=' . $item['id'])) ?>" class="responsibility-form">
-                            <?= csrf_field() ?>
-                            <strong>Páginas responsáveis</strong>
-                            <div class="responsibility-options">
-                                <?php foreach (($institutionPages ?? []) as $page): ?>
-                                    <label>
-                                        <input type="checkbox" name="pages[]" value="<?= e($page['slug']) ?>" <?= checked(in_array($page['slug'], $userResponsibilities[(int) $item['id']] ?? [], true)) ?>>
-                                        <span><?= e($page['name']) ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            <button class="btn btn-sm btn-outline-primary">Salvar páginas</button>
-                        </form>
-                        <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="password-reset-row">
-                            <?= csrf_field() ?>
-                            <div class="password-field">
-                                <input class="form-control form-control-sm" name="password" type="password" minlength="8" placeholder="Nova senha" required>
-                                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
-                            </div>
-                            <div class="password-field">
-                                <input class="form-control form-control-sm" name="password_confirmation" type="password" minlength="8" placeholder="Confirmar senha" required>
-                                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
-                            </div>
-                            <button class="btn btn-sm btn-outline-secondary">Resetar</button>
-                        </form>
+                        <?php if ($institutionPages ?? []): ?>
+                            <details>
+                                <summary>Páginas institucionais</summary>
+                                <form method="post" action="<?= e(url('/admin/users/responsibilities?id=' . $item['id'])) ?>" class="responsibility-form">
+                                    <?= csrf_field() ?>
+                                    <div class="responsibility-options">
+                                        <?php foreach (($institutionPages ?? []) as $page): ?>
+                                            <label>
+                                                <input type="checkbox" name="pages[]" value="<?= e($page['slug']) ?>" <?= checked(in_array($page['slug'], $userResponsibilities[(int) $item['id']] ?? [], true)) ?>>
+                                                <span><?= e($page['name']) ?></span>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary">Salvar páginas</button>
+                                </form>
+                            </details>
+                        <?php endif; ?>
+                        <details>
+                            <summary>Redefinir senha</summary>
+                            <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="password-reset-row">
+                                <?= csrf_field() ?>
+                                <div class="password-field">
+                                    <input class="form-control form-control-sm" name="password" type="password" minlength="8" placeholder="Nova senha" required>
+                                    <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+                                </div>
+                                <div class="password-field">
+                                    <input class="form-control form-control-sm" name="password_confirmation" type="password" minlength="8" placeholder="Confirmar senha" required>
+                                    <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary">Resetar senha</button>
+                            </form>
+                        </details>
                     <?php else: ?>
                         <span class="text-muted">Somente master</span>
                     <?php endif; ?>

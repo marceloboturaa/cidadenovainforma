@@ -312,8 +312,7 @@ main {
     padding-bottom: 16px;
 }
 
-.news-card img,
-.image-placeholder {
+.news-card img {
     width: 100%;
     aspect-ratio: 16 / 10;
     object-fit: cover;
@@ -321,18 +320,64 @@ main {
     margin-bottom: 10px;
 }
 
-.image-placeholder {
-    display: grid;
-    place-items: center;
-    background: var(--soft);
-    color: var(--brand);
-    font-weight: 800;
-}
-
 .news-card h2 {
     margin: 5px 0 8px;
     font-size: 1.18rem;
     line-height: 1.25;
+}
+
+.archive-badge {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    width: fit-content;
+    margin-left: 6px;
+    padding: 4px 8px;
+    border: 1px solid #f4c56a;
+    border-radius: 999px;
+    background: #fffbeb;
+    color: #8a5b08;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.archive-badge i {
+    position: relative;
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+}
+
+.archive-badge i::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 3px;
+    height: 3px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.archive-badge i::after {
+    content: "";
+    position: absolute;
+    right: -4px;
+    bottom: -3px;
+    width: 7px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    transform: rotate(45deg);
+}
+
+.archive-badge-lg {
+    margin-left: 0;
+    padding: 6px 10px;
 }
 
 .empty-public {
@@ -403,17 +448,6 @@ main {
     gap: 8px;
 }
 
-.archive-head span {
-    display: inline-block;
-    padding: 3px 7px;
-    border-radius: 999px;
-    background: #b8871c;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
 .archive-head strong {
     font-size: 0.95rem;
 }
@@ -459,16 +493,71 @@ main {
 
 .article-content p {
     margin: 0 0 1.25em;
+    font-weight: 400;
 }
 
 .article-content p:last-child {
     margin-bottom: 0;
 }
 
-.article-content h2,
-.article-content h3 {
+.article-content .text-color-ink {
+    color: #111827;
+}
+
+.article-content .text-color-red {
+    color: #b91c1c;
+}
+
+.article-content .text-color-orange {
+    color: #c2410c;
+}
+
+.article-content .text-color-blue {
+    color: #2563eb;
+}
+
+.article-content .text-color-green {
+    color: #15803d;
+}
+
+.article-content .text-color-teal {
+    color: #0f766e;
+}
+
+.article-content .text-color-gold {
+    color: #a16207;
+}
+
+.article-content .text-color-gray {
+    color: #6b7280;
+}
+
+.article-content .text-align-left {
+    text-align: left;
+}
+
+.article-content .text-align-center {
+    text-align: center;
+}
+
+.article-content .text-align-right {
+    text-align: right;
+}
+
+.article-content .text-align-justify {
+    text-align: justify;
+}
+
+.article-content h2 {
     margin: 28px 0 12px;
+    font-size: 1.55rem;
     line-height: 1.2;
+}
+
+.article-content h3 {
+    margin: 24px 0 10px;
+    font-size: 1.22rem;
+    line-height: 1.25;
 }
 
 .article-content ul,
@@ -495,6 +584,27 @@ main {
     height: auto;
     margin: 22px 0;
     border-radius: 8px;
+}
+
+.article-content iframe,
+.article-content video,
+.article-content audio {
+    display: block;
+    width: 100%;
+    margin: 24px 0;
+    border: 0;
+    border-radius: 8px;
+    background: #111827;
+}
+
+.article-content iframe,
+.article-content video {
+    aspect-ratio: 16 / 9;
+    min-height: 280px;
+}
+
+.article-content audio {
+    background: #f3f4f6;
 }
 
 .article-content a {
@@ -974,6 +1084,48 @@ main {
     color: var(--muted);
 }
 
+.public-document-list {
+    display: grid;
+    gap: 12px;
+    max-width: 850px;
+}
+
+.public-document-card {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.public-document-card span {
+    color: var(--brand);
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.public-document-card h2 {
+    margin: 4px 0;
+    font-size: 1.15rem;
+}
+
+.public-document-card p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.public-document-card a {
+    flex: 0 0 auto;
+    padding: 9px 13px;
+    border-radius: 8px;
+    background: var(--brand);
+    color: #ffffff;
+    font-weight: 800;
+}
+
 .area-side {
     position: sticky;
     top: 92px;
@@ -1281,6 +1433,15 @@ main {
 
     .area-photo-grid {
         grid-template-columns: 1fr;
+    }
+
+    .public-document-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .public-document-card a {
+        text-align: center;
     }
 
     .area-photo-grid a {

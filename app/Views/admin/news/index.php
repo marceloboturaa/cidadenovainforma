@@ -46,8 +46,9 @@
     <div class="news-admin-list">
         <?php foreach ($news as $item): ?>
             <?php
-                $canEditItem = \App\Core\Auth::can('news.manage') || ((int) $item['author_id'] === (int) current_user()['id'] && !in_array($item['status'], ['published', 'archived'], true));
+                $canEditItem = \App\Core\Auth::can('news.manage') || ((int) $item['author_id'] === (int) current_user()['id'] && $item['status'] !== 'archived');
                 $canArchiveItem = \App\Core\Auth::can('news.manage') || ((int) $item['author_id'] === (int) current_user()['id'] && !in_array($item['status'], ['published', 'archived'], true));
+                $canDeleteItem = (current_user()['role_slug'] ?? '') === 'master';
             ?>
             <article class="news-admin-item">
                 <div class="news-admin-body">
@@ -63,7 +64,7 @@
                             <span class="badge text-bg-warning">Destaque</span>
                         <?php endif; ?>
                         <?php if ($item['is_archive']): ?>
-                            <span class="badge text-bg-secondary">Acervo</span>
+                            <span class="archive-admin-badge"><i class="bi bi-archive" aria-hidden="true"></i>Acervo</span>
                         <?php endif; ?>
                     </div>
                     <dl class="news-admin-meta">
@@ -101,6 +102,13 @@
                         <form class="inline-form" method="post" action="<?= e(url('/admin/news/archive?id=' . $item['id'])) ?>">
                             <?= csrf_field() ?>
                             <button class="btn btn-sm btn-outline-dark">Arquivar</button>
+                        </form>
+                    <?php endif; ?>
+
+                    <?php if ($canDeleteItem): ?>
+                        <form class="inline-form" method="post" action="<?= e(url('/admin/news/delete?id=' . $item['id'])) ?>" onsubmit="return confirm('Excluir esta notícia permanentemente? Esta ação não pode ser desfeita.');">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3" aria-hidden="true"></i> Excluir</button>
                         </form>
                     <?php endif; ?>
                 </div>
