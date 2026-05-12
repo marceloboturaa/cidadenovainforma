@@ -739,7 +739,7 @@ class BackupController
             return false;
         }
 
-        $blocked = ['bat', 'cmd', 'com', 'exe', 'htaccess', 'html', 'htm', 'js', 'msi', 'phtml', 'phar', 'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'pl', 'ps1', 'py', 'sh', 'shtml', 'svg', 'vbs'];
+        $blocked = ['bat', 'cmd', 'com', 'exe', 'htaccess', 'html', 'htm', 'js', 'msi', 'phtml', 'phar', 'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'pl', 'ps1', 'py', 'sh', 'shtml', 'vbs'];
 
         return !in_array(strtolower($matches[1]), $blocked, true);
     }

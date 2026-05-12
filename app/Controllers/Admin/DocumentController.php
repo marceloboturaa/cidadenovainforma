@@ -18,6 +18,9 @@ class DocumentController
 
     private const DEFAULT_ALLOWED_EXTENSIONS = [
         'pdf',
+        'ai',
+        'cdr',
+        'eps',
         'doc',
         'docx',
         'xls',
@@ -28,7 +31,23 @@ class DocumentController
         'ods',
         'odp',
         'txt',
+        'csv',
+        'rtf',
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'webp',
+        'svg',
+        'mp4',
+        'mov',
+        'avi',
+        'mkv',
+        'mp3',
+        'wav',
         'zip',
+        'rar',
+        '7z',
     ];
 
     private const BLOCKED_EXTENSIONS = [
@@ -54,7 +73,6 @@ class DocumentController
         'py',
         'sh',
         'shtml',
-        'svg',
         'vbs',
     ];
 

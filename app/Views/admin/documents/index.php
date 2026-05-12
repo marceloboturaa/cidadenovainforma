@@ -57,9 +57,9 @@
             <?= csrf_field() ?>
             <label class="form-label">
                 Extensões liberadas para upload
-                <textarea class="form-control" name="allowed_extensions" rows="3" placeholder="pdf, docx, ai, cdr, eps, mov"><?= e($allowedExtensionsText ?? '') ?></textarea>
+                <textarea class="form-control" name="allowed_extensions" rows="3" placeholder="pdf, ai, cdr, eps, png, svg, mov, xlsx, rar"><?= e($allowedExtensionsText ?? '') ?></textarea>
             </label>
-            <p class="form-text">Separe por vírgula ou espaço. Exemplos: pdf, ai, cdr, eps, mov. Extensões executáveis e scripts são bloqueados.</p>
+            <p class="form-text">Separe por vírgula ou espaço. Exemplos: pdf, ai, cdr, eps, png, svg, mov, xlsx, rar. Extensões executáveis e scripts são bloqueados.</p>
             <button class="btn btn-outline-primary">Salvar formatos</button>
         </form>
     </section>
