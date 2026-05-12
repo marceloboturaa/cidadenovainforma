@@ -7,11 +7,56 @@ use App\Core\Csrf;
 use App\Core\Session;
 use App\Core\View;
 use App\Models\Document;
+use App\Models\SiteSetting;
 use App\Models\User;
 
 class DocumentController
 {
     private const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+    private const DOCUMENT_FORMATS_SETTING = 'document_allowed_extensions';
+
+    private const DEFAULT_ALLOWED_EXTENSIONS = [
+        'pdf',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'ppt',
+        'pptx',
+        'odt',
+        'ods',
+        'odp',
+        'txt',
+        'zip',
+    ];
+
+    private const BLOCKED_EXTENSIONS = [
+        'bat',
+        'cmd',
+        'com',
+        'exe',
+        'htaccess',
+        'html',
+        'htm',
+        'js',
+        'msi',
+        'phtml',
+        'phar',
+        'php',
+        'php3',
+        'php4',
+        'php5',
+        'php7',
+        'php8',
+        'pl',
+        'ps1',
+        'py',
+        'sh',
+        'shtml',
+        'svg',
+        'vbs',
+    ];
 
     private const ALLOWED_MIME_TYPES = [
         'application/pdf' => 'pdf',
@@ -36,6 +81,10 @@ class DocumentController
             'documents' => Auth::can('documents.manage') ? Document::all() : Document::visibleForUser((int) current_user()['id']),
             'users' => User::activeForAccessLists(),
             'canManage' => Auth::can('documents.manage'),
+            'canManageFormats' => $this->currentUserIsMaster(),
+            'allowedExtensions' => $this->allowedExtensions(),
+            'allowedExtensionsText' => implode(', ', $this->allowedExtensions()),
+            'allowedAccept' => $this->allowedAccept(),
         ]);
     }
 
@@ -58,7 +107,7 @@ class DocumentController
         $extension = strtolower(pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION));
 
         if (!$this->documentExtensionIsAllowed($extension, $mime)) {
-            Session::flash('error', 'Tipo de documento não permitido.');
+            Session::flash('error', 'Tipo de documento não permitido. Formatos liberados: ' . implode(', ', $this->allowedExtensions()) . '.');
             redirect('/admin/documents');
         }
 
@@ -87,6 +136,23 @@ class DocumentController
         Document::updateAccess($documentId, isset($_POST['is_public']), $_POST['user_ids'] ?? []);
 
         Session::flash('success', 'Documento enviado.');
+        redirect('/admin/documents');
+    }
+
+    public function formats(): void
+    {
+        $this->authorizeMaster();
+        $this->validateCsrf();
+
+        $extensions = $this->normalizeExtensions((string) ($_POST['allowed_extensions'] ?? ''));
+
+        if (!$extensions) {
+            Session::flash('error', 'Informe pelo menos um formato permitido.');
+            redirect('/admin/documents');
+        }
+
+        SiteSetting::set(self::DOCUMENT_FORMATS_SETTING, implode(',', $extensions));
+        Session::flash('success', 'Formatos de documentos atualizados.');
         redirect('/admin/documents');
     }
 
@@ -125,7 +191,7 @@ class DocumentController
 
     private function documentExtensionIsAllowed(string $extension, string $mime): bool
     {
-        if (!in_array($extension, self::ALLOWED_MIME_TYPES, true)) {
+        if (!in_array($extension, $this->allowedExtensions(), true)) {
             return false;
         }
 
@@ -134,8 +200,14 @@ class DocumentController
         }
 
         $zipBasedDocuments = ['docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp', 'zip'];
-        return in_array($extension, $zipBasedDocuments, true)
-            && in_array($mime, ['application/zip', 'application/x-zip', 'application/x-zip-compressed', 'application/octet-stream'], true);
+        if (
+            in_array($extension, $zipBasedDocuments, true)
+            && in_array($mime, ['application/zip', 'application/x-zip', 'application/x-zip-compressed', 'application/octet-stream'], true)
+        ) {
+            return true;
+        }
+
+        return !isset(self::ALLOWED_MIME_TYPES[$mime]);
     }
 
     private function safeMimeType(string $mime): string
@@ -143,6 +215,42 @@ class DocumentController
         return preg_match('/^[A-Za-z0-9.+-]+\/[A-Za-z0-9.+-]+$/', $mime)
             ? $mime
             : 'application/octet-stream';
+    }
+
+    private function allowedExtensions(): array
+    {
+        $saved = SiteSetting::get(self::DOCUMENT_FORMATS_SETTING, implode(',', self::DEFAULT_ALLOWED_EXTENSIONS));
+        return $this->normalizeExtensions($saved) ?: self::DEFAULT_ALLOWED_EXTENSIONS;
+    }
+
+    private function allowedAccept(): string
+    {
+        return implode(',', array_map(
+            fn (string $extension): string => '.' . $extension,
+            $this->allowedExtensions()
+        ));
+    }
+
+    private function normalizeExtensions(string $value): array
+    {
+        $parts = preg_split('/[\s,;]+/', strtolower($value)) ?: [];
+        $extensions = [];
+
+        foreach ($parts as $part) {
+            $extension = trim($part, ". \t\n\r\0\x0B");
+
+            if (
+                $extension === ''
+                || !preg_match('/^[a-z0-9]{1,12}$/', $extension)
+                || in_array($extension, self::BLOCKED_EXTENSIONS, true)
+            ) {
+                continue;
+            }
+
+            $extensions[] = $extension;
+        }
+
+        return array_values(array_unique($extensions));
     }
 
     public function delete(): void
@@ -198,6 +306,21 @@ class DocumentController
             View::render('errors/403');
             exit;
         }
+    }
+
+    private function authorizeMaster(): void
+    {
+        if (!$this->currentUserIsMaster()) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+    }
+
+    private function currentUserIsMaster(): bool
+    {
+        $user = current_user();
+        return $user && ($user['role_slug'] ?? '') === 'master';
     }
 
     private function validateCsrf(): void

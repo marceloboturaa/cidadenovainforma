@@ -19,7 +19,8 @@
             </div>
             <div>
                 <label class="form-label">Arquivo</label>
-                <input class="form-control" name="document" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.txt,.zip" required>
+                <input class="form-control" name="document" type="file" accept="<?= e($allowedAccept ?? '') ?>" required>
+                <small class="form-text">Formatos liberados: <?= e($allowedExtensionsText ?? '') ?></small>
             </div>
             <div>
                 <label class="form-label">Visibilidade</label>
@@ -42,6 +43,24 @@
                     <?php endforeach; ?>
                 </div>
             </details>
+        </form>
+    </section>
+<?php endif; ?>
+
+<?php if (!empty($canManageFormats)): ?>
+    <section class="panel document-formats-panel">
+        <div class="section-heading">
+            <h2>Formatos permitidos</h2>
+            <span>Controle exclusivo do MASTER</span>
+        </div>
+        <form method="post" action="<?= e(url('/admin/documents/formats')) ?>" class="document-formats-form">
+            <?= csrf_field() ?>
+            <label class="form-label">
+                Extensões liberadas para upload
+                <textarea class="form-control" name="allowed_extensions" rows="3" placeholder="pdf, docx, ai, cdr, eps, mov"><?= e($allowedExtensionsText ?? '') ?></textarea>
+            </label>
+            <p class="form-text">Separe por vírgula ou espaço. Exemplos: pdf, ai, cdr, eps, mov. Extensões executáveis e scripts são bloqueados.</p>
+            <button class="btn btn-outline-primary">Salvar formatos</button>
         </form>
     </section>
 <?php endif; ?>

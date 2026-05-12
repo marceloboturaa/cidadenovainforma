@@ -90,6 +90,7 @@ $router->post('/admin/backups/news/import', [BackupController::class, 'importNew
 
 $router->get('/admin/documents', [DocumentController::class, 'index']);
 $router->post('/admin/documents', [DocumentController::class, 'store']);
+$router->post('/admin/documents/formats', [DocumentController::class, 'formats']);
 $router->get('/admin/documents/download', [DocumentController::class, 'download']);
 $router->post('/admin/documents/access', [DocumentController::class, 'access']);
 $router->post('/admin/documents/delete', [DocumentController::class, 'delete']);

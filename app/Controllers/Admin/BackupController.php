@@ -735,8 +735,13 @@ class BackupController
 
     private function isSafeDocumentStorageEntry(string $entry): bool
     {
-        return (bool) preg_match('#^storage/documents/[A-Za-z0-9._/-]+\.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|txt|zip)$#i', $entry)
-            && !str_contains($entry, '../');
+        if (str_contains($entry, '../') || !preg_match('#^storage/documents/[A-Za-z0-9._/-]+\.([A-Za-z0-9]{1,12})$#', $entry, $matches)) {
+            return false;
+        }
+
+        $blocked = ['bat', 'cmd', 'com', 'exe', 'htaccess', 'html', 'htm', 'js', 'msi', 'phtml', 'phar', 'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'pl', 'ps1', 'py', 'sh', 'shtml', 'svg', 'vbs'];
+
+        return !in_array(strtolower($matches[1]), $blocked, true);
     }
 
     private function copyNewsAssetsFromZip(\ZipArchive $zip, array $news): void
