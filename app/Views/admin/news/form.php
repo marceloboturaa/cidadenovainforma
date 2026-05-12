@@ -144,7 +144,7 @@ $status = $newsItem['status'] ?? 'draft';
                 <?= article_html($newsItem['content'] ?? '') ?>
             </div>
             <textarea class="html-editor" data-html-editor hidden spellcheck="false"></textarea>
-            <input class="content-media-hidden" id="content-media-input" name="content_media[]" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,audio/mpeg,audio/mp3,audio/ogg,audio/wav" multiple>
+            <input class="content-media-hidden" id="content-media-input" name="content_media[]" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,audio/mpeg,audio/mp3,audio/ogg,audio/wav" multiple>
         </div>
     </section>
 
@@ -201,7 +201,7 @@ $status = $newsItem['status'] ?? 'draft';
         <div class="config-block">
             <h3>Imagem de capa</h3>
             <label class="form-label">Imagem de capa</label>
-            <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp">
+            <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
             <label class="form-label mt-3">Ou link externo da capa</label>
             <input class="form-control" name="cover_image_url" value="<?= !empty($newsItem['cover_image']) && preg_match('#^https?://#i', $newsItem['cover_image']) ? e($newsItem['cover_image']) : '' ?>" placeholder="https://site.com/imagem.jpg">
             <p class="field-hint">A capa aparece nas listagens e no compartilhamento. Imagens do corpo ficam no menu Imagem do editor.</p>

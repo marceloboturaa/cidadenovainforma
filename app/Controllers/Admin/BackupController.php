@@ -834,7 +834,7 @@ class BackupController
         }
 
         $pattern = $coverOnly
-            ? '#^/public/uploads/news/[A-Za-z0-9._-]+\.(jpe?g|png|webp)$#i'
+            ? '#^/public/uploads/news/[A-Za-z0-9._-]+\.(jpe?g|png|webp|gif)$#i'
             : '#^/public/uploads/news/[A-Za-z0-9._/-]+\.(jpe?g|png|webp|gif)$#i';
 
         if (!preg_match($pattern, $path)) {

@@ -110,6 +110,8 @@ class User
 
     public static function storeResetToken(int $userId, string $tokenHash, string $expiresAt): void
     {
+        self::ensurePasswordResetTable();
+
         Database::connection()
             ->prepare('UPDATE password_resets SET used_at = NOW() WHERE user_id = :user_id AND used_at IS NULL')
             ->execute(['user_id' => $userId]);
@@ -127,6 +129,8 @@ class User
 
     public static function findValidReset(string $token): ?array
     {
+        self::ensurePasswordResetTable();
+
         $token = trim($token);
 
         if ($token === '') {
@@ -163,7 +167,33 @@ class User
 
     public static function markResetUsed(int $resetId): void
     {
+        self::ensurePasswordResetTable();
+
         $stmt = Database::connection()->prepare('UPDATE password_resets SET used_at = NOW() WHERE id = :id');
         $stmt->execute(['id' => $resetId]);
+    }
+
+    private static function ensurePasswordResetTable(): void
+    {
+        static $done = false;
+
+        if ($done) {
+            return;
+        }
+
+        Database::connection()->exec(
+            'CREATE TABLE IF NOT EXISTS password_resets (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                user_id BIGINT UNSIGNED NOT NULL,
+                token_hash CHAR(64) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                used_at DATETIME NULL,
+                created_at TIMESTAMP NULL,
+                INDEX idx_password_resets_token (token_hash),
+                CONSTRAINT fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        $done = true;
     }
 }

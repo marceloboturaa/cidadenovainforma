@@ -402,15 +402,27 @@ class NewsController
             return $externalCover;
         }
 
-        if (empty($_FILES['cover_image']['name']) || $_FILES['cover_image']['error'] !== UPLOAD_ERR_OK) {
+        if (empty($_FILES['cover_image']['name']) || ($_FILES['cover_image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return null;
         }
 
-        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-        $mime = mime_content_type($_FILES['cover_image']['tmp_name']);
+        if (($_FILES['cover_image']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            Session::flash('error', $this->uploadErrorMessage((int) $_FILES['cover_image']['error']));
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/news');
+        }
 
-        if (!isset($allowed[$mime]) || $_FILES['cover_image']['size'] > 3 * 1024 * 1024 || !getimagesize($_FILES['cover_image']['tmp_name'])) {
-            Session::flash('error', 'Imagem invalida. Use JPG, PNG ou WEBP com ate 3MB.');
+        $tmpName = $_FILES['cover_image']['tmp_name'] ?? '';
+        $size = (int) ($_FILES['cover_image']['size'] ?? 0);
+        $imageInfo = $tmpName !== '' ? @getimagesize($tmpName) : false;
+        $allowedImageTypes = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+            IMAGETYPE_GIF => 'gif',
+        ];
+
+        if (!$imageInfo || !isset($allowedImageTypes[$imageInfo[2] ?? 0]) || $size <= 0 || $size > 8 * 1024 * 1024) {
+            Session::flash('error', 'Imagem invalida. Use JPG, PNG, WEBP ou GIF com ate 8MB.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/news');
         }
 
@@ -419,10 +431,16 @@ class NewsController
             mkdir($directory, 0775, true);
         }
 
-        $filename = bin2hex(random_bytes(16)) . '.' . $allowed[$mime];
+        if (!is_dir($directory) || !is_writable($directory)) {
+            Session::flash('error', 'A pasta de uploads nao esta gravavel.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/news');
+        }
+
+        $extension = $allowedImageTypes[$imageInfo[2]];
+        $filename = bin2hex(random_bytes(16)) . '.' . $extension;
         $target = $directory . '/' . $filename;
 
-        if (!move_uploaded_file($_FILES['cover_image']['tmp_name'], $target)) {
+        if (!move_uploaded_file($tmpName, $target)) {
             Session::flash('error', 'Não foi possível salvar a imagem.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/news');
         }
@@ -435,6 +453,19 @@ class NewsController
         return $this->uploadCover() ?: $existing;
     }
 
+    private function uploadErrorMessage(int $error): string
+    {
+        return match ($error) {
+            UPLOAD_ERR_INI_SIZE,
+            UPLOAD_ERR_FORM_SIZE => 'A imagem enviada e maior que o limite permitido.',
+            UPLOAD_ERR_PARTIAL => 'A imagem foi enviada parcialmente. Tente novamente.',
+            UPLOAD_ERR_NO_TMP_DIR => 'A pasta temporaria de upload nao foi encontrada no servidor.',
+            UPLOAD_ERR_CANT_WRITE => 'Nao foi possivel gravar a imagem no servidor.',
+            UPLOAD_ERR_EXTENSION => 'Uma extensao do PHP bloqueou o upload da imagem.',
+            default => 'Nao foi possivel enviar a imagem. Tente novamente.',
+        };
+    }
+
     private function uploadContentMedia(): array
     {
         if (empty($_FILES['content_media']['name']) || !is_array($_FILES['content_media']['name'])) {
@@ -445,6 +476,7 @@ class NewsController
             'image/jpeg' => ['jpg', 'image'],
             'image/png' => ['png', 'image'],
             'image/webp' => ['webp', 'image'],
+            'image/gif' => ['gif', 'image'],
             'video/mp4' => ['mp4', 'video'],
             'video/webm' => ['webm', 'video'],
             'audio/mpeg' => ['mp3', 'audio'],

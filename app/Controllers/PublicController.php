@@ -306,7 +306,7 @@ class PublicController
 
     private function institutionPhotos(string $slug): array
     {
-        $files = glob(dirname(__DIR__, 2) . '/public/uploads/news/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: [];
+        $files = glob(dirname(__DIR__, 2) . '/public/uploads/news/*.{jpg,jpeg,png,webp,gif}', GLOB_BRACE) ?: [];
         $files = array_values(array_filter($files, 'is_file'));
         sort($files);
 

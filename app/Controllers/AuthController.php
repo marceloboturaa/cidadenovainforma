@@ -130,10 +130,18 @@ class AuthController
             Logger::info('auth.password_reset_requested', 'Token de recuperação gerado.', (int) $user['id']);
 
             $resetLink = url('/reset-password?token=' . urlencode($token));
-            $this->sendPasswordResetEmail($user, $resetLink);
+            $emailSent = $this->sendPasswordResetEmail($user, $resetLink);
 
             $config = require dirname(__DIR__, 2) . '/config/app.php';
-            if (($config['env'] ?? 'production') !== 'production' || !empty($config['debug'])) {
+            $mailConfig = require dirname(__DIR__, 2) . '/config/mail.php';
+            $mailer = strtolower((string) ($mailConfig['mailer'] ?? 'mail'));
+            $smtpIncomplete = $mailer === 'smtp' && (
+                empty($mailConfig['host'])
+                || empty($mailConfig['username'])
+                || empty($mailConfig['password'])
+            );
+
+            if (!$emailSent || $smtpIncomplete || ($config['env'] ?? 'production') !== 'production' || !empty($config['debug'])) {
                 Session::flash('reset_link', $resetLink);
             }
         }
@@ -172,14 +180,37 @@ class AuthController
         redirect('/login');
     }
 
-    private function sendPasswordResetEmail(array $user, string $resetLink): void
+    private function sendPasswordResetEmail(array $user, string $resetLink): bool
     {
         $name = trim((string) ($user['name'] ?? ''));
         $greeting = $name !== '' ? 'Olá, ' . $name . '.' : 'Olá.';
-        $html = '<p>' . e($greeting) . '</p>'
-            . '<p>Recebemos uma solicitação para alterar a senha do seu acesso ao Cidade Nova Informa.</p>'
-            . '<p><a href="' . e($resetLink) . '">Clique aqui para criar uma nova senha</a>.</p>'
-            . '<p>Este link expira em 1 hora. Se você não solicitou a alteração, ignore este e-mail.</p>';
+        $safeLink = e($resetLink);
+        $html = '<div style="margin:0;padding:0;background:#f3f6fa;font-family:Arial,Helvetica,sans-serif;color:#1d171b;">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#f3f6fa;">'
+            . '<tr><td align="center" style="padding:34px 16px;">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;border-collapse:collapse;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 18px 46px rgba(17,24,39,.12);">'
+            . '<tr><td style="background:#1d171b;padding:28px 32px;text-align:center;">'
+            . '<div style="font-size:42px;line-height:1;font-weight:900;letter-spacing:2px;color:#ffffff;">CNI</div>'
+            . '<div style="margin-top:10px;font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#f0c8ca;">Cidade Nova Informa</div>'
+            . '</td></tr>'
+            . '<tr><td style="padding:34px 32px 12px;">'
+            . '<div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#c5161d;">Redefinição de senha</div>'
+            . '<h1 style="margin:8px 0 0;font-size:25px;line-height:1.25;color:#1d171b;">Atualize seu acesso</h1>'
+            . '<p style="margin:22px 0 0;font-size:15px;line-height:1.7;color:#4b5563;">' . e($greeting) . '</p>'
+            . '<p style="margin:12px 0 0;font-size:15px;line-height:1.7;color:#4b5563;">Recebemos uma solicitação para alterar a senha do seu acesso ao painel do Cidade Nova Informa.</p>'
+            . '<p style="margin:26px 0 28px;text-align:center;"><a href="' . $safeLink . '" style="display:inline-block;padding:13px 22px;border-radius:8px;background:#c5161d;color:#ffffff;font-size:14px;font-weight:800;text-decoration:none;">Criar nova senha</a></p>'
+            . '<p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">Este link expira em 1 hora. Se você não solicitou a alteração, ignore este e-mail.</p>'
+            . '</td></tr>'
+            . '<tr><td style="padding:20px 32px 32px;">'
+            . '<div style="padding:14px 16px;border-radius:10px;background:#f8fafc;border:1px solid #e5e7eb;">'
+            . '<p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#6b7280;">Se o botão não funcionar, copie e cole este link no navegador:</p>'
+            . '<a href="' . $safeLink . '" style="font-size:12px;line-height:1.5;color:#c5161d;word-break:break-all;text-decoration:none;">' . $safeLink . '</a>'
+            . '</div>'
+            . '</td></tr>'
+            . '</table>'
+            . '<p style="margin:18px 0 0;font-size:12px;color:#9ca3af;">Mensagem automática do Cidade Nova Informa.</p>'
+            . '</td></tr></table>'
+            . '</div>';
         $text = $greeting . "\n\n"
             . "Recebemos uma solicitação para alterar a senha do seu acesso ao Cidade Nova Informa.\n\n"
             . "Acesse o link abaixo para criar uma nova senha:\n"
@@ -189,9 +220,12 @@ class AuthController
         try {
             if (Mailer::send((string) $user['email'], 'Alteração de senha - Cidade Nova Informa', $html, $text)) {
                 Logger::info('auth.password_reset_email_sent', 'E-mail de recuperação enviado.', (int) $user['id']);
+                return true;
             }
         } catch (\Throwable $exception) {
             Logger::info('auth.password_reset_email_failed', 'Falha ao enviar e-mail de recuperação: ' . $exception->getMessage(), (int) $user['id']);
         }
+
+        return false;
     }
 }
