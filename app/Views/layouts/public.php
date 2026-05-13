@@ -64,6 +64,7 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
         <div class="nav-shell" id="site-menu-panel">
             <nav class="category-nav" id="site-menu">
                 <a href="<?= e(url('/')) ?>">Início</a>
+                <a href="<?= e($requestPath === '/' ? '#eventos' : url('/#eventos')) ?>">Eventos</a>
                 <?php foreach ($navigationItems as $item): ?>
                     <a href="<?= e(str_starts_with($item['url'], 'http') ? $item['url'] : url($item['url'])) ?>"><?= e($item['label']) ?></a>
                 <?php endforeach; ?>
@@ -76,6 +77,7 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
                 </button>
             </form>
             <nav class="mobile-actions" aria-label="Ações rápidas">
+                <a class="mobile-institution-link" href="<?= e($requestPath === '/' ? '#eventos' : url('/#eventos')) ?>">Eventos</a>
                 <a class="mobile-institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
                 <a class="mobile-institution-link" href="<?= e(url('/documentos')) ?>">Documentos</a>
                 <a class="mobile-login-link" href="<?= e(url('/login')) ?>">Entrar no painel</a>

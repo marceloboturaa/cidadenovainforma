@@ -54,19 +54,24 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
     <h2>Últimas notícias</h2>
 </section>
 
-<section class="news-grid" data-latest-grid data-page-size="9">
+<section class="news-grid" data-latest-grid data-page-size="6">
     <?php foreach ($latest as $index => $item): ?>
-        <?php $hiddenClass = $index >= 9 ? ' is-hidden' : ''; ?>
+        <?php $hiddenClass = $index >= 6 ? ' is-hidden' : ''; ?>
         <?php require dirname(__DIR__) . '/public/partials/news-card.php'; ?>
     <?php endforeach; ?>
 </section>
 
-<?php if (count($latest) > 9): ?>
-    <div class="news-load-sentinel" data-latest-sentinel aria-hidden="true"></div>
+<?php if (count($latest) > 6): ?>
+    <div class="news-load-actions">
+        <button class="news-load-button" type="button" data-latest-load>
+            Carregar mais notícias
+        </button>
+    </div>
 <?php endif; ?>
 
 <?php if (!empty($libraryEvents)): ?>
-    <section class="section-heading public-events-heading">
+    <section class="section-heading public-events-heading" id="eventos">
+        <span>Agenda da comunidade</span>
         <h2>Eventos e atividades da biblioteca</h2>
     </section>
 
@@ -76,8 +81,8 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
                 <?php if (!empty($event['cover_image'])): ?>
                     <img src="<?= e(media_url($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.remove()">
                 <?php endif; ?>
-                <div>
-                    <span><?= e($event['starts_at'] ? date('d/m/Y H:i', strtotime($event['starts_at'])) : 'Atividade aberta') ?></span>
+                <div class="public-event-body">
+                    <span class="public-event-date"><?= e($event['starts_at'] ? date('d/m/Y H:i', strtotime($event['starts_at'])) : 'Atividade aberta') ?></span>
                     <h3><?= e($event['title']) ?></h3>
                     <p><?= e(text_excerpt($event['description'] ?? '', 140)) ?></p>
                     <dl>
@@ -97,37 +102,20 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
 <script>
 (() => {
     const grid = document.querySelector('[data-latest-grid]');
-    const sentinel = document.querySelector('[data-latest-sentinel]');
-    if (!grid || !sentinel) {
+    const loadButton = document.querySelector('[data-latest-load]');
+    if (!grid || !loadButton) {
         return;
     }
 
-    const pageSize = Number(grid.dataset.pageSize || 9);
-    let observer = null;
+    const pageSize = Number(grid.dataset.pageSize || 6);
     const revealNext = () => {
         const hidden = Array.from(grid.querySelectorAll('.news-card.is-hidden')).slice(0, pageSize);
         hidden.forEach((card) => card.classList.remove('is-hidden'));
         if (!grid.querySelector('.news-card.is-hidden')) {
-            sentinel.remove();
-            if (observer) {
-                observer.disconnect();
-            }
+            loadButton.closest('.news-load-actions')?.remove();
         }
     };
 
-    if (!('IntersectionObserver' in window)) {
-        while (grid.querySelector('.news-card.is-hidden')) {
-            revealNext();
-        }
-        return;
-    }
-
-    observer = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-            revealNext();
-        }
-    }, { rootMargin: '320px 0px' });
-
-    observer.observe(sentinel);
+    loadButton.addEventListener('click', revealNext);
 })();
 </script>
