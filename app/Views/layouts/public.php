@@ -64,10 +64,10 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
         <div class="nav-shell" id="site-menu-panel">
             <nav class="category-nav" id="site-menu">
                 <a href="<?= e(url('/')) ?>">Início</a>
-                <a href="<?= e($requestPath === '/' ? '#eventos' : url('/#eventos')) ?>">Eventos</a>
                 <?php foreach ($navigationItems as $item): ?>
                     <a href="<?= e(str_starts_with($item['url'], 'http') ? $item['url'] : url($item['url'])) ?>"><?= e($item['label']) ?></a>
                 <?php endforeach; ?>
+                <a href="<?= e($requestPath === '/' ? '#eventos' : url('/#eventos')) ?>">Eventos</a>
             </nav>
             <form class="search-form" action="<?= e(url('/buscar')) ?>" method="get">
                 <input name="q" value="<?= e($query ?? '') ?>" placeholder="Buscar notícias">
