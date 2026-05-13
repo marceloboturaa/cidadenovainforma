@@ -131,6 +131,22 @@
                 </div>
                 <div class="user-management-block">
                     <?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
+                        <?php if (($item['role_slug'] ?? '') !== 'master' && (int) $item['id'] !== (int) (current_user()['id'] ?? 0)): ?>
+                            <details>
+                                <summary>Alterar cargo</summary>
+                                <form method="post" action="<?= e(url('/admin/users/role?id=' . $item['id'])) ?>" class="password-reset-row">
+                                    <?= csrf_field() ?>
+                                    <select class="form-select form-select-sm" name="role_id" required>
+                                        <?php foreach ($roles as $role): ?>
+                                            <option value="<?= e((string) $role['id']) ?>" <?= selected((string) $role['id'], (string) $item['role_id']) ?>>
+                                                <?= e($role['name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary">Salvar cargo</button>
+                                </form>
+                            </details>
+                        <?php endif; ?>
                         <?php if ($institutionPages ?? []): ?>
                             <details>
                                 <summary>Páginas institucionais</summary>

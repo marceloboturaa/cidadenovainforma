@@ -163,6 +163,39 @@ class UserController
         redirect('/admin/users');
     }
 
+    public function updateRole(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $roleId = filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT);
+        $user = $id ? User::find($id) : null;
+        $role = $roleId ? Role::find($roleId) : null;
+
+        if (!$user || !$role) {
+            Session::flash('error', 'Usuário ou cargo não encontrado.');
+            redirect('/admin/users');
+        }
+
+        if ((int) $user['id'] === (int) (current_user()['id'] ?? 0) || !$this->canAssignRole($role)) {
+            Session::flash('error', 'Você não pode alterar este cargo.');
+            redirect('/admin/users');
+        }
+
+        $currentRole = Role::find((int) $user['role_id']);
+        if (($currentRole['slug'] ?? '') === 'master') {
+            Session::flash('error', 'O cargo MASTER não pode ser alterado por esta tela.');
+            redirect('/admin/users');
+        }
+
+        User::updateRole((int) $user['id'], (int) $role['id']);
+        Logger::info('users.role_updated', 'Cargo atualizado para ' . $role['name'] . ': ' . $user['email'], current_user()['id'] ?? null);
+        Session::flash('success', 'Cargo atualizado para ' . $user['name'] . ': ' . $role['name'] . '.');
+        redirect('/admin/users');
+    }
+
     public function resetPassword(): void
     {
         Middleware::permission('users.manage');

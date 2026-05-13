@@ -47,6 +47,7 @@ $router->post('/admin/users', [UserController::class, 'store']);
 $router->post('/admin/users/registrations', [UserController::class, 'toggleRegistrations']);
 $router->post('/admin/users/approve', [UserController::class, 'approve']);
 $router->post('/admin/users/responsibilities', [UserController::class, 'responsibilities']);
+$router->post('/admin/users/role', [UserController::class, 'updateRole']);
 $router->post('/admin/users/reset-password', [UserController::class, 'resetPassword']);
 
 $router->get('/admin/institution-pages', [InstitutionPageController::class, 'index']);

@@ -36,7 +36,7 @@ class User
     public static function all(): array
     {
         $stmt = Database::connection()->query(
-            'SELECT users.id, users.name, users.email, users.active, users.created_at, roles.name AS role_name, roles.slug AS role_slug
+            'SELECT users.id, users.role_id, users.name, users.email, users.active, users.created_at, roles.name AS role_name, roles.slug AS role_slug
              FROM users
              INNER JOIN roles ON roles.id = users.role_id
              ORDER BY users.created_at DESC'
@@ -155,6 +155,17 @@ class User
         $stmt->execute([
             'id' => $userId,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+        ]);
+    }
+
+    public static function updateRole(int $userId, int $roleId): void
+    {
+        $stmt = Database::connection()->prepare(
+            'UPDATE users SET role_id = :role_id, updated_at = NOW() WHERE id = :id'
+        );
+        $stmt->execute([
+            'id' => $userId,
+            'role_id' => $roleId,
         ]);
     }
 
