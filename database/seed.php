@@ -161,6 +161,7 @@ $roles = [
     ['ADMIN', 'admin', 80],
     ['ADMIN LOCAL', 'admin-local', 60],
     ['JORNALISTA', 'jornalista', 40],
+    ['COLUNISTA', 'colunista', 35],
     ['EQUIPE', 'equipe', 20],
 ];
 
@@ -206,6 +207,7 @@ $grants = [
     'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage'],
     'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage'],
     'jornalista' => ['news.create'],
+    'colunista' => ['news.create'],
     'equipe' => ['documents.view'],
 ];
 
