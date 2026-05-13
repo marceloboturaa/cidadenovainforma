@@ -38,9 +38,9 @@ class Person
     {
         $stmt = Database::connection()->prepare(
             'INSERT INTO people
-                (full_name, cpf, birth_date, phone, whatsapp, email, address, district, guardian_name, contact_authorized, notes, active, created_by, updated_by, created_at, updated_at)
+                (full_name, cpf, birth_date, phone, whatsapp, email, cep, address, address_number, address_complement, district, city, state, is_minor, guardian_name, guardian_relation, guardian_cpf, guardian_phone, guardian_email, contact_authorized, notes, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:full_name, :cpf, :birth_date, :phone, :whatsapp, :email, :address, :district, :guardian_name, :contact_authorized, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:full_name, :cpf, :birth_date, :phone, :whatsapp, :email, :cep, :address, :address_number, :address_complement, :district, :city, :state, :is_minor, :guardian_name, :guardian_relation, :guardian_cpf, :guardian_phone, :guardian_email, :contact_authorized, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::payload($data));
 
@@ -60,9 +60,19 @@ class Person
                  phone = :phone,
                  whatsapp = :whatsapp,
                  email = :email,
+                 cep = :cep,
                  address = :address,
+                 address_number = :address_number,
+                 address_complement = :address_complement,
                  district = :district,
+                 city = :city,
+                 state = :state,
+                 is_minor = :is_minor,
                  guardian_name = :guardian_name,
+                 guardian_relation = :guardian_relation,
+                 guardian_cpf = :guardian_cpf,
+                 guardian_phone = :guardian_phone,
+                 guardian_email = :guardian_email,
                  contact_authorized = :contact_authorized,
                  notes = :notes,
                  updated_by = :updated_by,
@@ -91,9 +101,19 @@ class Person
             'phone' => self::nullable($data['phone'] ?? null),
             'whatsapp' => self::nullable($data['whatsapp'] ?? null),
             'email' => self::nullable($data['email'] ?? null),
+            'cep' => self::nullable($data['cep'] ?? null),
             'address' => self::nullable($data['address'] ?? null),
+            'address_number' => self::nullable($data['address_number'] ?? null),
+            'address_complement' => self::nullable($data['address_complement'] ?? null),
             'district' => self::nullable($data['district'] ?? null),
+            'city' => self::nullable($data['city'] ?? null),
+            'state' => self::nullable($data['state'] ?? null),
+            'is_minor' => (int) !empty($data['is_minor']),
             'guardian_name' => self::nullable($data['guardian_name'] ?? null),
+            'guardian_relation' => self::nullable($data['guardian_relation'] ?? null),
+            'guardian_cpf' => self::nullable($data['guardian_cpf'] ?? null),
+            'guardian_phone' => self::nullable($data['guardian_phone'] ?? null),
+            'guardian_email' => self::nullable($data['guardian_email'] ?? null),
             'contact_authorized' => (int) !empty($data['contact_authorized']),
             'notes' => self::nullable($data['notes'] ?? null),
             'created_by' => $data['created_by'] ?? null,

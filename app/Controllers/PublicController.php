@@ -7,6 +7,7 @@ use App\Core\View;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\InstitutionPage;
+use App\Models\LibraryEvent;
 use App\Models\MenuItem;
 use App\Models\News;
 use App\Models\Tag;
@@ -22,6 +23,7 @@ class PublicController
             'urgent' => News::publicList(['urgent' => true], 4),
             'latest' => News::publicList([], 50),
             'popular' => News::popular(5),
+            'libraryEvents' => LibraryEvent::publicUpcoming(6),
             'menuItems' => MenuItem::visible(),
             'pageTitle' => 'Cidade Nova Informa',
             'canonicalUrl' => url('/'),

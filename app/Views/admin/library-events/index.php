@@ -16,7 +16,7 @@ $endsAt = !empty($editing['ends_at']) ? date('Y-m-d\TH:i', strtotime($editing['e
         <h2><?= $isEdit ? 'Editar evento' : 'Novo evento' ?></h2>
         <span>Atividades internas da biblioteca</span>
     </div>
-    <form method="post" action="<?= e($isEdit ? url('/admin/library-events/update?id=' . $editing['id']) : url('/admin/library-events')) ?>" class="admin-form-grid internal-event-form">
+    <form method="post" action="<?= e($isEdit ? url('/admin/library-events/update?id=' . $editing['id']) : url('/admin/library-events')) ?>" class="admin-form-grid internal-event-form" enctype="multipart/form-data">
         <?= csrf_field() ?>
         <div>
             <label class="form-label">Nome do evento</label>
@@ -33,6 +33,13 @@ $endsAt = !empty($editing['ends_at']) ? date('Y-m-d\TH:i', strtotime($editing['e
         <div>
             <label class="form-label">Local</label>
             <input class="form-control" name="location" value="<?= e($editing['location'] ?? '') ?>">
+        </div>
+        <div>
+            <label class="form-label">Imagem de capa</label>
+            <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+            <?php if (!empty($editing['cover_image'])): ?>
+                <img class="cover-preview event-cover-preview" src="<?= e(media_url($editing['cover_image'])) ?>" alt="" onerror="this.remove()">
+            <?php endif; ?>
         </div>
         <div>
             <label class="form-label">Vagas</label>
@@ -88,6 +95,9 @@ $endsAt = !empty($editing['ends_at']) ? date('Y-m-d\TH:i', strtotime($editing['e
                         <strong class="admin-list-title"><?= e($event['title']) ?></strong>
                         <span class="state-pill <?= $event['status'] === 'aberto' ? 'is-active' : 'is-muted' ?>"><?= e(ucfirst($event['status'])) ?></span>
                     </div>
+                    <?php if (!empty($event['cover_image'])): ?>
+                        <img class="event-admin-thumb" src="<?= e(media_url($event['cover_image'])) ?>" alt="" loading="lazy" onerror="this.remove()">
+                    <?php endif; ?>
                     <dl class="admin-list-meta">
                         <div><dt>Data</dt><dd><?= e($event['starts_at'] ?? '-') ?></dd></div>
                         <div><dt>Local</dt><dd><?= e($event['location'] ?? '-') ?></dd></div>

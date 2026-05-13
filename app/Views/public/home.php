@@ -65,6 +65,35 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
     <div class="news-load-sentinel" data-latest-sentinel aria-hidden="true"></div>
 <?php endif; ?>
 
+<?php if (!empty($libraryEvents)): ?>
+    <section class="section-heading public-events-heading">
+        <h2>Eventos e atividades da biblioteca</h2>
+    </section>
+
+    <section class="public-events-grid">
+        <?php foreach ($libraryEvents as $event): ?>
+            <article class="public-event-card">
+                <?php if (!empty($event['cover_image'])): ?>
+                    <img src="<?= e(media_url($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.remove()">
+                <?php endif; ?>
+                <div>
+                    <span><?= e($event['starts_at'] ? date('d/m/Y H:i', strtotime($event['starts_at'])) : 'Atividade aberta') ?></span>
+                    <h3><?= e($event['title']) ?></h3>
+                    <p><?= e(text_excerpt($event['description'] ?? '', 140)) ?></p>
+                    <dl>
+                        <?php if (!empty($event['location'])): ?>
+                            <div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div>
+                        <?php endif; ?>
+                        <?php if (!empty($event['capacity'])): ?>
+                            <div><dt>Vagas</dt><dd><?= e((string) $event['capacity']) ?></dd></div>
+                        <?php endif; ?>
+                    </dl>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </section>
+<?php endif; ?>
+
 <script>
 (() => {
     const grid = document.querySelector('[data-latest-grid]');

@@ -59,9 +59,19 @@ $pdo->exec(
         phone VARCHAR(30) NULL,
         whatsapp VARCHAR(30) NULL,
         email VARCHAR(190) NULL,
+        cep VARCHAR(12) NULL,
         address VARCHAR(255) NULL,
+        address_number VARCHAR(30) NULL,
+        address_complement VARCHAR(120) NULL,
         district VARCHAR(120) NULL,
+        city VARCHAR(120) NULL,
+        state VARCHAR(2) NULL,
+        is_minor TINYINT(1) NOT NULL DEFAULT 0,
         guardian_name VARCHAR(160) NULL,
+        guardian_relation VARCHAR(80) NULL,
+        guardian_cpf VARCHAR(20) NULL,
+        guardian_phone VARCHAR(30) NULL,
+        guardian_email VARCHAR(190) NULL,
         contact_authorized TINYINT(1) NOT NULL DEFAULT 0,
         notes TEXT NULL,
         active TINYINT(1) NOT NULL DEFAULT 1,
@@ -84,6 +94,7 @@ $pdo->exec(
         starts_at DATETIME NULL,
         ends_at DATETIME NULL,
         location VARCHAR(160) NULL,
+        cover_image VARCHAR(255) NULL,
         capacity INT UNSIGNED NULL,
         responsible_user_id BIGINT UNSIGNED NULL,
         status ENUM('aberto','encerrado','cancelado') NOT NULL DEFAULT 'aberto',
@@ -99,6 +110,37 @@ $pdo->exec(
         CONSTRAINT fk_library_events_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB"
 );
+
+$peopleColumns = [
+    'cep' => "ALTER TABLE people ADD COLUMN cep VARCHAR(12) NULL AFTER email",
+    'address_number' => "ALTER TABLE people ADD COLUMN address_number VARCHAR(30) NULL AFTER address",
+    'address_complement' => "ALTER TABLE people ADD COLUMN address_complement VARCHAR(120) NULL AFTER address_number",
+    'city' => "ALTER TABLE people ADD COLUMN city VARCHAR(120) NULL AFTER district",
+    'state' => "ALTER TABLE people ADD COLUMN state VARCHAR(2) NULL AFTER city",
+    'is_minor' => "ALTER TABLE people ADD COLUMN is_minor TINYINT(1) NOT NULL DEFAULT 0 AFTER state",
+    'guardian_relation' => "ALTER TABLE people ADD COLUMN guardian_relation VARCHAR(80) NULL AFTER guardian_name",
+    'guardian_cpf' => "ALTER TABLE people ADD COLUMN guardian_cpf VARCHAR(20) NULL AFTER guardian_relation",
+    'guardian_phone' => "ALTER TABLE people ADD COLUMN guardian_phone VARCHAR(30) NULL AFTER guardian_cpf",
+    'guardian_email' => "ALTER TABLE people ADD COLUMN guardian_email VARCHAR(190) NULL AFTER guardian_phone",
+];
+
+$existingPeopleColumns = $pdo->query('SHOW COLUMNS FROM people')->fetchAll(PDO::FETCH_COLUMN);
+foreach ($peopleColumns as $column => $sql) {
+    if (!in_array($column, $existingPeopleColumns, true)) {
+        $pdo->exec($sql);
+    }
+}
+
+$eventColumns = [
+    'cover_image' => "ALTER TABLE library_events ADD COLUMN cover_image VARCHAR(255) NULL AFTER location",
+];
+
+$existingEventColumns = $pdo->query('SHOW COLUMNS FROM library_events')->fetchAll(PDO::FETCH_COLUMN);
+foreach ($eventColumns as $column => $sql) {
+    if (!in_array($column, $existingEventColumns, true)) {
+        $pdo->exec($sql);
+    }
+}
 
 $pdo->exec(
     "CREATE TABLE IF NOT EXISTS library_event_participants (

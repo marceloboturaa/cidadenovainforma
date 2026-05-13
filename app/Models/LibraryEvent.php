@@ -26,6 +26,22 @@ class LibraryEvent
             ->fetchAll();
     }
 
+    public static function publicUpcoming(int $limit = 6): array
+    {
+        $stmt = Database::connection()->prepare(
+            "SELECT id, title, description, starts_at, location, cover_image, capacity, status
+             FROM library_events
+             WHERE active = 1
+               AND status = 'aberto'
+             ORDER BY COALESCE(starts_at, created_at) ASC
+             LIMIT :limit"
+        );
+        $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
     public static function find(int $id): ?array
     {
         $stmt = Database::connection()->prepare('SELECT * FROM library_events WHERE id = :id LIMIT 1');
@@ -57,9 +73,9 @@ class LibraryEvent
     {
         $stmt = Database::connection()->prepare(
             'INSERT INTO library_events
-                (title, description, starts_at, ends_at, location, capacity, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
+                (title, description, starts_at, ends_at, location, cover_image, capacity, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :description, :starts_at, :ends_at, :location, :capacity, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :description, :starts_at, :ends_at, :location, :cover_image, :capacity, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::payload($data));
 
@@ -79,6 +95,7 @@ class LibraryEvent
                  starts_at = :starts_at,
                  ends_at = :ends_at,
                  location = :location,
+                 cover_image = :cover_image,
                  capacity = :capacity,
                  responsible_user_id = :responsible_user_id,
                  status = :status,
@@ -133,6 +150,7 @@ class LibraryEvent
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
             'location' => self::nullable($data['location'] ?? null),
+            'cover_image' => self::nullable($data['cover_image'] ?? null),
             'capacity' => !empty($data['capacity']) ? (int) $data['capacity'] : null,
             'responsible_user_id' => !empty($data['responsible_user_id']) ? (int) $data['responsible_user_id'] : null,
             'status' => in_array($status, ['aberto', 'encerrado', 'cancelado'], true) ? $status : 'aberto',

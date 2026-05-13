@@ -14,6 +14,8 @@ use App\Models\User;
 
 class LibraryEventController
 {
+    private const MAX_COVER_SIZE = 5 * 1024 * 1024;
+
     public function index(): void
     {
         Middleware::permission('events.manage');
@@ -39,6 +41,7 @@ class LibraryEventController
 
         $userId = (int) (current_user()['id'] ?? 0);
         $id = LibraryEvent::create(array_merge($_POST, [
+            'cover_image' => $this->uploadCover(),
             'created_by' => $userId ?: null,
             'updated_by' => $userId ?: null,
         ]));
@@ -62,6 +65,7 @@ class LibraryEventController
 
         $userId = (int) (current_user()['id'] ?? 0);
         LibraryEvent::update((int) $event['id'], array_merge($_POST, [
+            'cover_image' => $this->uploadCover() ?: ($event['cover_image'] ?? null),
             'updated_by' => $userId ?: null,
         ]));
 
@@ -178,5 +182,52 @@ class LibraryEventController
     {
         $user = Auth::user();
         return $user && ($user['role_slug'] ?? '') === 'master';
+    }
+
+    private function uploadCover(): ?string
+    {
+        if (empty($_FILES['cover_image']['name']) || ($_FILES['cover_image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (($_FILES['cover_image']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Não foi possível enviar a imagem de capa.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/library-events');
+        }
+
+        $tmpName = $_FILES['cover_image']['tmp_name'] ?? '';
+        $size = (int) ($_FILES['cover_image']['size'] ?? 0);
+        $imageInfo = $tmpName !== '' ? @getimagesize($tmpName) : false;
+        $allowed = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+            IMAGETYPE_GIF => 'gif',
+        ];
+
+        if (!$imageInfo || !isset($allowed[$imageInfo[2] ?? 0]) || $size <= 0 || $size > self::MAX_COVER_SIZE) {
+            Session::flash('error', 'Envie uma imagem JPG, PNG, WEBP ou GIF com até 5MB.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/library-events');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/public/uploads/events';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        if (!is_writable($directory)) {
+            Session::flash('error', 'A pasta de capas de eventos não está gravável.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/library-events');
+        }
+
+        $filename = bin2hex(random_bytes(12)) . '.' . $allowed[$imageInfo[2]];
+        $target = $directory . '/' . $filename;
+
+        if (!move_uploaded_file($tmpName, $target)) {
+            Session::flash('error', 'Não foi possível salvar a imagem de capa.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/library-events');
+        }
+
+        return '/public/uploads/events/' . $filename;
     }
 }
