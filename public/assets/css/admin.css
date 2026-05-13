@@ -1136,6 +1136,50 @@ body.editor-focus-mode {
     grid-column: 1 / -1;
 }
 
+.internal-editor-panel {
+    display: grid;
+    gap: 18px;
+}
+
+.internal-person-form > div:first-child,
+.internal-event-form > div:first-child {
+    grid-column: span 4;
+}
+
+.internal-person-form > div,
+.internal-event-form > div {
+    grid-column: span 2;
+}
+
+.internal-person-form > div:nth-child(8),
+.internal-person-form > div:nth-child(11),
+.internal-event-form > div:nth-child(8),
+.internal-event-form > div:nth-child(9) {
+    grid-column: span 4;
+}
+
+.internal-person-form > .form-action-cell,
+.internal-event-form > .form-action-cell {
+    grid-column: 1 / -1;
+}
+
+.internal-search-form,
+.participant-add-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.internal-list-card {
+    align-items: stretch;
+}
+
+.participant-add-form {
+    min-width: 240px;
+    margin-bottom: 0;
+}
+
 .form-action-cell {
     display: flex;
     align-items: end;
@@ -2627,7 +2671,17 @@ body.editor-focus-mode {
     .menu-form-grid > div:nth-child(3),
     .menu-form-grid > div:nth-child(4),
     .menu-form-grid > .form-check-cell,
-    .menu-form-grid > .form-action-cell {
+    .menu-form-grid > .form-action-cell,
+    .internal-person-form > div,
+    .internal-person-form > div:first-child,
+    .internal-person-form > div:nth-child(8),
+    .internal-person-form > div:nth-child(11),
+    .internal-person-form > .form-action-cell,
+    .internal-event-form > div,
+    .internal-event-form > div:first-child,
+    .internal-event-form > div:nth-child(8),
+    .internal-event-form > div:nth-child(9),
+    .internal-event-form > .form-action-cell {
         grid-column: 1 / -1;
     }
 
@@ -2674,6 +2728,13 @@ body.editor-focus-mode {
 
     .admin-list-actions {
         justify-content: flex-start;
+        min-width: 0;
+    }
+
+    .internal-search-form,
+    .participant-add-form {
+        align-items: stretch;
+        flex-direction: column;
         min-width: 0;
     }
 

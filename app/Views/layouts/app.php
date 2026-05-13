@@ -38,6 +38,12 @@
                 <?php if ($institutionPageAccess): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/institution-pages') ? 'active' : '' ?>" href="<?= e(url('/admin/institution-pages')) ?>"><i class="bi bi-building" aria-hidden="true"></i>Instituição</a>
                 <?php endif; ?>
+                <?php if (\App\Core\Auth::can('people.manage')): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/people') ? 'active' : '' ?>" href="<?= e(url('/admin/people')) ?>"><i class="bi bi-person-lines-fill" aria-hidden="true"></i>Pessoas</a>
+                <?php endif; ?>
+                <?php if (\App\Core\Auth::can('events.manage')): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/library-events') ? 'active' : '' ?>" href="<?= e(url('/admin/library-events')) ?>"><i class="bi bi-calendar-event" aria-hidden="true"></i>Eventos</a>
+                <?php endif; ?>
                 <?php if (\App\Core\Auth::can('documents.view') || \App\Core\Auth::can('documents.manage') || ($user && \App\Models\Document::userHasAnyAccess((int) $user['id']))): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>Documentos</a>
                 <?php endif; ?>

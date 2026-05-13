@@ -5,8 +5,10 @@ use App\Controllers\Admin\BackupController;
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\DocumentController;
 use App\Controllers\Admin\InstitutionPageController;
+use App\Controllers\Admin\LibraryEventController;
 use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\NewsController;
+use App\Controllers\Admin\PersonController;
 use App\Controllers\Admin\TagController;
 use App\Controllers\Admin\UserController;
 use App\Controllers\AuthController;
@@ -49,6 +51,21 @@ $router->post('/admin/users/approve', [UserController::class, 'approve']);
 $router->post('/admin/users/responsibilities', [UserController::class, 'responsibilities']);
 $router->post('/admin/users/role', [UserController::class, 'updateRole']);
 $router->post('/admin/users/reset-password', [UserController::class, 'resetPassword']);
+
+$router->get('/admin/people', [PersonController::class, 'index']);
+$router->get('/admin/people/edit', [PersonController::class, 'index']);
+$router->post('/admin/people', [PersonController::class, 'store']);
+$router->post('/admin/people/update', [PersonController::class, 'update']);
+$router->post('/admin/people/delete', [PersonController::class, 'delete']);
+
+$router->get('/admin/library-events', [LibraryEventController::class, 'index']);
+$router->get('/admin/library-events/edit', [LibraryEventController::class, 'index']);
+$router->post('/admin/library-events', [LibraryEventController::class, 'store']);
+$router->post('/admin/library-events/update', [LibraryEventController::class, 'update']);
+$router->post('/admin/library-events/delete', [LibraryEventController::class, 'delete']);
+$router->get('/admin/library-events/participants', [LibraryEventController::class, 'participants']);
+$router->post('/admin/library-events/participants', [LibraryEventController::class, 'addParticipant']);
+$router->post('/admin/library-events/participants/remove', [LibraryEventController::class, 'removeParticipant']);
 
 $router->get('/admin/institution-pages', [InstitutionPageController::class, 'index']);
 $router->get('/admin/institution-pages/edit', [InstitutionPageController::class, 'edit']);
