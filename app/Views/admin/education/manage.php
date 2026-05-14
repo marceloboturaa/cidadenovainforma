@@ -1,4 +1,9 @@
-<?php $isEdit = (bool) $editing; ?>
+<?php
+$isEdit = (bool) $editing;
+$teacherOptions = $teacherOptions ?? $users;
+$studentOptions = $studentOptions ?? $users;
+$canManageAll = $canManageAll ?? true;
+?>
 
 <div class="page-heading">
     <div>
@@ -21,14 +26,19 @@
         </div>
         <div>
             <label class="form-label">Professor responsável</label>
-            <select class="form-select" name="teacher_user_id">
-                <option value="">Sem professor definido</option>
-                <?php foreach ($users as $item): ?>
-                    <option value="<?= e((string) $item['id']) ?>" <?= selected((string) $item['id'], (string) ($editing['teacher_user_id'] ?? '')) ?>>
-                        <?= e($item['name']) ?> - <?= e($item['role_name']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <?php if ($canManageAll): ?>
+                <select class="form-select" name="teacher_user_id">
+                    <option value="">Sem professor definido</option>
+                    <?php foreach ($teacherOptions as $item): ?>
+                        <option value="<?= e((string) $item['id']) ?>" <?= selected((string) $item['id'], (string) ($editing['teacher_user_id'] ?? '')) ?>>
+                            <?= e($item['name']) ?> - <?= e($item['role_names'] ?? $item['role_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            <?php else: ?>
+                <input type="hidden" name="teacher_user_id" value="<?= e((string) (current_user()['id'] ?? '')) ?>">
+                <input class="form-control" value="<?= e(current_user()['name'] ?? 'Professor') ?>" disabled>
+            <?php endif; ?>
         </div>
         <div>
             <label class="form-label">Imagem de capa</label>
@@ -39,15 +49,18 @@
             <textarea class="form-control" name="summary" rows="4"><?= e($editing['summary'] ?? '') ?></textarea>
         </div>
         <details class="education-access-details" <?= $isEdit ? 'open' : '' ?>>
-            <summary>Alunos com acesso</summary>
+            <summary>Estudantes matriculados</summary>
             <?php $enrolledUserIds = $isEdit ? \App\Models\Education::enrollmentUserIds((int) $editing['id']) : []; ?>
             <div class="education-user-picker">
-                <?php foreach ($users as $item): ?>
+                <?php foreach ($studentOptions as $item): ?>
                     <label>
                         <input type="checkbox" name="user_ids[]" value="<?= e((string) $item['id']) ?>" <?= checked(in_array((int) $item['id'], $enrolledUserIds, true)) ?>>
-                        <span><?= e($item['name']) ?><small><?= e($item['role_name']) ?></small></span>
+                        <span><?= e($item['name']) ?><small><?= e($item['email']) ?></small></span>
                     </label>
                 <?php endforeach; ?>
+                <?php if (!$studentOptions): ?>
+                    <div class="empty-state">Nenhum estudante ativo encontrado. Crie um usuário com cargo ESTUDANTE em Usuários.</div>
+                <?php endif; ?>
             </div>
         </details>
         <div class="form-action-cell split-actions">

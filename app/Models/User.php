@@ -168,7 +168,13 @@ class User
                         FROM roles roles_inner
                         WHERE roles_inner.id = users.role_id
                            OR roles_inner.id IN (SELECT user_roles_inner.role_id FROM user_roles user_roles_inner WHERE user_roles_inner.user_id = users.id)
-                    ) AS role_names
+                    ) AS role_names,
+                    (
+                        SELECT GROUP_CONCAT(DISTINCT roles_inner.slug ORDER BY roles_inner.level DESC, roles_inner.name ASC SEPARATOR ",")
+                        FROM roles roles_inner
+                        WHERE roles_inner.id = users.role_id
+                           OR roles_inner.id IN (SELECT user_roles_inner.role_id FROM user_roles user_roles_inner WHERE user_roles_inner.user_id = users.id)
+                    ) AS role_slugs
              FROM users
              WHERE users.active = 1
              ORDER BY (

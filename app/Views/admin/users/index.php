@@ -51,7 +51,7 @@ $onlineCount = count($onlineUserIds ?? []);
                 <div class="users-panel-heading">
                     <div>
                         <span class="eyebrow">Adicionar</span>
-                        <h2>Novo membro</h2>
+                        <h2>Novo usuário</h2>
                     </div>
                     <i class="bi bi-person-badge" aria-hidden="true"></i>
                 </div>
@@ -73,6 +73,7 @@ $onlineCount = count($onlineUserIds ?? []);
                                 <option value="<?= e((string) $role['id']) ?>"><?= e($role['name']) ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <small class="field-hint">Para aluno de curso, use ESTUDANTE.</small>
                     </div>
                     <div>
                         <label class="form-label">Senha inicial</label>
@@ -225,6 +226,7 @@ $onlineCount = count($onlineUserIds ?? []);
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
+                                        <small class="field-hint">ESTUDANTE acessa somente cursos matriculados.</small>
                                     </div>
                                     <details class="users-check-options compact">
                                         <summary>Cargos extras</summary>

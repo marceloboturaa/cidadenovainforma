@@ -40,10 +40,15 @@ class EducationController
             return;
         }
 
+        $users = User::activeForAccessLists();
+
         View::render('admin/education/manage', [
             'courses' => Education::coursesForManagement($this->canManageAll() ? null : (int) (current_user()['id'] ?? 0)),
             'editing' => $editing,
-            'users' => User::activeForAccessLists(),
+            'users' => $users,
+            'teacherOptions' => $this->teacherOptions($users),
+            'studentOptions' => $this->studentOptions($users),
+            'canManageAll' => $this->canManageAll(),
         ]);
     }
 
@@ -272,6 +277,26 @@ class EducationController
     private function canTeach(): bool
     {
         return Auth::can('education.teach') || (Auth::user()['role_slug'] ?? '') === 'professor';
+    }
+
+    private function teacherOptions(array $users): array
+    {
+        return array_values(array_filter($users, function (array $user): bool {
+            $slugs = $this->roleSlugs($user);
+            return array_intersect($slugs, ['professor', 'master', 'admin', 'equipe']) !== [];
+        }));
+    }
+
+    private function studentOptions(array $users): array
+    {
+        return array_values(array_filter($users, function (array $user): bool {
+            return in_array('estudante', $this->roleSlugs($user), true);
+        }));
+    }
+
+    private function roleSlugs(array $user): array
+    {
+        return array_values(array_filter(explode(',', (string) ($user['role_slugs'] ?? $user['role_slug'] ?? ''))));
     }
 
     private function authorizeManage(): void
