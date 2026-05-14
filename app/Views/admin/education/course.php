@@ -62,18 +62,18 @@ $moduleAction = $editingModule
     </section>
 
     <?php if ($editingLesson): ?>
-        <section class="panel education-simple-panel" id="editar-aula">
+        <section class="panel education-simple-panel education-lesson-edit-panel" id="editar-aula">
             <div class="section-heading">
                 <h2>Editar aula</h2>
                 <span>Para criar outra aula, use o formulário dentro do módulo desejado</span>
                 <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">
-                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    <i class="bi bi-box-arrow-left" aria-hidden="true"></i>
                     Sair da edição
                 </a>
             </div>
-            <form method="post" action="<?= e(url('/admin/education/lesson/update?id=' . $editingLesson['id'])) ?>" class="education-lesson-form">
+            <form method="post" action="<?= e(url('/admin/education/lesson/update?id=' . $editingLesson['id'])) ?>" class="education-lesson-form education-lesson-edit-form">
                 <?= csrf_field() ?>
-                <div>
+                <div class="lesson-module-field">
                     <label class="form-label">Módulo</label>
                     <select class="form-select" name="module_id">
                         <option value="">Sem módulo</option>
@@ -84,19 +84,19 @@ $moduleAction = $editingModule
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div>
+                <div class="lesson-title-field">
                     <label class="form-label">Título da aula</label>
                     <input class="form-control" name="title" maxlength="180" value="<?= e($editingLesson['title'] ?? '') ?>" required>
                 </div>
-                <div>
+                <div class="lesson-order-field">
                     <label class="form-label">Ordem</label>
                     <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingLesson['sort_order'] ?? 0)) ?>">
                 </div>
-                <div>
+                <div class="lesson-video-field">
                     <label class="form-label">Vídeo principal opcional</label>
                     <input class="form-control" name="video_url" value="<?= e($editingLesson['video_url'] ?? '') ?>" placeholder="Cole um link do YouTube ou vídeo direto">
                 </div>
-                <div class="grid-span-2">
+                <div class="lesson-description-field grid-span-2">
                     <label class="form-label">Descrição</label>
                     <textarea class="form-control" name="description" rows="6" data-tinymce><?= e($editingLesson['description'] ?? '') ?></textarea>
                 </div>
