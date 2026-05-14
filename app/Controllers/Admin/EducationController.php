@@ -300,7 +300,7 @@ class EducationController
 
         Education::createLessonBlock(array_merge($_POST, [
             'lesson_id' => $lesson['id'],
-            'type' => $filePath ? 'file' : $type,
+            'type' => $filePath && $type !== 'image' ? 'file' : $type,
             'file_path' => $filePath,
         ]));
 

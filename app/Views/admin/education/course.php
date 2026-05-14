@@ -2,7 +2,6 @@
 $editingLesson = $editingLesson ?? null;
 $editingModule = $editingModule ?? null;
 $modules = $modules ?? [];
-$selectedModuleId = filter_input(INPUT_GET, 'new_lesson_module_id', FILTER_VALIDATE_INT) ?: null;
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
 
@@ -34,54 +33,52 @@ $moduleAction = $editingModule
 <?php endif; ?>
 
 <?php if ($canManage): ?>
-    <section class="education-course-builder">
-        <article class="panel education-editor-panel">
-            <div class="section-heading">
-                <h2><?= $editingModule ? 'Editar módulo' : 'Novo módulo' ?></h2>
-                <span>Use módulos para montar a playlist do curso</span>
+    <section class="panel education-simple-panel">
+        <div class="section-heading">
+            <h2><?= $editingModule ? 'Editar módulo' : 'Criar módulo' ?></h2>
+            <span>Primeiro crie o módulo, depois adicione as aulas dentro dele</span>
+        </div>
+        <form method="post" action="<?= e($moduleAction) ?>" class="education-module-form">
+            <?= csrf_field() ?>
+            <div>
+                <label class="form-label">Título do módulo</label>
+                <input class="form-control" name="title" maxlength="180" value="<?= e($editingModule['title'] ?? '') ?>" placeholder="Ex.: Módulo 01 [40 horas]" required>
             </div>
-            <form method="post" action="<?= e($moduleAction) ?>" class="education-module-form">
-                <?= csrf_field() ?>
-                <div>
-                    <label class="form-label">Título do módulo</label>
-                    <input class="form-control" name="title" maxlength="180" value="<?= e($editingModule['title'] ?? '') ?>" placeholder="Ex.: Módulo 01 [40 horas]" required>
-                </div>
-                <div>
-                    <label class="form-label">Ordem</label>
-                    <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingModule['sort_order'] ?? 0)) ?>">
-                </div>
-                <div class="grid-span-2">
-                    <label class="form-label">Resumo</label>
-                    <textarea class="form-control" name="summary" rows="2"><?= e($editingModule['summary'] ?? '') ?></textarea>
-                </div>
-                <div class="form-action-cell split-actions">
-                    <button class="btn btn-primary icon-btn"><i class="bi bi-collection-play" aria-hidden="true"></i><?= $editingModule ? 'Atualizar módulo' : 'Criar módulo' ?></button>
-                    <?php if ($editingModule): ?>
-                        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
-                    <?php endif; ?>
-                </div>
-            </form>
-        </article>
-
-        <article class="panel education-editor-panel" id="aula-form">
-            <div class="section-heading">
-                <h2><?= $editingLesson ? 'Editar aula' : 'Nova aula' ?></h2>
-                <span><?= $editingLesson ? 'Você está editando uma aula existente' : 'Cada aula vira um item da playlist do módulo' ?></span>
-                <?php if ($editingLesson): ?>
-                    <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">
-                        <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                        Nova aula
-                    </a>
+            <div>
+                <label class="form-label">Ordem</label>
+                <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingModule['sort_order'] ?? 0)) ?>">
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Resumo</label>
+                <textarea class="form-control" name="summary" rows="3"><?= e($editingModule['summary'] ?? '') ?></textarea>
+            </div>
+            <div class="form-action-cell split-actions">
+                <button class="btn btn-primary icon-btn"><i class="bi bi-collection-play" aria-hidden="true"></i><?= $editingModule ? 'Atualizar módulo' : 'Criar módulo' ?></button>
+                <?php if ($editingModule): ?>
+                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
                 <?php endif; ?>
             </div>
-            <form method="post" action="<?= e($editingLesson ? url('/admin/education/lesson/update?id=' . $editingLesson['id']) : url('/admin/education/lesson?id=' . $course['id'])) ?>" class="education-lesson-form">
+        </form>
+    </section>
+
+    <?php if ($editingLesson): ?>
+        <section class="panel education-simple-panel" id="editar-aula">
+            <div class="section-heading">
+                <h2>Editar aula</h2>
+                <span>Para criar outra aula, use o formulário dentro do módulo desejado</span>
+                <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">
+                    <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                    Sair da edição
+                </a>
+            </div>
+            <form method="post" action="<?= e(url('/admin/education/lesson/update?id=' . $editingLesson['id'])) ?>" class="education-lesson-form">
                 <?= csrf_field() ?>
                 <div>
                     <label class="form-label">Módulo</label>
                     <select class="form-select" name="module_id">
                         <option value="">Sem módulo</option>
                         <?php foreach ($modules as $module): ?>
-                            <option value="<?= e((string) $module['id']) ?>" <?= selected((string) $module['id'], (string) ($editingLesson['module_id'] ?? $selectedModuleId ?? '')) ?>>
+                            <option value="<?= e((string) $module['id']) ?>" <?= selected((string) $module['id'], (string) ($editingLesson['module_id'] ?? '')) ?>>
                                 <?= e($module['title']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -101,22 +98,20 @@ $moduleAction = $editingModule
                 </div>
                 <div class="grid-span-2">
                     <label class="form-label">Descrição</label>
-                    <textarea class="form-control" name="description" rows="3"><?= e($editingLesson['description'] ?? '') ?></textarea>
+                    <textarea class="form-control" name="description" rows="6"><?= e($editingLesson['description'] ?? '') ?></textarea>
                 </div>
                 <div class="form-action-cell split-actions">
-                    <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i><?= $editingLesson ? 'Atualizar aula' : 'Criar aula' ?></button>
-                    <?php if ($editingLesson): ?>
-                        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
-                    <?php endif; ?>
+                    <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Atualizar aula</button>
+                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
                 </div>
             </form>
-        </article>
-    </section>
+        </section>
+    <?php endif; ?>
 <?php endif; ?>
 
 <section class="panel education-playlist-panel">
     <div class="section-heading">
-        <h2>Playlist do curso</h2>
+        <h2>Módulos e aulas</h2>
         <span><?= e((string) count($lessons)) ?> aula(s) em <?= e((string) count($modules)) ?> módulo(s)</span>
     </div>
 
@@ -135,8 +130,7 @@ $moduleAction = $editingModule
                     <div class="education-module-actions">
                         <strong><?= e((string) count($moduleLessons)) ?> aula(s)</strong>
                         <?php if ($canManage): ?>
-                            <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&new_lesson_module_id=' . $module['id'] . '#aula-form')) ?>">Adicionar aula</a>
-                            <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>">Editar</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>">Editar módulo</a>
                             <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/delete?module_id=' . $module['id'])) ?>" onsubmit="return confirm('Remover este módulo? As aulas ficam no curso, sem módulo.');">
                                 <?= csrf_field() ?>
                                 <button class="btn btn-sm btn-outline-danger">Remover</button>
@@ -145,17 +139,39 @@ $moduleAction = $editingModule
                     </div>
                 </header>
 
+                <?php if ($canManage): ?>
+                    <details class="education-inline-create" <?= !$moduleLessons ? 'open' : '' ?>>
+                        <summary><i class="bi bi-plus-circle" aria-hidden="true"></i> Adicionar aula neste módulo</summary>
+                        <form method="post" action="<?= e(url('/admin/education/lesson?id=' . $course['id'])) ?>" class="education-quick-lesson-form">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="module_id" value="<?= e((string) $module['id']) ?>">
+                            <div>
+                                <label class="form-label">Título da aula</label>
+                                <input class="form-control" name="title" maxlength="180" required>
+                            </div>
+                            <div>
+                                <label class="form-label">Ordem</label>
+                                <input class="form-control" name="sort_order" type="number" value="<?= e((string) ((count($moduleLessons) + 1) * 10)) ?>">
+                            </div>
+                            <div>
+                                <label class="form-label">Vídeo principal opcional</label>
+                                <input class="form-control" name="video_url" placeholder="Cole o link do YouTube ou vídeo">
+                            </div>
+                            <div class="grid-span-2">
+                                <label class="form-label">Descrição</label>
+                                <textarea class="form-control" name="description" rows="4" placeholder="Texto inicial da aula"></textarea>
+                            </div>
+                            <button class="btn btn-primary icon-btn"><i class="bi bi-plus-circle" aria-hidden="true"></i>Criar aula neste módulo</button>
+                        </form>
+                    </details>
+                <?php endif; ?>
+
                 <div class="education-playlist-lessons">
                     <?php foreach ($moduleLessons as $lesson): ?>
                         <?php require __DIR__ . '/partials/lesson-row.php'; ?>
                     <?php endforeach; ?>
                     <?php if (!$moduleLessons): ?>
-                        <div class="empty-state">
-                            Nenhuma aula neste módulo.
-                            <?php if ($canManage): ?>
-                                <br><a class="btn btn-sm btn-primary mt-2" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&new_lesson_module_id=' . $module['id'] . '#aula-form')) ?>">Criar aula neste módulo</a>
-                            <?php endif; ?>
-                        </div>
+                        <div class="empty-state">Nenhuma aula cadastrada neste módulo.</div>
                     <?php endif; ?>
                 </div>
             </article>
@@ -178,7 +194,7 @@ $moduleAction = $editingModule
         <?php endif; ?>
 
         <?php if (!$modules && !$lessons): ?>
-            <div class="empty-state">Crie um módulo e depois adicione as aulas da playlist.</div>
+            <div class="empty-state">Crie o primeiro módulo. Depois aparecerá o botão para adicionar aulas dentro dele.</div>
         <?php endif; ?>
     </div>
 </section>

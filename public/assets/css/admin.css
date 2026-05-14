@@ -3455,6 +3455,42 @@ body.editor-focus-mode {
     text-align: right;
 }
 
+.education-simple-panel {
+    margin-bottom: 18px;
+}
+
+.education-inline-create {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-inline-create summary {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
+    cursor: pointer;
+    color: var(--brand);
+    font-weight: 900;
+}
+
+.education-quick-lesson-form {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 120px minmax(220px, 1fr);
+    gap: 12px;
+    align-items: end;
+    margin-top: 12px;
+}
+
+.education-quick-lesson-form .grid-span-2 {
+    grid-column: 1 / -1;
+}
+
+.education-quick-lesson-form .btn {
+    justify-self: start;
+}
+
 .education-playlist-lessons {
     display: grid;
     gap: 8px;
@@ -3510,6 +3546,27 @@ body.editor-focus-mode {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
     gap: 16px;
     align-items: start;
+}
+
+.education-sequence-form-panel {
+    border-color: rgba(22, 163, 74, 0.25);
+}
+
+.education-sequence-form {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.4fr) 120px minmax(220px, 1fr);
+    gap: 14px;
+    align-items: end;
+}
+
+.education-sequence-form .grid-span-2,
+.education-sequence-form .form-action-cell {
+    grid-column: 1 / -1;
+}
+
+.education-large-textarea {
+    min-height: 220px;
+    resize: vertical;
 }
 
 .education-content-stack,
@@ -3659,6 +3716,13 @@ body.editor-focus-mode {
     color: #374151;
     line-height: 1.65;
     overflow-wrap: anywhere;
+}
+
+.education-block-image {
+    display: block;
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--line);
 }
 
 .education-block-actions {
@@ -4495,7 +4559,9 @@ body.editor-focus-mode {
     .education-course-builder,
     .education-player-layout,
     .education-playlist-row,
-    .education-module-card > header {
+    .education-module-card > header,
+    .education-quick-lesson-form,
+    .education-sequence-form {
         grid-template-columns: 1fr;
     }
 
