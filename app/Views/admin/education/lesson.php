@@ -2,6 +2,23 @@
 $blocks = $blocks ?? [];
 $editingBlock = $editingBlock ?? null;
 $canManage = $canManage ?? false;
+$playlist = $playlist ?? [];
+$modules = $modules ?? [];
+$playlistByModule = [];
+$moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
+$currentIndex = null;
+
+foreach ($playlist as $index => $playlistLesson) {
+    if ((int) $playlistLesson['id'] === (int) $lesson['id']) {
+        $currentIndex = $index;
+    }
+
+    $key = !empty($playlistLesson['module_id']) && in_array((int) $playlistLesson['module_id'], $moduleIds, true) ? (string) $playlistLesson['module_id'] : 'none';
+    $playlistByModule[$key][] = $playlistLesson;
+}
+
+$previousLesson = $currentIndex !== null && isset($playlist[$currentIndex - 1]) ? $playlist[$currentIndex - 1] : null;
+$nextLesson = $currentIndex !== null && isset($playlist[$currentIndex + 1]) ? $playlist[$currentIndex + 1] : null;
 $blockAction = $editingBlock
     ? url('/admin/education/block/update?id=' . $editingBlock['id'])
     : url('/admin/education/block?id=' . $lesson['id']);
@@ -28,7 +45,43 @@ $embed = function (?string $url): ?string {
     <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar ao curso</a>
 </div>
 
-<section class="education-builder-layout">
+<section class="education-player-layout">
+    <aside class="education-playlist-sidebar">
+        <div class="education-playlist-title">
+            <span>Playlist</span>
+            <strong><?= e($course['title'] ?? 'Curso') ?></strong>
+        </div>
+        <div class="education-sidebar-scroll">
+            <?php foreach ($modules as $module): ?>
+                <?php $moduleLessons = $playlistByModule[(string) $module['id']] ?? []; ?>
+                <section class="education-sidebar-module">
+                    <h2><?= e($module['title']) ?></h2>
+                    <?php foreach ($moduleLessons as $playlistLesson): ?>
+                        <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
+                            <i class="bi <?= !empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle' ?>" aria-hidden="true"></i>
+                            <span><?= e($playlistLesson['title']) ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                    <?php if (!$moduleLessons): ?>
+                        <small>Nenhuma aula neste módulo.</small>
+                    <?php endif; ?>
+                </section>
+            <?php endforeach; ?>
+
+            <?php if (!empty($playlistByModule['none'])): ?>
+                <section class="education-sidebar-module">
+                    <h2>Sem módulo</h2>
+                    <?php foreach ($playlistByModule['none'] as $playlistLesson): ?>
+                        <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
+                            <i class="bi <?= !empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle' ?>" aria-hidden="true"></i>
+                            <span><?= e($playlistLesson['title']) ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </section>
+            <?php endif; ?>
+        </div>
+    </aside>
+
     <article class="education-content-stack">
         <?php if (!empty($lesson['description'])): ?>
             <section class="panel education-lesson-description">
@@ -118,6 +171,20 @@ $embed = function (?string $url): ?string {
         <?php if (!$blocks && empty($videoEmbedUrl) && empty($lesson['description'])): ?>
             <div class="empty-state">Esta aula ainda não tem materiais cadastrados.</div>
         <?php endif; ?>
+
+        <nav class="education-player-nav" aria-label="Navegação da playlist">
+            <?php if ($previousLesson): ?>
+                <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $previousLesson['id'])) ?>"><i class="bi bi-chevron-left" aria-hidden="true"></i>Aula anterior</a>
+            <?php else: ?>
+                <span></span>
+            <?php endif; ?>
+            <a href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>">Voltar para o curso</a>
+            <?php if ($nextLesson): ?>
+                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'])) ?>">Próxima aula<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+            <?php else: ?>
+                <span></span>
+            <?php endif; ?>
+        </nav>
     </article>
 
     <aside class="education-side-stack">

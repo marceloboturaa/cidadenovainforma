@@ -125,6 +125,9 @@ $router->post('/admin/education/course', [EducationController::class, 'storeCour
 $router->post('/admin/education/course/update', [EducationController::class, 'updateCourse']);
 $router->post('/admin/education/course/delete', [EducationController::class, 'deleteCourse']);
 $router->get('/admin/education/course', [EducationController::class, 'course']);
+$router->post('/admin/education/module', [EducationController::class, 'storeModule']);
+$router->post('/admin/education/module/update', [EducationController::class, 'updateModule']);
+$router->post('/admin/education/module/delete', [EducationController::class, 'deleteModule']);
 $router->post('/admin/education/lesson', [EducationController::class, 'storeLesson']);
 $router->post('/admin/education/lesson/update', [EducationController::class, 'updateLesson']);
 $router->post('/admin/education/lesson/delete', [EducationController::class, 'deleteLesson']);

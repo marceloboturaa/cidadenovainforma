@@ -139,9 +139,64 @@ class EducationController
         View::render('admin/education/course', [
             'course' => $course,
             'lessons' => Education::lessonsForCourse((int) $course['id'], (int) $user['id']),
+            'modules' => Education::modulesForCourse((int) $course['id']),
             'canManage' => $canManage,
             'editingLesson' => $this->lessonFromQuery(false),
+            'editingModule' => $this->moduleFromQuery(false),
         ]);
+    }
+
+    public function storeModule(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education/manage');
+        $course = $this->courseFromQuery();
+        $this->authorizeCourseManage($course);
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        if ($title === '') {
+            Session::flash('error', 'Informe o título do módulo.');
+            redirect('/admin/education/course?id=' . $course['id']);
+        }
+
+        Education::createModule(array_merge($_POST, ['course_id' => $course['id']]));
+        Session::flash('success', 'Módulo criado.');
+        redirect('/admin/education/course?id=' . $course['id']);
+    }
+
+    public function updateModule(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education/manage');
+        $module = $this->moduleFromQuery();
+        $course = Education::findCourse((int) $module['course_id']);
+        $this->authorizeCourseManage($course);
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        if ($title === '') {
+            Session::flash('error', 'Informe o título do módulo.');
+            redirect('/admin/education/course?id=' . $module['course_id'] . '&module_id=' . $module['id']);
+        }
+
+        Education::updateModule((int) $module['id'], array_merge($_POST, ['course_id' => $module['course_id']]));
+        Session::flash('success', 'Módulo atualizado.');
+        redirect('/admin/education/course?id=' . $module['course_id']);
+    }
+
+    public function deleteModule(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education/manage');
+        $module = $this->moduleFromQuery();
+        $course = Education::findCourse((int) $module['course_id']);
+        $this->authorizeCourseManage($course);
+
+        Education::deactivateModule((int) $module['id']);
+        Session::flash('success', 'Módulo removido.');
+        redirect('/admin/education/course?id=' . $module['course_id']);
     }
 
     public function storeLesson(): void
@@ -218,6 +273,8 @@ class EducationController
             'blocks' => Education::blocksForLesson((int) $lesson['id']),
             'editingBlock' => $this->blockFromQuery(false),
             'canManage' => $canManage,
+            'modules' => Education::modulesForCourse((int) $lesson['course_id']),
+            'playlist' => Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id']),
         ]);
     }
 
@@ -366,10 +423,26 @@ class EducationController
         return $lesson;
     }
 
+    private function moduleFromQuery(bool $required = true): ?array
+    {
+        $id = filter_input(INPUT_GET, 'module_id', FILTER_VALIDATE_INT);
+        $module = $id ? Education::findModule($id) : null;
+
+        if (!$module && $required) {
+            http_response_code(404);
+            View::render('errors/404');
+            exit;
+        }
+
+        return $module;
+    }
+
     private function blockFromQuery(bool $required = true): ?array
     {
-        $id = filter_input(INPUT_GET, 'block_id', FILTER_VALIDATE_INT)
-            ?: filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $id = filter_input(INPUT_GET, 'block_id', FILTER_VALIDATE_INT);
+        if (!$id && $required) {
+            $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        }
         $block = $id ? Education::findLessonBlock($id) : null;
 
         if (!$block && $required) {

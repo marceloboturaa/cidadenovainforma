@@ -302,7 +302,7 @@ class Education
                     progress.completed_at,
                     education_modules.title AS module_title
              FROM education_lessons
-             LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id
+             LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id AND education_modules.active = 1
              LEFT JOIN education_lesson_progress progress
                 ON progress.lesson_id = education_lessons.id
                AND progress.user_id = :user_id
@@ -349,6 +349,24 @@ class Education
         $stmt->execute(['lesson_id' => $lessonId]);
 
         return $stmt->fetchAll();
+    }
+
+    public static function findModule(int $id): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_modules.*, education_courses.teacher_user_id
+             FROM education_modules
+             INNER JOIN education_courses ON education_courses.id = education_modules.course_id
+             WHERE education_modules.id = :id
+               AND education_modules.active = 1
+               AND education_courses.active = 1
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
     }
 
     public static function findLessonBlock(int $id): ?array

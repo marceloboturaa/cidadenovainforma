@@ -3215,7 +3215,8 @@ body.editor-focus-mode {
 }
 
 .education-course-form,
-.education-lesson-form {
+.education-lesson-form,
+.education-module-form {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 14px;
@@ -3223,7 +3224,8 @@ body.editor-focus-mode {
 }
 
 .education-course-form > div,
-.education-lesson-form > div {
+.education-lesson-form > div,
+.education-module-form > div {
     grid-column: span 2;
     min-width: 0;
 }
@@ -3233,9 +3235,11 @@ body.editor-focus-mode {
 .education-lesson-form > div:first-child,
 .education-lesson-form > div:nth-child(3),
 .education-lesson-form > div:nth-child(4),
+.education-module-form .grid-span-2,
 .education-access-details,
 .education-course-form > .form-action-cell,
-.education-lesson-form > .form-action-cell {
+.education-lesson-form > .form-action-cell,
+.education-module-form > .form-action-cell {
     grid-column: 1 / -1;
 }
 
@@ -3384,6 +3388,123 @@ body.editor-focus-mode {
     gap: 10px;
 }
 
+.education-course-builder {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 16px;
+    align-items: start;
+    margin-bottom: 18px;
+}
+
+.education-playlist-panel {
+    display: grid;
+    gap: 16px;
+}
+
+.education-module-list {
+    display: grid;
+    gap: 14px;
+}
+
+.education-module-card {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.education-module-card > header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.education-module-card > header span {
+    color: var(--brand);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.education-module-card h3 {
+    margin: 3px 0 0;
+    font-size: 1.1rem;
+}
+
+.education-module-card p {
+    margin: 6px 0 0;
+    color: var(--muted);
+}
+
+.education-module-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.education-module-actions strong {
+    flex-basis: 100%;
+    color: var(--muted);
+    font-size: 0.84rem;
+    text-align: right;
+}
+
+.education-playlist-lessons {
+    display: grid;
+    gap: 8px;
+}
+
+.education-playlist-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-playlist-main {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 9px;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+}
+
+.education-playlist-main > span:first-child {
+    display: grid;
+    place-items: center;
+    color: var(--brand);
+}
+
+.education-playlist-main > span:first-child.is-complete {
+    color: #16a34a;
+}
+
+.education-playlist-main strong,
+.education-playlist-main small {
+    display: block;
+}
+
+.education-playlist-main strong {
+    color: var(--ink);
+}
+
+.education-playlist-main small {
+    margin-top: 3px;
+    color: var(--muted);
+    line-height: 1.35;
+}
+
 .education-builder-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
@@ -3395,6 +3516,112 @@ body.editor-focus-mode {
 .education-side-stack {
     display: grid;
     gap: 14px;
+}
+
+.education-player-layout {
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr) minmax(280px, 340px);
+    gap: 16px;
+    align-items: start;
+}
+
+.education-playlist-sidebar {
+    position: sticky;
+    top: 18px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid var(--line);
+}
+
+.education-playlist-title {
+    padding: 16px;
+    background: var(--brand);
+    color: #ffffff;
+}
+
+.education-playlist-title span,
+.education-playlist-title strong {
+    display: block;
+}
+
+.education-playlist-title span {
+    font-size: 0.78rem;
+    font-weight: 900;
+    opacity: 0.86;
+    text-transform: uppercase;
+}
+
+.education-playlist-title strong {
+    margin-top: 4px;
+    line-height: 1.25;
+}
+
+.education-sidebar-scroll {
+    max-height: calc(100vh - 190px);
+    overflow: auto;
+    padding: 10px;
+}
+
+.education-sidebar-module {
+    display: grid;
+    gap: 6px;
+    padding-bottom: 12px;
+}
+
+.education-sidebar-module h2 {
+    margin: 10px 4px 4px;
+    color: var(--ink);
+    font-size: 0.9rem;
+}
+
+.education-sidebar-module a {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 8px;
+    border-radius: 8px;
+    color: #1f2937;
+    text-decoration: none;
+    line-height: 1.35;
+}
+
+.education-sidebar-module a:hover,
+.education-sidebar-module a.active {
+    background: #ffffff;
+}
+
+.education-sidebar-module a.active {
+    color: var(--brand);
+    font-weight: 900;
+}
+
+.education-sidebar-module i {
+    margin-top: 2px;
+    color: var(--brand);
+}
+
+.education-sidebar-module small {
+    margin-left: 4px;
+    color: var(--muted);
+}
+
+.education-player-nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+}
+
+.education-player-nav > a:nth-child(2) {
+    font-weight: 900;
+}
+
+.education-player-nav > a:last-child {
+    justify-self: end;
 }
 
 .education-block-card {
@@ -4259,11 +4486,16 @@ body.editor-focus-mode {
     .education-grid,
     .education-course-form,
     .education-lesson-form,
+    .education-module-form,
     .education-user-picker,
     .education-course-intro,
     .education-lesson-row,
     .education-watch-layout,
-    .education-builder-layout {
+    .education-builder-layout,
+    .education-course-builder,
+    .education-player-layout,
+    .education-playlist-row,
+    .education-module-card > header {
         grid-template-columns: 1fr;
     }
 
@@ -4271,13 +4503,33 @@ body.editor-focus-mode {
         position: static;
     }
 
+    .education-playlist-sidebar {
+        position: static;
+    }
+
+    .education-sidebar-scroll {
+        max-height: 360px;
+    }
+
+    .education-player-nav {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .education-player-nav > a:last-child,
+    .education-player-nav > a:first-child {
+        justify-self: stretch;
+    }
+
     .education-course-form > div,
     .education-lesson-form > div,
+    .education-module-form > div,
     .education-course-form > div:first-child,
     .education-course-form > div:nth-child(4),
     .education-lesson-form > div:first-child,
     .education-lesson-form > div:nth-child(3),
-    .education-lesson-form > div:nth-child(4) {
+    .education-lesson-form > div:nth-child(4),
+    .education-module-form .grid-span-2 {
         grid-column: 1 / -1;
     }
 
