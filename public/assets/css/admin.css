@@ -1253,6 +1253,195 @@ body.editor-focus-mode {
     font-size: 0.86rem;
 }
 
+.person-register-panel {
+    padding: 0;
+    overflow: hidden;
+}
+
+.person-register-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.person-register-head span {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--brand);
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.person-register-head h2 {
+    margin: 0;
+    font-size: 1.28rem;
+}
+
+.person-register-head strong {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 6px 10px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 0.78rem;
+}
+
+.person-registration-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 0;
+}
+
+.person-form-main {
+    display: grid;
+    gap: 16px;
+    padding: 22px 24px 24px;
+}
+
+.person-form-side {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 22px;
+    border-left: 1px solid var(--line);
+    background: #f8fafc;
+}
+
+.person-form-section {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.person-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.person-section-title i {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: var(--brand);
+}
+
+.person-section-title h3 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.person-section-title span {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.84rem;
+}
+
+.person-field-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.person-field-grid > div {
+    grid-column: span 2;
+    min-width: 0;
+}
+
+.person-field-grid > .field-wide {
+    grid-column: span 3;
+}
+
+.person-form-section.guardian-fields {
+    grid-column: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px;
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.person-form-section.guardian-fields[hidden] {
+    display: none;
+}
+
+.person-form-section .guardian-fields-head {
+    grid-column: auto;
+}
+
+.person-form-section .guardian-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.person-side-card {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.person-side-card h3 {
+    margin: 0;
+    font-size: 0.98rem;
+}
+
+.person-toggle-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.person-toggle-row strong,
+.person-toggle-row small {
+    display: block;
+}
+
+.person-toggle-row strong {
+    color: var(--ink);
+    line-height: 1.25;
+}
+
+.person-toggle-row small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.person-form-actions {
+    display: grid;
+    gap: 8px;
+}
+
+.person-form-actions .btn {
+    width: 100%;
+}
+
 .event-cover-preview,
 .event-admin-thumb {
     display: block;
@@ -2875,6 +3064,44 @@ body.editor-focus-mode {
     .guardian-fields > div,
     .guardian-fields > div:nth-child(2) {
         grid-column: 1 / -1;
+    }
+
+    .person-register-head,
+    .person-registration-form {
+        grid-template-columns: 1fr;
+    }
+
+    .person-register-head {
+        display: grid;
+        padding: 18px;
+    }
+
+    .person-register-head strong {
+        justify-self: start;
+    }
+
+    .person-form-main,
+    .person-form-side {
+        padding: 16px;
+    }
+
+    .person-form-side {
+        border-top: 1px solid var(--line);
+        border-left: 0;
+    }
+
+    .person-field-grid,
+    .person-form-section .guardian-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .person-field-grid > div,
+    .person-field-grid > .field-wide {
+        grid-column: 1 / -1;
+    }
+
+    .person-section-title {
+        align-items: flex-start;
     }
 
     .tag-editor-panel {
