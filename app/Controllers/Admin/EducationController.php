@@ -13,6 +13,10 @@ use App\Models\User;
 
 class EducationController
 {
+    private const MAX_BLOCK_FILE_SIZE = 50 * 1024 * 1024;
+
+    private const BLOCKED_BLOCK_EXTENSIONS = ['bat', 'cmd', 'com', 'exe', 'htaccess', 'html', 'htm', 'js', 'msi', 'phtml', 'phar', 'php', 'pl', 'ps1', 'py', 'sh', 'shtml', 'vbs'];
+
     public function index(): void
     {
         Middleware::auth();
@@ -211,7 +215,106 @@ class EducationController
             'lesson' => $lesson,
             'course' => $course,
             'videoEmbedUrl' => $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
+            'blocks' => Education::blocksForLesson((int) $lesson['id']),
+            'editingBlock' => $this->blockFromQuery(false),
+            'canManage' => $canManage,
         ]);
+    }
+
+    public function storeBlock(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+        $lesson = $this->lessonFromQuery();
+        $course = Education::findCourse((int) $lesson['course_id']);
+        $this->authorizeCourseManage($course);
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $content = trim((string) ($_POST['content'] ?? ''));
+        $mediaUrl = trim((string) ($_POST['media_url'] ?? ''));
+        $filePath = $this->storeBlockFile();
+        $type = strtolower(trim((string) ($_POST['type'] ?? 'text')));
+
+        if ($title === '' && $content === '' && $mediaUrl === '' && $filePath === null) {
+            Session::flash('error', 'Informe conteúdo, vídeo ou arquivo para adicionar ao material.');
+            redirect('/admin/education/lesson?id=' . $lesson['id']);
+        }
+
+        Education::createLessonBlock(array_merge($_POST, [
+            'lesson_id' => $lesson['id'],
+            'type' => $filePath ? 'file' : $type,
+            'file_path' => $filePath,
+        ]));
+
+        Session::flash('success', 'Material adicionado à aula.');
+        redirect('/admin/education/lesson?id=' . $lesson['id']);
+    }
+
+    public function updateBlock(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+        $block = $this->blockFromQuery();
+        $lesson = Education::findLesson((int) $block['lesson_id']);
+        $course = Education::findCourse((int) $block['course_id']);
+        $this->authorizeCourseManage($course);
+
+        $filePath = $this->storeBlockFile();
+        Education::updateLessonBlock((int) $block['id'], array_merge($_POST, [
+            'lesson_id' => $lesson['id'],
+            'file_path' => $filePath ?: ($block['file_path'] ?? null),
+        ]));
+
+        Session::flash('success', 'Material atualizado.');
+        redirect('/admin/education/lesson?id=' . $lesson['id']);
+    }
+
+    public function deleteBlock(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+        $block = $this->blockFromQuery();
+        $course = Education::findCourse((int) $block['course_id']);
+        $this->authorizeCourseManage($course);
+
+        Education::deactivateLessonBlock((int) $block['id']);
+        Session::flash('success', 'Material removido.');
+        redirect('/admin/education/lesson?id=' . $block['lesson_id']);
+    }
+
+    public function downloadBlock(): void
+    {
+        Middleware::auth();
+        $user = current_user();
+        $block = $this->blockFromQuery();
+        $course = Education::findCourse((int) $block['course_id']);
+        $canManage = $this->canManageCourse($course);
+
+        if (!Education::userCanAccessCourse((int) $block['course_id'], (int) $user['id'], $canManage)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $relativePath = (string) ($block['file_path'] ?? '');
+        $path = dirname(__DIR__, 3) . '/' . ltrim($relativePath, '/');
+
+        if ($relativePath === '' || !is_file($path)) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $downloadName = basename($path);
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . str_replace(['"', "\r", "\n"], '', $downloadName) . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
     }
 
     public function progress(): void
@@ -261,6 +364,21 @@ class EducationController
         }
 
         return $lesson;
+    }
+
+    private function blockFromQuery(bool $required = true): ?array
+    {
+        $id = filter_input(INPUT_GET, 'block_id', FILTER_VALIDATE_INT)
+            ?: filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $block = $id ? Education::findLessonBlock($id) : null;
+
+        if (!$block && $required) {
+            http_response_code(404);
+            View::render('errors/404');
+            exit;
+        }
+
+        return $block;
     }
 
     private function canManage(): bool
@@ -349,5 +467,39 @@ class EducationController
         }
 
         return $url;
+    }
+
+    private function storeBlockFile(): ?string
+    {
+        if (empty($_FILES['block_file']['name']) || ($_FILES['block_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        if ((int) $_FILES['block_file']['size'] > self::MAX_BLOCK_FILE_SIZE) {
+            Session::flash('error', 'O arquivo deve ter no máximo 50MB.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $extension = strtolower(pathinfo((string) $_FILES['block_file']['name'], PATHINFO_EXTENSION));
+        if ($extension === '' || in_array($extension, self::BLOCKED_BLOCK_EXTENSIONS, true)) {
+            Session::flash('error', 'Tipo de arquivo não permitido.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/storage/documents/education';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        $safeBase = slugify(pathinfo((string) $_FILES['block_file']['name'], PATHINFO_FILENAME));
+        $filename = $safeBase . '-' . bin2hex(random_bytes(6)) . '.' . $extension;
+        $target = $directory . '/' . $filename;
+
+        if (!move_uploaded_file($_FILES['block_file']['tmp_name'], $target)) {
+            Session::flash('error', 'Não foi possível salvar o arquivo.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        return '/storage/documents/education/' . $filename;
     }
 }

@@ -351,6 +351,28 @@ class Education
         return $stmt->fetchAll();
     }
 
+    public static function findLessonBlock(int $id): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_lesson_blocks.*,
+                    education_lessons.course_id,
+                    education_lessons.title AS lesson_title
+             FROM education_lesson_blocks
+             INNER JOIN education_lessons ON education_lessons.id = education_lesson_blocks.lesson_id
+             INNER JOIN education_courses ON education_courses.id = education_lessons.course_id
+             WHERE education_lesson_blocks.id = :id
+               AND education_lesson_blocks.active = 1
+               AND education_lessons.active = 1
+               AND education_courses.active = 1
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function createLessonBlock(array $data): int
     {
         self::ensureSchema();

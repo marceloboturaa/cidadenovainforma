@@ -21,7 +21,7 @@
     <section class="panel education-editor-panel">
         <div class="section-heading">
             <h2><?= $editingLesson ? 'Editar aula' : 'Nova aula' ?></h2>
-            <span>Use link do YouTube ou arquivo de vídeo</span>
+            <span>Crie a aula e depois organize textos, vídeos e arquivos dentro dela</span>
         </div>
         <form method="post" action="<?= e($editingLesson ? url('/admin/education/lesson/update?id=' . $editingLesson['id']) : url('/admin/education/lesson?id=' . $course['id'])) ?>" class="education-lesson-form">
             <?= csrf_field() ?>
@@ -34,8 +34,8 @@
                 <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingLesson['sort_order'] ?? 0)) ?>">
             </div>
             <div>
-                <label class="form-label">Link do vídeo</label>
-                <input class="form-control" name="video_url" value="<?= e($editingLesson['video_url'] ?? '') ?>" placeholder="https://youtu.be/... ou /public/uploads/video.mp4">
+                <label class="form-label">Vídeo principal opcional</label>
+                <input class="form-control" name="video_url" value="<?= e($editingLesson['video_url'] ?? '') ?>" placeholder="Você também pode adicionar vídeos depois, dentro da aula">
             </div>
             <div>
                 <label class="form-label">Descrição</label>
@@ -68,6 +68,7 @@
                 <div class="education-lesson-actions">
                     <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Assistir</a>
                     <?php if ($canManage): ?>
+                        <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-layers" aria-hidden="true"></i>Materiais</a>
                         <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&lesson_id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar</a>
                         <form class="inline-form" method="post" action="<?= e(url('/admin/education/lesson/delete?id=' . $lesson['id'])) ?>" onsubmit="return confirm('Remover esta aula?');">
                             <?= csrf_field() ?>

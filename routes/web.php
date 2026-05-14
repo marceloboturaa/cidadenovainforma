@@ -129,6 +129,10 @@ $router->post('/admin/education/lesson', [EducationController::class, 'storeLess
 $router->post('/admin/education/lesson/update', [EducationController::class, 'updateLesson']);
 $router->post('/admin/education/lesson/delete', [EducationController::class, 'deleteLesson']);
 $router->get('/admin/education/lesson', [EducationController::class, 'lesson']);
+$router->post('/admin/education/block', [EducationController::class, 'storeBlock']);
+$router->post('/admin/education/block/update', [EducationController::class, 'updateBlock']);
+$router->post('/admin/education/block/delete', [EducationController::class, 'deleteBlock']);
+$router->get('/admin/education/block/download', [EducationController::class, 'downloadBlock']);
 $router->post('/admin/education/progress', [EducationController::class, 'progress']);
 
 $router->get('/admin/forum', [ForumController::class, 'index']);
