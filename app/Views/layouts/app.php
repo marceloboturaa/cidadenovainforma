@@ -3,6 +3,7 @@
 <?php $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/admin', PHP_URL_PATH) ?: '/admin'; ?>
 <?php $adminCssVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/css/admin.css'); ?>
 <?php $adminJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/admin.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/admin.js') : time(); ?>
+<?php $tinyMceJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/tinymce-init.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/tinymce-init.js') : time(); ?>
 <?php $faviconPath = str_starts_with($currentPath, '/admin/education') ? '/public/assets/img/favicon-education.svg' : '/public/assets/img/favicon-secondary.svg'; ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . $faviconPath); ?>
 <?php $institutionPageAccess = $user ? \App\Models\InstitutionPage::manageableForUser((int) $user['id'], ($user['role_slug'] ?? '') === 'master') : []; ?>
@@ -12,6 +13,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<?= e(\App\Core\Csrf::token()) ?>">
+    <meta name="tinymce-upload-url" content="<?= e(url('/admin/media/tinymce')) ?>">
     <title>Painel - <?= e($app['name']) ?></title>
     <link rel="icon" type="image/svg+xml" href="<?= e(url($faviconPath) . '?v=' . $faviconVersion) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -93,5 +96,7 @@
     </div>
     <script src="<?= e(url('/public/assets/js/password-toggle.js')) ?>"></script>
     <script src="<?= e(url('/public/assets/js/admin.js') . '?v=' . $adminJsVersion) ?>"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="<?= e(url('/public/assets/js/tinymce-init.js') . '?v=' . $tinyMceJsVersion) ?>"></script>
 </body>
 </html>

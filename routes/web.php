@@ -9,6 +9,7 @@ use App\Controllers\Admin\ForumController;
 use App\Controllers\Admin\InstitutionPageController;
 use App\Controllers\Admin\LibraryEventController;
 use App\Controllers\Admin\MenuController;
+use App\Controllers\Admin\MediaController;
 use App\Controllers\Admin\NewsController;
 use App\Controllers\Admin\PersonController;
 use App\Controllers\Admin\TagController;
@@ -46,6 +47,7 @@ $router->get('/reset-password', [AuthController::class, 'showReset']);
 $router->post('/reset-password', [AuthController::class, 'reset']);
 
 $router->get('/admin', [DashboardController::class, 'index']);
+$router->post('/admin/media/tinymce', [MediaController::class, 'tinyMceUpload']);
 $router->get('/admin/password', [UserController::class, 'password']);
 $router->post('/admin/password', [UserController::class, 'updatePassword']);
 $router->get('/admin/users', [UserController::class, 'index']);

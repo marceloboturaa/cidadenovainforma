@@ -98,7 +98,7 @@ $moduleAction = $editingModule
                 </div>
                 <div class="grid-span-2">
                     <label class="form-label">Descrição</label>
-                    <textarea class="form-control" name="description" rows="6"><?= e($editingLesson['description'] ?? '') ?></textarea>
+                    <textarea class="form-control" name="description" rows="6" data-tinymce><?= e($editingLesson['description'] ?? '') ?></textarea>
                 </div>
                 <div class="form-action-cell split-actions">
                     <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Atualizar aula</button>
@@ -159,7 +159,7 @@ $moduleAction = $editingModule
                             </div>
                             <div class="grid-span-2">
                                 <label class="form-label">Descrição</label>
-                                <textarea class="form-control" name="description" rows="4" placeholder="Texto inicial da aula"></textarea>
+                                <textarea class="form-control" name="description" rows="4" data-tinymce placeholder="Texto inicial da aula"></textarea>
                             </div>
                             <button class="btn btn-primary icon-btn"><i class="bi bi-plus-circle" aria-hidden="true"></i>Criar aula neste módulo</button>
                         </form>

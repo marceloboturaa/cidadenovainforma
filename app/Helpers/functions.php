@@ -280,6 +280,47 @@ function link_line(string $value): array
     return ['label' => $value, 'url' => null];
 }
 
+function clean_inline_style(string $style): string
+{
+    $safe = [];
+    $allowed = [
+        'background-color',
+        'color',
+        'font-size',
+        'letter-spacing',
+        'line-height',
+        'text-align',
+    ];
+
+    foreach (explode(';', $style) as $declaration) {
+        if (!str_contains($declaration, ':')) {
+            continue;
+        }
+
+        [$property, $value] = array_map('trim', explode(':', $declaration, 2));
+        $property = strtolower($property);
+        $value = preg_replace('/\s+/', ' ', $value) ?? '';
+
+        if (!in_array($property, $allowed, true) || preg_match('/(?:expression|javascript|url\s*\()/i', $value)) {
+            continue;
+        }
+
+        $isSafeValue = match ($property) {
+            'color', 'background-color' => (bool) preg_match('/^(#[0-9a-f]{3,8}|rgba?\([0-9.,\s%]+\)|[a-z]+)$/i', $value),
+            'font-size', 'letter-spacing' => (bool) preg_match('/^-?\d+(\.\d+)?(px|em|rem|%)$/i', $value),
+            'line-height' => (bool) preg_match('/^\d+(\.\d+)?(px|em|rem|%)?$/i', $value),
+            'text-align' => in_array(strtolower($value), ['left', 'center', 'right', 'justify'], true),
+            default => false,
+        };
+
+        if ($isSafeValue) {
+            $safe[] = $property . ':' . $value;
+        }
+    }
+
+    return implode(';', $safe);
+}
+
 function clean_article_html(string $html): string
 {
     $html = trim($html);
@@ -287,7 +328,7 @@ function clean_article_html(string $html): string
     $html = preg_replace('/<div([^>]*)>/i', '<p$1>', $html) ?? $html;
     $html = preg_replace('/<\/div>/i', '</p>', $html) ?? $html;
 
-    $allowed = '<p><br><strong><b><em><i><u><h2><h3><blockquote><ul><ol><li><a><img><iframe><video><audio><span>';
+    $allowed = '<p><br><strong><b><em><i><u><h2><h3><h4><blockquote><ul><ol><li><a><img><iframe><video><audio><span><table><thead><tbody><tr><th><td><hr>';
     $html = strip_tags($html, $allowed);
 
     $html = preg_replace('/\son[a-z]+\s*=\s*("|\').*?\1/i', '', $html) ?? $html;
@@ -310,16 +351,20 @@ function clean_article_html(string $html): string
 
     $html = preg_replace_callback('/<span\s+([^>]*)>/i', function (array $matches): string {
         preg_match('/class\s*=\s*("|\')([^"\']+)\1/i', $matches[1], $class);
+        preg_match('/style\s*=\s*("|\')([^"\']+)\1/i', $matches[1], $style);
         $classes = preg_split('/\s+/', trim($class[2] ?? '')) ?: [];
         $allowedClasses = ['text-color-ink', 'text-color-gray', 'text-color-red', 'text-color-orange', 'text-color-gold', 'text-color-green', 'text-color-teal', 'text-color-blue'];
         $safeClasses = array_values(array_intersect($classes, $allowedClasses));
+        $safeStyle = clean_inline_style($style[2] ?? '');
+        $styleAttribute = $safeStyle !== '' ? ' style="' . e($safeStyle) . '"' : '';
 
-        return $safeClasses ? '<span class="' . e(implode(' ', $safeClasses)) . '">' : '<span>';
+        return '<span' . ($safeClasses ? ' class="' . e(implode(' ', $safeClasses)) . '"' : '') . $styleAttribute . '>';
     }, $html) ?? $html;
 
-    $html = preg_replace_callback('/<(p|h2|h3|blockquote|li)\s+([^>]*)>/i', function (array $matches): string {
+    $html = preg_replace_callback('/<(p|h2|h3|h4|blockquote|li|td|th)\s+([^>]*)>/i', function (array $matches): string {
         $tag = strtolower($matches[1]);
         preg_match('/class\s*=\s*("|\')([^"\']+)\1/i', $matches[2], $class);
+        preg_match('/style\s*=\s*("|\')([^"\']+)\1/i', $matches[2], $style);
         preg_match('/(?:text-align\s*:\s*|align\s*=\s*("|\')?)(left|center|right|justify)/i', $matches[2], $align);
         $classes = preg_split('/\s+/', trim($class[2] ?? '')) ?: [];
         $allowedClasses = ['text-align-left', 'text-align-center', 'text-align-right', 'text-align-justify'];
@@ -330,8 +375,12 @@ function clean_article_html(string $html): string
         }
 
         $safeClasses = array_values(array_unique($safeClasses));
+        $safeStyle = clean_inline_style($style[2] ?? '');
 
-        return $safeClasses ? '<' . $tag . ' class="' . e(implode(' ', $safeClasses)) . '">' : '<' . $tag . '>';
+        return '<' . $tag
+            . ($safeClasses ? ' class="' . e(implode(' ', $safeClasses)) . '"' : '')
+            . ($safeStyle !== '' ? ' style="' . e($safeStyle) . '"' : '')
+            . '>';
     }, $html) ?? $html;
 
     $html = preg_replace_callback('/<img\s+([^>]+)>/i', function (array $matches): string {
@@ -394,7 +443,7 @@ function clean_article_html(string $html): string
         return '<' . $tag . ' controls' . $playsInline . ' src="' . e(media_url($url)) . '"></' . $tag . '>';
     }, $html) ?? $html;
 
-    $html = preg_replace('/<(br|strong|b|em|i|u|ul|ol)\s+[^>]*>/i', '<$1>', $html) ?? $html;
+    $html = preg_replace('/<(br|strong|b|em|i|u|ul|ol|table|thead|tbody|tr|hr)\s+[^>]*>/i', '<$1>', $html) ?? $html;
     $html = preg_replace('/<p>\s*(?:&nbsp;|\s|<br>)*<\/p>/i', '', $html) ?? $html;
     $html = preg_replace('/(?:<br>\s*){3,}/i', '<br><br>', $html) ?? $html;
 

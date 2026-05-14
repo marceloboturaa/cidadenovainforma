@@ -35,7 +35,7 @@
                 </div>
                 <span class="state-pill <?= !empty($topic['is_public']) ? 'is-active' : 'is-muted' ?>"><?= !empty($topic['is_public']) ? 'Público autorizado' : 'Restrito' ?></span>
             </header>
-            <div class="forum-message-text"><?= nl2br(e($topic['body'])) ?></div>
+            <div class="forum-message-text"><?= article_html($topic['body']) ?></div>
             <?php if (!empty($attachments['topic'])): ?>
                 <div class="forum-attachments">
                     <?php foreach ($attachments['topic'] as $attachment): ?>
@@ -69,7 +69,7 @@
                         </form>
                     <?php endif; ?>
                 </header>
-                <div class="forum-message-text"><?= nl2br(e($reply['body'])) ?></div>
+                <div class="forum-message-text"><?= article_html($reply['body']) ?></div>
                 <?php if (!empty($attachments['replies'][(int) $reply['id']])): ?>
                     <div class="forum-attachments">
                         <?php foreach ($attachments['replies'][(int) $reply['id']] as $attachment): ?>
@@ -115,7 +115,7 @@
                 <?= csrf_field() ?>
                 <label class="forum-compose-wide">
                     <span>Mensagem</span>
-                    <textarea class="form-control" name="body" rows="7" required autofocus></textarea>
+                    <textarea class="form-control" name="body" rows="7" data-tinymce required autofocus></textarea>
                 </label>
                 <label class="forum-compose-wide">
                     <span>Anexos</span>

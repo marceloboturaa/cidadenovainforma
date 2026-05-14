@@ -66,7 +66,7 @@ $endsAt = !empty($editing['ends_at']) ? date('Y-m-d\TH:i', strtotime($editing['e
         </div>
         <div>
             <label class="form-label">Descrição</label>
-            <textarea class="form-control" name="description" rows="3"><?= e($editing['description'] ?? '') ?></textarea>
+            <textarea class="form-control" name="description" rows="3" data-tinymce><?= e($editing['description'] ?? '') ?></textarea>
         </div>
         <div>
             <label class="form-label">Observações internas</label>

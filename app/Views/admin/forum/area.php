@@ -120,7 +120,7 @@
                 </label>
                 <label class="forum-compose-wide">
                     <span>Mensagem</span>
-                    <textarea class="form-control" name="body" rows="6" required></textarea>
+                    <textarea class="form-control" name="body" rows="6" data-tinymce required></textarea>
                 </label>
                 <label>
                     <span>Anexos</span>

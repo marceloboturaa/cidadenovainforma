@@ -2346,6 +2346,19 @@ body.editor-focus-mode {
     box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12);
 }
 
+.tinymce-textarea {
+    min-height: 320px;
+}
+
+.tox-tinymce {
+    border-color: var(--line) !important;
+    border-radius: 8px !important;
+}
+
+.tox-tinymce-aux {
+    z-index: 3000 !important;
+}
+
 .content-media-hidden {
     display: none;
 }
@@ -2568,6 +2581,10 @@ body.editor-focus-mode {
 
 .editor-focus-mode .rich-editor {
     min-height: calc(100vh - 240px);
+}
+
+.editor-focus-mode .tox-tinymce {
+    min-height: calc(100vh - 170px);
 }
 
 .backup-panel p,

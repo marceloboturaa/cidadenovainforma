@@ -22,7 +22,7 @@
             <h2>Informações do evento</h2>
             <?php if (!empty($event['description'])): ?>
                 <div class="event-detail-text">
-                    <?= nl2br(e($event['description'])) ?>
+                    <?= article_html($event['description']) ?>
                 </div>
             <?php else: ?>
                 <p class="event-detail-text">Mais informações serão divulgadas em breve.</p>

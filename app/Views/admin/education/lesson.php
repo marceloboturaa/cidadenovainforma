@@ -124,7 +124,7 @@ $embed = function (?string $url): ?string {
                     <?php endif; ?>
                     <div class="grid-span-2">
                         <label class="form-label">Texto, explicação ou instruções</label>
-                        <textarea class="form-control education-large-textarea" name="content" rows="10" placeholder="Escreva aqui o conteúdo que aparece depois ou antes do vídeo"><?= e($editingBlock['content'] ?? '') ?></textarea>
+                        <textarea class="form-control education-large-textarea" name="content" rows="10" data-tinymce placeholder="Escreva aqui o conteúdo que aparece depois ou antes do vídeo"><?= e($editingBlock['content'] ?? '') ?></textarea>
                     </div>
                     <div class="form-action-cell split-actions">
                         <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i><?= $editingBlock ? 'Atualizar item' : 'Adicionar à sequência' ?></button>
@@ -139,7 +139,7 @@ $embed = function (?string $url): ?string {
         <?php if (!empty($lesson['description'])): ?>
             <section class="panel education-lesson-description">
                 <h2>Sobre esta aula</h2>
-                <p><?= nl2br(e($lesson['description'])) ?></p>
+                <div class="education-block-text"><?= article_html($lesson['description']) ?></div>
             </section>
         <?php endif; ?>
 
@@ -199,7 +199,7 @@ $embed = function (?string $url): ?string {
                 <?php endif; ?>
 
                 <?php if (!empty($block['content'])): ?>
-                    <div class="education-block-text"><?= nl2br(e($block['content'])) ?></div>
+                    <div class="education-block-text"><?= article_html($block['content']) ?></div>
                 <?php endif; ?>
 
                 <?php if ($type === 'file' && !empty($block['file_path'])): ?>

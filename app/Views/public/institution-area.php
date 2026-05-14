@@ -11,7 +11,7 @@
     <header class="institution-area-hero">
         <span><?= e($area['kicker']) ?></span>
         <h1><?= e($area['name']) ?></h1>
-        <p><?= e($area['description']) ?></p>
+        <div><?= article_html($area['description']) ?></div>
     </header>
 
     <section class="area-layout">
@@ -21,7 +21,7 @@
                     <span>Projeto</span>
                     <h2>Descrição do projeto</h2>
                 </div>
-                <p><?= e($area['description']) ?></p>
+                <div><?= article_html($area['description']) ?></div>
             </section>
 
             <?php if ($isRadioArea): ?>

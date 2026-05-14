@@ -43,7 +43,7 @@
             </div>
             <div>
                 <label class="form-label">Descrição do projeto</label>
-                <textarea class="form-control" name="description" rows="7" required><?= e($page['description']) ?></textarea>
+                <textarea class="form-control" name="description" rows="7" data-tinymce required><?= e($page['description']) ?></textarea>
             </div>
         </div>
     </section>
