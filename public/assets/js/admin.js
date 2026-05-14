@@ -7,6 +7,7 @@
     const galleryList = document.querySelector('[data-gallery-list]');
     const galleryAdd = document.querySelector('[data-gallery-add]');
     const personForm = document.querySelector('[data-person-form]');
+    const modalOpeners = document.querySelectorAll('[data-modal-open]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -27,7 +28,29 @@
         if (event.key === 'Escape') {
             closeMenu();
             closeEditorFocus();
+            closeModal();
         }
+    });
+
+    modalOpeners.forEach((button) => {
+        button.addEventListener('click', () => {
+            const modal = document.getElementById(button.dataset.modalOpen || '');
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+            const focusTarget = modal.querySelector('[autofocus], textarea, input, select, button');
+            if (focusTarget) {
+                window.setTimeout(() => focusTarget.focus(), 80);
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-modal-close]').forEach((button) => {
+        button.addEventListener('click', closeModal);
     });
 
     focusButtons.forEach((button) => {
@@ -138,6 +161,14 @@
     function closeEditorFocus() {
         document.body.classList.remove('editor-focus-mode');
         setFocusButtonText(false);
+    }
+
+    function closeModal() {
+        document.querySelectorAll('.forum-modal.is-open').forEach((modal) => {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+        });
+        document.body.classList.remove('modal-open');
     }
 
     function setFocusButtonText(isFocused) {
