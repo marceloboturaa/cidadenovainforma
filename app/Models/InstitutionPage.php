@@ -100,14 +100,23 @@ class InstitutionPage
         self::seedDefaults();
 
         $validSlugs = array_column(self::all(), 'slug');
-        $slugs = array_values(array_intersect(array_unique($slugs), $validSlugs));
+        $slugs = array_values(array_intersect(array_unique(array_map('strval', $slugs)), $validSlugs));
         $db = Database::connection();
 
-        $db->prepare('DELETE FROM institution_page_users WHERE user_id = :user_id')->execute(['user_id' => $userId]);
-        $stmt = $db->prepare('INSERT IGNORE INTO institution_page_users (page_slug, user_id, created_at) VALUES (:page_slug, :user_id, NOW())');
+        $db->beginTransaction();
 
-        foreach ($slugs as $slug) {
-            $stmt->execute(['page_slug' => $slug, 'user_id' => $userId]);
+        try {
+            $db->prepare('DELETE FROM institution_page_users WHERE user_id = :user_id')->execute(['user_id' => $userId]);
+            $stmt = $db->prepare('INSERT IGNORE INTO institution_page_users (page_slug, user_id, created_at) VALUES (:page_slug, :user_id, NOW())');
+
+            foreach ($slugs as $slug) {
+                $stmt->execute(['page_slug' => $slug, 'user_id' => $userId]);
+            }
+
+            $db->commit();
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
         }
     }
 
@@ -312,6 +321,7 @@ class InstitutionPage
                 CONSTRAINT fk_institution_page_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+        self::ensureColumn('institution_page_users', 'created_at', 'TIMESTAMP NULL');
 
         $done = true;
     }

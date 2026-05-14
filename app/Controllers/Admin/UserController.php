@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserPresence;
+use Throwable;
 
 class UserController
 {
@@ -157,9 +158,15 @@ class UserController
             redirect('/admin/users');
         }
 
-        InstitutionPage::syncUserResponsibilities((int) $user['id'], $_POST['pages'] ?? []);
-        Logger::info('users.institution_responsibilities', 'Responsabilidades institucionais atualizadas: ' . $user['email'], current_user()['id'] ?? null);
-        Session::flash('success', 'Responsabilidades atualizadas para ' . $user['name'] . '.');
+        try {
+            InstitutionPage::syncUserResponsibilities((int) $user['id'], $_POST['pages'] ?? []);
+            Logger::info('users.institution_responsibilities', 'Responsabilidades institucionais atualizadas: ' . $user['email'], current_user()['id'] ?? null);
+            Session::flash('success', 'Responsabilidades atualizadas para ' . $user['name'] . '.');
+        } catch (Throwable $exception) {
+            Logger::info('users.institution_responsibilities_error', 'Falha ao atualizar responsabilidades: ' . $exception->getMessage(), current_user()['id'] ?? null);
+            Session::flash('error', 'Não foi possível atualizar os responsáveis. Verifique o banco e tente novamente.');
+        }
+
         redirect('/admin/users');
     }
 

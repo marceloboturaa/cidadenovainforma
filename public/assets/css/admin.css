@@ -2383,7 +2383,7 @@ body.editor-focus-mode {
 
 .user-directory-card {
     display: grid;
-    grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
     gap: 18px;
     padding: 18px;
     border: 1px solid var(--line);
@@ -2433,24 +2433,63 @@ body.editor-focus-mode {
     gap: 10px;
 }
 
-.user-management-block details {
+.user-action-panel {
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #f8fafc;
+    padding: 12px;
 }
 
-.user-management-block details {
-    padding: 10px 12px;
+.user-action-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
-.user-management-block summary {
-    cursor: pointer;
+.user-action-heading strong {
     color: var(--ink);
     font-weight: 800;
+    line-height: 1.25;
 }
 
-.user-management-block details[open] summary {
-    margin-bottom: 10px;
+.user-action-heading span {
+    color: var(--muted);
+    font-size: 0.82rem;
+    text-align: right;
+}
+
+.user-management-block .password-reset-row {
+    grid-template-columns: minmax(140px, 1fr) auto;
+    min-width: 0;
+}
+
+.user-management-block .user-action-panel:last-child .password-reset-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+}
+
+.user-management-block .responsibility-form {
+    min-width: 0;
+}
+
+.user-management-block .responsibility-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.user-management-block .responsibility-options label {
+    min-height: 42px;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.user-management-block .responsibility-options input {
+    margin-top: 3px;
 }
 
 .document-access-options {
@@ -3059,6 +3098,21 @@ body.editor-focus-mode {
     }
 
     .user-card .admin-list-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .user-action-heading {
+        display: grid;
+        gap: 3px;
+    }
+
+    .user-action-heading span {
+        text-align: left;
+    }
+
+    .user-management-block .password-reset-row,
+    .user-management-block .user-action-panel:last-child .password-reset-row,
+    .user-management-block .responsibility-options {
         grid-template-columns: 1fr;
     }
 

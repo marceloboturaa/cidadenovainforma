@@ -1,3 +1,5 @@
+<?php $isMaster = (current_user()['role_slug'] ?? '') === 'master'; ?>
+
 <div class="page-heading">
     <div>
         <p>Controle de acesso</p>
@@ -5,43 +7,43 @@
     </div>
 </div>
 
-<section class="panel user-create-panel">
-    <div class="section-heading">
-        <h2>Novo membro da equipe</h2>
-        <span>Crie o login e defina o cargo inicial</span>
-    </div>
-    <form method="post" action="<?= e(url('/admin/users')) ?>" class="admin-form-grid users-form-grid">
-        <?= csrf_field() ?>
-        <div>
-            <label class="form-label">Nome</label>
-            <input class="form-control" name="name" required>
+<?php if ($isMaster): ?>
+    <section class="panel user-create-panel">
+        <div class="section-heading">
+            <h2>Novo membro da equipe</h2>
+            <span>Crie o login e defina o cargo inicial</span>
         </div>
-        <div>
-            <label class="form-label">E-mail</label>
-            <input class="form-control" name="email" type="email" required>
-        </div>
-        <div>
-            <label class="form-label">Cargo</label>
-            <select class="form-select" name="role_id" required>
-                <?php foreach ($roles as $role): ?>
-                    <option value="<?= e((string) $role['id']) ?>"><?= e($role['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div>
-            <label class="form-label">Senha</label>
-            <div class="password-field">
-                <input class="form-control" name="password" type="password" minlength="8" required>
-                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+        <form method="post" action="<?= e(url('/admin/users')) ?>" class="admin-form-grid users-form-grid">
+            <?= csrf_field() ?>
+            <div>
+                <label class="form-label">Nome</label>
+                <input class="form-control" name="name" required>
             </div>
-        </div>
-        <div class="form-action-cell">
-            <button class="btn btn-primary w-100">Criar</button>
-        </div>
-    </form>
-</section>
+            <div>
+                <label class="form-label">E-mail</label>
+                <input class="form-control" name="email" type="email" required>
+            </div>
+            <div>
+                <label class="form-label">Cargo</label>
+                <select class="form-select" name="role_id" required>
+                    <?php foreach ($roles as $role): ?>
+                        <option value="<?= e((string) $role['id']) ?>"><?= e($role['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Senha</label>
+                <div class="password-field">
+                    <input class="form-control" name="password" type="password" minlength="8" required>
+                    <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha">&#128065;</button>
+                </div>
+            </div>
+            <div class="form-action-cell">
+                <button class="btn btn-primary w-100">Criar</button>
+            </div>
+        </form>
+    </section>
 
-<?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
     <section class="panel">
         <div class="registration-control">
             <div>
@@ -130,10 +132,13 @@
                     <small>Criado em <?= e($item['created_at']) ?></small>
                 </div>
                 <div class="user-management-block">
-                    <?php if ((current_user()['role_slug'] ?? '') === 'master'): ?>
+                    <?php if ($isMaster): ?>
                         <?php if (($item['role_slug'] ?? '') !== 'master' && (int) $item['id'] !== (int) (current_user()['id'] ?? 0)): ?>
-                            <details>
-                                <summary>Alterar cargo</summary>
+                            <div class="user-action-panel">
+                                <div class="user-action-heading">
+                                    <strong>Alterar cargo</strong>
+                                    <span>Ajusta o nível de acesso</span>
+                                </div>
                                 <form method="post" action="<?= e(url('/admin/users/role?id=' . $item['id'])) ?>" class="password-reset-row">
                                     <?= csrf_field() ?>
                                     <select class="form-select form-select-sm" name="role_id" required>
@@ -145,27 +150,34 @@
                                     </select>
                                     <button class="btn btn-sm btn-outline-primary">Salvar cargo</button>
                                 </form>
-                            </details>
+                            </div>
                         <?php endif; ?>
                         <?php if ($institutionPages ?? []): ?>
-                            <details>
-                                <summary>Páginas institucionais</summary>
+                            <?php $selectedPages = $userResponsibilities[(int) $item['id']] ?? []; ?>
+                            <div class="user-action-panel">
+                                <div class="user-action-heading">
+                                    <strong>Responsável por páginas</strong>
+                                    <span><?= e((string) count($selectedPages)) ?> selecionada(s)</span>
+                                </div>
                                 <form method="post" action="<?= e(url('/admin/users/responsibilities?id=' . $item['id'])) ?>" class="responsibility-form">
                                     <?= csrf_field() ?>
                                     <div class="responsibility-options">
                                         <?php foreach (($institutionPages ?? []) as $page): ?>
                                             <label>
-                                                <input type="checkbox" name="pages[]" value="<?= e($page['slug']) ?>" <?= checked(in_array($page['slug'], $userResponsibilities[(int) $item['id']] ?? [], true)) ?>>
+                                                <input type="checkbox" name="pages[]" value="<?= e($page['slug']) ?>" <?= checked(in_array($page['slug'], $selectedPages, true)) ?>>
                                                 <span><?= e($page['name']) ?></span>
                                             </label>
                                         <?php endforeach; ?>
                                     </div>
                                     <button class="btn btn-sm btn-outline-primary">Salvar páginas</button>
                                 </form>
-                            </details>
+                            </div>
                         <?php endif; ?>
-                        <details>
-                            <summary>Redefinir senha</summary>
+                        <div class="user-action-panel">
+                            <div class="user-action-heading">
+                                <strong>Redefinir senha</strong>
+                                <span>Use no mínimo 8 caracteres</span>
+                            </div>
                             <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="password-reset-row">
                                 <?= csrf_field() ?>
                                 <div class="password-field">
@@ -178,7 +190,7 @@
                                 </div>
                                 <button class="btn btn-sm btn-outline-secondary">Resetar senha</button>
                             </form>
-                        </details>
+                        </div>
                     <?php else: ?>
                         <span class="text-muted">Somente master</span>
                     <?php endif; ?>
