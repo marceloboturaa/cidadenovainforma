@@ -2,6 +2,7 @@
 $editingLesson = $editingLesson ?? null;
 $editingModule = $editingModule ?? null;
 $modules = $modules ?? [];
+$selectedModuleId = filter_input(INPUT_GET, 'new_lesson_module_id', FILTER_VALIDATE_INT) ?: null;
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
 
@@ -62,10 +63,16 @@ $moduleAction = $editingModule
             </form>
         </article>
 
-        <article class="panel education-editor-panel">
+        <article class="panel education-editor-panel" id="aula-form">
             <div class="section-heading">
                 <h2><?= $editingLesson ? 'Editar aula' : 'Nova aula' ?></h2>
-                <span>Cada aula vira um item da playlist do módulo</span>
+                <span><?= $editingLesson ? 'Você está editando uma aula existente' : 'Cada aula vira um item da playlist do módulo' ?></span>
+                <?php if ($editingLesson): ?>
+                    <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">
+                        <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                        Nova aula
+                    </a>
+                <?php endif; ?>
             </div>
             <form method="post" action="<?= e($editingLesson ? url('/admin/education/lesson/update?id=' . $editingLesson['id']) : url('/admin/education/lesson?id=' . $course['id'])) ?>" class="education-lesson-form">
                 <?= csrf_field() ?>
@@ -74,7 +81,7 @@ $moduleAction = $editingModule
                     <select class="form-select" name="module_id">
                         <option value="">Sem módulo</option>
                         <?php foreach ($modules as $module): ?>
-                            <option value="<?= e((string) $module['id']) ?>" <?= selected((string) $module['id'], (string) ($editingLesson['module_id'] ?? '')) ?>>
+                            <option value="<?= e((string) $module['id']) ?>" <?= selected((string) $module['id'], (string) ($editingLesson['module_id'] ?? $selectedModuleId ?? '')) ?>>
                                 <?= e($module['title']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -128,6 +135,7 @@ $moduleAction = $editingModule
                     <div class="education-module-actions">
                         <strong><?= e((string) count($moduleLessons)) ?> aula(s)</strong>
                         <?php if ($canManage): ?>
+                            <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&new_lesson_module_id=' . $module['id'] . '#aula-form')) ?>">Adicionar aula</a>
                             <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>">Editar</a>
                             <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/delete?module_id=' . $module['id'])) ?>" onsubmit="return confirm('Remover este módulo? As aulas ficam no curso, sem módulo.');">
                                 <?= csrf_field() ?>
@@ -142,7 +150,12 @@ $moduleAction = $editingModule
                         <?php require __DIR__ . '/partials/lesson-row.php'; ?>
                     <?php endforeach; ?>
                     <?php if (!$moduleLessons): ?>
-                        <div class="empty-state">Nenhuma aula neste módulo.</div>
+                        <div class="empty-state">
+                            Nenhuma aula neste módulo.
+                            <?php if ($canManage): ?>
+                                <br><a class="btn btn-sm btn-primary mt-2" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&new_lesson_module_id=' . $module['id'] . '#aula-form')) ?>">Criar aula neste módulo</a>
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </article>
