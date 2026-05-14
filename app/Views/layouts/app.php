@@ -50,7 +50,7 @@
                 <?php if ($user): ?>
                     <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-mortarboard" aria-hidden="true"></i>Ensino</a>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('education.manage') || in_array($user['role_slug'] ?? '', ['master', 'admin', 'equipe'], true)): ?>
+                <?php if (\App\Core\Auth::can('education.manage') || \App\Core\Auth::can('education.teach') || in_array($user['role_slug'] ?? '', ['master', 'admin', 'equipe', 'professor'], true)): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-journal-richtext" aria-hidden="true"></i>Cursos</a>
                 <?php endif; ?>
                 <?php if (($user['role_slug'] ?? '') === 'master'): ?>

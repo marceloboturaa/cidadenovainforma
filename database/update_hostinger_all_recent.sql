@@ -1,57 +1,25 @@
-CREATE DATABASE IF NOT EXISTS cidadenovainforma
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
+-- Atualizacao consolidada para Hostinger
+-- Execute no phpMyAdmin, no banco do site.
+-- Nao apaga dados existentes.
 
-USE cidadenovainforma;
-
-CREATE TABLE IF NOT EXISTS regions (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(120) NOT NULL,
-    slug VARCHAR(140) NOT NULL UNIQUE,
-    active TINYINT(1) NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NULL,
+CREATE TABLE IF NOT EXISTS site_settings (
+    name VARCHAR(120) PRIMARY KEY,
+    value TEXT NULL,
     updated_at TIMESTAMP NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS roles (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(80) NOT NULL,
-    slug VARCHAR(80) NOT NULL UNIQUE,
-    level INT NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
-) ENGINE=InnoDB;
+INSERT INTO site_settings (name, value, updated_at)
+VALUES ('registration_enabled', '1', NOW())
+ON DUPLICATE KEY UPDATE
+    value = value,
+    updated_at = updated_at;
 
-CREATE TABLE IF NOT EXISTS permissions (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(120) NOT NULL,
-    slug VARCHAR(120) NOT NULL UNIQUE,
-    created_at TIMESTAMP NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS role_permissions (
-    role_id BIGINT UNSIGNED NOT NULL,
-    permission_id BIGINT UNSIGNED NOT NULL,
-    PRIMARY KEY (role_id, permission_id),
-    CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
-    CONSTRAINT fk_role_permissions_permission FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    role_id BIGINT UNSIGNED NOT NULL,
-    region_id BIGINT UNSIGNED NULL,
-    name VARCHAR(140) NOT NULL,
-    email VARCHAR(190) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    avatar_path VARCHAR(255) NULL,
-    bio TEXT NULL,
-    active TINYINT(1) NOT NULL DEFAULT 1,
-    last_login_at TIMESTAMP NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles(id),
-    CONSTRAINT fk_users_region FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE SET NULL
+CREATE TABLE IF NOT EXISTS user_presence (
+    user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    last_seen_at DATETIME NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    CONSTRAINT fk_user_presence_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS user_roles (
@@ -62,6 +30,11 @@ CREATE TABLE IF NOT EXISTS user_roles (
     CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+INSERT IGNORE INTO user_roles (user_id, role_id, created_at)
+SELECT id, role_id, NOW()
+FROM users
+WHERE role_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS password_resets (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -74,12 +47,30 @@ CREATE TABLE IF NOT EXISTS password_resets (
     CONSTRAINT fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS user_presence (
-    user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    last_seen_at DATETIME NOT NULL,
-    ip_address VARCHAR(45) NULL,
-    user_agent VARCHAR(255) NULL,
-    CONSTRAINT fk_user_presence_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS institution_pages (
+    slug VARCHAR(80) PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    kicker VARCHAR(180) NOT NULL,
+    summary TEXT NOT NULL,
+    description TEXT NOT NULL,
+    team_json TEXT NULL,
+    materials_json TEXT NULL,
+    photos_json TEXT NULL,
+    galleries_json TEXT NULL,
+    search_terms VARCHAR(255) NOT NULL,
+    related_tags_json TEXT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS institution_page_users (
+    page_slug VARCHAR(80) NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    PRIMARY KEY (page_slug, user_id),
+    CONSTRAINT fk_institution_page_users_page FOREIGN KEY (page_slug) REFERENCES institution_pages(slug) ON DELETE CASCADE,
+    CONSTRAINT fk_institution_page_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS people (
@@ -150,126 +141,6 @@ CREATE TABLE IF NOT EXISTS library_event_participants (
     CONSTRAINT fk_event_participants_event FOREIGN KEY (event_id) REFERENCES library_events(id) ON DELETE CASCADE,
     CONSTRAINT fk_event_participants_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
     CONSTRAINT fk_event_participants_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS site_settings (
-    name VARCHAR(120) PRIMARY KEY,
-    value TEXT NULL,
-    updated_at TIMESTAMP NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS institution_pages (
-    slug VARCHAR(80) PRIMARY KEY,
-    name VARCHAR(120) NOT NULL,
-    kicker VARCHAR(180) NOT NULL,
-    summary TEXT NOT NULL,
-    description TEXT NOT NULL,
-    team_json TEXT NULL,
-    materials_json TEXT NULL,
-    photos_json TEXT NULL,
-    galleries_json TEXT NULL,
-    search_terms VARCHAR(255) NOT NULL,
-    related_tags_json TEXT NULL,
-    sort_order INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS institution_page_users (
-    page_slug VARCHAR(80) NOT NULL,
-    user_id BIGINT UNSIGNED NOT NULL,
-    created_at TIMESTAMP NULL,
-    PRIMARY KEY (page_slug, user_id),
-    CONSTRAINT fk_institution_page_users_page FOREIGN KEY (page_slug) REFERENCES institution_pages(slug) ON DELETE CASCADE,
-    CONSTRAINT fk_institution_page_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS categories (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    parent_id BIGINT UNSIGNED NULL,
-    region_id BIGINT UNSIGNED NULL,
-    name VARCHAR(120) NOT NULL,
-    slug VARCHAR(140) NOT NULL UNIQUE,
-    description TEXT NULL,
-    active TINYINT(1) NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    CONSTRAINT fk_categories_parent FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
-    CONSTRAINT fk_categories_region FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS menu_items (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    category_id BIGINT UNSIGNED NULL,
-    label VARCHAR(120) NOT NULL,
-    url VARCHAR(255) NOT NULL,
-    sort_order INT NOT NULL DEFAULT 0,
-    visible TINYINT(1) NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    CONSTRAINT fk_menu_items_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS tags (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(80) NOT NULL,
-    display_name VARCHAR(120) NULL,
-    slug VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS news (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    author_id BIGINT UNSIGNED NOT NULL,
-    approved_by BIGINT UNSIGNED NULL,
-    category_id BIGINT UNSIGNED NULL,
-    region_id BIGINT UNSIGNED NULL,
-    title VARCHAR(220) NOT NULL,
-    slug VARCHAR(240) NOT NULL UNIQUE,
-    summary TEXT NULL,
-    content LONGTEXT NOT NULL,
-    cover_image VARCHAR(255) NULL,
-    type ENUM('noticia','reportagem','artigo','coluna') NOT NULL DEFAULT 'noticia',
-    status ENUM('draft','pending','rejected','published','archived') NOT NULL DEFAULT 'draft',
-    featured TINYINT(1) NOT NULL DEFAULT 0,
-    urgent TINYINT(1) NOT NULL DEFAULT 0,
-    is_archive TINYINT(1) NOT NULL DEFAULT 0,
-    original_published_at DATE NULL,
-    original_author VARCHAR(160) NULL,
-    original_source VARCHAR(160) NULL,
-    original_url VARCHAR(255) NULL,
-    archive_note TEXT NULL,
-    views BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    published_at DATETIME NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    FULLTEXT KEY ft_news_search (title, summary, content),
-    CONSTRAINT fk_news_author FOREIGN KEY (author_id) REFERENCES users(id),
-    CONSTRAINT fk_news_approved_by FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_news_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
-    CONSTRAINT fk_news_region FOREIGN KEY (region_id) REFERENCES regions(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS news_tags (
-    news_id BIGINT UNSIGNED NOT NULL,
-    tag_id BIGINT UNSIGNED NOT NULL,
-    PRIMARY KEY (news_id, tag_id),
-    CONSTRAINT fk_news_tags_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE,
-    CONSTRAINT fk_news_tags_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS media (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    news_id BIGINT UNSIGNED NULL,
-    user_id BIGINT UNSIGNED NOT NULL,
-    path VARCHAR(255) NOT NULL,
-    mime_type VARCHAR(120) NOT NULL,
-    original_name VARCHAR(190) NOT NULL,
-    size_bytes BIGINT UNSIGNED NOT NULL,
-    alt_text VARCHAR(190) NULL,
-    created_at TIMESTAMP NULL,
-    CONSTRAINT fk_media_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE,
-    CONSTRAINT fk_media_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS team_documents (
@@ -399,59 +270,153 @@ CREATE TABLE IF NOT EXISTS education_forum_replies (
     CONSTRAINT fk_education_replies_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS comments (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    news_id BIGINT UNSIGNED NOT NULL,
-    user_id BIGINT UNSIGNED NULL,
-    author_name VARCHAR(140) NULL,
-    author_email VARCHAR(190) NULL,
-    content TEXT NOT NULL,
-    status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP NULL,
-    CONSTRAINT fk_comments_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE,
-    CONSTRAINT fk_comments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+INSERT INTO roles (name, slug, level, created_at, updated_at)
+VALUES
+    ('MASTER', 'master', 100, NOW(), NOW()),
+    ('ADMIN', 'admin', 80, NOW(), NOW()),
+    ('ADMIN LOCAL', 'admin-local', 60, NOW(), NOW()),
+    ('JORNALISTA', 'jornalista', 40, NOW(), NOW()),
+    ('COLUNISTA', 'colunista', 35, NOW(), NOW()),
+    ('PROFESSOR', 'professor', 30, NOW(), NOW()),
+    ('EQUIPE', 'equipe', 20, NOW(), NOW()),
+    ('ESTUDANTE', 'estudante', 10, NOW(), NOW())
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    level = VALUES(level),
+    updated_at = NOW();
 
-CREATE TABLE IF NOT EXISTS likes (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    news_id BIGINT UNSIGNED NOT NULL,
-    user_id BIGINT UNSIGNED NULL,
-    ip_address VARCHAR(45) NULL,
-    created_at TIMESTAMP NULL,
-    CONSTRAINT fk_likes_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE,
-    CONSTRAINT fk_likes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+INSERT INTO permissions (name, slug, created_at)
+VALUES
+    ('Gerenciar usuários', 'users.manage', NOW()),
+    ('Gerenciar permissões', 'permissions.manage', NOW()),
+    ('Ver logs', 'logs.view', NOW()),
+    ('Gerenciar notícias', 'news.manage', NOW()),
+    ('Aprovar notícias', 'news.approve', NOW()),
+    ('Criar notícias', 'news.create', NOW()),
+    ('Gerenciar categorias', 'categories.manage', NOW()),
+    ('Gerenciar tags', 'tags.manage', NOW()),
+    ('Moderar comentários', 'comments.moderate', NOW()),
+    ('Gerenciar publicidade', 'ads.manage', NOW()),
+    ('Gerenciar regiões', 'regions.manage', NOW()),
+    ('Gerenciar menu', 'menu.manage', NOW()),
+    ('Ver documentos', 'documents.view', NOW()),
+    ('Gerenciar documentos', 'documents.manage', NOW()),
+    ('Gerenciar pessoas internas', 'people.manage', NOW()),
+    ('Gerenciar eventos internos', 'events.manage', NOW()),
+    ('Gerenciar participantes de eventos', 'event_participants.manage', NOW()),
+    ('Gerenciar ensino', 'education.manage', NOW()),
+    ('Criar cursos e aulas', 'education.teach', NOW()),
+    ('Acessar ensino', 'education.view', NOW()),
+    ('Participar do fórum de ensino', 'education.forum', NOW())
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name);
 
-CREATE TABLE IF NOT EXISTS ads (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(140) NOT NULL,
-    position VARCHAR(80) NOT NULL,
-    image_path VARCHAR(255) NULL,
-    target_url VARCHAR(255) NULL,
-    starts_at DATETIME NULL,
-    ends_at DATETIME NULL,
-    active TINYINT(1) NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
-) ENGINE=InnoDB;
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN (
+    'users.manage',
+    'permissions.manage',
+    'logs.view',
+    'news.manage',
+    'news.approve',
+    'news.create',
+    'categories.manage',
+    'tags.manage',
+    'comments.moderate',
+    'ads.manage',
+    'regions.manage',
+    'menu.manage',
+    'documents.view',
+    'documents.manage',
+    'people.manage',
+    'events.manage',
+    'event_participants.manage',
+    'education.manage',
+    'education.teach',
+    'education.view',
+    'education.forum'
+)
+WHERE roles.slug = 'master';
 
-CREATE TABLE IF NOT EXISTS access_logs (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    news_id BIGINT UNSIGNED NULL,
-    ip_address VARCHAR(45) NULL,
-    user_agent VARCHAR(255) NULL,
-    path VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NULL,
-    CONSTRAINT fk_access_logs_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN (
+    'users.manage',
+    'news.manage',
+    'news.approve',
+    'news.create',
+    'categories.manage',
+    'tags.manage',
+    'comments.moderate',
+    'ads.manage',
+    'education.manage',
+    'education.view',
+    'education.forum'
+)
+WHERE roles.slug = 'admin';
 
-CREATE TABLE IF NOT EXISTS logs (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NULL,
-    action VARCHAR(120) NOT NULL,
-    description TEXT NULL,
-    ip_address VARCHAR(45) NULL,
-    user_agent VARCHAR(255) NULL,
-    created_at TIMESTAMP NULL,
-    CONSTRAINT fk_logs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN ('news.manage', 'news.approve', 'news.create', 'categories.manage')
+WHERE roles.slug = 'admin-local';
+
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug = 'news.create'
+WHERE roles.slug IN ('jornalista', 'colunista');
+
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN ('education.teach', 'education.view', 'education.forum')
+WHERE roles.slug = 'professor';
+
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN (
+    'documents.view',
+    'people.manage',
+    'events.manage',
+    'event_participants.manage',
+    'education.manage',
+    'education.view',
+    'education.forum'
+)
+WHERE roles.slug = 'equipe';
+
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN ('education.view', 'education.forum')
+WHERE roles.slug = 'estudante';
+
+-- Adiciona colunas novas em bancos que ja tinham tabelas antigas.
+-- Requer MySQL/MariaDB com suporte a ADD COLUMN IF NOT EXISTS.
+ALTER TABLE news ADD COLUMN IF NOT EXISTS is_archive TINYINT(1) NOT NULL DEFAULT 0 AFTER urgent;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS original_published_at DATE NULL AFTER is_archive;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS original_author VARCHAR(160) NULL AFTER original_published_at;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS original_source VARCHAR(160) NULL AFTER original_author;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS original_url VARCHAR(255) NULL AFTER original_source;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS archive_note TEXT NULL AFTER original_url;
+
+ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes;
+
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS module_id BIGINT UNSIGNED NULL AFTER course_id;
+
+ALTER TABLE people ADD COLUMN IF NOT EXISTS cep VARCHAR(12) NULL AFTER email;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS address_number VARCHAR(30) NULL AFTER address;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS address_complement VARCHAR(120) NULL AFTER address_number;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS city VARCHAR(120) NULL AFTER district;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS state VARCHAR(2) NULL AFTER city;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS is_minor TINYINT(1) NOT NULL DEFAULT 0 AFTER state;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_relation VARCHAR(80) NULL AFTER guardian_name;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_cpf VARCHAR(20) NULL AFTER guardian_relation;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_phone VARCHAR(30) NULL AFTER guardian_cpf;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_email VARCHAR(190) NULL AFTER guardian_phone;
+
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;

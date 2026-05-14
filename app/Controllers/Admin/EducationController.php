@@ -17,11 +17,14 @@ class EducationController
     {
         Middleware::auth();
         $user = current_user();
-        $canManage = $this->canManage();
+        $canManage = $this->canManageAll();
+        $courses = $this->canTeach() && !$canManage
+            ? Education::coursesForManagement((int) $user['id'])
+            : Education::coursesForUser((int) $user['id'], $canManage);
 
         View::render('admin/education/index', [
-            'courses' => Education::coursesForUser((int) $user['id'], $canManage),
-            'canManage' => $canManage,
+            'courses' => $courses,
+            'canManage' => $this->canManage(),
         ]);
     }
 
@@ -30,9 +33,16 @@ class EducationController
         Middleware::auth();
         $this->authorizeManage();
 
+        $editing = $this->courseFromQuery(false);
+        if ($editing && !$this->canManageCourse($editing)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
         View::render('admin/education/manage', [
-            'courses' => Education::coursesForManagement(),
-            'editing' => $this->courseFromQuery(false),
+            'courses' => Education::coursesForManagement($this->canManageAll() ? null : (int) (current_user()['id'] ?? 0)),
+            'editing' => $editing,
             'users' => User::activeForAccessLists(),
         ]);
     }
@@ -50,7 +60,9 @@ class EducationController
         }
 
         $userId = (int) (current_user()['id'] ?? 0);
+        $teacherUserId = $this->canManageAll() ? ($_POST['teacher_user_id'] ?? null) : $userId;
         $id = Education::createCourse(array_merge($_POST, [
+            'teacher_user_id' => $teacherUserId,
             'created_by' => $userId ?: null,
             'updated_by' => $userId ?: null,
         ]));
@@ -68,6 +80,7 @@ class EducationController
         $this->validateCsrf('/admin/education/manage');
 
         $course = $this->courseFromQuery();
+        $this->authorizeCourseManage($course);
         $title = trim((string) ($_POST['title'] ?? ''));
         if ($title === '') {
             Session::flash('error', 'Informe o título do curso.');
@@ -75,7 +88,9 @@ class EducationController
         }
 
         $userId = (int) (current_user()['id'] ?? 0);
+        $teacherUserId = $this->canManageAll() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? $userId);
         Education::updateCourse((int) $course['id'], array_merge($_POST, [
+            'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
         ]));
         Education::syncEnrollments((int) $course['id'], $_POST['user_ids'] ?? []);
@@ -91,6 +106,7 @@ class EducationController
         $this->authorizeManage();
         $this->validateCsrf('/admin/education/manage');
         $course = $this->courseFromQuery();
+        $this->authorizeCourseManage($course);
 
         Education::deactivateCourse((int) $course['id']);
         Logger::info('education.course_deleted', 'Curso desativado: ' . $course['title'], current_user()['id'] ?? null);
@@ -103,7 +119,7 @@ class EducationController
         Middleware::auth();
         $user = current_user();
         $course = $this->courseFromQuery();
-        $canManage = $this->canManage();
+        $canManage = $this->canManageCourse($course);
 
         if (!Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
@@ -125,6 +141,7 @@ class EducationController
         $this->authorizeManage();
         $this->validateCsrf('/admin/education/manage');
         $course = $this->courseFromQuery();
+        $this->authorizeCourseManage($course);
 
         $title = trim((string) ($_POST['title'] ?? ''));
         if ($title === '') {
@@ -143,6 +160,8 @@ class EducationController
         $this->authorizeManage();
         $this->validateCsrf('/admin/education/manage');
         $lesson = $this->lessonFromQuery();
+        $course = Education::findCourse((int) $lesson['course_id']);
+        $this->authorizeCourseManage($course);
 
         $title = trim((string) ($_POST['title'] ?? ''));
         if ($title === '') {
@@ -161,6 +180,8 @@ class EducationController
         $this->authorizeManage();
         $this->validateCsrf('/admin/education/manage');
         $lesson = $this->lessonFromQuery();
+        $course = Education::findCourse((int) $lesson['course_id']);
+        $this->authorizeCourseManage($course);
 
         Education::deactivateLesson((int) $lesson['id']);
         Session::flash('success', 'Aula removida.');
@@ -237,15 +258,47 @@ class EducationController
 
     private function canManage(): bool
     {
+        return $this->canManageAll() || $this->canTeach();
+    }
+
+    private function canManageAll(): bool
+    {
         $user = Auth::user();
         $role = $user['role_slug'] ?? '';
 
         return Auth::can('education.manage') || in_array($role, ['master', 'admin', 'equipe'], true);
     }
 
+    private function canTeach(): bool
+    {
+        return Auth::can('education.teach') || (Auth::user()['role_slug'] ?? '') === 'professor';
+    }
+
     private function authorizeManage(): void
     {
         if (!$this->canManage()) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+    }
+
+    private function canManageCourse(?array $course): bool
+    {
+        if (!$course) {
+            return false;
+        }
+
+        if ($this->canManageAll()) {
+            return true;
+        }
+
+        return $this->canTeach() && (int) ($course['teacher_user_id'] ?? 0) === (int) (current_user()['id'] ?? 0);
+    }
+
+    private function authorizeCourseManage(?array $course): void
+    {
+        if (!$this->canManageCourse($course)) {
             http_response_code(403);
             View::render('errors/403');
             exit;
