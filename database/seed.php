@@ -51,6 +51,17 @@ $pdo->exec(
 );
 
 $pdo->exec(
+    'CREATE TABLE IF NOT EXISTS user_roles (
+        user_id BIGINT UNSIGNED NOT NULL,
+        role_id BIGINT UNSIGNED NOT NULL,
+        created_at TIMESTAMP NULL,
+        PRIMARY KEY (user_id, role_id),
+        CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
     "CREATE TABLE IF NOT EXISTS people (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         full_name VARCHAR(160) NOT NULL,
@@ -269,6 +280,7 @@ $roles = [
     ['ADMIN LOCAL', 'admin-local', 60],
     ['JORNALISTA', 'jornalista', 40],
     ['COLUNISTA', 'colunista', 35],
+    ['PROFESSOR', 'professor', 30],
     ['EQUIPE', 'equipe', 20],
 ];
 
@@ -290,6 +302,8 @@ $permissions = [
     ['Gerenciar pessoas internas', 'people.manage'],
     ['Gerenciar eventos internos', 'events.manage'],
     ['Gerenciar participantes de eventos', 'event_participants.manage'],
+    ['Gerenciar ensino', 'education.manage'],
+    ['Acessar ensino', 'education.view'],
 ];
 
 $stmt = $pdo->prepare('INSERT IGNORE INTO roles (name, slug, level, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())');
@@ -314,11 +328,12 @@ $permissionIds = array_column($permissionRows, 'id', 'slug');
 
 $grants = [
     'master' => array_keys($permissionIds),
-    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage'],
+    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view'],
     'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage'],
     'jornalista' => ['news.create'],
     'colunista' => ['news.create'],
-    'equipe' => ['documents.view', 'people.manage', 'events.manage', 'event_participants.manage'],
+    'professor' => ['education.manage', 'education.view'],
+    'equipe' => ['documents.view', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view'],
 ];
 
 $stmt = $pdo->prepare('INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
@@ -341,6 +356,12 @@ $stmt->execute([
     'email' => $masterEmail,
     'password_hash' => password_hash($masterPassword, PASSWORD_DEFAULT),
 ]);
+
+$pdo->exec(
+    'INSERT IGNORE INTO user_roles (user_id, role_id, created_at)
+     SELECT id, role_id, NOW()
+     FROM users'
+);
 
 $categories = [
     ['Geral', 'geral'],

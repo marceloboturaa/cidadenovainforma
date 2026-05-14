@@ -77,6 +77,10 @@ class UserController
         $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
         $password = $_POST['password'] ?? '';
         $roleId = filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT);
+        $roleIds = $this->assignableRoleIds($_POST['role_ids'] ?? []);
+        if ($roleId && !in_array($roleId, $roleIds, true)) {
+            $roleIds[] = $roleId;
+        }
         $role = $roleId ? Role::find($roleId) : null;
 
         if ($name === '' || !$email || strlen($password) < 8 || !$role) {
@@ -99,6 +103,7 @@ class UserController
             'email' => $email,
             'password' => $password,
             'role_id' => $roleId,
+            'role_ids' => $roleIds,
         ]);
 
         Logger::info('users.created', 'Usuário criado.', current_user()['id'] ?? null);
@@ -178,8 +183,12 @@ class UserController
 
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         $roleId = filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT);
+        $roleIds = $this->assignableRoleIds($_POST['role_ids'] ?? []);
         $user = $id ? User::find($id) : null;
         $role = $roleId ? Role::find($roleId) : null;
+        if ($roleId && !in_array($roleId, $roleIds, true)) {
+            $roleIds[] = $roleId;
+        }
 
         if (!$user || !$role) {
             Session::flash('error', 'Usuário ou cargo não encontrado.');
@@ -191,15 +200,75 @@ class UserController
             redirect('/admin/users');
         }
 
-        $currentRole = Role::find((int) $user['role_id']);
-        if (($currentRole['slug'] ?? '') === 'master') {
+        $currentRoleSlugs = $this->roleSlugs(User::roleIds((int) $user['id']));
+        if (in_array('master', $currentRoleSlugs, true)) {
             Session::flash('error', 'O cargo MASTER não pode ser alterado por esta tela.');
             redirect('/admin/users');
         }
 
-        User::updateRole((int) $user['id'], (int) $role['id']);
-        Logger::info('users.role_updated', 'Cargo atualizado para ' . $role['name'] . ': ' . $user['email'], current_user()['id'] ?? null);
-        Session::flash('success', 'Cargo atualizado para ' . $user['name'] . ': ' . $role['name'] . '.');
+        User::syncRoles((int) $user['id'], $roleIds, (int) $role['id']);
+        Logger::info('users.role_updated', 'Cargos atualizados para: ' . $user['email'], current_user()['id'] ?? null);
+        Session::flash('success', 'Cargos atualizados para ' . $user['name'] . '.');
+        redirect('/admin/users');
+    }
+
+    public function update(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $name = trim($_POST['name'] ?? '');
+        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+        $user = $id ? User::find($id) : null;
+
+        if (!$user || $name === '' || !$email) {
+            Session::flash('error', 'Informe nome e e-mail válidos.');
+            redirect('/admin/users');
+        }
+
+        $existing = User::findByEmail($email);
+        if ($existing && (int) $existing['id'] !== (int) $user['id']) {
+            Session::flash('error', 'Este e-mail já está em uso por outro usuário.');
+            redirect('/admin/users');
+        }
+
+        User::updateProfile((int) $user['id'], $name, $email);
+        Logger::info('users.updated', 'Dados do usuário atualizados: ' . $email, current_user()['id'] ?? null);
+        Session::flash('success', 'Dados atualizados para ' . $name . '.');
+        redirect('/admin/users');
+    }
+
+    public function status(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $active = ($_POST['active'] ?? '') === '1';
+        $user = $id ? User::find($id) : null;
+
+        if (!$user) {
+            Session::flash('error', 'Usuário não encontrado.');
+            redirect('/admin/users');
+        }
+
+        if ((int) $user['id'] === (int) (current_user()['id'] ?? 0)) {
+            Session::flash('error', 'Você não pode alterar o status do próprio usuário.');
+            redirect('/admin/users');
+        }
+
+        $roleSlugs = $this->roleSlugs(User::roleIds((int) $user['id']));
+        if (in_array('master', $roleSlugs, true)) {
+            Session::flash('error', 'O usuário MASTER não pode ser inativado por esta tela.');
+            redirect('/admin/users');
+        }
+
+        User::setActive((int) $user['id'], $active);
+        Logger::info('users.status_updated', ($active ? 'Usuário ativado: ' : 'Usuário inativado: ') . $user['email'], current_user()['id'] ?? null);
+        Session::flash('success', $active ? 'Usuário ativado.' : 'Usuário inativado.');
         redirect('/admin/users');
     }
 
@@ -272,5 +341,21 @@ class UserController
         }
 
         return ($role['slug'] ?? '') !== 'master';
+    }
+
+    private function assignableRoleIds(mixed $value): array
+    {
+        $ids = is_array($value) ? $value : [];
+        $assignable = $this->assignableRoles();
+        $assignableIds = array_map(fn (array $role): int => (int) $role['id'], $assignable);
+
+        return array_values(array_intersect(array_unique(array_map('intval', $ids)), $assignableIds));
+    }
+
+    private function roleSlugs(array $roleIds): array
+    {
+        $roles = array_filter(array_map(fn (int $roleId): ?array => Role::find($roleId), $roleIds));
+
+        return array_values(array_filter(array_map(fn (array $role): string => (string) ($role['slug'] ?? ''), $roles)));
     }
 }

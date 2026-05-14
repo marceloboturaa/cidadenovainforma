@@ -47,6 +47,12 @@
                 <?php if (\App\Core\Auth::can('documents.view') || \App\Core\Auth::can('documents.manage') || ($user && \App\Models\Document::userHasAnyAccess((int) $user['id']))): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>Documentos</a>
                 <?php endif; ?>
+                <?php if ($user): ?>
+                    <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-mortarboard" aria-hidden="true"></i>Ensino</a>
+                <?php endif; ?>
+                <?php if (\App\Core\Auth::can('education.manage') || in_array($user['role_slug'] ?? '', ['master', 'admin', 'equipe'], true)): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-journal-richtext" aria-hidden="true"></i>Cursos</a>
+                <?php endif; ?>
                 <?php if (($user['role_slug'] ?? '') === 'master'): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/menu') ? 'active' : '' ?>" href="<?= e(url('/admin/menu')) ?>"><i class="bi bi-list-ul" aria-hidden="true"></i>Menu</a>
                     <a class="<?= str_starts_with($currentPath, '/admin/backups') ? 'active' : '' ?>" href="<?= e(url('/admin/backups')) ?>"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i>Backups</a>
@@ -62,7 +68,7 @@
                 </button>
                 <div>
                     <strong><?= e($user['name'] ?? 'Usuário') ?></strong>
-                    <span><?= e($user['role_name'] ?? '') ?></span>
+                    <span><?= e($user['role_names'] ?? $user['role_name'] ?? '') ?></span>
                 </div>
                 <form method="post" action="<?= e(url('/logout')) ?>">
                     <?= csrf_field() ?>
