@@ -402,6 +402,7 @@ $roles = [
     ['MASTER', 'master', 100],
     ['ADMIN', 'admin', 80],
     ['ADMIN LOCAL', 'admin-local', 60],
+    ['DIRETOR', 'diretor', 50],
     ['JORNALISTA', 'jornalista', 40],
     ['COLUNISTA', 'colunista', 35],
     ['PROFESSOR', 'professor', 30],
@@ -431,6 +432,9 @@ $permissions = [
     ['Criar cursos e aulas', 'education.teach'],
     ['Acessar ensino', 'education.view'],
     ['Participar do fórum de ensino', 'education.forum'],
+    ['Ver fóruns', 'forum.view'],
+    ['Criar tópicos e respostas nos fóruns', 'forum.create'],
+    ['Moderar fóruns', 'forum.moderate'],
 ];
 
 $stmt = $pdo->prepare('INSERT IGNORE INTO roles (name, slug, level, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())');
@@ -455,13 +459,14 @@ $permissionIds = array_column($permissionRows, 'id', 'slug');
 
 $grants = [
     'master' => array_keys($permissionIds),
-    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum'],
+    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
     'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage'],
+    'diretor' => ['documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
     'jornalista' => ['news.create'],
     'colunista' => ['news.create'],
-    'professor' => ['education.teach', 'education.view', 'education.forum'],
-    'equipe' => ['documents.view', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view', 'education.forum'],
-    'estudante' => ['education.view', 'education.forum'],
+    'professor' => ['education.teach', 'education.view', 'education.forum', 'forum.view', 'forum.create'],
+    'equipe' => ['documents.view', 'people.manage', 'events.manage', 'event_participants.manage', 'forum.view', 'forum.create'],
+    'estudante' => ['education.view', 'education.forum', 'forum.view', 'forum.create'],
 ];
 
 $stmt = $pdo->prepare('INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
@@ -470,6 +475,26 @@ foreach ($grants as $roleSlug => $rolePermissions) {
         $stmt->execute([$roleMap[$roleSlug], $permissionIds[$permissionSlug]]);
     }
 }
+
+$stmt = $pdo->prepare(
+    'DELETE role_permissions
+     FROM role_permissions
+     INNER JOIN roles ON roles.id = role_permissions.role_id
+     INNER JOIN permissions ON permissions.id = role_permissions.permission_id
+     WHERE roles.slug IN ("jornalista", "colunista", "equipe")
+       AND permissions.slug IN ("education.manage", "education.teach")'
+);
+$stmt->execute();
+
+$stmt = $pdo->prepare(
+    'DELETE role_permissions
+     FROM role_permissions
+     INNER JOIN roles ON roles.id = role_permissions.role_id
+     INNER JOIN permissions ON permissions.id = role_permissions.permission_id
+     WHERE roles.slug = "diretor"
+       AND permissions.slug IN ("users.manage", "permissions.manage", "logs.view", "news.manage", "news.approve", "news.create", "categories.manage", "tags.manage", "comments.moderate", "ads.manage", "regions.manage", "menu.manage", "documents.manage")'
+);
+$stmt->execute();
 
 $masterEmail = getenv('MASTER_EMAIL') ?: 'master@cidadenovainforma.local';
 $masterPassword = getenv('MASTER_PASSWORD') ?: 'Master@12345';

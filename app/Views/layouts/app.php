@@ -5,6 +5,7 @@
 <?php $adminJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/admin.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/admin.js') : time(); ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/favicon-secondary.svg'); ?>
 <?php $institutionPageAccess = $user ? \App\Models\InstitutionPage::manageableForUser((int) $user['id'], ($user['role_slug'] ?? '') === 'master') : []; ?>
+<?php $roleSlugs = $user ? \App\Core\Auth::roleSlugs($user) : []; ?>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -44,14 +45,17 @@
                 <?php if (\App\Core\Auth::can('events.manage')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/library-events') ? 'active' : '' ?>" href="<?= e(url('/admin/library-events')) ?>"><i class="bi bi-calendar-event" aria-hidden="true"></i>Eventos</a>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('documents.view') || \App\Core\Auth::can('documents.manage') || ($user && \App\Models\Document::userHasAnyAccess((int) $user['id']))): ?>
+                <?php if (\App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && \App\Models\Document::userHasAnyAccess((int) $user['id']))): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>Documentos</a>
                 <?php endif; ?>
                 <?php if ($user): ?>
                     <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-mortarboard" aria-hidden="true"></i>Ensino</a>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('education.manage') || \App\Core\Auth::can('education.teach') || in_array($user['role_slug'] ?? '', ['master', 'admin', 'equipe', 'professor'], true)): ?>
+                <?php if (array_intersect($roleSlugs, ['master', 'diretor', 'professor']) || \App\Core\Auth::can('education.teach')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-journal-richtext" aria-hidden="true"></i>Cursos</a>
+                <?php endif; ?>
+                <?php if (\App\Core\Auth::can('forum.view') || \App\Core\Auth::can('forum.create') || \App\Core\Auth::can('forum.moderate')): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/forum') ? 'active' : '' ?>" href="<?= e(url('/admin/forum')) ?>"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Fóruns</a>
                 <?php endif; ?>
                 <?php if (($user['role_slug'] ?? '') === 'master'): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/menu') ? 'active' : '' ?>" href="<?= e(url('/admin/menu')) ?>"><i class="bi bi-list-ul" aria-hidden="true"></i>Menu</a>

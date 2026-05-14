@@ -96,9 +96,9 @@ class DocumentController
         $this->authorizeView();
 
         View::render('admin/documents/index', [
-            'documents' => Auth::can('documents.manage') ? Document::all() : Document::visibleForUser((int) current_user()['id']),
+            'documents' => $this->canManageDocuments() ? Document::all() : Document::visibleForUser((int) current_user()['id']),
             'users' => User::activeForAccessLists(),
-            'canManage' => Auth::can('documents.manage'),
+            'canManage' => $this->canManageDocuments(),
             'canManageFormats' => $this->currentUserIsMaster(),
             'allowedExtensions' => $this->allowedExtensions(),
             'allowedExtensionsText' => implode(', ', $this->allowedExtensions()),
@@ -181,7 +181,7 @@ class DocumentController
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         $document = $id ? Document::find($id) : null;
 
-        if (!$document || (!Auth::can('documents.manage') && !Document::userCanAccess((int) $document['id'], (int) current_user()['id']))) {
+        if (!$document || (!$this->canManageDocuments() && !Document::userCanAccess((int) $document['id'], (int) current_user()['id']))) {
             http_response_code(404);
             View::render('errors/404');
             return;
@@ -309,7 +309,7 @@ class DocumentController
 
         if (
             !$user
-            || (!Auth::can('documents.view') && !Auth::can('documents.manage') && !Document::userHasAnyAccess((int) $user['id']))
+            || (!Auth::can('documents.view') && !$this->canManageDocuments() && !Document::userHasAnyAccess((int) $user['id']))
         ) {
             http_response_code(403);
             View::render('errors/403');
@@ -319,7 +319,7 @@ class DocumentController
 
     private function authorizeManage(): void
     {
-        if (!Auth::can('documents.manage')) {
+        if (!$this->canManageDocuments()) {
             http_response_code(403);
             View::render('errors/403');
             exit;
@@ -338,7 +338,12 @@ class DocumentController
     private function currentUserIsMaster(): bool
     {
         $user = current_user();
-        return $user && ($user['role_slug'] ?? '') === 'master';
+        return $user && Auth::hasRole('master');
+    }
+
+    private function canManageDocuments(): bool
+    {
+        return Auth::can('documents.manage') && !Auth::hasRole('diretor');
     }
 
     private function validateCsrf(): void

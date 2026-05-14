@@ -62,6 +62,30 @@ class Auth
         return in_array($permission, User::permissions((int) $user['id']), true);
     }
 
+    public static function hasRole(string|array $roles): bool
+    {
+        $user = self::user();
+
+        if (!$user) {
+            return false;
+        }
+
+        $roles = is_array($roles) ? $roles : [$roles];
+
+        return (bool) array_intersect($roles, self::roleSlugs($user));
+    }
+
+    public static function roleSlugs(?array $user = null): array
+    {
+        $user ??= self::user();
+
+        if (!$user) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', (string) ($user['role_slugs'] ?? $user['role_slug'] ?? '')))));
+    }
+
     private static function validUserId(): ?int
     {
         $userId = Session::get('user_id');

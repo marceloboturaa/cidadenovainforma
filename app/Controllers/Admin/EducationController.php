@@ -198,7 +198,8 @@ class EducationController
         Middleware::auth();
         $user = current_user();
         $lesson = $this->lessonFromQuery();
-        $canManage = $this->canManage();
+        $course = Education::findCourse((int) $lesson['course_id']);
+        $canManage = $this->canManageCourse($course);
 
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
@@ -208,7 +209,7 @@ class EducationController
 
         View::render('admin/education/lesson', [
             'lesson' => $lesson,
-            'course' => Education::findCourse((int) $lesson['course_id']),
+            'course' => $course,
             'videoEmbedUrl' => $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
         ]);
     }
@@ -219,7 +220,8 @@ class EducationController
         $this->validateCsrf('/admin/education');
         $user = current_user();
         $lesson = $this->lessonFromQuery();
-        $canManage = $this->canManage();
+        $course = Education::findCourse((int) $lesson['course_id']);
+        $canManage = $this->canManageCourse($course);
 
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
@@ -268,22 +270,19 @@ class EducationController
 
     private function canManageAll(): bool
     {
-        $user = Auth::user();
-        $role = $user['role_slug'] ?? '';
-
-        return Auth::can('education.manage') || in_array($role, ['master', 'admin', 'equipe'], true);
+        return Auth::hasRole(['master', 'diretor']);
     }
 
     private function canTeach(): bool
     {
-        return Auth::can('education.teach') || (Auth::user()['role_slug'] ?? '') === 'professor';
+        return Auth::hasRole('professor') || Auth::can('education.teach');
     }
 
     private function teacherOptions(array $users): array
     {
         return array_values(array_filter($users, function (array $user): bool {
             $slugs = $this->roleSlugs($user);
-            return array_intersect($slugs, ['professor', 'master', 'admin', 'equipe']) !== [];
+            return array_intersect($slugs, ['professor', 'master', 'diretor']) !== [];
         }));
     }
 

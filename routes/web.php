@@ -5,6 +5,7 @@ use App\Controllers\Admin\BackupController;
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\DocumentController;
 use App\Controllers\Admin\EducationController;
+use App\Controllers\Admin\ForumController;
 use App\Controllers\Admin\InstitutionPageController;
 use App\Controllers\Admin\LibraryEventController;
 use App\Controllers\Admin\MenuController;
@@ -129,3 +130,13 @@ $router->post('/admin/education/lesson/update', [EducationController::class, 'up
 $router->post('/admin/education/lesson/delete', [EducationController::class, 'deleteLesson']);
 $router->get('/admin/education/lesson', [EducationController::class, 'lesson']);
 $router->post('/admin/education/progress', [EducationController::class, 'progress']);
+
+$router->get('/admin/forum', [ForumController::class, 'index']);
+$router->get('/admin/forum/area', [ForumController::class, 'area']);
+$router->post('/admin/forum/topic', [ForumController::class, 'storeTopic']);
+$router->get('/admin/forum/topic', [ForumController::class, 'topic']);
+$router->post('/admin/forum/reply', [ForumController::class, 'reply']);
+$router->post('/admin/forum/moderate', [ForumController::class, 'moderateTopic']);
+$router->post('/admin/forum/reply/delete', [ForumController::class, 'deleteReply']);
+$router->post('/admin/forum/category', [ForumController::class, 'category']);
+$router->get('/admin/forum/attachment', [ForumController::class, 'download']);
