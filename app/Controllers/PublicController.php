@@ -60,6 +60,45 @@ class PublicController
         ], 'public');
     }
 
+    public function events(): void
+    {
+        $this->logAccess();
+
+        View::render('public/events', [
+            'events' => LibraryEvent::publicAll(),
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => 'Eventos - Cidade Nova Informa',
+            'metaDescription' => 'Agenda de eventos e atividades abertas do Cidade Nova Informa.',
+            'canonicalUrl' => url('/eventos'),
+        ], 'public');
+    }
+
+    public function eventShow(): void
+    {
+        $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+        $event = $id ? LibraryEvent::findPublic((int) $id) : null;
+
+        if (!$event) {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        $this->logAccess();
+
+        View::render('public/event-show', [
+            'event' => $event,
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => $event['title'] . ' - Eventos - Cidade Nova Informa',
+            'metaDescription' => text_excerpt($event['description'] ?? '', 150),
+            'canonicalUrl' => url('/evento/' . $event['id']),
+            'ogType' => 'article',
+            'ogImage' => !empty($event['cover_image']) ? media_url($event['cover_image']) : null,
+        ], 'public');
+    }
+
     public function institutionArea(): void
     {
         $areas = $this->institutionAreas();
@@ -225,6 +264,7 @@ class PublicController
 
         $urls = [
             ['loc' => url('/'), 'priority' => '1.0'],
+            ['loc' => url('/eventos'), 'priority' => '0.7'],
             ['loc' => url('/instituicao'), 'priority' => '0.6'],
             ['loc' => url('/buscar'), 'priority' => '0.4'],
             ['loc' => url('/acervo'), 'priority' => '0.7'],
@@ -232,6 +272,14 @@ class PublicController
 
         foreach ($this->institutionAreas() as $area) {
             $urls[] = ['loc' => url('/instituicao/' . $area['slug']), 'priority' => '0.6'];
+        }
+
+        foreach (LibraryEvent::publicAll() as $event) {
+            $urls[] = [
+                'loc' => url('/evento/' . $event['id']),
+                'priority' => '0.6',
+                'lastmod' => date('Y-m-d', strtotime($event['updated_at'] ?? $event['created_at'] ?? 'now')),
+            ];
         }
 
         foreach (Category::active() as $category) {

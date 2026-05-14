@@ -7,8 +7,8 @@ $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool
     $label = mb_strtolower(trim($item['label'] ?? ''), 'UTF-8');
     $path = '/' . ltrim((string) ($item['url'] ?? ''), '/');
 
-    return !in_array($path, ['/instituicao', '/login'], true)
-        && !in_array($label, ['instituição', 'instituicao', 'entrar', 'entrar no painel'], true);
+    return !in_array($path, ['/eventos', '/instituicao', '/login'], true)
+        && !in_array($label, ['eventos', 'evento', 'instituição', 'instituicao', 'entrar', 'entrar no painel'], true);
 });
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $basePath = trim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
@@ -56,6 +56,7 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
                 <strong>Menu</strong>
             </button>
             <div class="header-actions">
+                <a class="event-link" href="<?= e(url('/eventos')) ?>">Eventos</a>
                 <a class="institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
                 <a class="institution-link" href="<?= e(url('/documentos')) ?>">Documentos</a>
                 <a class="admin-link" href="<?= e(url('/login')) ?>">Entrar</a>
@@ -67,7 +68,6 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
                 <?php foreach ($navigationItems as $item): ?>
                     <a href="<?= e(str_starts_with($item['url'], 'http') ? $item['url'] : url($item['url'])) ?>"><?= e($item['label']) ?></a>
                 <?php endforeach; ?>
-                <a href="<?= e($requestPath === '/' ? '#eventos' : url('/#eventos')) ?>">Eventos</a>
             </nav>
             <form class="search-form" action="<?= e(url('/buscar')) ?>" method="get">
                 <input name="q" value="<?= e($query ?? '') ?>" placeholder="Buscar notícias">
@@ -77,7 +77,7 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
                 </button>
             </form>
             <nav class="mobile-actions" aria-label="Ações rápidas">
-                <a class="mobile-institution-link" href="<?= e($requestPath === '/' ? '#eventos' : url('/#eventos')) ?>">Eventos</a>
+                <a class="mobile-institution-link" href="<?= e(url('/eventos')) ?>">Eventos</a>
                 <a class="mobile-institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
                 <a class="mobile-institution-link" href="<?= e(url('/documentos')) ?>">Documentos</a>
                 <a class="mobile-login-link" href="<?= e(url('/login')) ?>">Entrar no painel</a>

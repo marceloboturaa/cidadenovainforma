@@ -93,6 +93,7 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
                             <div><dt>Vagas</dt><dd><?= e((string) $event['capacity']) ?></dd></div>
                         <?php endif; ?>
                     </dl>
+                    <a class="public-event-more" href="<?= e(url('/evento/' . $event['id'])) ?>">Ver detalhes</a>
                 </div>
             </article>
         <?php endforeach; ?>

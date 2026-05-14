@@ -15,6 +15,8 @@ use App\Controllers\AuthController;
 use App\Controllers\PublicController;
 
 $router->get('/', [PublicController::class, 'home']);
+$router->get('/eventos', [PublicController::class, 'events']);
+$router->get('/evento/{id}', [PublicController::class, 'eventShow']);
 $router->get('/instituicao', [PublicController::class, 'institution']);
 $router->get('/instituicao/{slug}', [PublicController::class, 'institutionArea']);
 $router->get('/documentos', [PublicController::class, 'documents']);

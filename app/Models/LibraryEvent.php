@@ -29,7 +29,7 @@ class LibraryEvent
     public static function publicUpcoming(int $limit = 6): array
     {
         $stmt = Database::connection()->prepare(
-            "SELECT id, title, description, starts_at, location, cover_image, capacity, status
+            "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status
              FROM library_events
              WHERE active = 1
                AND status = 'aberto'
@@ -40,6 +40,36 @@ class LibraryEvent
         $stmt->execute();
 
         return $stmt->fetchAll();
+    }
+
+    public static function publicAll(): array
+    {
+        return Database::connection()
+            ->query(
+                "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status, created_at, updated_at
+                 FROM library_events
+                 WHERE active = 1
+                   AND status = 'aberto'
+                 ORDER BY COALESCE(starts_at, created_at) ASC"
+            )
+            ->fetchAll();
+    }
+
+    public static function findPublic(int $id): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            "SELECT library_events.*,
+                    responsible.name AS responsible_name
+             FROM library_events
+             LEFT JOIN users responsible ON responsible.id = library_events.responsible_user_id
+             WHERE library_events.id = :id
+               AND library_events.active = 1
+               AND library_events.status = 'aberto'
+             LIMIT 1"
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
     }
 
     public static function find(int $id): ?array
