@@ -817,6 +817,13 @@ body.editor-focus-mode {
     margin-bottom: 20px;
 }
 
+.heading-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
 .section-heading {
     display: flex;
     align-items: center;
@@ -3247,12 +3254,15 @@ body.editor-focus-mode {
     min-width: 0;
 }
 
+.education-course-form > .education-course-title-field,
+.education-course-form > .education-course-summary-field,
 .education-course-form > div:first-child,
 .education-course-form > div:nth-child(4),
 .education-lesson-form > div:first-child,
 .education-lesson-form > div:nth-child(3),
 .education-lesson-form > div:nth-child(4),
 .education-module-form .grid-span-2,
+.education-course-advanced,
 .education-access-details,
 .education-course-form > .form-action-cell,
 .education-lesson-form > .form-action-cell,
@@ -3260,6 +3270,15 @@ body.editor-focus-mode {
     grid-column: 1 / -1;
 }
 
+.education-course-title-field {
+    max-width: 760px;
+}
+
+.education-course-summary-field textarea {
+    resize: vertical;
+}
+
+.education-course-advanced,
 .education-access-details {
     padding: 12px;
     border: 1px solid var(--line);
@@ -3267,9 +3286,34 @@ body.editor-focus-mode {
     background: #f8fafc;
 }
 
+.education-course-advanced summary,
 .education-access-details summary {
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-weight: 900;
+}
+
+.education-access-details summary span {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.education-course-advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 12px;
+}
+
+.education-picker-toolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
 }
 
 .education-user-picker {
@@ -3289,6 +3333,10 @@ body.editor-focus-mode {
     border: 1px solid var(--line);
     border-radius: 6px;
     background: #ffffff;
+}
+
+.education-user-picker label.is-hidden {
+    display: none;
 }
 
 .education-user-picker small {
@@ -3634,6 +3682,26 @@ body.editor-focus-mode {
     line-height: 1.35;
 }
 
+.education-playlist-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 5px 0 2px;
+}
+
+.education-playlist-badges em {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 0.74rem;
+    font-style: normal;
+    font-weight: 900;
+}
+
 .education-builder-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
@@ -3727,7 +3795,7 @@ body.editor-focus-mode {
 
 .education-sidebar-module a {
     display: grid;
-    grid-template-columns: 22px minmax(0, 1fr);
+    grid-template-columns: 22px minmax(0, 1fr) auto auto;
     gap: 8px;
     align-items: start;
     padding: 8px;
@@ -3755,6 +3823,66 @@ body.editor-focus-mode {
 .education-sidebar-module small {
     margin-left: 4px;
     color: var(--muted);
+}
+
+.education-attendance-panel {
+    display: grid;
+    gap: 18px;
+}
+
+.education-attendance-date {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.education-attendance-form {
+    display: grid;
+    gap: 14px;
+}
+
+.education-attendance-list {
+    display: grid;
+    gap: 8px;
+}
+
+.education-attendance-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(280px, 1fr) minmax(180px, 0.7fr);
+    gap: 12px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-attendance-row strong,
+.education-attendance-row small {
+    display: block;
+}
+
+.education-attendance-row small {
+    color: var(--muted);
+}
+
+.education-attendance-status {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.education-attendance-status label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 800;
 }
 
 .education-player-nav {
@@ -4648,6 +4776,8 @@ body.editor-focus-mode {
     .document-upload-form,
     .education-grid,
     .education-course-form,
+    .education-course-advanced-grid,
+    .education-picker-toolbar,
     .education-lesson-form,
     .education-module-form,
     .education-user-picker,
@@ -4660,7 +4790,10 @@ body.editor-focus-mode {
     .education-playlist-row,
     .education-module-card > header,
     .education-quick-lesson-form,
-    .education-sequence-form {
+    .education-sequence-form,
+    .education-attendance-date,
+    .education-attendance-row,
+    .education-attendance-status {
         grid-template-columns: 1fr;
     }
 
@@ -4689,6 +4822,8 @@ body.editor-focus-mode {
     .education-course-form > div,
     .education-lesson-form > div,
     .education-module-form > div,
+    .education-course-form > .education-course-title-field,
+    .education-course-form > .education-course-summary-field,
     .education-course-form > div:first-child,
     .education-course-form > div:nth-child(4),
     .education-lesson-form > div:first-child,

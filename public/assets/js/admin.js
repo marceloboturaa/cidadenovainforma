@@ -8,6 +8,10 @@
     const galleryAdd = document.querySelector('[data-gallery-add]');
     const personForm = document.querySelector('[data-person-form]');
     const modalOpeners = document.querySelectorAll('[data-modal-open]');
+    const educationStudentList = document.querySelector('[data-education-student-list]');
+    const educationStudentSearch = document.querySelector('[data-education-student-search]');
+    const educationSelectVisible = document.querySelector('[data-education-select-visible]');
+    const educationClearVisible = document.querySelector('[data-education-clear-visible]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -92,6 +96,37 @@
 
             card.remove();
         });
+    }
+
+    if (educationStudentList) {
+        const visibleStudentInputs = () => Array.from(educationStudentList.querySelectorAll('label:not(.is-hidden) input[type="checkbox"]'));
+
+        if (educationStudentSearch) {
+            educationStudentSearch.addEventListener('input', () => {
+                const term = educationStudentSearch.value.trim().toLowerCase();
+
+                educationStudentList.querySelectorAll('label[data-student-label]').forEach((label) => {
+                    const text = label.dataset.studentLabel || '';
+                    label.classList.toggle('is-hidden', term !== '' && !text.includes(term));
+                });
+            });
+        }
+
+        if (educationSelectVisible) {
+            educationSelectVisible.addEventListener('click', () => {
+                visibleStudentInputs().forEach((input) => {
+                    input.checked = true;
+                });
+            });
+        }
+
+        if (educationClearVisible) {
+            educationClearVisible.addEventListener('click', () => {
+                visibleStudentInputs().forEach((input) => {
+                    input.checked = false;
+                });
+            });
+        }
     }
 
     if (personForm) {

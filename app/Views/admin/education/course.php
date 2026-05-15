@@ -1,6 +1,7 @@
 <?php
 $editingLesson = $editingLesson ?? null;
 $editingModule = $editingModule ?? null;
+$canTakeAttendance = $canTakeAttendance ?? false;
 $modules = $modules ?? [];
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
@@ -20,7 +21,12 @@ $moduleAction = $editingModule
         <p><?= e($course['teacher_name'] ?? 'Plataforma de ensino') ?></p>
         <h1><?= e($course['title']) ?></h1>
     </div>
-    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
+    <div class="heading-actions">
+        <?php if ($canTakeAttendance): ?>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Chamada</a>
+        <?php endif; ?>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
+    </div>
 </div>
 
 <?php if (!empty($course['summary'])): ?>

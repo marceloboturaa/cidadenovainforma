@@ -109,6 +109,25 @@ class Education
         );
 
         $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_attendance (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                course_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                attendance_date DATE NOT NULL,
+                status ENUM("present","absent","justified") NOT NULL DEFAULT "present",
+                notes VARCHAR(255) NULL,
+                recorded_by BIGINT UNSIGNED NULL,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                UNIQUE KEY uq_education_attendance_course_user_date (course_id, user_id, attendance_date),
+                INDEX idx_education_attendance_course_date (course_id, attendance_date),
+                CONSTRAINT fk_education_attendance_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_attendance_recorder FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
+            ) ENGINE=InnoDB'
+        );
+
+        $db->exec(
             'CREATE TABLE IF NOT EXISTS education_forum_topics (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 course_id BIGINT UNSIGNED NULL,
@@ -304,7 +323,21 @@ class Education
         $stmt = Database::connection()->prepare(
             'SELECT education_lessons.*,
                     progress.completed_at,
-                    education_modules.title AS module_title
+                    education_modules.title AS module_title,
+                    (
+                        SELECT COUNT(*)
+                        FROM education_lesson_blocks assignment_blocks
+                        WHERE assignment_blocks.lesson_id = education_lessons.id
+                          AND assignment_blocks.active = 1
+                          AND assignment_blocks.type = "assignment"
+                    ) AS assignment_count,
+                    (
+                        SELECT COUNT(*)
+                        FROM education_lesson_blocks certificate_blocks
+                        WHERE certificate_blocks.lesson_id = education_lessons.id
+                          AND certificate_blocks.active = 1
+                          AND certificate_blocks.type = "certificate"
+                    ) AS certificate_count
              FROM education_lessons
              LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id AND education_modules.active = 1
              LEFT JOIN education_lesson_progress progress
@@ -557,6 +590,76 @@ class Education
         return array_map('intval', array_column($stmt->fetchAll(), 'user_id'));
     }
 
+    public static function enrolledStudentsForCourse(int $courseId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT users.id, users.name, users.email
+             FROM education_enrollments
+             INNER JOIN users ON users.id = education_enrollments.user_id
+             WHERE education_enrollments.course_id = :course_id
+               AND users.active = 1
+             ORDER BY users.name ASC'
+        );
+        $stmt->execute(['course_id' => $courseId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function attendanceForCourseDate(int $courseId, string $date): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT *
+             FROM education_attendance
+             WHERE course_id = :course_id
+               AND attendance_date = :attendance_date'
+        );
+        $stmt->execute([
+            'course_id' => $courseId,
+            'attendance_date' => $date,
+        ]);
+
+        $records = [];
+        foreach ($stmt->fetchAll() as $record) {
+            $records[(int) $record['user_id']] = $record;
+        }
+
+        return $records;
+    }
+
+    public static function saveAttendance(int $courseId, string $date, array $rows, ?int $recordedBy): void
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO education_attendance
+                (course_id, user_id, attendance_date, status, notes, recorded_by, created_at, updated_at)
+             VALUES
+                (:course_id, :user_id, :attendance_date, :status, :notes, :recorded_by, NOW(), NOW())
+             ON DUPLICATE KEY UPDATE
+                status = VALUES(status),
+                notes = VALUES(notes),
+                recorded_by = VALUES(recorded_by),
+                updated_at = NOW()'
+        );
+
+        $allowedStatuses = ['present', 'absent', 'justified'];
+        foreach ($rows as $userId => $row) {
+            $status = (string) ($row['status'] ?? 'present');
+            $stmt->execute([
+                'course_id' => $courseId,
+                'user_id' => (int) $userId,
+                'attendance_date' => $date,
+                'status' => in_array($status, $allowedStatuses, true) ? $status : 'present',
+                'notes' => self::nullable($row['notes'] ?? null),
+                'recorded_by' => $recordedBy,
+            ]);
+        }
+    }
+
     public static function markLesson(int $lessonId, int $userId, bool $completed): void
     {
         self::ensureSchema();
@@ -689,7 +792,7 @@ class Education
 
     private static function blockPayload(array $data): array
     {
-        $allowedTypes = ['video', 'text', 'image', 'article', 'file', 'embed', 'quiz', 'assignment'];
+        $allowedTypes = ['video', 'text', 'image', 'article', 'file', 'embed', 'quiz', 'assignment', 'certificate'];
         $type = strtolower(trim((string) ($data['type'] ?? 'text')));
 
         return [

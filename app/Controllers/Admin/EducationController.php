@@ -24,9 +24,10 @@ class EducationController
         Middleware::auth();
         $user = current_user();
         $canManage = $this->canManageAll();
-        $courses = $this->canTeach() && !$canManage
+        $canViewAllCourses = $canManage || Auth::hasRole(['admin', 'admin-local']);
+        $courses = $this->canTeach() && !$canViewAllCourses
             ? Education::coursesForManagement((int) $user['id'])
-            : Education::coursesForUser((int) $user['id'], $canManage);
+            : Education::coursesForUser((int) $user['id'], $canViewAllCourses);
 
         View::render('admin/education/index', [
             'courses' => $courses,
@@ -131,8 +132,9 @@ class EducationController
         $user = current_user();
         $course = $this->courseFromQuery();
         $canManage = $this->canManageCourse($course);
+        $canTakeAttendance = $this->canTakeAttendance($course);
 
-        if (!Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+        if (!Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage || $canTakeAttendance)) {
             http_response_code(403);
             View::render('errors/403');
             return;
@@ -143,6 +145,7 @@ class EducationController
             'lessons' => Education::lessonsForCourse((int) $course['id'], (int) $user['id']),
             'modules' => Education::modulesForCourse((int) $course['id']),
             'canManage' => $canManage,
+            'canTakeAttendance' => $canTakeAttendance,
             'editingLesson' => $this->lessonFromQuery(false),
             'editingModule' => $this->moduleFromQuery(false),
         ]);
@@ -308,7 +311,7 @@ class EducationController
 
         Education::createLessonBlock(array_merge($_POST, [
             'lesson_id' => $lesson['id'],
-            'type' => $filePath && $type !== 'image' ? 'file' : $type,
+            'type' => $filePath && !in_array($type, ['image', 'assignment', 'certificate'], true) ? 'file' : $type,
             'file_path' => $filePath,
         ]));
 
@@ -402,6 +405,40 @@ class EducationController
         redirect('/admin/education/lesson?id=' . $lesson['id']);
     }
 
+    public function attendance(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->authorizeAttendance($course);
+
+        $date = $this->attendanceDate();
+        View::render('admin/education/attendance', [
+            'course' => $course,
+            'date' => $date,
+            'students' => Education::enrolledStudentsForCourse((int) $course['id']),
+            'records' => Education::attendanceForCourseDate((int) $course['id'], $date),
+        ]);
+    }
+
+    public function saveAttendance(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->authorizeAttendance($course);
+        $this->validateCsrf('/admin/education/attendance?id=' . $course['id']);
+
+        $date = $this->attendanceDate();
+        Education::saveAttendance(
+            (int) $course['id'],
+            $date,
+            is_array($_POST['attendance'] ?? null) ? $_POST['attendance'] : [],
+            (int) (current_user()['id'] ?? 0) ?: null
+        );
+
+        Session::flash('success', 'Chamada salva.');
+        redirect('/admin/education/attendance?id=' . $course['id'] . '&date=' . $date);
+    }
+
     private function courseFromQuery(bool $required = true): ?array
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -477,6 +514,19 @@ class EducationController
         return Auth::hasRole('professor') || Auth::can('education.teach');
     }
 
+    private function canTakeAttendance(?array $course): bool
+    {
+        if (!$course) {
+            return false;
+        }
+
+        if (Auth::hasRole(['master', 'admin', 'admin-local', 'diretor'])) {
+            return true;
+        }
+
+        return $this->canTeach() && (int) ($course['teacher_user_id'] ?? 0) === (int) (current_user()['id'] ?? 0);
+    }
+
     private function teacherOptions(array $users): array
     {
         return array_values(array_filter($users, function (array $user): bool {
@@ -528,12 +578,27 @@ class EducationController
         }
     }
 
+    private function authorizeAttendance(?array $course): void
+    {
+        if (!$this->canTakeAttendance($course)) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+    }
+
     private function validateCsrf(string $redirectTo): void
     {
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             Session::flash('error', 'Sessão expirada. Tente novamente.');
             redirect($redirectTo);
         }
+    }
+
+    private function attendanceDate(): string
+    {
+        $date = trim((string) ($_POST['attendance_date'] ?? $_GET['date'] ?? date('Y-m-d')));
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? $date : date('Y-m-d');
     }
 
     private function videoEmbedUrl(string $url): ?string

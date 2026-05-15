@@ -5,6 +5,16 @@
         </span>
         <span>
             <strong><?= e($lesson['title']) ?></strong>
+            <?php if (!empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
+                <span class="education-playlist-badges">
+                    <?php if (!empty($lesson['assignment_count'])): ?>
+                        <em><i class="bi bi-clipboard-check" aria-hidden="true"></i><?= e((string) $lesson['assignment_count']) ?> tarefa(s)</em>
+                    <?php endif; ?>
+                    <?php if (!empty($lesson['certificate_count'])): ?>
+                        <em><i class="bi bi-award" aria-hidden="true"></i>certificado</em>
+                    <?php endif; ?>
+                </span>
+            <?php endif; ?>
             <small><?= e(text_excerpt($lesson['description'] ?? '', 120)) ?></small>
         </span>
     </a>

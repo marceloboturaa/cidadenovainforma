@@ -60,6 +60,12 @@ $embed = function (?string $url): ?string {
                         <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
                             <i class="bi <?= !empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle' ?>" aria-hidden="true"></i>
                             <span><?= e($playlistLesson['title']) ?></span>
+                            <?php if (!empty($playlistLesson['assignment_count'])): ?>
+                                <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
+                            <?php endif; ?>
+                            <?php if (!empty($playlistLesson['certificate_count'])): ?>
+                                <small><i class="bi bi-award" aria-hidden="true"></i></small>
+                            <?php endif; ?>
                         </a>
                     <?php endforeach; ?>
                     <?php if (!$moduleLessons): ?>
@@ -75,6 +81,12 @@ $embed = function (?string $url): ?string {
                         <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
                             <i class="bi <?= !empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle' ?>" aria-hidden="true"></i>
                             <span><?= e($playlistLesson['title']) ?></span>
+                            <?php if (!empty($playlistLesson['assignment_count'])): ?>
+                                <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
+                            <?php endif; ?>
+                            <?php if (!empty($playlistLesson['certificate_count'])): ?>
+                                <small><i class="bi bi-award" aria-hidden="true"></i></small>
+                            <?php endif; ?>
                         </a>
                     <?php endforeach; ?>
                 </section>
@@ -87,7 +99,7 @@ $embed = function (?string $url): ?string {
             <section class="panel education-sequence-form-panel">
                 <div class="section-heading">
                     <h2><?= $editingBlock ? 'Editar item da sequência' : 'Adicionar item à sequência' ?></h2>
-                    <span>Monte a aula em ordem: vídeo, texto, imagem e arquivo</span>
+                    <span>Monte a aula em ordem: vídeo, texto, tarefa, certificado, imagem e arquivo</span>
                 </div>
                 <form method="post" action="<?= e($blockAction) ?>" enctype="multipart/form-data" class="education-sequence-form">
                     <?= csrf_field() ?>
@@ -96,6 +108,8 @@ $embed = function (?string $url): ?string {
                         <select class="form-select" name="type">
                             <option value="video" <?= selected((string) ($editingBlock['type'] ?? ''), 'video') ?>>Vídeo</option>
                             <option value="text" <?= selected((string) ($editingBlock['type'] ?? 'text'), 'text') ?>>Texto</option>
+                            <option value="assignment" <?= selected((string) ($editingBlock['type'] ?? ''), 'assignment') ?>>Tarefa</option>
+                            <option value="certificate" <?= selected((string) ($editingBlock['type'] ?? ''), 'certificate') ?>>Certificado</option>
                             <option value="image" <?= selected((string) ($editingBlock['type'] ?? ''), 'image') ?>>Imagem</option>
                             <option value="file" <?= selected((string) ($editingBlock['type'] ?? ''), 'file') ?>>Arquivo para baixar</option>
                         </select>
@@ -176,6 +190,8 @@ $embed = function (?string $url): ?string {
                 'video' => 'Vídeo da aula',
                 'image' => 'Imagem da aula',
                 'file' => 'Arquivo para baixar',
+                'assignment' => 'Tarefa da aula',
+                'certificate' => 'Certificado',
                 default => 'Material da aula',
             };
             $media = $embed($block['media_url'] ?? '');
@@ -189,6 +205,10 @@ $embed = function (?string $url): ?string {
                             <i class="bi bi-image" aria-hidden="true"></i> Imagem
                         <?php elseif ($type === 'file'): ?>
                             <i class="bi bi-download" aria-hidden="true"></i> Arquivo
+                        <?php elseif ($type === 'assignment'): ?>
+                            <i class="bi bi-clipboard-check" aria-hidden="true"></i> Tarefa
+                        <?php elseif ($type === 'certificate'): ?>
+                            <i class="bi bi-award" aria-hidden="true"></i> Certificado
                         <?php else: ?>
                             <i class="bi bi-card-text" aria-hidden="true"></i> Texto
                         <?php endif; ?>
@@ -212,12 +232,12 @@ $embed = function (?string $url): ?string {
                     <div class="education-block-text"><?= article_html($block['content']) ?></div>
                 <?php endif; ?>
 
-                <?php if ($type === 'file' && !empty($block['file_path'])): ?>
+                <?php if (in_array($type, ['file', 'assignment', 'certificate'], true) && !empty($block['file_path'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(url('/admin/education/block/download?id=' . $block['id'])) ?>">
                         <i class="bi bi-download" aria-hidden="true"></i>
                         Baixar arquivo
                     </a>
-                <?php elseif ($type === 'file' && !empty($block['media_url'])): ?>
+                <?php elseif (in_array($type, ['file', 'assignment', 'certificate'], true) && !empty($block['media_url'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(media_url($block['media_url'])) ?>" target="_blank" rel="noopener">
                         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                         Abrir arquivo
