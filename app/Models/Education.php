@@ -660,6 +660,62 @@ class Education
         }
     }
 
+    public static function attendanceReportForCourse(int $courseId, string $startDate, string $endDate): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT users.id,
+                    users.name,
+                    users.email,
+                    COUNT(education_attendance.id) AS total_records,
+                    SUM(CASE WHEN education_attendance.status = "present" THEN 1 ELSE 0 END) AS present_count,
+                    SUM(CASE WHEN education_attendance.status = "absent" THEN 1 ELSE 0 END) AS absent_count,
+                    SUM(CASE WHEN education_attendance.status = "justified" THEN 1 ELSE 0 END) AS justified_count
+             FROM education_enrollments
+             INNER JOIN users ON users.id = education_enrollments.user_id
+             LEFT JOIN education_attendance
+                ON education_attendance.course_id = education_enrollments.course_id
+               AND education_attendance.user_id = education_enrollments.user_id
+               AND education_attendance.attendance_date BETWEEN :start_date AND :end_date
+             WHERE education_enrollments.course_id = :course_id
+               AND users.active = 1
+             GROUP BY users.id
+             ORDER BY users.name ASC'
+        );
+        $stmt->execute([
+            'course_id' => $courseId,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function attendanceDatesForCourse(int $courseId, string $startDate, string $endDate): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT attendance_date,
+                    SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) AS present_count,
+                    SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) AS absent_count,
+                    SUM(CASE WHEN status = "justified" THEN 1 ELSE 0 END) AS justified_count
+             FROM education_attendance
+             WHERE course_id = :course_id
+               AND attendance_date BETWEEN :start_date AND :end_date
+             GROUP BY attendance_date
+             ORDER BY attendance_date DESC'
+        );
+        $stmt->execute([
+            'course_id' => $courseId,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+
+        return $stmt->fetchAll();
+    }
+
     public static function markLesson(int $lessonId, int $userId, bool $completed): void
     {
         self::ensureSchema();

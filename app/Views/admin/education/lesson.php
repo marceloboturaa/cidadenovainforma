@@ -7,10 +7,12 @@ $modules = $modules ?? [];
 $playlistByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
 $currentIndex = null;
+$currentPlaylistLesson = null;
 
 foreach ($playlist as $index => $playlistLesson) {
     if ((int) $playlistLesson['id'] === (int) $lesson['id']) {
         $currentIndex = $index;
+        $currentPlaylistLesson = $playlistLesson;
     }
 
     $key = !empty($playlistLesson['module_id']) && in_array((int) $playlistLesson['module_id'], $moduleIds, true) ? (string) $playlistLesson['module_id'] : 'none';
@@ -19,6 +21,7 @@ foreach ($playlist as $index => $playlistLesson) {
 
 $previousLesson = $currentIndex !== null && isset($playlist[$currentIndex - 1]) ? $playlist[$currentIndex - 1] : null;
 $nextLesson = $currentIndex !== null && isset($playlist[$currentIndex + 1]) ? $playlist[$currentIndex + 1] : null;
+$isCompleted = !empty($currentPlaylistLesson['completed_at']);
 $blockAction = $editingBlock
     ? url('/admin/education/block/update?id=' . $editingBlock['id'])
     : url('/admin/education/block?id=' . $lesson['id']);
@@ -37,12 +40,12 @@ $embed = function (?string $url): ?string {
 };
 ?>
 
-<div class="page-heading">
+<div class="page-heading education-lesson-heading">
     <div>
-        <p><?= e($course['title'] ?? 'Curso') ?></p>
+        <p>Aula</p>
         <h1><?= e($lesson['title']) ?></h1>
     </div>
-    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar ao curso</a>
+    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Curso</a>
 </div>
 
 <section class="education-player-layout">
@@ -50,6 +53,24 @@ $embed = function (?string $url): ?string {
         <div class="education-playlist-title">
             <span>Playlist</span>
             <strong><?= e($course['title'] ?? 'Curso') ?></strong>
+        </div>
+        <div class="education-progress-inline">
+            <div>
+                <strong>Progresso</strong>
+                <span><?= $isCompleted ? 'Aula concluída' : 'Aula pendente' ?></span>
+            </div>
+            <div class="education-progress-actions">
+                <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="completed" value="1">
+                    <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
+                </form>
+                <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="completed" value="0">
+                    <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
+                </form>
+            </div>
         </div>
         <div class="education-sidebar-scroll">
             <?php foreach ($modules as $module): ?>
@@ -280,20 +301,4 @@ $embed = function (?string $url): ?string {
         </nav>
     </article>
 
-    <aside class="education-side-stack">
-        <section class="panel education-progress-panel">
-            <h2>Progresso</h2>
-            <p>Marque a aula quando terminar de estudar.</p>
-            <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
-                <?= csrf_field() ?>
-                <input type="hidden" name="completed" value="1">
-                <button class="btn btn-success icon-btn w-100"><i class="bi bi-check2-circle" aria-hidden="true"></i>Marcar como concluída</button>
-            </form>
-            <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
-                <?= csrf_field() ?>
-                <input type="hidden" name="completed" value="0">
-                <button class="btn btn-outline-secondary icon-btn w-100"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Marcar como pendente</button>
-            </form>
-        </section>
-    </aside>
 </section>

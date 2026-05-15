@@ -439,6 +439,22 @@ class EducationController
         redirect('/admin/education/attendance?id=' . $course['id'] . '&date=' . $date);
     }
 
+    public function attendanceReport(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->authorizeAttendance($course);
+
+        [$startDate, $endDate] = $this->attendanceRange();
+        View::render('admin/education/attendance-report', [
+            'course' => $course,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'rows' => Education::attendanceReportForCourse((int) $course['id'], $startDate, $endDate),
+            'dates' => Education::attendanceDatesForCourse((int) $course['id'], $startDate, $endDate),
+        ]);
+    }
+
     private function courseFromQuery(bool $required = true): ?array
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -599,6 +615,26 @@ class EducationController
     {
         $date = trim((string) ($_POST['attendance_date'] ?? $_GET['date'] ?? date('Y-m-d')));
         return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? $date : date('Y-m-d');
+    }
+
+    private function attendanceRange(): array
+    {
+        $startDate = trim((string) ($_GET['start_date'] ?? date('Y-m-01')));
+        $endDate = trim((string) ($_GET['end_date'] ?? date('Y-m-d')));
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
+            $startDate = date('Y-m-01');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) {
+            $endDate = date('Y-m-d');
+        }
+
+        if ($startDate > $endDate) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
+
+        return [$startDate, $endDate];
     }
 
     private function videoEmbedUrl(string $url): ?string

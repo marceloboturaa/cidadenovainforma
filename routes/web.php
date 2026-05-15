@@ -141,6 +141,7 @@ $router->get('/admin/education/block/download', [EducationController::class, 'do
 $router->post('/admin/education/progress', [EducationController::class, 'progress']);
 $router->get('/admin/education/attendance', [EducationController::class, 'attendance']);
 $router->post('/admin/education/attendance', [EducationController::class, 'saveAttendance']);
+$router->get('/admin/education/attendance/report', [EducationController::class, 'attendanceReport']);
 
 $router->get('/admin/forum', [ForumController::class, 'index']);
 $router->get('/admin/forum/area', [ForumController::class, 'area']);
