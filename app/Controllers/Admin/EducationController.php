@@ -105,7 +105,9 @@ class EducationController
             'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
         ]));
-        Education::syncEnrollments((int) $course['id'], $_POST['user_ids'] ?? []);
+        if (array_key_exists('user_ids', $_POST)) {
+            Education::syncEnrollments((int) $course['id'], $_POST['user_ids'] ?? []);
+        }
 
         Logger::info('education.course_updated', 'Curso atualizado: ' . $title, $userId ?: null);
         Session::flash('success', 'Curso atualizado.');

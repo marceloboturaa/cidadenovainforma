@@ -3968,6 +3968,43 @@ body.editor-focus-mode {
     font-weight: 800;
 }
 
+.education-edit-modal .forum-modal-dialog {
+    width: min(880px, 100%);
+}
+
+.education-edit-modal .forum-modal-small {
+    width: min(560px, 100%);
+}
+
+.education-modal-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px;
+}
+
+.education-modal-form > div,
+.education-modal-form > details,
+.education-modal-form > footer,
+.education-modal-form > .form-action-cell {
+    grid-column: 1 / -1;
+}
+
+.education-modal-form .lesson-module-field,
+.education-modal-form .lesson-order-field {
+    grid-column: span 1;
+}
+
+.education-modal-form .lesson-title-field {
+    grid-column: 1 / -1;
+}
+
+.education-modal-form footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
 .education-report-filter {
     grid-template-columns: minmax(160px, 220px) minmax(160px, 220px) auto;
 }
@@ -4981,7 +5018,9 @@ body.editor-focus-mode {
     .education-report-filter,
     .education-report-summary,
     .education-report-row,
-    .education-report-dates div {
+    .education-report-dates div,
+    .education-modal-form,
+    .education-modal-form footer {
         grid-template-columns: 1fr;
     }
 
