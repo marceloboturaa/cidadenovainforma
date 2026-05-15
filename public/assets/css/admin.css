@@ -3715,18 +3715,49 @@ body.editor-focus-mode {
 
 .education-sequence-form {
     display: grid;
-    grid-template-columns: minmax(160px, 0.4fr) 120px minmax(220px, 1fr);
+    grid-template-columns: minmax(0, 1fr) 170px 120px;
     gap: 14px;
     align-items: end;
 }
 
+.education-sequence-form .sequence-title-field,
 .education-sequence-form .grid-span-2,
+.education-sequence-form .education-sequence-extra,
 .education-sequence-form .form-action-cell {
     grid-column: 1 / -1;
 }
 
+.education-sequence-form .sequence-type-field,
+.education-sequence-form .sequence-order-field {
+    grid-row: 2;
+}
+
+.education-sequence-extra {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-sequence-extra summary {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    cursor: pointer;
+    color: var(--brand);
+    font-weight: 900;
+}
+
+.education-sequence-extra-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.6fr);
+    gap: 12px;
+    align-items: end;
+    margin-top: 12px;
+}
+
 .education-large-textarea {
-    min-height: 220px;
+    min-height: 180px;
     resize: vertical;
 }
 
@@ -3738,12 +3769,16 @@ body.editor-focus-mode {
 
 .education-player-layout {
     display: grid;
-    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr) minmax(280px, 340px);
+    grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
+    grid-template-areas:
+        "playlist content"
+        "playlist progress";
     gap: 16px;
     align-items: start;
 }
 
 .education-playlist-sidebar {
+    grid-area: playlist;
     position: sticky;
     top: 18px;
     overflow: hidden;
@@ -3944,6 +3979,14 @@ body.editor-focus-mode {
     max-width: 100%;
     border-radius: 8px;
     border: 1px solid var(--line);
+}
+
+.education-content-stack {
+    grid-area: content;
+}
+
+.education-side-stack {
+    grid-area: progress;
 }
 
 .education-lesson-main-image {
@@ -4791,10 +4834,18 @@ body.editor-focus-mode {
     .education-module-card > header,
     .education-quick-lesson-form,
     .education-sequence-form,
+    .education-sequence-extra-grid,
     .education-attendance-date,
     .education-attendance-row,
     .education-attendance-status {
         grid-template-columns: 1fr;
+    }
+
+    .education-player-layout {
+        grid-template-areas:
+            "playlist"
+            "content"
+            "progress";
     }
 
     .education-material-form-panel {

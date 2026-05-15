@@ -98,37 +98,29 @@ $embed = function (?string $url): ?string {
         <?php if ($canManage): ?>
             <section class="panel education-sequence-form-panel">
                 <div class="section-heading">
-                    <h2><?= $editingBlock ? 'Editar item da sequência' : 'Adicionar item à sequência' ?></h2>
-                    <span>Monte a aula em ordem: vídeo, texto, tarefa, certificado, imagem e arquivo</span>
+                    <h2><?= $editingBlock ? 'Editar item' : 'Adicionar à aula' ?></h2>
+                    <span>Escolha o tipo, escreva o conteúdo e salve.</span>
                 </div>
                 <form method="post" action="<?= e($blockAction) ?>" enctype="multipart/form-data" class="education-sequence-form">
                     <?= csrf_field() ?>
-                    <div>
-                        <label class="form-label">Tipo</label>
-                        <select class="form-select" name="type">
-                            <option value="video" <?= selected((string) ($editingBlock['type'] ?? ''), 'video') ?>>Vídeo</option>
-                            <option value="text" <?= selected((string) ($editingBlock['type'] ?? 'text'), 'text') ?>>Texto</option>
-                            <option value="assignment" <?= selected((string) ($editingBlock['type'] ?? ''), 'assignment') ?>>Tarefa</option>
-                            <option value="certificate" <?= selected((string) ($editingBlock['type'] ?? ''), 'certificate') ?>>Certificado</option>
-                            <option value="image" <?= selected((string) ($editingBlock['type'] ?? ''), 'image') ?>>Imagem</option>
-                            <option value="file" <?= selected((string) ($editingBlock['type'] ?? ''), 'file') ?>>Arquivo para baixar</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label">Ordem</label>
-                        <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingBlock['sort_order'] ?? ((count($blocks) + 1) * 10))) ?>">
-                    </div>
-                    <div>
+                    <div class="sequence-title-field">
                         <label class="form-label">Título</label>
                         <input class="form-control" name="title" maxlength="180" value="<?= e($editingBlock['title'] ?? '') ?>" placeholder="Ex.: Vídeo 1, Leitura, Material de apoio">
                     </div>
-                    <div class="grid-span-2">
-                        <label class="form-label">Link de vídeo, imagem ou arquivo</label>
-                        <input class="form-control" name="media_url" value="<?= e($editingBlock['media_url'] ?? '') ?>" placeholder="YouTube, Vimeo, imagem ou arquivo externo">
+                    <div class="sequence-type-field">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" name="type">
+                            <option value="text" <?= selected((string) ($editingBlock['type'] ?? 'text'), 'text') ?>>Texto</option>
+                            <option value="video" <?= selected((string) ($editingBlock['type'] ?? ''), 'video') ?>>Vídeo</option>
+                            <option value="assignment" <?= selected((string) ($editingBlock['type'] ?? ''), 'assignment') ?>>Tarefa</option>
+                            <option value="certificate" <?= selected((string) ($editingBlock['type'] ?? ''), 'certificate') ?>>Certificado</option>
+                            <option value="image" <?= selected((string) ($editingBlock['type'] ?? ''), 'image') ?>>Imagem</option>
+                            <option value="file" <?= selected((string) ($editingBlock['type'] ?? ''), 'file') ?>>Arquivo</option>
+                        </select>
                     </div>
-                    <div>
-                        <label class="form-label">Enviar imagem ou arquivo</label>
-                        <input class="form-control" name="block_file" type="file">
+                    <div class="sequence-order-field">
+                        <label class="form-label">Ordem</label>
+                        <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingBlock['sort_order'] ?? ((count($blocks) + 1) * 10))) ?>">
                     </div>
                     <?php if ($editingBlock && !empty($editingBlock['file_path'])): ?>
                         <div class="education-current-file">
@@ -140,6 +132,19 @@ $embed = function (?string $url): ?string {
                         <label class="form-label">Texto, explicação ou instruções</label>
                         <textarea class="form-control education-large-textarea" name="content" rows="10" data-tinymce placeholder="Escreva aqui o conteúdo que aparece depois ou antes do vídeo"><?= e($editingBlock['content'] ?? '') ?></textarea>
                     </div>
+                    <details class="education-sequence-extra">
+                        <summary><i class="bi bi-link-45deg" aria-hidden="true"></i>Link, vídeo ou arquivo</summary>
+                        <div class="education-sequence-extra-grid">
+                            <div>
+                                <label class="form-label">Link externo</label>
+                                <input class="form-control" name="media_url" value="<?= e($editingBlock['media_url'] ?? '') ?>" placeholder="YouTube, Vimeo, imagem ou arquivo externo">
+                            </div>
+                            <div>
+                                <label class="form-label">Enviar arquivo</label>
+                                <input class="form-control" name="block_file" type="file">
+                            </div>
+                        </div>
+                    </details>
                     <div class="form-action-cell split-actions">
                         <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i><?= $editingBlock ? 'Atualizar item' : 'Adicionar à sequência' ?></button>
                         <?php if ($editingBlock): ?>
