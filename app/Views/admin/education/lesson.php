@@ -3,6 +3,8 @@ $blocks = $blocks ?? [];
 $editingBlock = $editingBlock ?? null;
 $canManage = $canManage ?? false;
 $isLocked = $isLocked ?? false;
+$hasVideo = $hasVideo ?? false;
+$videoWatched = $videoWatched ?? !$hasVideo;
 $playlist = $playlist ?? [];
 $modules = $modules ?? [];
 $playlistByModule = [];
@@ -73,7 +75,7 @@ $embed = function (?string $url): ?string {
                     <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
                         <?= csrf_field() ?>
                         <input type="hidden" name="completed" value="1">
-                        <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
+                        <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn" data-education-complete-button <?= $hasVideo && !$videoWatched ? 'disabled' : '' ?>><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
                     </form>
                     <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
                         <?= csrf_field() ?>
@@ -90,7 +92,7 @@ $embed = function (?string $url): ?string {
                     <h2><?= e($module['title']) ?></h2>
                     <?php foreach ($moduleLessons as $playlistLesson): ?>
                         <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
-                            <i class="bi <?= !empty($playlistLesson['locked']) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
+                            <i class="bi <?= (!empty($playlistLesson['locked']) || (!empty($playlistLesson['sequence_locked']) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
                             <span><?= e($playlistLesson['title']) ?></span>
                             <?php if (!empty($playlistLesson['assignment_count'])): ?>
                                 <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
@@ -111,7 +113,7 @@ $embed = function (?string $url): ?string {
                     <h2>Sem módulo</h2>
                     <?php foreach ($playlistByModule['none'] as $playlistLesson): ?>
                         <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
-                            <i class="bi <?= !empty($playlistLesson['locked']) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
+                            <i class="bi <?= (!empty($playlistLesson['locked']) || (!empty($playlistLesson['sequence_locked']) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
                             <span><?= e($playlistLesson['title']) ?></span>
                             <?php if (!empty($playlistLesson['assignment_count'])): ?>
                                 <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
@@ -213,11 +215,14 @@ $embed = function (?string $url): ?string {
                     <span class="education-block-type"><i class="bi bi-play-circle" aria-hidden="true"></i> Vídeo principal</span>
                     <strong><?= e($lesson['title']) ?></strong>
                 </div>
+                <?php if ($hasVideo && !$videoWatched && !$canManage): ?>
+                    <p class="education-video-watch-hint" data-education-watch-hint>Assista ao vídeo até o final para liberar o botão Concluir e a próxima aula.</p>
+                <?php endif; ?>
                 <div class="education-video-frame">
                     <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $videoEmbedUrl)): ?>
-                        <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls></video>
+                        <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls data-education-video-watch data-watch-url="<?= e(url('/admin/education/watch?id=' . $lesson['id'])) ?>"></video>
                     <?php else: ?>
-                        <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen></iframe>
+                        <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen data-education-video-watch data-watch-url="<?= e(url('/admin/education/watch?id=' . $lesson['id'])) ?>"></iframe>
                     <?php endif; ?>
                 </div>
             </section>
@@ -314,8 +319,10 @@ $embed = function (?string $url): ?string {
                 <span></span>
             <?php endif; ?>
             <a href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>">Voltar para o curso</a>
-            <?php if ($nextLesson): ?>
+            <?php if ($nextLesson && (empty($nextLesson['sequence_locked']) || $canManage)): ?>
                 <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'])) ?>">Próxima aula<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+            <?php elseif ($nextLesson): ?>
+                <span class="btn btn-outline-secondary icon-btn disabled" aria-disabled="true"><i class="bi bi-lock-fill" aria-hidden="true"></i>Próxima bloqueada</span>
             <?php else: ?>
                 <span></span>
             <?php endif; ?>

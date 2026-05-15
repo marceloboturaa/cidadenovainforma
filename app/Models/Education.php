@@ -113,6 +113,18 @@ class Education
         );
 
         $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_lesson_watches (
+                lesson_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                completed_at DATETIME NULL,
+                updated_at TIMESTAMP NULL,
+                PRIMARY KEY (lesson_id, user_id),
+                CONSTRAINT fk_education_watches_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_watches_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        $db->exec(
             'CREATE TABLE IF NOT EXISTS education_attendance (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 course_id BIGINT UNSIGNED NOT NULL,
@@ -327,6 +339,7 @@ class Education
         $stmt = Database::connection()->prepare(
             'SELECT education_lessons.*,
                     progress.completed_at,
+                    watches.completed_at AS video_completed_at,
                     education_modules.title AS module_title,
                     (
                         SELECT COUNT(*)
@@ -347,15 +360,56 @@ class Education
              LEFT JOIN education_lesson_progress progress
                 ON progress.lesson_id = education_lessons.id
                AND progress.user_id = :user_id
+             LEFT JOIN education_lesson_watches watches
+                ON watches.lesson_id = education_lessons.id
+               AND watches.user_id = :watch_user_id
              WHERE education_lessons.course_id = :course_id
                AND education_lessons.active = 1
              ORDER BY COALESCE(education_modules.sort_order, 0) ASC,
                       education_lessons.sort_order ASC,
                       education_lessons.id ASC'
         );
-        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
+        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId, 'watch_user_id' => $userId]);
 
         return $stmt->fetchAll();
+    }
+
+    public static function lessonsWithSequenceAccess(array $lessons, bool $canManage = false): array
+    {
+        $previousCompleted = true;
+
+        foreach ($lessons as $index => $lesson) {
+            $lockedBySequence = !$canManage && !$previousCompleted;
+            $lessons[$index]['sequence_locked'] = $lockedBySequence ? 1 : 0;
+            $lessons[$index]['can_watch'] = !$lockedBySequence;
+            $previousCompleted = !empty($lesson['completed_at']);
+        }
+
+        return $lessons;
+    }
+
+    public static function userCanAccessLessonInSequence(int $lessonId, int $userId, bool $canManage = false): bool
+    {
+        if ($canManage) {
+            return true;
+        }
+
+        $lesson = self::findLesson($lessonId);
+        if (!$lesson) {
+            return false;
+        }
+
+        foreach (self::lessonsForCourse((int) $lesson['course_id'], $userId) as $courseLesson) {
+            if ((int) $courseLesson['id'] === $lessonId) {
+                return true;
+            }
+
+            if (empty($courseLesson['completed_at'])) {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     public static function findLesson(int $id): ?array
@@ -734,6 +788,37 @@ class Education
             'user_id' => $userId,
             'completed_at' => $completed ? date('Y-m-d H:i:s') : null,
         ]);
+    }
+
+    public static function markLessonVideoWatched(int $lessonId, int $userId): void
+    {
+        self::ensureSchema();
+
+        Database::connection()->prepare(
+            'INSERT INTO education_lesson_watches (lesson_id, user_id, completed_at, updated_at)
+             VALUES (:lesson_id, :user_id, NOW(), NOW())
+             ON DUPLICATE KEY UPDATE completed_at = NOW(), updated_at = NOW()'
+        )->execute([
+            'lesson_id' => $lessonId,
+            'user_id' => $userId,
+        ]);
+    }
+
+    public static function userWatchedLessonVideo(int $lessonId, int $userId): bool
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT completed_at
+             FROM education_lesson_watches
+             WHERE lesson_id = :lesson_id
+               AND user_id = :user_id
+               AND completed_at IS NOT NULL
+             LIMIT 1'
+        );
+        $stmt->execute(['lesson_id' => $lessonId, 'user_id' => $userId]);
+
+        return (bool) $stmt->fetchColumn();
     }
 
     public static function forumTopics(?int $courseId = null): array

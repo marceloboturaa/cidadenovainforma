@@ -146,11 +146,15 @@ class EducationController
             return;
         }
 
+        $lessons = Education::lessonsWithSequenceAccess(
+            Education::lessonsForCourse((int) $course['id'], (int) $user['id']),
+            $canManage
+        );
         $forumTopics = Education::forumTopics((int) $course['id']);
 
         View::render('admin/education/course', [
             'course' => $course,
-            'lessons' => Education::lessonsForCourse((int) $course['id'], (int) $user['id']),
+            'lessons' => $lessons,
             'modules' => Education::modulesForCourse((int) $course['id']),
             'canManage' => $canManage,
             'canTakeAttendance' => $canTakeAttendance,
@@ -287,6 +291,17 @@ class EducationController
             View::render('errors/403');
             return;
         }
+        if (!Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)) {
+            Session::flash('error', 'Conclua a aula anterior antes de assistir esta aula.');
+            redirect('/admin/education/course?id=' . $lesson['course_id']);
+        }
+
+        $playlist = Education::lessonsWithSequenceAccess(
+            Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id']),
+            $canManage
+        );
+        $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
+        $videoWatched = !$hasVideo || $canManage || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
 
         View::render('admin/education/lesson', [
             'lesson' => $lesson,
@@ -296,8 +311,10 @@ class EducationController
             'editingBlock' => $this->blockFromQuery(false),
             'canManage' => $canManage,
             'isLocked' => $isLocked,
+            'hasVideo' => $hasVideo,
+            'videoWatched' => $videoWatched,
             'modules' => Education::modulesForCourse((int) $lesson['course_id']),
-            'playlist' => Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id']),
+            'playlist' => $playlist,
         ]);
     }
 
@@ -415,10 +432,50 @@ class EducationController
             Session::flash('error', 'Esta aula está bloqueada pelo professor.');
             redirect('/admin/education/lesson?id=' . $lesson['id']);
         }
+        if (!Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)) {
+            Session::flash('error', 'Conclua a aula anterior antes de marcar esta aula.');
+            redirect('/admin/education/course?id=' . $lesson['course_id']);
+        }
+        if (($_POST['completed'] ?? '') === '1' && !$canManage && trim((string) ($lesson['video_url'] ?? '')) !== '' && !Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id'])) {
+            Session::flash('error', 'Assista ao vídeo completo antes de concluir a aula.');
+            redirect('/admin/education/lesson?id=' . $lesson['id']);
+        }
 
         Education::markLesson((int) $lesson['id'], (int) $user['id'], ($_POST['completed'] ?? '') === '1');
         Session::flash('success', 'Progresso atualizado.');
         redirect('/admin/education/lesson?id=' . $lesson['id']);
+    }
+
+    public function watchVideo(): void
+    {
+        Middleware::auth();
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            http_response_code(419);
+            echo json_encode(['ok' => false, 'message' => 'Sessão expirada.']);
+            return;
+        }
+
+        $user = current_user();
+        $lesson = $this->lessonFromQuery();
+        $course = Education::findCourse((int) $lesson['course_id']);
+        $canManage = $this->canManageCourse($course);
+
+        if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)
+            || !Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)
+            || (!empty($lesson['locked']) && !$canManage)
+        ) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'message' => 'Acesso negado.']);
+            return;
+        }
+
+        if (trim((string) ($lesson['video_url'] ?? '')) !== '') {
+            Education::markLessonVideoWatched((int) $lesson['id'], (int) $user['id']);
+        }
+
+        echo json_encode(['ok' => true]);
     }
 
     public function storeForumTopic(): void
@@ -732,8 +789,8 @@ class EducationController
             return null;
         }
 
-        if (preg_match('#(?:youtube\.com/watch\?v=|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
-            return 'https://www.youtube.com/embed/' . $match[1];
+        if (preg_match('#(?:youtube\.com/watch\?v=|youtube\.com/embed/|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
+            return 'https://www.youtube.com/embed/' . $match[1] . '?enablejsapi=1';
         }
 
         return $url;

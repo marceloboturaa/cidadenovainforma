@@ -12,6 +12,8 @@
     const educationStudentSearch = document.querySelector('[data-education-student-search]');
     const educationSelectVisible = document.querySelector('[data-education-select-visible]');
     const educationClearVisible = document.querySelector('[data-education-clear-visible]');
+    const educationVideoWatch = document.querySelector('[data-education-video-watch]');
+    const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -133,6 +135,10 @@
         }
     }
 
+    if (educationVideoWatch) {
+        bindEducationVideoWatch(educationVideoWatch);
+    }
+
     if (personForm) {
         const minorToggle = personForm.querySelector('[data-minor-toggle]');
         const guardianFields = personForm.querySelector('[data-guardian-fields]');
@@ -230,6 +236,90 @@
         const input = personForm.querySelector(selector);
         if (input && value) {
             input.value = value;
+        }
+    }
+
+    function bindEducationVideoWatch(player) {
+        if (player.tagName === 'VIDEO') {
+            player.addEventListener('ended', () => markEducationVideoWatched(player));
+            return;
+        }
+
+        if (player.tagName === 'IFRAME' && /youtube\.com\/embed\//i.test(player.src)) {
+            loadYouTubeApi(() => {
+                const id = player.id || `education-youtube-${Date.now()}`;
+                player.id = id;
+                new window.YT.Player(id, {
+                    events: {
+                        onStateChange(event) {
+                            if (event.data === window.YT.PlayerState.ENDED) {
+                                markEducationVideoWatched(player);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+    }
+
+    function loadYouTubeApi(callback) {
+        if (window.YT && window.YT.Player) {
+            callback();
+            return;
+        }
+
+        const previous = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function () {
+            if (typeof previous === 'function') {
+                previous();
+            }
+            callback();
+        };
+
+        if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+            const script = document.createElement('script');
+            script.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(script);
+        }
+    }
+
+    async function markEducationVideoWatched(player) {
+        if (player.dataset.watchSaved === '1') {
+            return;
+        }
+
+        const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const watchUrl = player.dataset.watchUrl || '';
+        if (!token || !watchUrl) {
+            return;
+        }
+
+        const body = new URLSearchParams();
+        body.set('_token', token);
+
+        try {
+            const response = await fetch(watchUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
+                body: body.toString()
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+                return;
+            }
+
+            player.dataset.watchSaved = '1';
+            educationCompleteButtons.forEach((button) => {
+                button.disabled = false;
+            });
+            document.querySelectorAll('[data-education-watch-hint]').forEach((hint) => {
+                hint.textContent = 'Vídeo concluído. Agora você pode marcar a aula como concluída.';
+                hint.classList.add('is-complete');
+            });
+        } catch (error) {
+            return;
         }
     }
 
