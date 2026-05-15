@@ -173,20 +173,22 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
         <h2>Fórum do curso</h2>
         <span><?= e((string) count($forumTopics)) ?> tópico(s)</span>
     </div>
-    <form method="post" action="<?= e(url('/admin/education/forum/topic?id=' . $course['id'])) ?>" class="education-sequence-form">
-        <?= csrf_field() ?>
-        <div class="sequence-title-field">
-            <label class="form-label">Título</label>
-            <input class="form-control" name="title" maxlength="180" placeholder="Dúvida ou aviso do curso" required>
-        </div>
-        <div class="grid-span-2">
-            <label class="form-label">Mensagem</label>
-            <textarea class="form-control" name="body" rows="4" data-tinymce required></textarea>
-        </div>
-        <div class="form-action-cell">
-            <button class="btn btn-primary icon-btn"><i class="bi bi-chat-dots" aria-hidden="true"></i>Publicar no fórum</button>
-        </div>
-    </form>
+    <?php if ($canManage): ?>
+        <form method="post" action="<?= e(url('/admin/education/forum/topic?id=' . $course['id'])) ?>" class="education-sequence-form">
+            <?= csrf_field() ?>
+            <div class="sequence-title-field">
+                <label class="form-label">Título</label>
+                <input class="form-control" name="title" maxlength="180" placeholder="Aviso ou tema geral do curso" required>
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Mensagem</label>
+                <textarea class="form-control" name="body" rows="4" data-tinymce required></textarea>
+            </div>
+            <div class="form-action-cell">
+                <button class="btn btn-primary icon-btn"><i class="bi bi-chat-dots" aria-hidden="true"></i>Publicar no fórum</button>
+            </div>
+        </form>
+    <?php endif; ?>
     <div class="forum-topic-list mt-3">
         <?php foreach ($forumTopics as $topic): ?>
             <?php $topicReplies = $forumRepliesByTopic[(int) $topic['id']] ?? []; ?>

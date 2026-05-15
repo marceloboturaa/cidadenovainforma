@@ -10,3 +10,6 @@ CREATE TABLE IF NOT EXISTS education_lesson_watches (
     CONSTRAINT fk_education_watches_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_watches_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+ALTER TABLE education_forum_topics
+    ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NULL AFTER course_id;

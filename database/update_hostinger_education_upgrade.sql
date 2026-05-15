@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS education_lesson_watches (
 CREATE TABLE IF NOT EXISTS education_forum_topics (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     course_id BIGINT UNSIGNED NULL,
+    lesson_id BIGINT UNSIGNED NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     title VARCHAR(180) NOT NULL,
     body TEXT NOT NULL,
@@ -105,9 +106,13 @@ CREATE TABLE IF NOT EXISTS education_forum_topics (
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     INDEX idx_education_forum_topics_course (course_id),
+    INDEX idx_education_forum_topics_lesson (lesson_id),
     CONSTRAINT fk_education_topics_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_topics_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_topics_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+ALTER TABLE education_forum_topics ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NULL AFTER course_id;
 
 CREATE TABLE IF NOT EXISTS education_forum_replies (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

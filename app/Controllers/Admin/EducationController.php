@@ -302,6 +302,7 @@ class EducationController
         );
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
         $videoWatched = !$hasVideo || $canManage || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
+        $lessonForumTopics = Education::forumTopics((int) $lesson['course_id'], (int) $lesson['id']);
 
         View::render('admin/education/lesson', [
             'lesson' => $lesson,
@@ -315,6 +316,8 @@ class EducationController
             'videoWatched' => $videoWatched,
             'modules' => Education::modulesForCourse((int) $lesson['course_id']),
             'playlist' => $playlist,
+            'lessonForumTopics' => $lessonForumTopics,
+            'lessonForumRepliesByTopic' => Education::forumRepliesForTopics(array_column($lessonForumTopics, 'id')),
         ]);
     }
 
@@ -483,10 +486,12 @@ class EducationController
         Middleware::auth();
         $this->validateCsrf('/admin/education');
         $user = current_user();
-        $course = $this->courseFromQuery();
+        $lessonId = filter_input(INPUT_GET, 'lesson_id', FILTER_VALIDATE_INT);
+        $lesson = $lessonId ? Education::findLesson($lessonId) : null;
+        $course = $lesson ? Education::findCourse((int) $lesson['course_id']) : $this->courseFromQuery();
         $canManage = $this->canManageCourse($course);
 
-        if (!Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+        if (!$course || !$canManage || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], true)) {
             http_response_code(403);
             View::render('errors/403');
             return;
@@ -501,13 +506,14 @@ class EducationController
 
         Education::createForumTopic([
             'course_id' => $course['id'],
+            'lesson_id' => $lesson['id'] ?? null,
             'user_id' => $user['id'],
             'title' => $title,
             'body' => $body,
         ]);
 
-        Session::flash('success', 'Tópico publicado no fórum do curso.');
-        redirect('/admin/education/course?id=' . $course['id'] . '#course-forum');
+        Session::flash('success', $lesson ? 'Tópico publicado no fórum desta aula.' : 'Tópico publicado no fórum do curso.');
+        redirect($lesson ? '/admin/education/lesson?id=' . $lesson['id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
     }
 
     public function storeForumReply(): void
@@ -545,7 +551,7 @@ class EducationController
         ]);
 
         Session::flash('success', 'Resposta publicada.');
-        redirect('/admin/education/course?id=' . $course['id'] . '#course-forum');
+        redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
     }
 
     public function attendance(): void

@@ -147,6 +147,7 @@ class Education
             'CREATE TABLE IF NOT EXISTS education_forum_topics (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 course_id BIGINT UNSIGNED NULL,
+                lesson_id BIGINT UNSIGNED NULL,
                 user_id BIGINT UNSIGNED NOT NULL,
                 title VARCHAR(180) NOT NULL,
                 body TEXT NOT NULL,
@@ -154,10 +155,18 @@ class Education
                 created_at TIMESTAMP NULL,
                 updated_at TIMESTAMP NULL,
                 INDEX idx_education_forum_topics_course (course_id),
+                INDEX idx_education_forum_topics_lesson (lesson_id),
                 CONSTRAINT fk_education_topics_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_topics_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_topics_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+
+        $topicColumns = $db->query('SHOW COLUMNS FROM education_forum_topics')->fetchAll(\PDO::FETCH_COLUMN);
+        if (!in_array('lesson_id', $topicColumns, true)) {
+            $db->exec('ALTER TABLE education_forum_topics ADD COLUMN lesson_id BIGINT UNSIGNED NULL AFTER course_id');
+            $db->exec('ALTER TABLE education_forum_topics ADD INDEX idx_education_forum_topics_lesson (lesson_id)');
+        }
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_forum_replies (
@@ -821,11 +830,21 @@ class Education
         return (bool) $stmt->fetchColumn();
     }
 
-    public static function forumTopics(?int $courseId = null): array
+    public static function forumTopics(?int $courseId = null, ?int $lessonId = null): array
     {
         self::ensureSchema();
 
-        $scope = $courseId ? 'education_forum_topics.course_id = :course_id' : 'education_forum_topics.course_id IS NULL';
+        $params = [];
+        if ($lessonId) {
+            $scope = 'education_forum_topics.lesson_id = :lesson_id';
+            $params['lesson_id'] = $lessonId;
+        } elseif ($courseId) {
+            $scope = 'education_forum_topics.course_id = :course_id AND education_forum_topics.lesson_id IS NULL';
+            $params['course_id'] = $courseId;
+        } else {
+            $scope = 'education_forum_topics.course_id IS NULL AND education_forum_topics.lesson_id IS NULL';
+        }
+
         $stmt = Database::connection()->prepare(
             'SELECT education_forum_topics.*,
                     users.name AS user_name,
@@ -840,7 +859,7 @@ class Education
              GROUP BY education_forum_topics.id
              ORDER BY education_forum_topics.updated_at DESC, education_forum_topics.created_at DESC'
         );
-        $stmt->execute($courseId ? ['course_id' => $courseId] : []);
+        $stmt->execute($params);
 
         return $stmt->fetchAll();
     }
@@ -865,8 +884,8 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO education_forum_topics (course_id, user_id, title, body, status, created_at, updated_at)
-             VALUES (:course_id, :user_id, :title, :body, "open", NOW(), NOW())'
+            'INSERT INTO education_forum_topics (course_id, lesson_id, user_id, title, body, status, created_at, updated_at)
+             VALUES (:course_id, :lesson_id, :user_id, :title, :body, "open", NOW(), NOW())'
         );
         $stmt->execute(self::topicPayload($data));
 
@@ -1019,6 +1038,7 @@ class Education
     {
         return [
             'course_id' => !empty($data['course_id']) ? (int) $data['course_id'] : null,
+            'lesson_id' => !empty($data['lesson_id']) ? (int) $data['lesson_id'] : null,
             'user_id' => (int) ($data['user_id'] ?? 0),
             'title' => trim((string) ($data['title'] ?? '')),
             'body' => trim((string) ($data['body'] ?? '')),
