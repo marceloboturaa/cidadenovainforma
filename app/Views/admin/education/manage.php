@@ -20,6 +20,7 @@ $canManageAll = $canManageAll ?? true;
     </div>
     <form method="post" action="<?= e($isEdit ? url('/admin/education/course/update?id=' . $editing['id']) : url('/admin/education/course')) ?>" class="education-course-form">
         <?= csrf_field() ?>
+        <input type="hidden" name="enrollment_sync" value="1">
         <div class="education-course-title-field">
             <label class="form-label">Título do curso</label>
             <input class="form-control form-control-lg" name="title" maxlength="180" value="<?= e($editing['title'] ?? '') ?>" placeholder="Ex.: Informática básica" required autofocus>

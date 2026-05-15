@@ -105,7 +105,7 @@ class EducationController
             'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
         ]));
-        if (array_key_exists('user_ids', $_POST)) {
+        if (($_POST['enrollment_sync'] ?? '') === '1') {
             Education::syncEnrollments((int) $course['id'], $_POST['user_ids'] ?? []);
         }
 
