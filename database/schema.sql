@@ -406,6 +406,7 @@ CREATE TABLE IF NOT EXISTS education_forum_topics (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     course_id BIGINT UNSIGNED NULL,
     lesson_id BIGINT UNSIGNED NULL,
+    central_topic_id BIGINT UNSIGNED NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     title VARCHAR(180) NOT NULL,
     body TEXT NOT NULL,

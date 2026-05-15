@@ -13,3 +13,6 @@ CREATE TABLE IF NOT EXISTS education_lesson_watches (
 
 ALTER TABLE education_forum_topics
     ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NULL AFTER course_id;
+
+ALTER TABLE education_forum_topics
+    ADD COLUMN IF NOT EXISTS central_topic_id BIGINT UNSIGNED NULL AFTER lesson_id;

@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS education_forum_topics (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     course_id BIGINT UNSIGNED NULL,
     lesson_id BIGINT UNSIGNED NULL,
+    central_topic_id BIGINT UNSIGNED NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     title VARCHAR(180) NOT NULL,
     body TEXT NOT NULL,
@@ -113,6 +114,7 @@ CREATE TABLE IF NOT EXISTS education_forum_topics (
 ) ENGINE=InnoDB;
 
 ALTER TABLE education_forum_topics ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NULL AFTER course_id;
+ALTER TABLE education_forum_topics ADD COLUMN IF NOT EXISTS central_topic_id BIGINT UNSIGNED NULL AFTER lesson_id;
 
 CREATE TABLE IF NOT EXISTS education_forum_replies (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

@@ -9,6 +9,7 @@ use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
 use App\Models\Education;
+use App\Models\Forum;
 use App\Models\User;
 
 class EducationController
@@ -504,9 +505,11 @@ class EducationController
             redirect('/admin/education/course?id=' . $course['id']);
         }
 
-        Education::createForumTopic([
+        $centralTopicId = $this->createCentralForumCopy($course, $lesson, $user, $title, $body);
+        $topicId = Education::createForumTopic([
             'course_id' => $course['id'],
             'lesson_id' => $lesson['id'] ?? null,
+            'central_topic_id' => $centralTopicId,
             'user_id' => $user['id'],
             'title' => $title,
             'body' => $body,
@@ -514,6 +517,31 @@ class EducationController
 
         Session::flash('success', $lesson ? 'Tópico publicado no fórum desta aula.' : 'Tópico publicado no fórum do curso.');
         redirect($lesson ? '/admin/education/lesson?id=' . $lesson['id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
+    }
+
+    public function deleteForumTopic(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+
+        $topicId = filter_input(INPUT_GET, 'topic_id', FILTER_VALIDATE_INT);
+        $topic = $topicId ? Education::findForumTopic($topicId) : null;
+        if (!$topic || empty($topic['course_id'])) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $topic['course_id']);
+        $this->authorizeCourseManage($course);
+
+        Education::hideForumTopic((int) $topic['id']);
+        if (!empty($topic['central_topic_id'])) {
+            Forum::setTopicStatus((int) $topic['central_topic_id'], 'hidden');
+        }
+
+        Session::flash('success', 'Fórum removido.');
+        redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $topic['course_id'] . '#course-forum');
     }
 
     public function storeForumReply(): void
@@ -800,6 +828,35 @@ class EducationController
         }
 
         return $url;
+    }
+
+    private function createCentralForumCopy(array $course, ?array $lesson, array $user, string $title, string $body): ?int
+    {
+        $area = Forum::findArea('estudantes') ?: Forum::findArea('professores');
+        if (!$area) {
+            return null;
+        }
+
+        $prefix = $lesson ? 'Aula: ' . ($lesson['title'] ?? '') : 'Curso: ' . ($course['title'] ?? '');
+        $centralTitle = trim($prefix . ' - ' . $title);
+        $centralBody = '<p><strong>Fórum vinculado ao ensino.</strong></p>'
+            . '<p><strong>Curso:</strong> ' . e($course['title'] ?? '') . '</p>'
+            . ($lesson ? '<p><strong>Aula:</strong> ' . e($lesson['title'] ?? '') . '</p>' : '')
+            . '<hr>'
+            . $body;
+
+        try {
+            return Forum::createTopic([
+                'area_id' => $area['id'],
+                'category_id' => null,
+                'user_id' => (int) ($user['id'] ?? 0),
+                'title' => $centralTitle,
+                'body' => $centralBody,
+                'is_public' => false,
+            ]);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function storeBlockFile(): ?string

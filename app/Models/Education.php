@@ -148,6 +148,7 @@ class Education
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 course_id BIGINT UNSIGNED NULL,
                 lesson_id BIGINT UNSIGNED NULL,
+                central_topic_id BIGINT UNSIGNED NULL,
                 user_id BIGINT UNSIGNED NOT NULL,
                 title VARCHAR(180) NOT NULL,
                 body TEXT NOT NULL,
@@ -166,6 +167,9 @@ class Education
         if (!in_array('lesson_id', $topicColumns, true)) {
             $db->exec('ALTER TABLE education_forum_topics ADD COLUMN lesson_id BIGINT UNSIGNED NULL AFTER course_id');
             $db->exec('ALTER TABLE education_forum_topics ADD INDEX idx_education_forum_topics_lesson (lesson_id)');
+        }
+        if (!in_array('central_topic_id', $topicColumns, true)) {
+            $db->exec('ALTER TABLE education_forum_topics ADD COLUMN central_topic_id BIGINT UNSIGNED NULL AFTER lesson_id');
         }
 
         $db->exec(
@@ -884,12 +888,21 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO education_forum_topics (course_id, lesson_id, user_id, title, body, status, created_at, updated_at)
-             VALUES (:course_id, :lesson_id, :user_id, :title, :body, "open", NOW(), NOW())'
+            'INSERT INTO education_forum_topics (course_id, lesson_id, central_topic_id, user_id, title, body, status, created_at, updated_at)
+             VALUES (:course_id, :lesson_id, :central_topic_id, :user_id, :title, :body, "open", NOW(), NOW())'
         );
         $stmt->execute(self::topicPayload($data));
 
         return (int) Database::connection()->lastInsertId();
+    }
+
+    public static function setForumTopicCentralId(int $topicId, int $centralTopicId): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('UPDATE education_forum_topics SET central_topic_id = :central_topic_id, updated_at = NOW() WHERE id = :id')
+            ->execute(['central_topic_id' => $centralTopicId, 'id' => $topicId]);
     }
 
     public static function findForumTopic(int $id): ?array
@@ -982,6 +995,15 @@ class Education
             ->execute(['id' => $topicId]);
     }
 
+    public static function hideForumTopic(int $topicId): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('UPDATE education_forum_topics SET status = "hidden", updated_at = NOW() WHERE id = :id')
+            ->execute(['id' => $topicId]);
+    }
+
     private static function coursePayload(array $data): array
     {
         return [
@@ -1039,6 +1061,7 @@ class Education
         return [
             'course_id' => !empty($data['course_id']) ? (int) $data['course_id'] : null,
             'lesson_id' => !empty($data['lesson_id']) ? (int) $data['lesson_id'] : null,
+            'central_topic_id' => !empty($data['central_topic_id']) ? (int) $data['central_topic_id'] : null,
             'user_id' => (int) ($data['user_id'] ?? 0),
             'title' => trim((string) ($data['title'] ?? '')),
             'body' => trim((string) ($data['body'] ?? '')),

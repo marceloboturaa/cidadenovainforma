@@ -205,6 +205,17 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
                     <span><?= e((string) ($topic['reply_count'] ?? 0)) ?> resposta(s)</span>
                     <span><?= e($topic['created_at'] ?? '') ?></span>
                 </div>
+                <div class="education-forum-topic-actions">
+                    <?php if (!empty($topic['central_topic_id'])): ?>
+                        <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/forum/topic?id=' . $topic['central_topic_id'])) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Central de fóruns</a>
+                    <?php endif; ?>
+                    <?php if ($canManage): ?>
+                        <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/delete?topic_id=' . $topic['id'])) ?>" onsubmit="return confirm('Remover este fórum? A cópia da central também será ocultada.');">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Remover fórum</button>
+                        </form>
+                    <?php endif; ?>
+                </div>
                 <?php if ($topicReplies): ?>
                     <div class="education-forum-replies">
                         <?php foreach ($topicReplies as $reply): ?>
