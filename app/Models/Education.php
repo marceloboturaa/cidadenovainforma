@@ -51,6 +51,7 @@ class Education
                 description TEXT NULL,
                 video_url VARCHAR(255) NULL,
                 image_url VARCHAR(255) NULL,
+                locked TINYINT(1) NOT NULL DEFAULT 0,
                 sort_order INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
@@ -66,6 +67,9 @@ class Education
         }
         if (!in_array('image_url', $lessonColumns, true)) {
             $db->exec('ALTER TABLE education_lessons ADD COLUMN image_url VARCHAR(255) NULL AFTER video_url');
+        }
+        if (!in_array('locked', $lessonColumns, true)) {
+            $db->exec('ALTER TABLE education_lessons ADD COLUMN locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
         }
 
         $db->exec(
@@ -520,9 +524,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lessons
-                (course_id, module_id, title, description, video_url, image_url, sort_order, active, created_at, updated_at)
+                (course_id, module_id, title, description, video_url, image_url, locked, sort_order, active, created_at, updated_at)
              VALUES
-                (:course_id, :module_id, :title, :description, :video_url, :image_url, :sort_order, 1, NOW(), NOW())'
+                (:course_id, :module_id, :title, :description, :video_url, :image_url, :locked, :sort_order, 1, NOW(), NOW())'
         );
         $stmt->execute(self::lessonPayload($data));
 
@@ -543,6 +547,7 @@ class Education
                  description = :description,
                  video_url = :video_url,
                  image_url = :image_url,
+                 locked = :locked,
                  sort_order = :sort_order,
                  updated_at = NOW()
              WHERE id = :id'
@@ -755,6 +760,21 @@ class Education
         return $stmt->fetchAll();
     }
 
+    public static function forumTopicCountForCourse(int $courseId): int
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT COUNT(*)
+             FROM education_forum_topics
+             WHERE course_id = :course_id
+               AND status <> "hidden"'
+        );
+        $stmt->execute(['course_id' => $courseId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public static function createForumTopic(array $data): int
     {
         self::ensureSchema();
@@ -766,6 +786,53 @@ class Education
         $stmt->execute(self::topicPayload($data));
 
         return (int) Database::connection()->lastInsertId();
+    }
+
+    public static function findForumTopic(int $id): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_forum_topics.*,
+                    users.name AS user_name
+             FROM education_forum_topics
+             INNER JOIN users ON users.id = education_forum_topics.user_id
+             WHERE education_forum_topics.id = :id
+               AND education_forum_topics.status <> "hidden"
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function forumRepliesForTopics(array $topicIds): array
+    {
+        self::ensureSchema();
+
+        $topicIds = array_values(array_unique(array_filter(array_map('intval', $topicIds))));
+        if (!$topicIds) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($topicIds), '?'));
+        $stmt = Database::connection()->prepare(
+            'SELECT education_forum_replies.*,
+                    users.name AS user_name
+             FROM education_forum_replies
+             INNER JOIN users ON users.id = education_forum_replies.user_id
+             WHERE education_forum_replies.topic_id IN (' . $placeholders . ')
+               AND education_forum_replies.active = 1
+             ORDER BY education_forum_replies.created_at ASC, education_forum_replies.id ASC'
+        );
+        $stmt->execute($topicIds);
+
+        $grouped = [];
+        foreach ($stmt->fetchAll() as $reply) {
+            $grouped[(int) $reply['topic_id']][] = $reply;
+        }
+
+        return $grouped;
     }
 
     public static function forumReplies(int $topicId): array
@@ -842,6 +909,7 @@ class Education
             'description' => self::nullable($data['description'] ?? null),
             'video_url' => self::nullable($data['video_url'] ?? null),
             'image_url' => self::nullable($data['image_url'] ?? null),
+            'locked' => !empty($data['locked']) ? 1 : 0,
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
     }

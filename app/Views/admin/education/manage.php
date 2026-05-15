@@ -18,7 +18,7 @@ $canManageAll = $canManageAll ?? true;
         <h2><?= $isEdit ? 'Editar curso' : 'Novo curso' ?></h2>
         <span><?= $isEdit ? 'Ajuste os dados do curso e as matrículas quando necessário.' : 'Informe só o essencial agora. As aulas entram na próxima etapa.' ?></span>
     </div>
-    <form method="post" action="<?= e($isEdit ? url('/admin/education/course/update?id=' . $editing['id']) : url('/admin/education/course')) ?>" class="education-course-form">
+    <form method="post" action="<?= e($isEdit ? url('/admin/education/course/update?id=' . $editing['id']) : url('/admin/education/course')) ?>" enctype="multipart/form-data" class="education-course-form">
         <?= csrf_field() ?>
         <input type="hidden" name="enrollment_sync" value="1">
         <div class="education-course-title-field">
@@ -49,8 +49,13 @@ $canManageAll = $canManageAll ?? true;
                     <?php endif; ?>
                 </div>
                 <div>
-                    <label class="form-label">Imagem de capa</label>
+                    <label class="form-label">Imagem de capa por link</label>
                     <input class="form-control" name="cover_image" value="<?= e($editing['cover_image'] ?? '') ?>" placeholder="/public/uploads/... ou URL">
+                </div>
+                <div>
+                    <label class="form-label">Enviar imagem de capa</label>
+                    <input class="form-control" name="course_cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                    <small class="field-hint">Se enviar arquivo, ele será salvo no banco como caminho da capa.</small>
                 </div>
             </div>
         </details>

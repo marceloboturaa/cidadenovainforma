@@ -2,6 +2,7 @@
 $blocks = $blocks ?? [];
 $editingBlock = $editingBlock ?? null;
 $canManage = $canManage ?? false;
+$isLocked = $isLocked ?? false;
 $playlist = $playlist ?? [];
 $modules = $modules ?? [];
 $playlistByModule = [];
@@ -45,7 +46,15 @@ $embed = function (?string $url): ?string {
         <p>Aula</p>
         <h1><?= e($lesson['title']) ?></h1>
     </div>
-    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Curso</a>
+    <div class="heading-actions">
+        <?php if (!empty($lesson['description'])): ?>
+            <a class="btn btn-outline-primary icon-btn" href="#lesson-description"><i class="bi bi-card-text" aria-hidden="true"></i>Descrição</a>
+        <?php endif; ?>
+        <?php if ($canManage): ?>
+            <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'] . '&lesson_id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar aula</a>
+        <?php endif; ?>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Curso</a>
+    </div>
 </div>
 
 <section class="education-player-layout">
@@ -59,18 +68,20 @@ $embed = function (?string $url): ?string {
                 <strong>Progresso</strong>
                 <span><?= $isCompleted ? 'Aula concluída' : 'Aula pendente' ?></span>
             </div>
-            <div class="education-progress-actions">
-                <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="completed" value="1">
-                    <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
-                </form>
-                <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="completed" value="0">
-                    <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
-                </form>
-            </div>
+            <?php if (!$isLocked): ?>
+                <div class="education-progress-actions">
+                    <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="completed" value="1">
+                        <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
+                    </form>
+                    <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="completed" value="0">
+                        <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
+                    </form>
+                </div>
+            <?php endif; ?>
         </div>
         <div class="education-sidebar-scroll">
             <?php foreach ($modules as $module): ?>
@@ -79,7 +90,7 @@ $embed = function (?string $url): ?string {
                     <h2><?= e($module['title']) ?></h2>
                     <?php foreach ($moduleLessons as $playlistLesson): ?>
                         <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
-                            <i class="bi <?= !empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle' ?>" aria-hidden="true"></i>
+                            <i class="bi <?= !empty($playlistLesson['locked']) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
                             <span><?= e($playlistLesson['title']) ?></span>
                             <?php if (!empty($playlistLesson['assignment_count'])): ?>
                                 <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
@@ -100,7 +111,7 @@ $embed = function (?string $url): ?string {
                     <h2>Sem módulo</h2>
                     <?php foreach ($playlistByModule['none'] as $playlistLesson): ?>
                         <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
-                            <i class="bi <?= !empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle' ?>" aria-hidden="true"></i>
+                            <i class="bi <?= !empty($playlistLesson['locked']) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
                             <span><?= e($playlistLesson['title']) ?></span>
                             <?php if (!empty($playlistLesson['assignment_count'])): ?>
                                 <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
@@ -186,10 +197,13 @@ $embed = function (?string $url): ?string {
             </section>
         <?php endif; ?>
 
-        <?php if (!empty($lesson['description'])): ?>
-            <section class="panel education-lesson-description">
-                <h2>Sobre esta aula</h2>
-                <div class="education-block-text"><?= article_html($lesson['description']) ?></div>
+        <?php if ($isLocked): ?>
+            <section class="panel education-block-card education-lesson-locked">
+                <div class="education-block-heading">
+                    <span class="education-block-type"><i class="bi bi-lock-fill" aria-hidden="true"></i> Aula bloqueada</span>
+                    <strong><?= e($lesson['title']) ?></strong>
+                </div>
+                <p class="mb-0">O professor liberou a visualização desta aula na lista, mas bloqueou a reprodução e os materiais por enquanto.</p>
             </section>
         <?php endif; ?>
 
@@ -206,6 +220,13 @@ $embed = function (?string $url): ?string {
                         <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen></iframe>
                     <?php endif; ?>
                 </div>
+            </section>
+        <?php endif; ?>
+
+        <?php if (!empty($lesson['description'])): ?>
+            <section class="panel education-lesson-description" id="lesson-description">
+                <h2>Descrição da aula</h2>
+                <div class="education-block-text"><?= article_html($lesson['description']) ?></div>
             </section>
         <?php endif; ?>
 

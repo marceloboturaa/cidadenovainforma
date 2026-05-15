@@ -15,6 +15,8 @@ class EducationController
 {
     private const MAX_LESSON_IMAGE_SIZE = 8 * 1024 * 1024;
 
+    private const MAX_COURSE_COVER_SIZE = 8 * 1024 * 1024;
+
     private const MAX_BLOCK_FILE_SIZE = 50 * 1024 * 1024;
 
     private const BLOCKED_BLOCK_EXTENSIONS = ['bat', 'cmd', 'com', 'exe', 'htaccess', 'html', 'htm', 'js', 'msi', 'phtml', 'phar', 'php', 'pl', 'ps1', 'py', 'sh', 'shtml', 'vbs'];
@@ -74,6 +76,7 @@ class EducationController
         $userId = (int) (current_user()['id'] ?? 0);
         $teacherUserId = $this->canManageAll() ? ($_POST['teacher_user_id'] ?? null) : $userId;
         $id = Education::createCourse(array_merge($_POST, [
+            'cover_image' => $this->courseCoverFromRequest(null),
             'teacher_user_id' => $teacherUserId,
             'created_by' => $userId ?: null,
             'updated_by' => $userId ?: null,
@@ -102,6 +105,7 @@ class EducationController
         $userId = (int) (current_user()['id'] ?? 0);
         $teacherUserId = $this->canManageAll() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? $userId);
         Education::updateCourse((int) $course['id'], array_merge($_POST, [
+            'cover_image' => $this->courseCoverFromRequest($course['cover_image'] ?? null),
             'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
         ]));
@@ -142,14 +146,18 @@ class EducationController
             return;
         }
 
+        $forumTopics = Education::forumTopics((int) $course['id']);
+
         View::render('admin/education/course', [
             'course' => $course,
             'lessons' => Education::lessonsForCourse((int) $course['id'], (int) $user['id']),
             'modules' => Education::modulesForCourse((int) $course['id']),
             'canManage' => $canManage,
             'canTakeAttendance' => $canTakeAttendance,
-            'editingLesson' => $this->lessonFromQuery(false),
+            'editingLesson' => $this->lessonFromQuery(false, false),
             'editingModule' => $this->moduleFromQuery(false),
+            'forumTopics' => $forumTopics,
+            'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id')),
         ]);
     }
 
@@ -272,6 +280,7 @@ class EducationController
         $lesson = $this->lessonFromQuery();
         $course = Education::findCourse((int) $lesson['course_id']);
         $canManage = $this->canManageCourse($course);
+        $isLocked = !empty($lesson['locked']) && !$canManage;
 
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
@@ -282,10 +291,11 @@ class EducationController
         View::render('admin/education/lesson', [
             'lesson' => $lesson,
             'course' => $course,
-            'videoEmbedUrl' => $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
-            'blocks' => Education::blocksForLesson((int) $lesson['id']),
+            'videoEmbedUrl' => $isLocked ? null : $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
+            'blocks' => $isLocked ? [] : Education::blocksForLesson((int) $lesson['id']),
             'editingBlock' => $this->blockFromQuery(false),
             'canManage' => $canManage,
+            'isLocked' => $isLocked,
             'modules' => Education::modulesForCourse((int) $lesson['course_id']),
             'playlist' => Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id']),
         ]);
@@ -401,10 +411,84 @@ class EducationController
             View::render('errors/403');
             return;
         }
+        if (!empty($lesson['locked']) && !$canManage) {
+            Session::flash('error', 'Esta aula está bloqueada pelo professor.');
+            redirect('/admin/education/lesson?id=' . $lesson['id']);
+        }
 
         Education::markLesson((int) $lesson['id'], (int) $user['id'], ($_POST['completed'] ?? '') === '1');
         Session::flash('success', 'Progresso atualizado.');
         redirect('/admin/education/lesson?id=' . $lesson['id']);
+    }
+
+    public function storeForumTopic(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+        $user = current_user();
+        $course = $this->courseFromQuery();
+        $canManage = $this->canManageCourse($course);
+
+        if (!Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $body = trim((string) ($_POST['body'] ?? ''));
+        if ($title === '' || $body === '') {
+            Session::flash('error', 'Informe título e mensagem para publicar no fórum do curso.');
+            redirect('/admin/education/course?id=' . $course['id']);
+        }
+
+        Education::createForumTopic([
+            'course_id' => $course['id'],
+            'user_id' => $user['id'],
+            'title' => $title,
+            'body' => $body,
+        ]);
+
+        Session::flash('success', 'Tópico publicado no fórum do curso.');
+        redirect('/admin/education/course?id=' . $course['id'] . '#course-forum');
+    }
+
+    public function storeForumReply(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+        $user = current_user();
+        $topicId = filter_input(INPUT_GET, 'topic_id', FILTER_VALIDATE_INT);
+        $topic = $topicId ? Education::findForumTopic($topicId) : null;
+
+        if (!$topic || empty($topic['course_id'])) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $topic['course_id']);
+        $canManage = $this->canManageCourse($course);
+        if (!$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $body = trim((string) ($_POST['body'] ?? ''));
+        if ($body === '') {
+            Session::flash('error', 'Escreva a resposta antes de enviar.');
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-forum');
+        }
+
+        Education::createForumReply([
+            'topic_id' => $topic['id'],
+            'user_id' => $user['id'],
+            'body' => $body,
+        ]);
+
+        Session::flash('success', 'Resposta publicada.');
+        redirect('/admin/education/course?id=' . $course['id'] . '#course-forum');
     }
 
     public function attendance(): void
@@ -471,10 +555,12 @@ class EducationController
         return $course;
     }
 
-    private function lessonFromQuery(bool $required = true): ?array
+    private function lessonFromQuery(bool $required = true, bool $allowIdParam = true): ?array
     {
-        $id = filter_input(INPUT_GET, 'lesson_id', FILTER_VALIDATE_INT)
-            ?: filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $id = filter_input(INPUT_GET, 'lesson_id', FILTER_VALIDATE_INT);
+        if (!$id && $allowIdParam) {
+            $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        }
         $lesson = $id ? Education::findLesson($id) : null;
 
         if (!$lesson && $required) {
@@ -731,6 +817,55 @@ class EducationController
         if (!move_uploaded_file($tmpName, $target)) {
             Session::flash('error', 'Não foi possível salvar a imagem da aula.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        return '/public/uploads/education/' . $filename;
+    }
+
+    private function courseCoverFromRequest(?string $existing): ?string
+    {
+        $coverUrl = trim((string) ($_POST['cover_image'] ?? ''));
+
+        if (empty($_FILES['course_cover']['name']) || ($_FILES['course_cover']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return $coverUrl !== '' ? $coverUrl : null;
+        }
+
+        if (($_FILES['course_cover']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Não foi possível enviar a capa do curso.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education/manage');
+        }
+
+        $tmpName = (string) ($_FILES['course_cover']['tmp_name'] ?? '');
+        $size = (int) ($_FILES['course_cover']['size'] ?? 0);
+        $imageInfo = $tmpName !== '' ? @getimagesize($tmpName) : false;
+        $allowedTypes = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+            IMAGETYPE_GIF => 'gif',
+        ];
+
+        if (!$imageInfo || !isset($allowedTypes[$imageInfo[2] ?? 0]) || $size <= 0 || $size > self::MAX_COURSE_COVER_SIZE) {
+            Session::flash('error', 'Use uma capa JPG, PNG, WEBP ou GIF com até 8MB.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education/manage');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/public/uploads/education';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        if (!is_dir($directory) || !is_writable($directory)) {
+            Session::flash('error', 'A pasta de imagens do curso não está gravável.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education/manage');
+        }
+
+        $filename = 'course-' . bin2hex(random_bytes(12)) . '.' . $allowedTypes[$imageInfo[2]];
+        $target = $directory . '/' . $filename;
+
+        if (!move_uploaded_file($tmpName, $target)) {
+            Session::flash('error', 'Não foi possível salvar a capa do curso.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education/manage');
         }
 
         return '/public/uploads/education/' . $filename;

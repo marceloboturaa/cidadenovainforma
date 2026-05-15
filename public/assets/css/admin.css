@@ -3463,6 +3463,42 @@ body.editor-focus-mode {
     line-height: 1.6;
 }
 
+.education-lesson-locked {
+    border-color: rgba(220, 38, 38, 0.22);
+    background: #fff7f7;
+}
+
+.education-forum-replies {
+    display: grid;
+    gap: 8px;
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 10px;
+    padding-left: 46px;
+}
+
+.education-forum-replies > div {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-forum-reply-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 10px;
+    padding-left: 46px;
+    align-items: start;
+}
+
+.education-course-forum .forum-topic-item {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 0.35fr);
+}
+
 .education-progress-panel {
     display: grid;
     gap: 10px;
@@ -5684,5 +5720,15 @@ body.editor-focus-mode {
     .institution-save-bar .btn,
     .institution-edit-heading .btn {
         width: 100%;
+    }
+
+    .education-course-forum .forum-topic-item,
+    .education-forum-reply-form {
+        grid-template-columns: 1fr;
+    }
+
+    .education-forum-replies,
+    .education-forum-reply-form {
+        padding-left: 0;
     }
 }

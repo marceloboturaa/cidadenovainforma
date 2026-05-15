@@ -5,8 +5,11 @@
         </span>
         <span>
             <strong><?= e($lesson['title']) ?></strong>
-            <?php if (!empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
+            <?php if (!empty($lesson['locked']) || !empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
                 <span class="education-playlist-badges">
+                    <?php if (!empty($lesson['locked'])): ?>
+                        <em><i class="bi bi-lock-fill" aria-hidden="true"></i>bloqueada</em>
+                    <?php endif; ?>
                     <?php if (!empty($lesson['assignment_count'])): ?>
                         <em><i class="bi bi-clipboard-check" aria-hidden="true"></i><?= e((string) $lesson['assignment_count']) ?> tarefa(s)</em>
                     <?php endif; ?>
@@ -19,7 +22,9 @@
         </span>
     </a>
     <div class="education-lesson-actions">
-        <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Assistir</a>
+        <a class="btn btn-sm <?= !empty($lesson['locked']) && !$canManage ? 'btn-outline-secondary' : 'btn-primary' ?> icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>">
+            <i class="bi <?= !empty($lesson['locked']) && !$canManage ? 'bi-lock-fill' : 'bi-play-circle' ?>" aria-hidden="true"></i><?= !empty($lesson['locked']) && !$canManage ? 'Ver aviso' : 'Assistir' ?>
+        </a>
         <?php if ($canManage): ?>
             <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-layers" aria-hidden="true"></i>Materiais</a>
             <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&lesson_id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar</a>

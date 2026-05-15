@@ -13,6 +13,8 @@ foreach ($lessons as $lessonItem) {
 }
 
 $moduleAction = url('/admin/education/module?id=' . $course['id']);
+$forumTopics = $forumTopics ?? [];
+$forumRepliesByTopic = $forumRepliesByTopic ?? [];
 ?>
 
 <div class="page-heading">
@@ -120,6 +122,10 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
                                 <label class="form-label">Imagem principal opcional</label>
                                 <input class="form-control" name="lesson_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
                             </div>
+                            <label class="forum-check-line grid-span-2">
+                                <input type="checkbox" name="locked" value="1">
+                                <span>Bloquear reprodução para alunos</span>
+                            </label>
                             <div class="grid-span-2">
                                 <label class="form-label">Descrição</label>
                                 <textarea class="form-control" name="description" rows="4" data-tinymce placeholder="Texto inicial da aula"></textarea>
@@ -162,6 +168,64 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
     </div>
 </section>
 
+<section class="panel education-course-forum" id="course-forum">
+    <div class="section-heading">
+        <h2>Fórum do curso</h2>
+        <span><?= e((string) count($forumTopics)) ?> tópico(s)</span>
+    </div>
+    <form method="post" action="<?= e(url('/admin/education/forum/topic?id=' . $course['id'])) ?>" class="education-sequence-form">
+        <?= csrf_field() ?>
+        <div class="sequence-title-field">
+            <label class="form-label">Título</label>
+            <input class="form-control" name="title" maxlength="180" placeholder="Dúvida ou aviso do curso" required>
+        </div>
+        <div class="grid-span-2">
+            <label class="form-label">Mensagem</label>
+            <textarea class="form-control" name="body" rows="4" data-tinymce required></textarea>
+        </div>
+        <div class="form-action-cell">
+            <button class="btn btn-primary icon-btn"><i class="bi bi-chat-dots" aria-hidden="true"></i>Publicar no fórum</button>
+        </div>
+    </form>
+    <div class="forum-topic-list mt-3">
+        <?php foreach ($forumTopics as $topic): ?>
+            <?php $topicReplies = $forumRepliesByTopic[(int) $topic['id']] ?? []; ?>
+            <article class="forum-topic-item">
+                <div class="forum-topic-main">
+                    <span class="forum-topic-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
+                    <span>
+                        <strong><?= e($topic['title']) ?></strong>
+                        <small><?= e(text_excerpt($topic['body'] ?? '', 150)) ?></small>
+                    </span>
+                </div>
+                <div class="forum-topic-meta">
+                    <span><?= e($topic['user_name'] ?? 'Usuário') ?></span>
+                    <span><?= e((string) ($topic['reply_count'] ?? 0)) ?> resposta(s)</span>
+                    <span><?= e($topic['created_at'] ?? '') ?></span>
+                </div>
+                <?php if ($topicReplies): ?>
+                    <div class="education-forum-replies">
+                        <?php foreach ($topicReplies as $reply): ?>
+                            <div>
+                                <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
+                                <div><?= article_html($reply['body'] ?? '') ?></div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+                <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
+                    <?= csrf_field() ?>
+                    <textarea class="form-control" name="body" rows="2" placeholder="Responder este tópico" required></textarea>
+                    <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
+                </form>
+            </article>
+        <?php endforeach; ?>
+        <?php if (!$forumTopics): ?>
+            <div class="empty-state">Nenhum tópico no fórum deste curso ainda.</div>
+        <?php endif; ?>
+    </div>
+</section>
+
 <?php if ($canManage && $editingCourseIntro): ?>
     <div class="forum-modal is-open education-edit-modal" id="education-course-edit-modal" aria-hidden="false">
         <div class="forum-modal-backdrop" data-modal-close></div>
@@ -173,7 +237,7 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
                 </div>
                 <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
             </header>
-            <form method="post" action="<?= e(url('/admin/education/course/update?id=' . $course['id'])) ?>" class="education-modal-form">
+            <form method="post" action="<?= e(url('/admin/education/course/update?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-modal-form">
                 <?= csrf_field() ?>
                 <input type="hidden" name="teacher_user_id" value="<?= e((string) ($course['teacher_user_id'] ?? '')) ?>">
                 <div>
@@ -181,8 +245,12 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
                     <input class="form-control" name="title" maxlength="180" value="<?= e($course['title'] ?? '') ?>" required autofocus>
                 </div>
                 <div>
-                    <label class="form-label">Imagem de capa</label>
+                    <label class="form-label">Imagem de capa por link</label>
                     <input class="form-control" name="cover_image" value="<?= e($course['cover_image'] ?? '') ?>" placeholder="/public/uploads/... ou URL">
+                </div>
+                <div>
+                    <label class="form-label">Enviar imagem de capa</label>
+                    <input class="form-control" name="course_cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
                 </div>
                 <div>
                     <label class="form-label">Resumo / introdução</label>
@@ -280,6 +348,10 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
                         </div>
                     </div>
                 </details>
+                <label class="forum-check-line grid-span-2">
+                    <input type="checkbox" name="locked" value="1" <?= checked(!empty($editingLesson['locked'])) ?>>
+                    <span>Bloquear reprodução para alunos</span>
+                </label>
                 <div class="lesson-description-field grid-span-2">
                     <label class="form-label">Descrição da aula</label>
                     <textarea class="form-control" name="description" rows="7" data-tinymce><?= e($editingLesson['description'] ?? '') ?></textarea>
