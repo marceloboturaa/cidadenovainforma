@@ -202,6 +202,7 @@ CREATE TABLE IF NOT EXISTS education_lessons (
     title VARCHAR(180) NOT NULL,
     description TEXT NULL,
     video_url VARCHAR(255) NULL,
+    image_url VARCHAR(255) NULL,
     sort_order INT NOT NULL DEFAULT 0,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
@@ -407,6 +408,7 @@ ALTER TABLE news ADD COLUMN IF NOT EXISTS archive_note TEXT NULL AFTER original_
 ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes;
 
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS module_id BIGINT UNSIGNED NULL AFTER course_id;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER video_url;
 
 ALTER TABLE people ADD COLUMN IF NOT EXISTS cep VARCHAR(12) NULL AFTER email;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS address_number VARCHAR(30) NULL AFTER address;

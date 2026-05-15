@@ -293,6 +293,7 @@ $pdo->exec(
         title VARCHAR(180) NOT NULL,
         description TEXT NULL,
         video_url VARCHAR(255) NULL,
+        image_url VARCHAR(255) NULL,
         sort_order INT NOT NULL DEFAULT 0,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NULL,
@@ -305,6 +306,9 @@ $pdo->exec(
 $lessonColumns = $pdo->query('SHOW COLUMNS FROM education_lessons')->fetchAll(PDO::FETCH_COLUMN);
 if (!in_array('module_id', $lessonColumns, true)) {
     $pdo->exec('ALTER TABLE education_lessons ADD COLUMN module_id BIGINT UNSIGNED NULL AFTER course_id');
+}
+if (!in_array('image_url', $lessonColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lessons ADD COLUMN image_url VARCHAR(255) NULL AFTER video_url');
 }
 
 $pdo->exec(

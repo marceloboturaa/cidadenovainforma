@@ -136,6 +136,16 @@ $embed = function (?string $url): ?string {
             </section>
         <?php endif; ?>
 
+        <?php if (!empty($lesson['image_url'])): ?>
+            <section class="panel education-block-card">
+                <div class="education-block-heading">
+                    <span class="education-block-type"><i class="bi bi-image" aria-hidden="true"></i> Imagem principal</span>
+                    <strong><?= e($lesson['title']) ?></strong>
+                </div>
+                <img class="education-block-image education-lesson-main-image" src="<?= e(media_url($lesson['image_url'])) ?>" alt="<?= e($lesson['title']) ?>" onerror="this.remove()">
+            </section>
+        <?php endif; ?>
+
         <?php if (!empty($lesson['description'])): ?>
             <section class="panel education-lesson-description">
                 <h2>Sobre esta aula</h2>
@@ -226,7 +236,7 @@ $embed = function (?string $url): ?string {
             </section>
         <?php endforeach; ?>
 
-        <?php if (!$blocks && empty($videoEmbedUrl) && empty($lesson['description'])): ?>
+        <?php if (!$blocks && empty($videoEmbedUrl) && empty($lesson['description']) && empty($lesson['image_url'])): ?>
             <div class="empty-state">Esta aula ainda não tem sequência cadastrada.</div>
         <?php endif; ?>
 

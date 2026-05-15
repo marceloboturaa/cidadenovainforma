@@ -3521,9 +3521,26 @@ body.editor-focus-mode {
 }
 
 .education-lesson-edit-form .lesson-video-field,
+.education-lesson-edit-form .lesson-image-field,
 .education-lesson-edit-form .lesson-description-field,
 .education-lesson-edit-form > .form-action-cell {
     grid-column: 1 / -1;
+}
+
+.education-image-inputs {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.65fr) minmax(260px, 1fr);
+    gap: 10px;
+}
+
+.education-lesson-image-preview {
+    display: block;
+    width: min(360px, 100%);
+    max-height: 190px;
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    object-fit: cover;
 }
 
 .education-lesson-edit-form .lesson-description-field {
@@ -3553,7 +3570,7 @@ body.editor-focus-mode {
 
 .education-quick-lesson-form {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) 120px minmax(220px, 1fr);
+    grid-template-columns: minmax(220px, 1fr) 120px minmax(220px, 1fr) minmax(220px, 1fr);
     gap: 12px;
     align-items: end;
     margin-top: 12px;
@@ -3799,6 +3816,12 @@ body.editor-focus-mode {
     max-width: 100%;
     border-radius: 8px;
     border: 1px solid var(--line);
+}
+
+.education-lesson-main-image {
+    width: 100%;
+    max-height: 520px;
+    object-fit: cover;
 }
 
 .education-block-actions {
@@ -5081,6 +5104,10 @@ body.editor-focus-mode {
     .education-lesson-edit-panel .section-heading .btn {
         grid-column: 1;
         grid-row: auto;
+    }
+
+    .education-image-inputs {
+        grid-template-columns: 1fr;
     }
 
     .section-heading .btn,

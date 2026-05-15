@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS education_lessons (
     title VARCHAR(180) NOT NULL,
     description TEXT NULL,
     video_url VARCHAR(255) NULL,
+    image_url VARCHAR(255) NULL,
     sort_order INT NOT NULL DEFAULT 0,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS education_lessons (
 ) ENGINE=InnoDB;
 
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS module_id BIGINT UNSIGNED NULL AFTER course_id;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER video_url;
 
 CREATE TABLE IF NOT EXISTS education_lesson_blocks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

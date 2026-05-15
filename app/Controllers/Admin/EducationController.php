@@ -13,6 +13,8 @@ use App\Models\User;
 
 class EducationController
 {
+    private const MAX_LESSON_IMAGE_SIZE = 8 * 1024 * 1024;
+
     private const MAX_BLOCK_FILE_SIZE = 50 * 1024 * 1024;
 
     private const BLOCKED_BLOCK_EXTENSIONS = ['bat', 'cmd', 'com', 'exe', 'htaccess', 'html', 'htm', 'js', 'msi', 'phtml', 'phar', 'php', 'pl', 'ps1', 'py', 'sh', 'shtml', 'vbs'];
@@ -213,7 +215,10 @@ class EducationController
             redirect('/admin/education/course?id=' . $course['id']);
         }
 
-        Education::createLesson(array_merge($_POST, ['course_id' => $course['id']]));
+        Education::createLesson(array_merge($_POST, [
+            'course_id' => $course['id'],
+            'image_url' => $this->lessonImageFromRequest(),
+        ]));
         Session::flash('success', 'Aula criada.');
         redirect('/admin/education/course?id=' . $course['id']);
     }
@@ -233,7 +238,10 @@ class EducationController
             redirect('/admin/education/course?id=' . $lesson['course_id'] . '&lesson_id=' . $lesson['id']);
         }
 
-        Education::updateLesson((int) $lesson['id'], array_merge($_POST, ['course_id' => $lesson['course_id']]));
+        Education::updateLesson((int) $lesson['id'], array_merge($_POST, [
+            'course_id' => $lesson['course_id'],
+            'image_url' => $this->lessonImageFromRequest(),
+        ]));
         Session::flash('success', 'Aula atualizada.');
         redirect('/admin/education/course?id=' . $lesson['course_id']);
     }
@@ -574,5 +582,54 @@ class EducationController
         }
 
         return '/storage/documents/education/' . $filename;
+    }
+
+    private function lessonImageFromRequest(): ?string
+    {
+        $imageUrl = trim((string) ($_POST['image_url'] ?? ''));
+
+        if (empty($_FILES['lesson_image']['name']) || ($_FILES['lesson_image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return $imageUrl !== '' ? $imageUrl : null;
+        }
+
+        if (($_FILES['lesson_image']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Não foi possível enviar a imagem da aula.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $tmpName = (string) ($_FILES['lesson_image']['tmp_name'] ?? '');
+        $size = (int) ($_FILES['lesson_image']['size'] ?? 0);
+        $imageInfo = $tmpName !== '' ? @getimagesize($tmpName) : false;
+        $allowedTypes = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+            IMAGETYPE_GIF => 'gif',
+        ];
+
+        if (!$imageInfo || !isset($allowedTypes[$imageInfo[2] ?? 0]) || $size <= 0 || $size > self::MAX_LESSON_IMAGE_SIZE) {
+            Session::flash('error', 'Use uma imagem JPG, PNG, WEBP ou GIF com até 8MB.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/public/uploads/education';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        if (!is_dir($directory) || !is_writable($directory)) {
+            Session::flash('error', 'A pasta de imagens da aula não está gravável.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $filename = 'lesson-' . bin2hex(random_bytes(12)) . '.' . $allowedTypes[$imageInfo[2]];
+        $target = $directory . '/' . $filename;
+
+        if (!move_uploaded_file($tmpName, $target)) {
+            Session::flash('error', 'Não foi possível salvar a imagem da aula.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        return '/public/uploads/education/' . $filename;
     }
 }

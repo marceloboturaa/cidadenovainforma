@@ -71,7 +71,7 @@ $moduleAction = $editingModule
                     Sair da edição
                 </a>
             </div>
-            <form method="post" action="<?= e(url('/admin/education/lesson/update?id=' . $editingLesson['id'])) ?>" class="education-lesson-form education-lesson-edit-form">
+            <form method="post" action="<?= e(url('/admin/education/lesson/update?id=' . $editingLesson['id'])) ?>" enctype="multipart/form-data" class="education-lesson-form education-lesson-edit-form">
                 <?= csrf_field() ?>
                 <div class="lesson-module-field">
                     <label class="form-label">Módulo</label>
@@ -95,6 +95,16 @@ $moduleAction = $editingModule
                 <div class="lesson-video-field">
                     <label class="form-label">Vídeo principal opcional</label>
                     <input class="form-control" name="video_url" value="<?= e($editingLesson['video_url'] ?? '') ?>" placeholder="Cole um link do YouTube ou vídeo direto">
+                </div>
+                <div class="lesson-image-field">
+                    <label class="form-label">Imagem principal opcional</label>
+                    <div class="education-image-inputs">
+                        <input class="form-control" name="lesson_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                        <input class="form-control" name="image_url" value="<?= e($editingLesson['image_url'] ?? '') ?>" placeholder="Ou cole a URL da imagem">
+                    </div>
+                    <?php if (!empty($editingLesson['image_url'])): ?>
+                        <img class="education-lesson-image-preview" src="<?= e(media_url($editingLesson['image_url'])) ?>" alt="" onerror="this.remove()">
+                    <?php endif; ?>
                 </div>
                 <div class="lesson-description-field grid-span-2">
                     <label class="form-label">Descrição</label>
@@ -142,7 +152,7 @@ $moduleAction = $editingModule
                 <?php if ($canManage): ?>
                     <details class="education-inline-create" <?= !$moduleLessons ? 'open' : '' ?>>
                         <summary><i class="bi bi-plus-circle" aria-hidden="true"></i> Adicionar aula neste módulo</summary>
-                        <form method="post" action="<?= e(url('/admin/education/lesson?id=' . $course['id'])) ?>" class="education-quick-lesson-form">
+                        <form method="post" action="<?= e(url('/admin/education/lesson?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-quick-lesson-form">
                             <?= csrf_field() ?>
                             <input type="hidden" name="module_id" value="<?= e((string) $module['id']) ?>">
                             <div>
@@ -156,6 +166,10 @@ $moduleAction = $editingModule
                             <div>
                                 <label class="form-label">Vídeo principal opcional</label>
                                 <input class="form-control" name="video_url" placeholder="Cole o link do YouTube ou vídeo">
+                            </div>
+                            <div>
+                                <label class="form-label">Imagem principal opcional</label>
+                                <input class="form-control" name="lesson_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
                             </div>
                             <div class="grid-span-2">
                                 <label class="form-label">Descrição</label>

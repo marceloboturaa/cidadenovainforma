@@ -50,6 +50,7 @@ class Education
                 title VARCHAR(180) NOT NULL,
                 description TEXT NULL,
                 video_url VARCHAR(255) NULL,
+                image_url VARCHAR(255) NULL,
                 sort_order INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
@@ -62,6 +63,9 @@ class Education
         $lessonColumns = $db->query('SHOW COLUMNS FROM education_lessons')->fetchAll(\PDO::FETCH_COLUMN);
         if (!in_array('module_id', $lessonColumns, true)) {
             $db->exec('ALTER TABLE education_lessons ADD COLUMN module_id BIGINT UNSIGNED NULL AFTER course_id');
+        }
+        if (!in_array('image_url', $lessonColumns, true)) {
+            $db->exec('ALTER TABLE education_lessons ADD COLUMN image_url VARCHAR(255) NULL AFTER video_url');
         }
 
         $db->exec(
@@ -483,9 +487,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lessons
-                (course_id, module_id, title, description, video_url, sort_order, active, created_at, updated_at)
+                (course_id, module_id, title, description, video_url, image_url, sort_order, active, created_at, updated_at)
              VALUES
-                (:course_id, :module_id, :title, :description, :video_url, :sort_order, 1, NOW(), NOW())'
+                (:course_id, :module_id, :title, :description, :video_url, :image_url, :sort_order, 1, NOW(), NOW())'
         );
         $stmt->execute(self::lessonPayload($data));
 
@@ -505,6 +509,7 @@ class Education
                  title = :title,
                  description = :description,
                  video_url = :video_url,
+                 image_url = :image_url,
                  sort_order = :sort_order,
                  updated_at = NOW()
              WHERE id = :id'
@@ -677,6 +682,7 @@ class Education
             'title' => trim((string) ($data['title'] ?? '')),
             'description' => self::nullable($data['description'] ?? null),
             'video_url' => self::nullable($data['video_url'] ?? null),
+            'image_url' => self::nullable($data['image_url'] ?? null),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
     }
