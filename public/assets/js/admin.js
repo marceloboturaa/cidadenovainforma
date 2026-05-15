@@ -54,7 +54,11 @@
     });
 
     document.querySelectorAll('[data-modal-close]').forEach((button) => {
-        button.addEventListener('click', closeModal);
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            closeModal();
+            clearEducationEditParams();
+        });
     });
 
     focusButtons.forEach((button) => {
@@ -204,6 +208,16 @@
             modal.setAttribute('aria-hidden', 'true');
         });
         document.body.classList.remove('modal-open');
+    }
+
+    function clearEducationEditParams() {
+        if (!window.history || !window.history.replaceState) {
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        ['edit_course', 'module_id', 'lesson_id'].forEach((name) => url.searchParams.delete(name));
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
     }
 
     function setFocusButtonText(isFocused) {

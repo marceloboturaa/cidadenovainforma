@@ -164,14 +164,14 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
 
 <?php if ($canManage && $editingCourseIntro): ?>
     <div class="forum-modal is-open education-edit-modal" id="education-course-edit-modal" aria-hidden="false">
-        <div class="forum-modal-backdrop"></div>
+        <div class="forum-modal-backdrop" data-modal-close></div>
         <section class="forum-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="education-course-edit-title">
             <header>
                 <div>
                     <span>Edição separada</span>
                     <h2 id="education-course-edit-title">Editar introdução do curso</h2>
                 </div>
-                <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+                <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
             </header>
             <form method="post" action="<?= e(url('/admin/education/course/update?id=' . $course['id'])) ?>" class="education-modal-form">
                 <?= csrf_field() ?>
@@ -189,8 +189,8 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
                     <textarea class="form-control" name="summary" rows="6"><?= e($course['summary'] ?? '') ?></textarea>
                 </div>
                 <footer class="split-actions">
-                    <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar curso</button>
-                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
+                    <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar curso</button>
+                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
                 </footer>
             </form>
         </section>
@@ -199,14 +199,14 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
 
 <?php if ($canManage && $editingModule): ?>
     <div class="forum-modal is-open education-edit-modal" id="education-module-edit-modal" aria-hidden="false">
-        <div class="forum-modal-backdrop"></div>
+        <div class="forum-modal-backdrop" data-modal-close></div>
         <section class="forum-modal-dialog forum-modal-small" role="dialog" aria-modal="true" aria-labelledby="education-module-edit-title">
             <header>
                 <div>
                     <span>Edição separada</span>
                     <h2 id="education-module-edit-title">Editar módulo</h2>
                 </div>
-                <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+                <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
             </header>
             <form method="post" action="<?= e(url('/admin/education/module/update?module_id=' . $editingModule['id'])) ?>" class="education-modal-form">
                 <?= csrf_field() ?>
@@ -223,8 +223,8 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
                     <textarea class="form-control" name="summary" rows="4"><?= e($editingModule['summary'] ?? '') ?></textarea>
                 </div>
                 <footer class="split-actions">
-                    <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar módulo</button>
-                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
+                    <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar módulo</button>
+                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
                 </footer>
             </form>
         </section>
@@ -233,14 +233,14 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
 
 <?php if ($canManage && $editingLesson): ?>
     <div class="forum-modal is-open education-edit-modal" id="education-lesson-edit-modal" aria-hidden="false">
-        <div class="forum-modal-backdrop"></div>
+        <div class="forum-modal-backdrop" data-modal-close></div>
         <section class="forum-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="education-lesson-edit-title">
             <header>
                 <div>
                     <span>Edição separada</span>
                     <h2 id="education-lesson-edit-title">Editar aula</h2>
                 </div>
-                <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+                <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
             </header>
             <form method="post" action="<?= e(url('/admin/education/lesson/update?id=' . $editingLesson['id'])) ?>" enctype="multipart/form-data" class="education-lesson-form education-lesson-edit-form education-modal-form">
                 <?= csrf_field() ?>
@@ -285,8 +285,8 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
                     <textarea class="form-control" name="description" rows="7" data-tinymce><?= e($editingLesson['description'] ?? '') ?></textarea>
                 </div>
                 <div class="form-action-cell split-actions">
-                    <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar aula</button>
-                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
+                    <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar aula</button>
+                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
                 </div>
             </form>
         </section>
