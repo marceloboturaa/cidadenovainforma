@@ -81,8 +81,11 @@
             }
 
             const clone = firstCard.cloneNode(true);
-            clone.querySelectorAll('input').forEach((input) => {
+            clone.querySelectorAll('input, textarea').forEach((input) => {
                 input.value = '';
+            });
+            clone.querySelectorAll('select').forEach((select) => {
+                select.selectedIndex = 0;
             });
             galleryList.appendChild(clone);
         });
@@ -97,8 +100,11 @@
             const card = removeButton.closest('[data-gallery-card]');
 
             if (cards.length === 1) {
-                card.querySelectorAll('input').forEach((input) => {
+                card.querySelectorAll('input, textarea').forEach((input) => {
                     input.value = '';
+                });
+                card.querySelectorAll('select').forEach((select) => {
+                    select.selectedIndex = 0;
                 });
                 return;
             }

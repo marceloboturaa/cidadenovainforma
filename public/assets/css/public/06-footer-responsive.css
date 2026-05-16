@@ -117,15 +117,29 @@
 
     .institution-intro,
     .institution-story,
-    .area-layout {
+    .area-layout,
+    .institution-about {
         grid-template-columns: 1fr;
     }
 
     .institution-values,
     .institution-project-grid,
     .institution-download-grid,
-    .institution-gallery-grid {
+    .institution-gallery-grid,
+    .institution-project-grid-modern,
+    .institution-media-grid,
+    .institution-impact-grid,
+    .institution-support-grid {
         grid-template-columns: 1fr;
+    }
+
+    .institution-project-card-modern {
+        grid-template-columns: 1fr;
+    }
+
+    .institution-project-media img {
+        min-height: 0;
+        aspect-ratio: 16 / 9;
     }
 
     .area-side {
@@ -346,9 +360,38 @@
         padding: 24px;
     }
 
+    .institution-social {
+        gap: 34px;
+    }
+
+    .institution-landing-hero {
+        min-height: 430px;
+    }
+
+    .institution-landing-hero-copy {
+        padding: 24px;
+    }
+
+    .institution-landing-hero-copy h1 {
+        font-size: 2.05rem;
+        line-height: 1.05;
+    }
+
+    .institution-landing-hero-copy p {
+        font-size: 1.04rem;
+    }
+
     .institution-hero-actions,
-    .institution-hero-actions a {
+    .institution-hero-actions a,
+    .institution-primary-action,
+    .institution-project-card-modern a:not(.institution-project-media),
+    .institution-support-grid a {
         width: 100%;
+    }
+
+    .institution-impact,
+    .institution-support {
+        padding: 22px;
     }
 
     .institution-area-hero {

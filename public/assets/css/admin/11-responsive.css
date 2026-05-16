@@ -87,7 +87,8 @@
     }
 
     .institution-admin-grid,
-    .institution-field-grid {
+    .institution-field-grid,
+    .institution-repeat-grid {
         grid-template-columns: 1fr;
     }
 
@@ -886,7 +887,8 @@
     }
 
     .institution-tag-picker,
-    .gallery-editor-fields {
+    .gallery-editor-fields,
+    .gallery-editor-fields-wide {
         grid-template-columns: 1fr;
     }
 

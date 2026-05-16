@@ -2,13 +2,15 @@
 <?php $hasGalleries = !empty($area['galleries']); ?>
 <?php $hasLoosePhotos = !empty($photos); ?>
 
+<?php $areaCoverImage = !empty($area['cover_image']) ? media_url($area['cover_image']) : ''; ?>
+
 <article class="institution-area-page">
     <nav class="institution-breadcrumb" aria-label="Caminho">
         <a href="<?= e(url('/instituicao')) ?>">Instituição</a>
         <span><?= e($area['name']) ?></span>
     </nav>
 
-    <header class="institution-area-hero">
+    <header class="institution-area-hero <?= $areaCoverImage ? 'has-area-image' : '' ?>" <?= $areaCoverImage ? 'style="--institution-area-image: url(\'' . e($areaCoverImage) . '\');"' : '' ?>>
         <span><?= e($area['kicker']) ?></span>
         <h1><?= e($area['name']) ?></h1>
         <div><?= article_html($area['description']) ?></div>

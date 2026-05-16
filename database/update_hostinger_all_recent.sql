@@ -57,6 +57,10 @@ CREATE TABLE IF NOT EXISTS institution_pages (
     materials_json TEXT NULL,
     photos_json TEXT NULL,
     galleries_json TEXT NULL,
+    cover_image VARCHAR(255) NULL,
+    cta_label VARCHAR(80) NULL,
+    cta_url VARCHAR(255) NULL,
+    show_on_landing TINYINT(1) NOT NULL DEFAULT 1,
     search_terms VARCHAR(255) NOT NULL,
     related_tags_json TEXT NULL,
     sort_order INT NOT NULL DEFAULT 0,
@@ -72,6 +76,60 @@ CREATE TABLE IF NOT EXISTS institution_page_users (
     CONSTRAINT fk_institution_page_users_page FOREIGN KEY (page_slug) REFERENCES institution_pages(slug) ON DELETE CASCADE,
     CONSTRAINT fk_institution_page_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+ALTER TABLE institution_pages ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER galleries_json;
+ALTER TABLE institution_pages ADD COLUMN IF NOT EXISTS cta_label VARCHAR(80) NULL AFTER cover_image;
+ALTER TABLE institution_pages ADD COLUMN IF NOT EXISTS cta_url VARCHAR(255) NULL AFTER cta_label;
+ALTER TABLE institution_pages ADD COLUMN IF NOT EXISTS show_on_landing TINYINT(1) NOT NULL DEFAULT 1 AFTER cta_url;
+
+UPDATE institution_pages
+SET name = 'Biblioteca Comunitária'
+WHERE slug = 'biblioteca'
+  AND name = 'Biblioteca';
+
+UPDATE institution_pages
+SET name = 'Horta Comunitária'
+WHERE slug = 'horta'
+  AND name = 'Horta';
+
+UPDATE institution_pages
+SET name = 'Rádio Comunitária',
+    show_on_landing = 0
+WHERE slug = 'radio'
+  AND name IN ('Rádio', 'Radio');
+
+UPDATE institution_pages
+SET sort_order = 20
+WHERE slug = 'biblioteca'
+  AND sort_order = 10;
+
+UPDATE institution_pages
+SET sort_order = 40
+WHERE slug = 'horta'
+  AND sort_order = 20;
+
+UPDATE institution_pages
+SET sort_order = 60
+WHERE slug = 'radio'
+  AND sort_order = 30;
+
+UPDATE institution_pages
+SET cover_image = '/public/assets/img/institution-hero-community.jpg'
+WHERE cover_image IS NULL
+   OR cover_image = '';
+
+UPDATE institution_pages
+SET cover_image = '/public/assets/img/institution-hero-community.jpg'
+WHERE cover_image = '/public/assets/img/institution-hero-community.png';
+
+INSERT INTO institution_pages
+    (slug, name, kicker, summary, description, team_json, materials_json, photos_json, galleries_json, cover_image, cta_label, cta_url, show_on_landing, search_terms, related_tags_json, sort_order, created_at, updated_at)
+VALUES
+    ('jornalismo-comunitario', 'Jornalismo Comunitário', 'Comunicação popular e utilidade pública', 'Produção de notícias, memória local, serviços e informações de interesse público para o território.', 'O Jornalismo Comunitário é a base do Cidade Nova Informa. A frente organiza pautas do bairro, registra histórias, acompanha serviços públicos e fortalece a circulação de informações úteis para moradores, lideranças e parceiros.', '["Equipe editorial","Colaboradores locais","Moradores e fontes comunitárias"]', '["Sugestões de pauta","Cobertura comunitária","Registros de memória local"]', '[]', '[]', '/public/assets/img/institution-hero-community.jpg', 'Conhecer o jornalismo', '', 1, 'jornalismo comunicação comunidade bairro notícia noticias', '["jornalismo","bairro","comunidade"]', 10, NOW(), NOW()),
+    ('educacao', 'Educação', 'Educação popular e formação cidadã', 'Atividades educativas, oficinas, cursos e ações de aprendizagem ligadas à comunicação e ao território.', 'A frente de Educação reúne oficinas, formações, cursos e atividades de educação popular. O objetivo é ampliar oportunidades de aprendizagem, fortalecer autonomia comunitária e aproximar estudantes, educadores e moradores.', '["Educadores parceiros","Coordenação pedagógica","Voluntários e estudantes"]', '["Oficinas comunitárias","Cursos e formações","Materiais de aprendizagem"]', '[]', '[]', '/public/assets/img/institution-hero-community.jpg', 'Ver ações educativas', '', 1, 'educação educacao curso oficina formação formacao', '["educacao","formacao"]', 30, NOW(), NOW()),
+    ('idosos', 'Projeto com Idosos', 'Convivência, cuidado e pertencimento', 'Ações de convivência, escuta, cultura e fortalecimento de vínculos com pessoas idosas da comunidade.', 'O Projeto com Idosos valoriza convivência, escuta e participação social. As ações buscam criar oportunidades de encontro, cuidado, memória, cultura e fortalecimento de vínculos entre gerações.', '["Coordenação social","Voluntários","Parceiros da rede comunitária"]', '["Rodas de conversa","Atividades culturais","Ações de convivência"]', '[]', '[]', '/public/assets/img/institution-hero-community.jpg', 'Conhecer o projeto', '', 1, 'idosos terceira idade convivência memoria', '["idosos","comunidade"]', 50, NOW(), NOW())
+ON DUPLICATE KEY UPDATE
+    updated_at = updated_at;
 
 CREATE TABLE IF NOT EXISTS people (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

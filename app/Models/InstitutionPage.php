@@ -18,6 +18,18 @@ class InstitutionPage
         return array_map([self::class, 'normalize'], $rows);
     }
 
+    public static function landingProjects(): array
+    {
+        self::ensureTables();
+        self::seedDefaults();
+
+        $rows = Database::connection()
+            ->query('SELECT * FROM institution_pages WHERE show_on_landing = 1 ORDER BY sort_order ASC, name ASC')
+            ->fetchAll();
+
+        return array_map([self::class, 'normalize'], $rows);
+    }
+
     public static function find(string $slug): ?array
     {
         self::ensureTables();
@@ -44,6 +56,10 @@ class InstitutionPage
                  materials_json = :materials_json,
                  photos_json = :photos_json,
                  galleries_json = :galleries_json,
+                 cover_image = :cover_image,
+                 cta_label = :cta_label,
+                 cta_url = :cta_url,
+                 show_on_landing = :show_on_landing,
                  search_terms = :search_terms,
                  related_tags_json = :related_tags_json,
                  updated_at = NOW()
@@ -58,6 +74,10 @@ class InstitutionPage
             'materials_json' => json_encode(self::lines($data['materials'] ?? ''), JSON_UNESCAPED_UNICODE),
             'photos_json' => json_encode(self::photoLines($data['photos'] ?? ''), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             'galleries_json' => json_encode(self::galleries($data['galleries'] ?? []), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'cover_image' => self::normalizePhotoUrl($data['cover_image'] ?? ''),
+            'cta_label' => trim($data['cta_label'] ?? ''),
+            'cta_url' => self::normalizeLinkUrl($data['cta_url'] ?? ''),
+            'show_on_landing' => !empty($data['show_on_landing']) ? 1 : 0,
             'search_terms' => trim($data['search_terms'] ?? ''),
             'related_tags_json' => json_encode(self::tagSlugs($data['related_tags'] ?? []), JSON_UNESCAPED_UNICODE),
         ]);
@@ -131,10 +151,30 @@ class InstitutionPage
 
     public static function defaults(): array
     {
+        $defaultImage = '/public/assets/img/institution-hero-community.jpg';
+
         return [
             [
+                'slug' => 'jornalismo-comunitario',
+                'name' => 'Jornalismo Comunitário',
+                'kicker' => 'Comunicação popular e utilidade pública',
+                'summary' => 'Produção de notícias, memória local, serviços e informações de interesse público para o território.',
+                'description' => 'O Jornalismo Comunitário é a base do Cidade Nova Informa. A frente organiza pautas do bairro, registra histórias, acompanha serviços públicos e fortalece a circulação de informações úteis para moradores, lideranças e parceiros.',
+                'team' => ['Equipe editorial', 'Colaboradores locais', 'Moradores e fontes comunitárias'],
+                'materials' => ['Sugestões de pauta', 'Cobertura comunitária', 'Registros de memória local'],
+                'photos' => [],
+                'galleries' => [],
+                'cover_image' => $defaultImage,
+                'cta_label' => 'Conhecer o jornalismo',
+                'cta_url' => '',
+                'show_on_landing' => 1,
+                'search' => 'jornalismo comunicação comunidade bairro notícia noticias',
+                'related_tags' => ['jornalismo', 'bairro', 'comunidade'],
+                'sort_order' => 10,
+            ],
+            [
                 'slug' => 'biblioteca',
-                'name' => 'Biblioteca',
+                'name' => 'Biblioteca Comunitária',
                 'kicker' => 'Leitura, memória e formação',
                 'summary' => 'Espaço dedicado à leitura, pesquisa e preservação de registros importantes para a comunidade.',
                 'description' => 'A Biblioteca reúne ações de incentivo à leitura, consulta a conteúdos educativos e valorização da memória local. O espaço apoia estudantes, moradores e leitores interessados em conhecer melhor a história e as iniciativas da instituição.',
@@ -142,13 +182,35 @@ class InstitutionPage
                 'materials' => ['Reprise comunitária', 'Apoio à leitura', 'Registros históricos'],
                 'photos' => [],
                 'galleries' => [],
+                'cover_image' => $defaultImage,
+                'cta_label' => 'Conhecer a biblioteca',
+                'cta_url' => '',
+                'show_on_landing' => 1,
                 'search' => 'biblioteca',
                 'related_tags' => ['biblioteca'],
-                'sort_order' => 10,
+                'sort_order' => 20,
+            ],
+            [
+                'slug' => 'educacao',
+                'name' => 'Educação',
+                'kicker' => 'Educação popular e formação cidadã',
+                'summary' => 'Atividades educativas, oficinas, cursos e ações de aprendizagem ligadas à comunicação e ao território.',
+                'description' => 'A frente de Educação reúne oficinas, formações, cursos e atividades de educação popular. O objetivo é ampliar oportunidades de aprendizagem, fortalecer autonomia comunitária e aproximar estudantes, educadores e moradores.',
+                'team' => ['Educadores parceiros', 'Coordenação pedagógica', 'Voluntários e estudantes'],
+                'materials' => ['Oficinas comunitárias', 'Cursos e formações', 'Materiais de aprendizagem'],
+                'photos' => [],
+                'galleries' => [],
+                'cover_image' => $defaultImage,
+                'cta_label' => 'Ver ações educativas',
+                'cta_url' => '',
+                'show_on_landing' => 1,
+                'search' => 'educação educacao curso oficina formação formacao',
+                'related_tags' => ['educacao', 'formacao'],
+                'sort_order' => 30,
             ],
             [
                 'slug' => 'horta',
-                'name' => 'Horta',
+                'name' => 'Horta Comunitária',
                 'kicker' => 'Educação ambiental e cuidado coletivo',
                 'summary' => 'Projeto voltado ao cultivo, sustentabilidade, alimentação saudável e participação comunitária.',
                 'description' => 'A Horta aproxima a comunidade de práticas sustentáveis e do cuidado com o território. O espaço integra cultivo, educação ambiental e ações coletivas que valorizam alimentação saudável, preservação e participação.',
@@ -156,13 +218,35 @@ class InstitutionPage
                 'materials' => ['Registros de plantio', 'Orientações de cultivo', 'Ações educativas'],
                 'photos' => [],
                 'galleries' => [],
+                'cover_image' => $defaultImage,
+                'cta_label' => 'Conhecer a horta',
+                'cta_url' => '',
+                'show_on_landing' => 1,
                 'search' => 'horta',
                 'related_tags' => ['horta'],
-                'sort_order' => 20,
+                'sort_order' => 40,
+            ],
+            [
+                'slug' => 'idosos',
+                'name' => 'Projeto com Idosos',
+                'kicker' => 'Convivência, cuidado e pertencimento',
+                'summary' => 'Ações de convivência, escuta, cultura e fortalecimento de vínculos com pessoas idosas da comunidade.',
+                'description' => 'O Projeto com Idosos valoriza convivência, escuta e participação social. As ações buscam criar oportunidades de encontro, cuidado, memória, cultura e fortalecimento de vínculos entre gerações.',
+                'team' => ['Coordenação social', 'Voluntários', 'Parceiros da rede comunitária'],
+                'materials' => ['Rodas de conversa', 'Atividades culturais', 'Ações de convivência'],
+                'photos' => [],
+                'galleries' => [],
+                'cover_image' => $defaultImage,
+                'cta_label' => 'Conhecer o projeto',
+                'cta_url' => '',
+                'show_on_landing' => 1,
+                'search' => 'idosos terceira idade convivência memoria',
+                'related_tags' => ['idosos', 'comunidade'],
+                'sort_order' => 50,
             ],
             [
                 'slug' => 'radio',
-                'name' => 'Rádio',
+                'name' => 'Rádio Comunitária',
                 'kicker' => 'Comunicação, voz e serviço público',
                 'summary' => 'Canal de comunicação para programação ao vivo, boletins, entrevistas e avisos de utilidade pública.',
                 'description' => 'A Rádio Cidade Nova Informa fortalece a comunicação direta com a comunidade por meio da programação online, entrevistas, boletins e avisos de utilidade pública. É um canal voltado à participação, escuta e circulação de informação local.',
@@ -170,9 +254,13 @@ class InstitutionPage
                 'materials' => ['https://radiowebcni.ismyradio.com/', 'https://radio.cidadenovainforma.com.br/'],
                 'photos' => [],
                 'galleries' => [],
+                'cover_image' => $defaultImage,
+                'cta_label' => 'Ouvir a rádio',
+                'cta_url' => '',
+                'show_on_landing' => 0,
                 'search' => 'radio rádio',
                 'related_tags' => ['radio', 'rádio'],
-                'sort_order' => 30,
+                'sort_order' => 60,
             ],
         ];
     }
@@ -184,6 +272,10 @@ class InstitutionPage
         $page['photos'] = self::decode($page['photos_json'] ?? '[]');
         $page['galleries'] = self::decode($page['galleries_json'] ?? '[]');
         $page['related_tags'] = self::decode($page['related_tags_json'] ?? '[]');
+        $page['cover_image'] = self::normalizePhotoUrl($page['cover_image'] ?? '') ?: '/public/assets/img/institution-hero-community.jpg';
+        $page['cta_label'] = trim((string) ($page['cta_label'] ?? ''));
+        $page['cta_url'] = self::normalizeLinkUrl($page['cta_url'] ?? '');
+        $page['show_on_landing'] = (int) ($page['show_on_landing'] ?? 1);
         unset($page['team_json'], $page['materials_json'], $page['photos_json'], $page['galleries_json'], $page['related_tags_json']);
 
         return $page;
@@ -254,6 +346,10 @@ class InstitutionPage
             return '';
         }
 
+        if ($value === '/public/assets/img/institution-hero-community.png') {
+            return '/public/assets/img/institution-hero-community.jpg';
+        }
+
         if (preg_match('#drive\.google\.com/file/d/([^/]+)#i', $value, $match)
             || preg_match('#drive\.google\.com/open\?id=([^&]+)#i', $value, $match)
         ) {
@@ -270,6 +366,21 @@ class InstitutionPage
 
         if (preg_match('#^(public/|uploads/)#i', $value)) {
             return '/' . ltrim($value, '/');
+        }
+
+        return '';
+    }
+
+    private static function normalizeLinkUrl(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('~^(https?://|mailto:|tel:|/|#)~i', $value)) {
+            return $value;
         }
 
         return '';
@@ -302,6 +413,10 @@ class InstitutionPage
                 materials_json TEXT NULL,
                 photos_json TEXT NULL,
                 galleries_json TEXT NULL,
+                cover_image VARCHAR(255) NULL,
+                cta_label VARCHAR(80) NULL,
+                cta_url VARCHAR(255) NULL,
+                show_on_landing TINYINT(1) NOT NULL DEFAULT 1,
                 search_terms VARCHAR(255) NOT NULL,
                 related_tags_json TEXT NULL,
                 sort_order INT NOT NULL DEFAULT 0,
@@ -310,6 +425,10 @@ class InstitutionPage
             ) ENGINE=InnoDB'
         );
         self::ensureColumn('institution_pages', 'galleries_json', 'TEXT NULL AFTER photos_json');
+        self::ensureColumn('institution_pages', 'cover_image', 'VARCHAR(255) NULL AFTER galleries_json');
+        self::ensureColumn('institution_pages', 'cta_label', 'VARCHAR(80) NULL AFTER cover_image');
+        self::ensureColumn('institution_pages', 'cta_url', 'VARCHAR(255) NULL AFTER cta_label');
+        self::ensureColumn('institution_pages', 'show_on_landing', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER cta_url');
         self::ensureColumn('institution_pages', 'related_tags_json', 'TEXT NULL AFTER search_terms');
         $db->exec(
             'CREATE TABLE IF NOT EXISTS institution_page_users (
@@ -336,9 +455,9 @@ class InstitutionPage
 
         $stmt = Database::connection()->prepare(
             'INSERT IGNORE INTO institution_pages
-                (slug, name, kicker, summary, description, team_json, materials_json, photos_json, galleries_json, search_terms, related_tags_json, sort_order, created_at, updated_at)
+                (slug, name, kicker, summary, description, team_json, materials_json, photos_json, galleries_json, cover_image, cta_label, cta_url, show_on_landing, search_terms, related_tags_json, sort_order, created_at, updated_at)
              VALUES
-                (:slug, :name, :kicker, :summary, :description, :team_json, :materials_json, :photos_json, :galleries_json, :search_terms, :related_tags_json, :sort_order, NOW(), NOW())'
+                (:slug, :name, :kicker, :summary, :description, :team_json, :materials_json, :photos_json, :galleries_json, :cover_image, :cta_label, :cta_url, :show_on_landing, :search_terms, :related_tags_json, :sort_order, NOW(), NOW())'
         );
 
         foreach (self::defaults() as $page) {
@@ -352,13 +471,37 @@ class InstitutionPage
                 'materials_json' => json_encode($page['materials'], JSON_UNESCAPED_UNICODE),
                 'photos_json' => json_encode($page['photos'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 'galleries_json' => json_encode($page['galleries'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'cover_image' => $page['cover_image'],
+                'cta_label' => $page['cta_label'],
+                'cta_url' => $page['cta_url'],
+                'show_on_landing' => $page['show_on_landing'],
                 'search_terms' => $page['search'],
                 'related_tags_json' => json_encode($page['related_tags'], JSON_UNESCAPED_UNICODE),
                 'sort_order' => $page['sort_order'],
             ]);
         }
 
+        self::applyOneTimeDefaultAdjustments();
+
         $done = true;
+    }
+
+    private static function applyOneTimeDefaultAdjustments(): void
+    {
+        if (SiteSetting::get('institution_pages_default_adjusted_20260516', '0') === '1') {
+            return;
+        }
+
+        $db = Database::connection();
+        $db->exec("UPDATE institution_pages SET name = 'Biblioteca Comunitária' WHERE slug = 'biblioteca' AND name = 'Biblioteca'");
+        $db->exec("UPDATE institution_pages SET name = 'Horta Comunitária' WHERE slug = 'horta' AND name = 'Horta'");
+        $db->exec("UPDATE institution_pages SET name = 'Rádio Comunitária', show_on_landing = 0 WHERE slug = 'radio' AND name IN ('Rádio', 'Radio')");
+        $db->exec("UPDATE institution_pages SET sort_order = 20 WHERE slug = 'biblioteca' AND sort_order = 10");
+        $db->exec("UPDATE institution_pages SET sort_order = 40 WHERE slug = 'horta' AND sort_order = 20");
+        $db->exec("UPDATE institution_pages SET sort_order = 60 WHERE slug = 'radio' AND sort_order = 30");
+        $db->exec("UPDATE institution_pages SET cover_image = '/public/assets/img/institution-hero-community.jpg' WHERE cover_image IS NULL OR cover_image = ''");
+
+        SiteSetting::set('institution_pages_default_adjusted_20260516', '1');
     }
 
     private static function ensureColumn(string $table, string $column, string $definition): void

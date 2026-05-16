@@ -1,90 +1,152 @@
-<article class="institution-page institution-modern">
-    <header class="institution-hero">
-        <span>Portal institucional</span>
-        <h1>Cidade Nova Informa</h1>
-        <p>
-            Bem-vindo ao espaço oficial do Cidade Nova Informa. Esta página apresenta a instituição, sua história e os projetos que fazem parte da atuação comunitária do portal.
-        </p>
-        <div class="institution-hero-actions">
-            <a href="#projetos">Ver áreas</a>
-            <a href="#historia">Nossa história</a>
+<?php
+$landing = $landing ?? \App\Models\InstitutionLanding::get();
+$projects = $projects ?? [];
+$areas = $areas ?? [];
+$hero = $landing['hero'];
+$about = $landing['about'];
+$gallery = $landing['gallery'];
+$impact = $landing['impact'];
+$support = $landing['support'];
+$linkHref = static function (string $value): string {
+    $value = \App\Models\InstitutionLanding::linkUrl($value);
+
+    if ($value !== '' && str_starts_with($value, '/')) {
+        return url($value);
+    }
+
+    return $value;
+};
+$isExternal = static fn (string $value): bool => (bool) preg_match('#^https?://#i', $value);
+$heroImage = media_url($hero['image']);
+?>
+
+<article class="institution-page institution-modern institution-social">
+    <header class="institution-landing-hero" style="--institution-hero-image: url('<?= e($heroImage) ?>');">
+        <div class="institution-landing-hero-copy">
+            <span><?= e($hero['eyebrow']) ?></span>
+            <h1><?= e($hero['title']) ?></h1>
+            <p><?= e($hero['subtitle']) ?></p>
+            <?php $heroButtonUrl = $linkHref($hero['button_url']); ?>
+            <?php if ($heroButtonUrl !== ''): ?>
+                <a class="institution-primary-action" href="<?= e($heroButtonUrl) ?>" <?= $isExternal($heroButtonUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                    <?= e($hero['button_label']) ?>
+                </a>
+            <?php endif; ?>
         </div>
     </header>
 
-    <section class="institution-intro">
-        <div>
-            <span>Apresentação</span>
-            <h2>Comunicação local com responsabilidade e presença comunitária</h2>
-        </div>
-        <p>
-            O Cidade Nova Informa atua na produção e organização de conteúdos de interesse público, com atenção à vida do bairro, aos serviços essenciais, aos projetos comunitários e às histórias que fazem parte da rotina local.
-        </p>
-    </section>
-
-    <section class="institution-values" aria-label="Missão, visão e valores">
-        <article>
-            <span>Missão</span>
-            <p>Informar a comunidade com responsabilidade, clareza e compromisso social, fortalecendo o acesso a notícias, serviços e registros da vida local.</p>
-        </article>
-        <article>
-            <span>Visão</span>
-            <p>Ser uma referência comunitária em comunicação, memória e utilidade pública para Cidade Nova e região.</p>
-        </article>
-        <article>
-            <span>Valores</span>
-            <p>Ética, transparência, participação, respeito, valorização da comunidade e preservação da memória local.</p>
-        </article>
-    </section>
-<section class="institution-story" id="historia">
-    <div class="institution-story-header">
-        <span>História</span>
-        <h2>Nossa trajetória</h2>
-    </div>
-<p class="institution-story-text">
-    A história do Cidade Nova Informa nasce da necessidade de dar visibilidade aos acontecimentos do território, organizar informações úteis e valorizar registros importantes para os moradores. Com o tempo, o portal passou a integrar jornalismo, memória local e projetos de participação comunitária.
-    
-    
-     <span> <a 
-        href="https://cidadenovainforma.blogspot.com/p/historia.html" 
-        target="_blank"
-        class="institution-read-more"
-    >
-        Ver mais
-    </a></span>
-</p>
-</section>
-
-    <section class="institution-values institution-organization" aria-label="Diretoria e organização">
-        <article>
-            <span>Diretoria</span>
-            <p>Coordenação institucional, direção editorial e responsáveis por projetos atuam de forma integrada na organização das frentes do portal.</p>
-        </article>
-        <article>
-            <span>Notas públicas</span>
-            <p>Comunicados oficiais, avisos institucionais e posicionamentos públicos são publicados nas áreas correspondentes do Cidade Nova Informa.</p>
-        </article>
-        <article>
-            <span>Contatos</span>
-            <p>Os canais digitais e redes sociais concentram o atendimento, sugestões de pauta e comunicação com leitores, parceiros e colaboradores.</p>
-        </article>
-    </section>
-
-    <section class="institution-projects" id="projetos">
+    <section class="institution-about" id="quem-somos">
         <div class="institution-section-head">
-            <span>Setores e projetos</span>
-            <h2>Áreas institucionais</h2>
+            <span><?= e($about['eyebrow']) ?></span>
+            <h2><?= e($about['title']) ?></h2>
         </div>
-        <div class="institution-project-grid">
-            <?php foreach ($areas as $area): ?>
-                <article class="institution-project-card">
-                    <span><?= e($area['kicker']) ?></span>
-                    <h3><?= e($area['name']) ?></h3>
-                    <p><?= e($area['summary']) ?></p>
-                    <a href="<?= e(url('/instituicao/' . $area['slug'])) ?>">Abrir página</a>
+        <div class="institution-rich-text">
+            <?= article_html($about['body']) ?>
+        </div>
+    </section>
+
+    <section class="institution-projects institution-landing-section" id="projetos">
+        <div class="institution-section-head">
+            <span>Nossos projetos</span>
+            <h2>Frentes de atuação social e cultural</h2>
+        </div>
+
+        <div class="institution-project-grid institution-project-grid-modern">
+            <?php foreach ($projects as $area): ?>
+                <?php
+                $projectImage = media_url($area['cover_image'] ?? $hero['image']);
+                $projectUrl = $linkHref($area['cta_url'] ?? '') ?: url('/instituicao/' . $area['slug']);
+                $projectLabel = trim((string) ($area['cta_label'] ?? '')) ?: 'Conhecer projeto';
+                ?>
+                <article class="institution-project-card institution-project-card-modern">
+                    <a class="institution-project-media" href="<?= e($projectUrl) ?>" <?= $isExternal($projectUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                        <img src="<?= e($projectImage) ?>" alt="<?= e($area['name']) ?>" loading="lazy">
+                    </a>
+                    <div>
+                        <span><?= e($area['kicker']) ?></span>
+                        <h3><?= e($area['name']) ?></h3>
+                        <p><?= e($area['summary']) ?></p>
+                        <a href="<?= e($projectUrl) ?>" <?= $isExternal($projectUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                            <?= e($projectLabel) ?>
+                        </a>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+            <?php if (empty($projects)): ?>
+                <article class="empty-public area-empty-news">
+                    <h2>Projetos em atualização</h2>
+                    <p>Os projetos institucionais aparecerão aqui assim que forem habilitados no painel.</p>
+                </article>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <section class="institution-gallery-showcase institution-landing-section" id="galeria">
+        <div class="institution-section-head">
+            <span><?= e($gallery['eyebrow']) ?></span>
+            <h2><?= e($gallery['title']) ?></h2>
+            <p><?= e($gallery['intro']) ?></p>
+        </div>
+
+        <div class="institution-media-grid">
+            <?php foreach ($gallery['items'] as $item): ?>
+                <?php
+                $itemUrl = $linkHref($item['url'] ?? '');
+                $tagName = $itemUrl !== '' ? 'a' : 'div';
+                $cover = media_url($item['cover'] ?: $hero['image']);
+                ?>
+                <<?= $tagName ?> class="institution-media-card" <?= $itemUrl !== '' ? 'href="' . e($itemUrl) . '"' : '' ?> <?= $itemUrl !== '' && $isExternal($itemUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                    <img src="<?= e($cover) ?>" alt="<?= e($item['title']) ?>" loading="lazy">
+                    <div>
+                        <span><?= e($item['type']) ?></span>
+                        <h3><?= e($item['title']) ?></h3>
+                        <?php if (!empty($item['description'])): ?>
+                            <p><?= e($item['description']) ?></p>
+                        <?php endif; ?>
+                    </div>
+                </<?= $tagName ?>>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <section class="institution-impact institution-landing-section" id="impacto">
+        <div class="institution-section-head">
+            <span><?= e($impact['eyebrow']) ?></span>
+            <h2><?= e($impact['title']) ?></h2>
+        </div>
+        <div class="institution-impact-grid">
+            <?php foreach ($impact['stats'] as $stat): ?>
+                <article>
+                    <strong><?= e($stat['value']) ?></strong>
+                    <span><?= e($stat['label']) ?></span>
+                    <?php if (!empty($stat['description'])): ?>
+                        <p><?= e($stat['description']) ?></p>
+                    <?php endif; ?>
                 </article>
             <?php endforeach; ?>
         </div>
     </section>
 
-    
+    <section class="institution-support institution-landing-section" id="contato">
+        <div class="institution-section-head">
+            <span><?= e($support['eyebrow']) ?></span>
+            <h2><?= e($support['title']) ?></h2>
+            <p><?= e($support['body']) ?></p>
+        </div>
+
+        <div class="institution-support-grid">
+            <?php foreach ($support['items'] as $item): ?>
+                <?php $supportUrl = $linkHref($item['url'] ?? ''); ?>
+                <article>
+                    <h3><?= e($item['title']) ?></h3>
+                    <p><?= e($item['description']) ?></p>
+                    <?php if ($supportUrl !== ''): ?>
+                        <a href="<?= e($supportUrl) ?>" <?= $isExternal($supportUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                            <?= e($item['button_label']) ?>
+                        </a>
+                    <?php endif; ?>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </section>
 </article>

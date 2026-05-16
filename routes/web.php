@@ -79,6 +79,8 @@ $router->post('/admin/library-events/participants', [LibraryEventController::cla
 $router->post('/admin/library-events/participants/remove', [LibraryEventController::class, 'removeParticipant']);
 
 $router->get('/admin/institution-pages', [InstitutionPageController::class, 'index']);
+$router->get('/admin/institution-pages/landing', [InstitutionPageController::class, 'landing']);
+$router->post('/admin/institution-pages/landing', [InstitutionPageController::class, 'updateLanding']);
 $router->get('/admin/institution-pages/edit', [InstitutionPageController::class, 'edit']);
 $router->post('/admin/institution-pages/update', [InstitutionPageController::class, 'update']);
 

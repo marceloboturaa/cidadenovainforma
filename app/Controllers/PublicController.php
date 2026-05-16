@@ -6,6 +6,7 @@ use App\Core\Database;
 use App\Core\View;
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\InstitutionLanding;
 use App\Models\InstitutionPage;
 use App\Models\LibraryEvent;
 use App\Models\MenuItem;
@@ -49,14 +50,18 @@ class PublicController
     public function institution(): void
     {
         $this->logAccess();
+        $landing = InstitutionLanding::get();
 
         View::render('public/institution', [
+            'landing' => $landing,
+            'projects' => InstitutionPage::landingProjects(),
             'areas' => $this->institutionAreas(),
             'menuItems' => MenuItem::visible(),
             'query' => '',
-            'pageTitle' => 'Instituição - Cidade Nova Informa',
-            'metaDescription' => 'Conheça a missão, a atuação e o compromisso editorial do Cidade Nova Informa.',
+            'pageTitle' => $landing['seo']['title'] ?? 'Instituição - Cidade Nova Informa',
+            'metaDescription' => $landing['seo']['description'] ?? 'Conheça a missão, a atuação e o compromisso editorial do Cidade Nova Informa.',
             'canonicalUrl' => url('/instituicao'),
+            'ogImage' => !empty($landing['hero']['image']) ? media_url($landing['hero']['image']) : null,
         ], 'public');
     }
 

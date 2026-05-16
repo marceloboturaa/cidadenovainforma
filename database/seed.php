@@ -201,6 +201,10 @@ $pdo->exec(
         materials_json TEXT NULL,
         photos_json TEXT NULL,
         galleries_json TEXT NULL,
+        cover_image VARCHAR(255) NULL,
+        cta_label VARCHAR(80) NULL,
+        cta_url VARCHAR(255) NULL,
+        show_on_landing TINYINT(1) NOT NULL DEFAULT 1,
         search_terms VARCHAR(255) NOT NULL,
         related_tags_json TEXT NULL,
         sort_order INT NOT NULL DEFAULT 0,
@@ -208,6 +212,20 @@ $pdo->exec(
         updated_at TIMESTAMP NULL
     ) ENGINE=InnoDB'
 );
+
+$institutionPageColumns = [
+    'cover_image' => 'ALTER TABLE institution_pages ADD COLUMN cover_image VARCHAR(255) NULL AFTER galleries_json',
+    'cta_label' => 'ALTER TABLE institution_pages ADD COLUMN cta_label VARCHAR(80) NULL AFTER cover_image',
+    'cta_url' => 'ALTER TABLE institution_pages ADD COLUMN cta_url VARCHAR(255) NULL AFTER cta_label',
+    'show_on_landing' => 'ALTER TABLE institution_pages ADD COLUMN show_on_landing TINYINT(1) NOT NULL DEFAULT 1 AFTER cta_url',
+];
+
+$existingInstitutionPageColumns = $pdo->query('SHOW COLUMNS FROM institution_pages')->fetchAll(PDO::FETCH_COLUMN);
+foreach ($institutionPageColumns as $column => $sql) {
+    if (!in_array($column, $existingInstitutionPageColumns, true)) {
+        $pdo->exec($sql);
+    }
+}
 
 $pdo->exec(
     'CREATE TABLE IF NOT EXISTS institution_page_users (

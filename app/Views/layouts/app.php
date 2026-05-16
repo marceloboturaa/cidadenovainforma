@@ -8,6 +8,7 @@
 <?php $faviconPath = str_starts_with($currentPath, '/admin/education') ? '/public/assets/img/favicon-education.svg' : '/public/assets/img/favicon-secondary.svg'; ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . $faviconPath); ?>
 <?php $institutionPageAccess = $user ? \App\Models\InstitutionPage::manageableForUser((int) $user['id'], ($user['role_slug'] ?? '') === 'master') : []; ?>
+<?php $canManageInstitutionLanding = $user ? \App\Core\Auth::hasRole(['master', 'admin']) : false; ?>
 <?php $roleSlugs = $user ? \App\Core\Auth::roleSlugs($user) : []; ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -43,7 +44,7 @@
                 <?php if (\App\Core\Auth::can('tags.manage')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/tags') ? 'active' : '' ?>" href="<?= e(url('/admin/tags')) ?>"><i class="bi bi-tags" aria-hidden="true"></i>Tags</a>
                 <?php endif; ?>
-                <?php if ($institutionPageAccess): ?>
+                <?php if ($institutionPageAccess || $canManageInstitutionLanding): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/institution-pages') ? 'active' : '' ?>" href="<?= e(url('/admin/institution-pages')) ?>"><i class="bi bi-building" aria-hidden="true"></i>Instituição</a>
                 <?php endif; ?>
                 <?php if (\App\Core\Auth::can('people.manage')): ?>

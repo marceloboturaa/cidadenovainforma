@@ -11,12 +11,13 @@
 
 <nav class="institution-editor-nav" aria-label="Seções da edição institucional">
     <a href="#apresentacao">Apresentação</a>
+    <a href="#card">Card público</a>
     <a href="#galerias">Galerias</a>
     <a href="#organizacao">Organização</a>
     <a href="#noticias">Notícias</a>
 </nav>
 
-<form method="post" action="<?= e($action) ?>" class="institution-editor">
+<form method="post" action="<?= e($action) ?>" enctype="multipart/form-data" class="institution-editor">
     <?= csrf_field() ?>
 
     <section class="panel institution-editor-section" id="apresentacao">
@@ -48,10 +49,47 @@
         </div>
     </section>
 
-    <section class="panel institution-editor-section" id="galerias">
+    <section class="panel institution-editor-section" id="card">
         <div class="institution-editor-section-head">
             <div>
                 <span>02</span>
+                <h2>Card na página institucional</h2>
+                <p>Imagem, botão e visibilidade do projeto na página principal da instituição.</p>
+            </div>
+        </div>
+
+        <div class="institution-field-grid">
+            <div>
+                <label class="form-label">Imagem do card</label>
+                <input class="form-control" name="cover_image" value="<?= e($page['cover_image'] ?? '') ?>" placeholder="/public/uploads/institution/imagem.jpg">
+                <p class="form-text">Cole uma URL, imagem do site ou Google Drive. Se enviar arquivo abaixo, ele substitui este campo.</p>
+            </div>
+            <div>
+                <label class="form-label">Substituir imagem por upload</label>
+                <input class="form-control" type="file" name="cover_image_file" accept="image/*">
+            </div>
+            <div>
+                <label class="form-label">Texto do botão</label>
+                <input class="form-control" name="cta_label" value="<?= e($page['cta_label'] ?? '') ?>" placeholder="Conhecer projeto">
+            </div>
+            <div>
+                <label class="form-label">Link opcional do botão</label>
+                <input class="form-control" name="cta_url" value="<?= e($page['cta_url'] ?? '') ?>" placeholder="Opcional: https://... ou /instituicao/<?= e($page['slug']) ?>">
+                <p class="form-text">Deixe em branco para abrir a página pública deste projeto.</p>
+            </div>
+            <div class="institution-checkbox-field">
+                <label>
+                    <input type="checkbox" name="show_on_landing" value="1" <?= checked(!empty($page['show_on_landing'])) ?>>
+                    <span>Exibir este projeto nos cards da página institucional principal</span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel institution-editor-section" id="galerias">
+        <div class="institution-editor-section-head">
+            <div>
+                <span>03</span>
                 <h2>Galerias de fotos</h2>
                 <p>Adicione álbuns do Google Photos como cards. O link fica escondido no botão da página pública.</p>
             </div>
@@ -90,7 +128,7 @@
     <section class="panel institution-editor-section" id="organizacao">
         <div class="institution-editor-section-head">
             <div>
-                <span>03</span>
+                <span>04</span>
                 <h2>Equipe e informações</h2>
                 <p>Organize responsáveis, informações úteis e fotos avulsas sem expor links longos na página.</p>
             </div>
@@ -118,7 +156,7 @@
     <section class="panel institution-editor-section" id="noticias">
         <div class="institution-editor-section-head">
             <div>
-                <span>04</span>
+                <span>05</span>
                 <h2>Matérias relacionadas</h2>
                 <p>Selecione as tags que devem alimentar a seção de notícias desta página.</p>
             </div>

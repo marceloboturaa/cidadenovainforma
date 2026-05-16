@@ -139,6 +139,10 @@
     gap: 10px 12px;
 }
 
+.gallery-editor-fields-wide {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .gallery-editor-fields div {
     min-width: 0;
 }
@@ -218,6 +222,14 @@
     line-height: 1.55;
 }
 
+.institution-admin-card-status {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
 .institution-admin-card dl {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -295,6 +307,25 @@
     grid-column: 1 / -1;
 }
 
+.institution-checkbox-field {
+    display: flex;
+    align-items: center;
+}
+
+.institution-checkbox-field label {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--text);
+    font-weight: 800;
+}
+
 .institution-advanced {
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -350,5 +381,24 @@
     background: rgba(255, 255, 255, 0.94);
     box-shadow: 0 12px 34px rgba(15, 23, 42, 0.14);
     backdrop-filter: blur(10px);
+}
+
+.institution-repeat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.institution-repeat-grid article {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.institution-repeat-grid .form-label {
+    margin: 0;
 }
 
