@@ -116,10 +116,10 @@ $status = $newsItem['status'] ?? 'draft';
         <?php endif; ?>
 
         <div class="archive-box">
-            <h3>Acervo</h3>
+            <h3>Reprise</h3>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="is_archive" id="is_archive" <?= checked((bool) ($newsItem['is_archive'] ?? false)) ?>>
-                <label class="form-check-label" for="is_archive">Materia de acervo</label>
+                <label class="form-check-label" for="is_archive">Matéria de reprise</label>
             </div>
 
             <label class="form-label mt-3">Data original</label>

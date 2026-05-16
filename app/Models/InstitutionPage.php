@@ -139,7 +139,7 @@ class InstitutionPage
                 'summary' => 'Espaço dedicado à leitura, pesquisa e preservação de registros importantes para a comunidade.',
                 'description' => 'A Biblioteca reúne ações de incentivo à leitura, consulta a conteúdos educativos e valorização da memória local. O espaço apoia estudantes, moradores e leitores interessados em conhecer melhor a história e as iniciativas da instituição.',
                 'team' => ['Coordenação institucional', 'Colaboradores de leitura', 'Voluntários e apoiadores culturais'],
-                'materials' => ['Acervo comunitário', 'Apoio à leitura', 'Registros históricos'],
+                'materials' => ['Reprise comunitária', 'Apoio à leitura', 'Registros históricos'],
                 'photos' => [],
                 'galleries' => [],
                 'search' => 'biblioteca',

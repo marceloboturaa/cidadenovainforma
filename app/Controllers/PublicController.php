@@ -210,14 +210,19 @@ class PublicController
         $this->logAccess();
 
         View::render('public/list', [
-            'heading' => 'Acervo Cidade Nova',
+            'heading' => 'Reprise Cidade Nova',
             'news' => News::publicList(['is_archive' => 1, 'archive_order' => true], 30),
             'menuItems' => MenuItem::visible(),
             'query' => '',
-            'pageTitle' => 'Acervo Cidade Nova - Cidade Nova Informa',
-            'metaDescription' => 'Reportagens antigas republicadas para preservação histórica do acervo.',
-            'canonicalUrl' => url('/acervo'),
+            'pageTitle' => 'Reprise Cidade Nova - Cidade Nova Informa',
+            'metaDescription' => 'Reportagens antigas republicadas em reprise para preservação histórica.',
+            'canonicalUrl' => url('/reprise'),
         ], 'public');
+    }
+
+    public function legacyArchive(): void
+    {
+        redirect('/reprise');
     }
 
     public function category(): void
@@ -303,7 +308,7 @@ class PublicController
             ['loc' => url('/eventos/realizados'), 'priority' => '0.5'],
             ['loc' => url('/instituicao'), 'priority' => '0.6'],
             ['loc' => url('/buscar'), 'priority' => '0.4'],
-            ['loc' => url('/acervo'), 'priority' => '0.7'],
+            ['loc' => url('/reprise'), 'priority' => '0.7'],
         ];
 
         foreach ($this->institutionAreas() as $area) {

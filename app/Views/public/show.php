@@ -15,7 +15,7 @@
     <?php if (!empty($news['is_archive'])): ?>
         <section class="archive-notice">
             <div class="archive-head">
-                <span class="archive-badge archive-badge-lg"><i aria-hidden="true"></i>Acervo</span>
+                <span class="archive-badge archive-badge-lg"><i aria-hidden="true"></i>Reprise</span>
                 <strong>Reportagem republicada</strong>
             </div>
             <div class="archive-meta-line">

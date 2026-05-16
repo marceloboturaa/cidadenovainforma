@@ -93,7 +93,7 @@ Também ajuste `config/app.php`:
 Abra no navegador:
 
 - `/`
-- `/acervo`
+- `/reprise`
 - `/login`
 - `/admin/news`
 - `/sitemap.xml`

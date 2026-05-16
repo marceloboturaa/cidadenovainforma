@@ -27,7 +27,8 @@ $router->get('/instituicao/{slug}', [PublicController::class, 'institutionArea']
 $router->get('/documentos', [PublicController::class, 'documents']);
 $router->get('/documentos/download', [PublicController::class, 'downloadDocument']);
 $router->get('/buscar', [PublicController::class, 'search']);
-$router->get('/acervo', [PublicController::class, 'archive']);
+$router->get('/reprise', [PublicController::class, 'archive']);
+$router->get('/acervo', [PublicController::class, 'legacyArchive']);
 $router->get('/categoria', [PublicController::class, 'category']);
 $router->get('/categoria/{slug}', [PublicController::class, 'category']);
 $router->get('/tag', [PublicController::class, 'tag']);

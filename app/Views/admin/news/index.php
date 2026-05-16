@@ -30,7 +30,7 @@
             <label class="form-label">Tipo editorial</label>
             <select class="form-select" name="is_archive">
                 <option value="">Todos</option>
-                <option value="1" <?= selected((string) ($filters['is_archive'] ?? ''), '1') ?>>Acervo</option>
+                <option value="1" <?= selected((string) ($filters['is_archive'] ?? ''), '1') ?>>Reprise</option>
                 <option value="0" <?= selected((string) ($filters['is_archive'] ?? ''), '0') ?>>Atual</option>
             </select>
         </div>
@@ -114,7 +114,7 @@
                             <span class="badge text-bg-warning"><i class="bi bi-star" aria-hidden="true"></i>Destaque</span>
                         <?php endif; ?>
                         <?php if ($item['is_archive']): ?>
-                            <span class="archive-admin-badge"><i class="bi bi-archive" aria-hidden="true"></i>Acervo</span>
+                            <span class="archive-admin-badge"><i class="bi bi-archive" aria-hidden="true"></i>Reprise</span>
                         <?php endif; ?>
                     </div>
                     <dl class="news-admin-meta">

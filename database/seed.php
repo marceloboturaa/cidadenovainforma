@@ -588,16 +588,22 @@ if ($menuCount === 0) {
 
     $stmt->execute([
         null,
-        'Acervo',
-        '/acervo',
+        'Reprise',
+        '/reprise',
         95,
     ]);
 }
 
+$pdo->exec(
+    'UPDATE menu_items
+     SET label = "Reprise", url = "/reprise", updated_at = NOW()
+     WHERE url = "/acervo" OR label = "Acervo"'
+);
+
 $stmt = $pdo->prepare(
     'INSERT INTO menu_items (category_id, label, url, sort_order, visible, created_at, updated_at)
-     SELECT NULL, "Acervo", "/acervo", 95, 1, NOW(), NOW()
-     WHERE NOT EXISTS (SELECT 1 FROM menu_items WHERE url = "/acervo")'
+     SELECT NULL, "Reprise", "/reprise", 95, 1, NOW(), NOW()
+     WHERE NOT EXISTS (SELECT 1 FROM menu_items WHERE url = "/reprise")'
 );
 $stmt->execute();
 

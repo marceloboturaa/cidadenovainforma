@@ -471,3 +471,15 @@ ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_phone VARCHAR(30) NULL AFTE
 ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_email VARCHAR(190) NULL AFTER guardian_phone;
 
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;
+
+-- Renomeia o menu publico antigo de Acervo para Reprise.
+UPDATE menu_items
+SET label = 'Reprise',
+    url = '/reprise',
+    updated_at = NOW()
+WHERE url = '/acervo'
+   OR label = 'Acervo';
+
+INSERT INTO menu_items (category_id, label, url, sort_order, visible, created_at, updated_at)
+SELECT NULL, 'Reprise', '/reprise', 95, 1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM menu_items WHERE url = '/reprise');
