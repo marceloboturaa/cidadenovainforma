@@ -3552,6 +3552,25 @@ body.editor-focus-mode {
     background: #f0fdfa;
 }
 
+.education-forum-reply-card.is-hidden-reply {
+    border-style: dashed;
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.education-hidden-badge {
+    display: inline-flex;
+    margin-left: 8px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 800;
+    vertical-align: middle;
+}
+
 .education-forum-topic-actions {
     display: flex;
     flex-wrap: wrap;

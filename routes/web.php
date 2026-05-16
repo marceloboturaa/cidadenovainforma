@@ -138,6 +138,7 @@ $router->post('/admin/education/forum/topic', [EducationController::class, 'stor
 $router->post('/admin/education/forum/topic/update', [EducationController::class, 'updateForumTopic']);
 $router->post('/admin/education/forum/reply', [EducationController::class, 'storeForumReply']);
 $router->post('/admin/education/forum/reply/delete', [EducationController::class, 'deleteForumReply']);
+$router->post('/admin/education/forum/reply/restore', [EducationController::class, 'restoreForumReply']);
 $router->post('/admin/education/forum/delete', [EducationController::class, 'deleteForumTopic']);
 $router->post('/admin/education/block', [EducationController::class, 'storeBlock']);
 $router->post('/admin/education/block/update', [EducationController::class, 'updateBlock']);

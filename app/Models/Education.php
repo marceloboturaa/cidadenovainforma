@@ -940,7 +940,7 @@ class Education
         return $stmt->fetch() ?: null;
     }
 
-    public static function forumRepliesForTopics(array $topicIds): array
+    public static function forumRepliesForTopics(array $topicIds, bool $includeHidden = false): array
     {
         self::ensureSchema();
 
@@ -956,7 +956,7 @@ class Education
              FROM education_forum_replies
              INNER JOIN users ON users.id = education_forum_replies.user_id
              WHERE education_forum_replies.topic_id IN (' . $placeholders . ')
-               AND education_forum_replies.active = 1
+               ' . ($includeHidden ? '' : 'AND education_forum_replies.active = 1') . '
              ORDER BY education_forum_replies.created_at ASC, education_forum_replies.id ASC'
         );
         $stmt->execute($topicIds);
@@ -969,7 +969,7 @@ class Education
         return $grouped;
     }
 
-    public static function findForumReply(int $id): ?array
+    public static function findForumReply(int $id, bool $includeHidden = false): ?array
     {
         self::ensureSchema();
 
@@ -983,7 +983,7 @@ class Education
              INNER JOIN education_forum_topics ON education_forum_topics.id = education_forum_replies.topic_id
              INNER JOIN users ON users.id = education_forum_replies.user_id
              WHERE education_forum_replies.id = :id
-               AND education_forum_replies.active = 1
+               ' . ($includeHidden ? '' : 'AND education_forum_replies.active = 1') . '
                AND education_forum_topics.status <> "hidden"
              LIMIT 1'
         );
@@ -1028,11 +1028,24 @@ class Education
 
     public static function hideForumReply(int $replyId): void
     {
+        self::setForumReplyActive($replyId, false);
+    }
+
+    public static function restoreForumReply(int $replyId): void
+    {
+        self::setForumReplyActive($replyId, true);
+    }
+
+    public static function setForumReplyActive(int $replyId, bool $active): void
+    {
         self::ensureSchema();
 
         Database::connection()
-            ->prepare('UPDATE education_forum_replies SET active = 0, updated_at = NOW() WHERE id = :id')
-            ->execute(['id' => $replyId]);
+            ->prepare('UPDATE education_forum_replies SET active = :active, updated_at = NOW() WHERE id = :id')
+            ->execute([
+                'active' => $active ? 1 : 0,
+                'id' => $replyId,
+            ]);
     }
 
     public static function closeForumTopic(int $topicId): void

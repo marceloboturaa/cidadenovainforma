@@ -167,7 +167,7 @@ class EducationController
             'editingLesson' => $this->lessonFromQuery(false, false),
             'editingModule' => $this->moduleFromQuery(false),
             'forumTopics' => $forumTopics,
-            'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id')),
+            'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id'), $canManage),
         ]);
     }
 
@@ -323,7 +323,7 @@ class EducationController
             'modules' => Education::modulesForCourse((int) $lesson['course_id']),
             'playlist' => $playlist,
             'lessonForumTopics' => $lessonForumTopics,
-            'lessonForumRepliesByTopic' => Education::forumRepliesForTopics(array_column($lessonForumTopics, 'id')),
+            'lessonForumRepliesByTopic' => Education::forumRepliesForTopics(array_column($lessonForumTopics, 'id'), $canManage),
         ]);
     }
 
@@ -592,7 +592,7 @@ class EducationController
         $this->validateCsrf('/admin/education');
 
         $replyId = filter_input(INPUT_GET, 'reply_id', FILTER_VALIDATE_INT);
-        $reply = $replyId ? Education::findForumReply($replyId) : null;
+        $reply = $replyId ? Education::findForumReply($replyId, true) : null;
         if (!$reply || empty($reply['course_id'])) {
             http_response_code(404);
             View::render('errors/404');
@@ -605,6 +605,28 @@ class EducationController
         Education::hideForumReply((int) $reply['id']);
 
         Session::flash('success', 'Comentário ocultado.');
+        redirect(!empty($reply['lesson_id']) ? '/admin/education/lesson?id=' . $reply['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $reply['course_id'] . '#course-forum');
+    }
+
+    public function restoreForumReply(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+
+        $replyId = filter_input(INPUT_GET, 'reply_id', FILTER_VALIDATE_INT);
+        $reply = $replyId ? Education::findForumReply($replyId, true) : null;
+        if (!$reply || empty($reply['course_id'])) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $reply['course_id']);
+        $this->authorizeCourseManage($course);
+
+        Education::restoreForumReply((int) $reply['id']);
+
+        Session::flash('success', 'Comentário restaurado para estudantes.');
         redirect(!empty($reply['lesson_id']) ? '/admin/education/lesson?id=' . $reply['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $reply['course_id'] . '#course-forum');
     }
 

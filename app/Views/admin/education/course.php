@@ -212,14 +212,27 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
                 <?php if ($topicReplies): ?>
                     <div class="education-forum-replies">
                         <?php foreach ($topicReplies as $replyIndex => $reply): ?>
-                            <div class="education-forum-reply-card reply-tone-<?= e((string) (((int) $replyIndex % 6) + 1)) ?>">
+                            <?php $replyHidden = empty($reply['active']); ?>
+                            <div class="education-forum-reply-card reply-tone-<?= e((string) (((int) $replyIndex % 6) + 1)) ?> <?= $replyHidden ? 'is-hidden-reply' : '' ?>">
                                 <div class="education-forum-reply-head">
-                                    <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
+                                    <strong>
+                                        <?= e($reply['user_name'] ?? 'Usuário') ?>
+                                        <?php if ($replyHidden): ?>
+                                            <span class="education-hidden-badge">Oculto para estudantes</span>
+                                        <?php endif; ?>
+                                    </strong>
                                     <?php if ($canManage): ?>
-                                        <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/reply/delete?reply_id=' . $reply['id'])) ?>" onsubmit="return confirm('Ocultar este comentário?');">
-                                            <?= csrf_field() ?>
-                                            <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-eye-slash" aria-hidden="true"></i>Ocultar</button>
-                                        </form>
+                                        <?php if ($replyHidden): ?>
+                                            <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/reply/restore?reply_id=' . $reply['id'])) ?>">
+                                                <?= csrf_field() ?>
+                                                <button class="btn btn-sm btn-outline-success icon-btn"><i class="bi bi-eye" aria-hidden="true"></i>Restaurar</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/reply/delete?reply_id=' . $reply['id'])) ?>" onsubmit="return confirm('Ocultar este comentário para estudantes?');">
+                                                <?= csrf_field() ?>
+                                                <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-eye-slash" aria-hidden="true"></i>Ocultar</button>
+                                            </form>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                                 <div><?= article_html($reply['body'] ?? '') ?></div>
