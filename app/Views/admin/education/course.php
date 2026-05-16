@@ -199,7 +199,7 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
                                 <label class="form-label">Título</label>
                                 <input class="form-control" name="title" maxlength="180" value="<?= e($topic['title'] ?? '') ?>" required>
                                 <label class="form-label">Mensagem</label>
-                                <textarea class="form-control" name="body" rows="4" required><?= e($topic['body'] ?? '') ?></textarea>
+                                <textarea class="form-control" name="body" rows="4" data-tinymce required><?= e($topic['body'] ?? '') ?></textarea>
                                 <button class="btn btn-sm btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar fórum</button>
                             </form>
                         </details>
