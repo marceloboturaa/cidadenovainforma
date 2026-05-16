@@ -250,6 +250,8 @@
         const empty = directory.querySelector('[data-users-empty]');
         const countBadge = document.querySelector('[data-users-visible-count]');
         const countLabel = document.querySelector('[data-users-visible-label]');
+        const filterButtons = Array.from(document.querySelectorAll('[data-users-filter]'));
+        let activeFilter = 'all';
 
         const applyFilter = () => {
             const term = normalizeSearch(searchInput.value);
@@ -257,7 +259,9 @@
 
             cards.forEach((card) => {
                 const haystack = normalizeSearch(card.dataset.userSearchText || card.textContent || '');
-                const matches = term === '' || haystack.includes(term);
+                const matchesText = term === '' || haystack.includes(term);
+                const matchesStatus = activeFilter === 'all' || card.dataset.userStatus === activeFilter;
+                const matches = matchesText && matchesStatus;
                 card.classList.toggle('is-hidden', !matches);
                 if (matches) {
                     visible += 1;
@@ -276,6 +280,13 @@
         };
 
         searchInput.addEventListener('input', applyFilter);
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                activeFilter = button.dataset.usersFilter || 'all';
+                filterButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+                applyFilter();
+            });
+        });
         applyFilter();
     }
 

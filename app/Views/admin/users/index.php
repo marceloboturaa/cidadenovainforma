@@ -180,6 +180,11 @@ $onlineCount = count($onlineUserIds ?? []);
                 <span class="visually-hidden">Pesquisar equipe</span>
                 <input class="form-control" type="search" placeholder="Pesquisar por nome, e-mail ou cargo" data-users-search autocomplete="off">
             </label>
+            <div class="users-filter-tabs" role="group" aria-label="Filtrar equipe">
+                <button type="button" class="is-active" data-users-filter="all">Todos</button>
+                <button type="button" data-users-filter="active">Ativos</button>
+                <button type="button" data-users-filter="inactive">Inativos</button>
+            </div>
             <div class="users-filter-summary">
                 <strong data-users-visible-label><?= e((string) $totalUsers) ?></strong>
                 <span>pessoa(s) na lista</span>
@@ -202,54 +207,56 @@ $onlineCount = count($onlineUserIds ?? []);
                     in_array((int) $item['id'], $onlineUserIds ?? [], true) ? 'online' : '',
                 ]);
                 ?>
-                <article class="user-row-card" data-user-card data-user-search-text="<?= e($searchText) ?>">
+                <article class="user-row-card" data-user-card data-user-status="<?= $item['active'] ? 'active' : 'inactive' ?>" data-user-search-text="<?= e($searchText) ?>">
                     <header class="user-row-header">
                         <div class="user-avatar"><?= e($initial) ?></div>
                         <div class="user-identity">
-                            <div>
-                                <strong><?= e($item['name']) ?></strong>
-                                <span class="state-pill <?= $item['active'] ? 'is-active' : 'is-muted' ?>"><?= $item['active'] ? 'Ativo' : 'Inativo' ?></span>
-                                <?php if (in_array((int) $item['id'], $onlineUserIds ?? [], true)): ?>
-                                    <span class="state-pill is-online">Online</span>
-                                <?php endif; ?>
-                            </div>
+                            <strong><?= e($item['name']) ?></strong>
                             <span><?= e($item['email']) ?></span>
-                            <small><?= e($item['role_names'] ?? $item['role_name']) ?> · Criado em <?= e($item['created_at']) ?></small>
+                        </div>
+                        <div class="user-role-summary">
+                            <span><?= e($item['role_names'] ?? $item['role_name']) ?></span>
+                            <small>Criado em <?= e($item['created_at']) ?></small>
+                        </div>
+                        <div class="user-status-stack">
+                            <span class="state-pill <?= $item['active'] ? 'is-active' : 'is-muted' ?>"><?= $item['active'] ? 'Ativo' : 'Inativo' ?></span>
+                            <?php if (in_array((int) $item['id'], $onlineUserIds ?? [], true)): ?>
+                                <span class="state-pill is-online">Online</span>
+                            <?php endif; ?>
                         </div>
                     </header>
 
                     <?php if ($isMaster): ?>
-                        <div class="user-row-actions">
+                        <details class="user-manage-drawer">
+                            <summary>
+                                <span><i class="bi bi-sliders" aria-hidden="true"></i> Gerenciar</span>
+                                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                            </summary>
+
                             <div class="user-access-grid">
-                                <section class="user-action-panel user-action-panel-wide">
-                                    <div class="user-form-title">
-                                        <strong>Dados da pessoa</strong>
-                                        <span>Nome e e-mail de acesso</span>
-                                    </div>
-                                    <form method="post" action="<?= e(url('/admin/users/update?id=' . $item['id'])) ?>" class="user-inline-form user-profile-form">
+                                <section class="user-action-panel">
+                                    <h3>Dados</h3>
+                                    <form method="post" action="<?= e(url('/admin/users/update?id=' . $item['id'])) ?>" class="user-stacked-form">
                                         <?= csrf_field() ?>
-                                        <div>
-                                            <label class="form-label">Nome</label>
+                                        <label>
+                                            <span>Nome</span>
                                             <input class="form-control form-control-sm" name="name" value="<?= e($item['name']) ?>" required>
-                                        </div>
-                                        <div>
-                                            <label class="form-label">E-mail</label>
+                                        </label>
+                                        <label>
+                                            <span>E-mail</span>
                                             <input class="form-control form-control-sm" name="email" type="email" value="<?= e($item['email']) ?>" required>
-                                        </div>
+                                        </label>
                                         <button class="btn btn-sm btn-outline-primary">Salvar dados</button>
                                     </form>
                                 </section>
 
                                 <?php if ($canManageAccess): ?>
-                                    <section class="user-action-panel user-action-panel-wide">
-                                        <div class="user-form-title">
-                                            <strong>Cargos e permissões</strong>
-                                            <span>Define o nível de acesso no painel</span>
-                                        </div>
-                                        <form method="post" action="<?= e(url('/admin/users/role?id=' . $item['id'])) ?>" class="user-inline-form user-role-form">
+                                    <section class="user-action-panel">
+                                        <h3>Cargos</h3>
+                                        <form method="post" action="<?= e(url('/admin/users/role?id=' . $item['id'])) ?>" class="user-stacked-form">
                                             <?= csrf_field() ?>
-                                            <div>
-                                                <label class="form-label">Cargo principal</label>
+                                            <label>
+                                                <span>Cargo principal</span>
                                                 <select class="form-select form-select-sm" name="role_id" required>
                                                     <?php foreach ($roles as $role): ?>
                                                         <option value="<?= e((string) $role['id']) ?>" <?= selected((string) $role['id'], (string) $item['role_id']) ?>>
@@ -257,8 +264,7 @@ $onlineCount = count($onlineUserIds ?? []);
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
-                                                <small class="field-hint">ESTUDANTE acessa somente cursos matriculados.</small>
-                                            </div>
+                                            </label>
                                             <details class="users-check-options compact">
                                                 <summary>Cargos extras</summary>
                                                 <div>
@@ -275,10 +281,8 @@ $onlineCount = count($onlineUserIds ?? []);
                                     </section>
 
                                     <section class="user-action-panel">
-                                        <div class="user-form-title">
-                                            <strong>Status do acesso</strong>
-                                            <span><?= $item['active'] ? 'Usuário pode entrar' : 'Usuário sem acesso' ?></span>
-                                        </div>
+                                        <h3>Status</h3>
+                                        <p><?= $item['active'] ? 'Este usuário pode acessar o painel.' : 'Este usuário está bloqueado no login.' ?></p>
                                         <form method="post" action="<?= e(url('/admin/users/status?id=' . $item['id'])) ?>" class="user-status-form" onsubmit="return confirm('<?= $item['active'] ? 'Inativar este usuário?' : 'Ativar este usuário?' ?>');">
                                             <?= csrf_field() ?>
                                             <?php if ($item['active']): ?>
@@ -294,12 +298,10 @@ $onlineCount = count($onlineUserIds ?? []);
 
                                 <?php if ($institutionPages ?? []): ?>
                                     <section class="user-action-panel user-action-panel-wide">
-                                        <form method="post" action="<?= e(url('/admin/users/responsibilities?id=' . $item['id'])) ?>" class="user-pages-form">
+                                        <h3>Páginas institucionais</h3>
+                                        <form method="post" action="<?= e(url('/admin/users/responsibilities?id=' . $item['id'])) ?>" class="user-stacked-form">
                                             <?= csrf_field() ?>
-                                            <div class="user-form-title">
-                                                <strong>Páginas institucionais</strong>
-                                                <span><?= e((string) count($selectedPages)) ?> selecionada(s)</span>
-                                            </div>
+                                            <span class="field-hint"><?= e((string) count($selectedPages)) ?> selecionada(s)</span>
                                             <div class="responsibility-options">
                                                 <?php foreach (($institutionPages ?? []) as $page): ?>
                                                     <label>
@@ -313,26 +315,23 @@ $onlineCount = count($onlineUserIds ?? []);
                                     </section>
                                 <?php endif; ?>
 
-                                <section class="user-action-panel user-action-panel-wide">
-                                    <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="user-password-form">
-                                    <?= csrf_field() ?>
-                                        <div class="user-form-title">
-                                            <strong>Redefinir senha</strong>
-                                            <span>Mínimo 8 caracteres</span>
-                                        </div>
-                                        <div class="password-field">
+                                <section class="user-action-panel">
+                                    <h3>Senha</h3>
+                                    <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="user-stacked-form">
+                                        <?= csrf_field() ?>
+                                        <label>
+                                            <span>Nova senha</span>
                                             <input class="form-control form-control-sm" name="password" type="password" minlength="8" placeholder="Nova senha" autocomplete="new-password" required>
-                                            <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha"><i class="bi bi-eye" aria-hidden="true"></i></button>
-                                        </div>
-                                        <div class="password-field">
+                                        </label>
+                                        <label>
+                                            <span>Confirmar senha</span>
                                             <input class="form-control form-control-sm" name="password_confirmation" type="password" minlength="8" placeholder="Confirmar senha" autocomplete="new-password" required>
-                                            <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha"><i class="bi bi-eye" aria-hidden="true"></i></button>
-                                        </div>
+                                        </label>
                                         <button class="btn btn-sm btn-outline-secondary">Resetar</button>
                                     </form>
                                 </section>
                             </div>
-                        </div>
+                        </details>
                     <?php else: ?>
                         <div class="user-readonly-note">Somente master pode alterar acessos.</div>
                     <?php endif; ?>
