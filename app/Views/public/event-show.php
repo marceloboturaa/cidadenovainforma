@@ -1,8 +1,11 @@
 <?php
 $startsAt = !empty($event['starts_at']) ? date('d/m/Y H:i', strtotime($event['starts_at'])) : 'Data a definir';
 $endsAt = !empty($event['ends_at']) ? date('d/m/Y H:i', strtotime($event['ends_at'])) : null;
-$isPast = ($event['status'] ?? '') === 'encerrado' || (!empty($event['starts_at']) && strtotime($event['starts_at']) < time());
-$statusText = $isPast ? 'Evento realizado' : 'Próximo evento';
+$startTime = !empty($event['starts_at']) ? strtotime($event['starts_at']) : null;
+$endTime = !empty($event['ends_at']) ? strtotime($event['ends_at']) : null;
+$isHappening = ($event['status'] ?? '') === 'aberto' && $startTime && $endTime && $startTime <= time() && $endTime >= time();
+$isPast = ($event['status'] ?? '') === 'encerrado' || (($endTime ?: $startTime) && ($endTime ?: $startTime) < time());
+$statusText = $isHappening ? 'Acontecendo' : ($isPast ? 'Evento realizado' : 'Próximo evento');
 ?>
 
 <article class="event-show-page">

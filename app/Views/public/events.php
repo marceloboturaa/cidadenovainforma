@@ -6,10 +6,15 @@ $totalEvents = count($upcomingEvents) + count($pastEvents);
 $featuredEvent = $upcomingEvents[0] ?? $pastEvents[0] ?? null;
 $formatDate = fn (?string $value): string => $value ? date('d/m/Y H:i', strtotime($value)) : 'Data a definir';
 $eventStatus = function (array $event): string {
+    $start = !empty($event['starts_at']) ? strtotime($event['starts_at']) : null;
+    $end = !empty($event['ends_at']) ? strtotime($event['ends_at']) : null;
+    if (($event['status'] ?? '') === 'aberto' && $start && $end && $start <= time() && $end >= time()) {
+        return 'Acontecendo';
+    }
     if (($event['status'] ?? '') === 'encerrado') {
         return 'Realizado';
     }
-    if (!empty($event['starts_at']) && strtotime($event['starts_at']) < time()) {
+    if (($end ?: $start) && ($end ?: $start) < time()) {
         return 'Realizado';
     }
     return 'Próximo evento';
@@ -113,6 +118,13 @@ $eventStatus = function (array $event): string {
             <div class="events-history-list">
                 <?php foreach ($pastEvents as $event): ?>
                     <article class="events-history-item">
+                        <a class="events-history-media" href="<?= e(url('/evento/' . $event['id'])) ?>">
+                            <?php if (!empty($event['cover_image'])): ?>
+                                <img src="<?= e(media_url($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
+                            <?php else: ?>
+                                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                            <?php endif; ?>
+                        </a>
                         <div>
                             <span><?= e($formatDate($event['starts_at'] ?? null)) ?></span>
                             <h3><a href="<?= e(url('/evento/' . $event['id'])) ?>"><?= e($event['title']) ?></a></h3>

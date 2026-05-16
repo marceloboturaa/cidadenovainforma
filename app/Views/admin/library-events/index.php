@@ -3,26 +3,90 @@ $isEdit = (bool) $editing;
 $startsAt = !empty($editing['starts_at']) ? date('Y-m-d\TH:i', strtotime($editing['starts_at'])) : '';
 $endsAt = !empty($editing['ends_at']) ? date('Y-m-d\TH:i', strtotime($editing['ends_at'])) : '';
 $now = time();
-$upcomingEvents = [];
+$happeningEvents = [];
+$openEvents = [];
 $pastEvents = [];
 $canceledEvents = [];
+$totalEventMinutes = 0;
+
+$eventBucket = function (array $event) use ($now): string {
+    $status = (string) ($event['status'] ?? 'aberto');
+    $start = !empty($event['starts_at']) ? strtotime($event['starts_at']) : null;
+    $end = !empty($event['ends_at']) ? strtotime($event['ends_at']) : null;
+
+    if ($status === 'cancelado') {
+        return 'canceled';
+    }
+
+    if ($status === 'encerrado' || (($end ?: $start) && ($end ?: $start) < $now)) {
+        return 'past';
+    }
+
+    if ($status === 'aberto' && $start && $start <= $now && (!$end || $end >= $now)) {
+        return 'happening';
+    }
+
+    return 'open';
+};
+
+$eventDurationMinutes = function (array $event): ?int {
+    if (empty($event['starts_at']) || empty($event['ends_at'])) {
+        return null;
+    }
+
+    $start = strtotime($event['starts_at']);
+    $end = strtotime($event['ends_at']);
+    if (!$start || !$end || $end <= $start) {
+        return null;
+    }
+
+    return (int) round(($end - $start) / 60);
+};
+
+$formatDuration = function (?int $minutes): string {
+    if (!$minutes) {
+        return 'Não informado';
+    }
+
+    $hours = intdiv($minutes, 60);
+    $remaining = $minutes % 60;
+    if ($hours > 0 && $remaining > 0) {
+        return $hours . 'h ' . $remaining . 'min';
+    }
+    if ($hours > 0) {
+        return $hours . 'h';
+    }
+
+    return $remaining . 'min';
+};
 
 foreach ($events as $event) {
-    $eventTime = !empty($event['ends_at'] ?: $event['starts_at']) ? strtotime($event['ends_at'] ?: $event['starts_at']) : null;
-    if (($event['status'] ?? '') === 'cancelado') {
-        $canceledEvents[] = $event;
-    } elseif (($event['status'] ?? '') === 'encerrado' || ($eventTime && $eventTime < $now)) {
-        $pastEvents[] = $event;
-    } else {
-        $upcomingEvents[] = $event;
+    $duration = $eventDurationMinutes($event);
+    if ($duration) {
+        $totalEventMinutes += $duration;
     }
-}
+
+    match ($eventBucket($event)) {
+        'happening' => $happeningEvents[] = $event,
+        'past' => $pastEvents[] = $event,
+        'canceled' => $canceledEvents[] = $event,
+        default => $openEvents[] = $event,
+    };
+    }
 
 $totalParticipants = array_sum(array_map(fn (array $event): int => (int) ($event['participant_count'] ?? 0), $events));
 $formatDate = function (?string $value): string {
     return $value ? date('d/m/Y H:i', strtotime($value)) : 'Sem data definida';
 };
-$statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Realizado', 'cancelado' => 'Cancelado'];
+$displayStatus = function (array $event) use ($eventBucket): string {
+    return match ($eventBucket($event)) {
+        'happening' => 'Acontecendo',
+        'past' => 'Encerrado',
+        'canceled' => 'Cancelado',
+        default => 'Aberto',
+    };
+};
+$statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' => 'Cancelado'];
 ?>
 
 <div class="events-admin-shell">
@@ -48,24 +112,24 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Realizado', 'cancelado' =>
 
     <section class="events-admin-metrics" aria-label="Resumo de eventos">
         <article>
-            <span>Próximos</span>
-            <strong><?= e((string) count($upcomingEvents)) ?></strong>
-            <small>em aberto</small>
+            <span>Acontecendo</span>
+            <strong><?= e((string) count($happeningEvents)) ?></strong>
+            <small>em andamento agora</small>
         </article>
         <article>
-            <span>Realizados</span>
+            <span>Abertos</span>
+            <strong><?= e((string) count($openEvents)) ?></strong>
+            <small>futuros ou sem data</small>
+        </article>
+        <article>
+            <span>Encerrados</span>
             <strong><?= e((string) count($pastEvents)) ?></strong>
-            <small>histórico</small>
+            <small>já realizados</small>
         </article>
         <article>
-            <span>Participantes</span>
-            <strong><?= e((string) $totalParticipants) ?></strong>
-            <small>em todos os eventos</small>
-        </article>
-        <article>
-            <span>Cancelados</span>
-            <strong><?= e((string) count($canceledEvents)) ?></strong>
-            <small>fora da agenda pública</small>
+            <span>Horas</span>
+            <strong><?= e($formatDuration($totalEventMinutes)) ?></strong>
+            <small><?= e((string) $totalParticipants) ?> participante(s)</small>
         </article>
     </section>
 
@@ -77,8 +141,8 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Realizado', 'cancelado' =>
                     <h2><?= $isEdit ? 'Editar evento' : 'Novo evento' ?></h2>
                 </div>
                 <?php if ($isEdit): ?>
-                    <span class="state-pill <?= ($editing['status'] ?? '') === 'aberto' ? 'is-active' : 'is-muted' ?>">
-                        <?= e($statusLabel[$editing['status']] ?? ucfirst((string) $editing['status'])) ?>
+                    <span class="state-pill <?= $eventBucket($editing) === 'open' || $eventBucket($editing) === 'happening' ? 'is-active' : 'is-muted' ?>">
+                        <?= e($displayStatus($editing)) ?>
                     </span>
                 <?php endif; ?>
             </div>
@@ -168,10 +232,11 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Realizado', 'cancelado' =>
         <aside class="events-admin-guide">
             <h2>Como organizar</h2>
             <ul>
-                <li>Use <strong>Aberto</strong> para aparecer em eventos futuros.</li>
-                <li>Use <strong>Realizado</strong> quando a atividade terminar.</li>
+                <li><strong>Acontecendo</strong> aparece automaticamente quando o horário atual está entre início e fim.</li>
+                <li>Use <strong>Aberto</strong> para eventos futuros ou ainda disponíveis.</li>
+                <li>Use <strong>Encerrado</strong> quando a atividade terminar.</li>
                 <li>Use <strong>Cancelado</strong> para tirar da página pública.</li>
-                <li>Adicione capa, local e horário para deixar a página pública completa.</li>
+                <li>Preencha início e fim para o painel calcular a duração em horas.</li>
             </ul>
         </aside>
     </section>
@@ -184,7 +249,8 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Realizado', 'cancelado' =>
             </div>
             <div class="events-admin-tabs" role="group" aria-label="Filtrar eventos">
                 <button type="button" class="is-active" data-event-filter="all">Todos</button>
-                <button type="button" data-event-filter="upcoming">Futuros</button>
+                <button type="button" data-event-filter="happening">Acontecendo</button>
+                <button type="button" data-event-filter="open">Abertos</button>
                 <button type="button" data-event-filter="past">Realizados</button>
                 <button type="button" data-event-filter="canceled">Cancelados</button>
             </div>
@@ -193,10 +259,10 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Realizado', 'cancelado' =>
         <div class="events-admin-list" data-events-admin-list>
             <?php foreach ($events as $event): ?>
                 <?php
-                $eventTime = !empty($event['ends_at'] ?: $event['starts_at']) ? strtotime($event['ends_at'] ?: $event['starts_at']) : null;
-                $bucket = ($event['status'] ?? '') === 'cancelado' ? 'canceled' : ((($event['status'] ?? '') === 'encerrado' || ($eventTime && $eventTime < $now)) ? 'past' : 'upcoming');
+                $bucket = $eventBucket($event);
                 $capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
                 $participants = (int) ($event['participant_count'] ?? 0);
+                $duration = $eventDurationMinutes($event);
                 ?>
                 <article class="events-admin-item" data-event-card data-event-bucket="<?= e($bucket) ?>">
                     <?php if (!empty($event['cover_image'])): ?>
@@ -207,11 +273,12 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Realizado', 'cancelado' =>
                     <div class="events-admin-item-main">
                         <div class="events-admin-title-row">
                             <h3><?= e($event['title']) ?></h3>
-                            <span class="state-pill <?= $bucket === 'upcoming' ? 'is-active' : 'is-muted' ?>"><?= e($statusLabel[$event['status']] ?? ucfirst((string) $event['status'])) ?></span>
+                            <span class="state-pill <?= in_array($bucket, ['open', 'happening'], true) ? 'is-active' : 'is-muted' ?>"><?= e($displayStatus($event)) ?></span>
                         </div>
                         <p><?= e(text_excerpt($event['description'] ?? '', 130)) ?></p>
                         <dl>
                             <div><dt>Quando</dt><dd><?= e($formatDate($event['starts_at'] ?? null)) ?></dd></div>
+                            <div><dt>Duração</dt><dd><?= e($formatDuration($duration)) ?></dd></div>
                             <div><dt>Local</dt><dd><?= e($event['location'] ?: '-') ?></dd></div>
                             <div><dt>Participantes</dt><dd><?= e((string) $participants) ?><?= $capacity ? ' / ' . e((string) $capacity) : '' ?></dd></div>
                             <div><dt>Responsável</dt><dd><?= e($event['responsible_name'] ?? '-') ?></dd></div>
