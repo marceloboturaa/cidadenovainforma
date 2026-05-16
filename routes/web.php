@@ -19,6 +19,8 @@ use App\Controllers\PublicController;
 
 $router->get('/', [PublicController::class, 'home']);
 $router->get('/eventos', [PublicController::class, 'events']);
+$router->get('/eventos/futuros', [PublicController::class, 'upcomingEvents']);
+$router->get('/eventos/realizados', [PublicController::class, 'pastEvents']);
 $router->get('/evento/{id}', [PublicController::class, 'eventShow']);
 $router->get('/instituicao', [PublicController::class, 'institution']);
 $router->get('/instituicao/{slug}', [PublicController::class, 'institutionArea']);

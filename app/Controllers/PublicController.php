@@ -65,12 +65,46 @@ class PublicController
         $this->logAccess();
 
         View::render('public/events', [
-            'events' => LibraryEvent::publicAll(),
+            'upcomingEvents' => LibraryEvent::publicUpcomingAll(),
+            'pastEvents' => LibraryEvent::publicPastAll(),
+            'mode' => 'all',
             'menuItems' => MenuItem::visible(),
             'query' => '',
             'pageTitle' => 'Eventos - Cidade Nova Informa',
             'metaDescription' => 'Agenda de eventos e atividades abertas do Cidade Nova Informa.',
             'canonicalUrl' => url('/eventos'),
+        ], 'public');
+    }
+
+    public function upcomingEvents(): void
+    {
+        $this->logAccess();
+
+        View::render('public/events', [
+            'upcomingEvents' => LibraryEvent::publicUpcomingAll(),
+            'pastEvents' => [],
+            'mode' => 'upcoming',
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => 'Eventos futuros - Cidade Nova Informa',
+            'metaDescription' => 'Confira os próximos eventos e atividades do Cidade Nova Informa.',
+            'canonicalUrl' => url('/eventos/futuros'),
+        ], 'public');
+    }
+
+    public function pastEvents(): void
+    {
+        $this->logAccess();
+
+        View::render('public/events', [
+            'upcomingEvents' => [],
+            'pastEvents' => LibraryEvent::publicPastAll(),
+            'mode' => 'past',
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => 'Eventos realizados - Cidade Nova Informa',
+            'metaDescription' => 'Histórico de eventos e atividades já realizadas pelo Cidade Nova Informa.',
+            'canonicalUrl' => url('/eventos/realizados'),
         ], 'public');
     }
 
@@ -265,6 +299,8 @@ class PublicController
         $urls = [
             ['loc' => url('/'), 'priority' => '1.0'],
             ['loc' => url('/eventos'), 'priority' => '0.7'],
+            ['loc' => url('/eventos/futuros'), 'priority' => '0.6'],
+            ['loc' => url('/eventos/realizados'), 'priority' => '0.5'],
             ['loc' => url('/instituicao'), 'priority' => '0.6'],
             ['loc' => url('/buscar'), 'priority' => '0.4'],
             ['loc' => url('/acervo'), 'priority' => '0.7'],

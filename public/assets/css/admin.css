@@ -1249,6 +1249,274 @@ body.editor-focus-mode {
     background: #f9fafb;
 }
 
+.events-admin-shell {
+    display: grid;
+    gap: 18px;
+}
+
+.events-admin-hero,
+.events-admin-metrics,
+.events-admin-board,
+.events-list-panel {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.events-admin-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px;
+}
+
+.events-admin-hero h1 {
+    margin: 4px 0 8px;
+    color: var(--ink);
+    font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+.events-admin-hero p {
+    max-width: 720px;
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+.events-admin-actions,
+.events-form-actions,
+.events-admin-item-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.events-admin-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    background: var(--line);
+}
+
+.events-admin-metrics article {
+    padding: 16px;
+    background: #ffffff;
+}
+
+.events-admin-metrics span,
+.events-admin-metrics small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.events-admin-metrics strong {
+    display: block;
+    margin: 6px 0 2px;
+    color: var(--ink);
+    font-size: 1.9rem;
+    line-height: 1;
+}
+
+.events-admin-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    align-items: start;
+    overflow: hidden;
+}
+
+.events-editor-card,
+.events-list-panel {
+    padding: 18px;
+}
+
+.events-admin-guide {
+    display: grid;
+    gap: 10px;
+    min-height: 100%;
+    padding: 18px;
+    border-left: 1px solid var(--line);
+    background: #f8fafc;
+}
+
+.events-admin-guide h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.events-admin-guide ul {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.events-card-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.events-card-heading h2 {
+    margin: 3px 0 0;
+    color: var(--ink);
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+.events-modern-form {
+    display: grid;
+    gap: 14px;
+}
+
+.events-form-section {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.events-form-section.is-main {
+    background: #ffffff;
+}
+
+.events-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.events-form-actions {
+    padding-top: 4px;
+}
+
+.events-admin-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.events-admin-tabs button {
+    min-height: 34px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 900;
+}
+
+.events-admin-tabs button.is-active {
+    background: #111827;
+    color: #ffffff;
+}
+
+.events-admin-list {
+    display: grid;
+    gap: 12px;
+}
+
+.events-admin-item {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.events-admin-item.is-hidden {
+    display: none;
+}
+
+.events-admin-item > img,
+.events-admin-placeholder {
+    width: 112px;
+    aspect-ratio: 4 / 3;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f3f4f6;
+}
+
+.events-admin-placeholder {
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-size: 1.5rem;
+}
+
+.events-admin-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.events-admin-title-row h3 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+
+.events-admin-item-main p {
+    margin: 0 0 9px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.events-admin-item-main dl {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+}
+
+.events-admin-item-main dt {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.events-admin-item-main dd {
+    margin: 2px 0 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+.events-admin-item-actions {
+    justify-content: flex-end;
+    min-width: 160px;
+}
+
+.events-admin-item-actions .btn,
+.events-admin-item-actions form,
+.events-admin-item-actions form button {
+    width: 100%;
+}
+
 .guardian-fields[hidden] {
     display: none;
 }
@@ -5466,6 +5734,11 @@ body.editor-focus-mode {
     .users-directory-toolbar,
     .user-row-header,
     .user-access-grid,
+    .events-admin-metrics,
+    .events-admin-board,
+    .events-form-grid,
+    .events-admin-item,
+    .events-admin-item-main dl,
     .users-create-form,
     .pending-user-row,
     .user-profile-form,
@@ -5494,6 +5767,36 @@ body.editor-focus-mode {
 
     .user-status-stack {
         justify-content: flex-start;
+    }
+
+    .events-admin-hero,
+    .events-card-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .events-admin-guide {
+        border-top: 1px solid var(--line);
+        border-left: 0;
+    }
+
+    .events-admin-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .events-admin-item > img,
+    .events-admin-placeholder {
+        width: 100%;
+    }
+
+    .events-admin-actions .btn,
+    .events-form-actions .btn,
+    .events-admin-item-actions,
+    .events-admin-item-actions .btn,
+    .events-admin-item-actions form,
+    .events-admin-item-actions form button {
+        width: 100%;
     }
 
     .user-manage-drawer > summary,

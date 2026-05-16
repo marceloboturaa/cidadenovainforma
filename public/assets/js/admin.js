@@ -16,6 +16,7 @@
     const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
+    const eventsAdminList = document.querySelector('[data-events-admin-list]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -143,6 +144,10 @@
 
     if (usersDirectory && usersSearch) {
         bindUsersSearch(usersDirectory, usersSearch);
+    }
+
+    if (eventsAdminList) {
+        bindEventsAdminFilter(eventsAdminList);
     }
 
     if (personForm) {
@@ -296,6 +301,32 @@
             .replace(/[\u0300-\u036f]/g, '')
             .toLowerCase()
             .trim();
+    }
+
+    function bindEventsAdminFilter(list) {
+        const cards = Array.from(list.querySelectorAll('[data-event-card]'));
+        const empty = list.querySelector('[data-events-empty]');
+        const buttons = Array.from(document.querySelectorAll('[data-event-filter]'));
+
+        buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const filter = button.dataset.eventFilter || 'all';
+                let visible = 0;
+
+                buttons.forEach((item) => item.classList.toggle('is-active', item === button));
+                cards.forEach((card) => {
+                    const matches = filter === 'all' || card.dataset.eventBucket === filter;
+                    card.classList.toggle('is-hidden', !matches);
+                    if (matches) {
+                        visible += 1;
+                    }
+                });
+
+                if (empty) {
+                    empty.hidden = visible > 0;
+                }
+            });
+        });
     }
 
     function bindEducationVideoWatch(player) {

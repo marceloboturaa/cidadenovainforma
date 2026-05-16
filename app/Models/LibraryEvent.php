@@ -131,6 +131,7 @@ class LibraryEvent
              FROM library_events
              WHERE active = 1
                AND status = 'aberto'
+               AND (starts_at IS NULL OR COALESCE(ends_at, starts_at) >= NOW())
              ORDER BY COALESCE(starts_at, created_at) ASC
              LIMIT :limit"
         );
@@ -138,6 +139,41 @@ class LibraryEvent
         $stmt->execute();
 
         return $stmt->fetchAll();
+    }
+
+    public static function publicUpcomingAll(): array
+    {
+        self::ensureSchema();
+
+        return Database::connection()
+            ->query(
+                "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status, created_at, updated_at
+                 FROM library_events
+                 WHERE active = 1
+                   AND status = 'aberto'
+                   AND (starts_at IS NULL OR COALESCE(ends_at, starts_at) >= NOW())
+                 ORDER BY COALESCE(starts_at, created_at) ASC"
+            )
+            ->fetchAll();
+    }
+
+    public static function publicPastAll(): array
+    {
+        self::ensureSchema();
+
+        return Database::connection()
+            ->query(
+                "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status, created_at, updated_at
+                 FROM library_events
+                 WHERE active = 1
+                   AND status <> 'cancelado'
+                   AND (
+                        status = 'encerrado'
+                        OR (starts_at IS NOT NULL AND COALESCE(ends_at, starts_at) < NOW())
+                   )
+                 ORDER BY COALESCE(starts_at, created_at) DESC"
+            )
+            ->fetchAll();
     }
 
     public static function publicAll(): array
@@ -149,8 +185,8 @@ class LibraryEvent
                 "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status, created_at, updated_at
                  FROM library_events
                  WHERE active = 1
-                   AND status = 'aberto'
-                 ORDER BY COALESCE(starts_at, created_at) ASC"
+                   AND status <> 'cancelado'
+                 ORDER BY COALESCE(starts_at, created_at) DESC"
             )
             ->fetchAll();
     }
@@ -166,7 +202,7 @@ class LibraryEvent
              LEFT JOIN users responsible ON responsible.id = library_events.responsible_user_id
              WHERE library_events.id = :id
                AND library_events.active = 1
-               AND library_events.status = 'aberto'
+               AND library_events.status <> 'cancelado'
              LIMIT 1"
         );
         $stmt->execute(['id' => $id]);
