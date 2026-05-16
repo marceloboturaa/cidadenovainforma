@@ -535,7 +535,7 @@ class BackupController
         if (!$this->fullBackupSignatureIsValid($zip)) {
             $zip->close();
             $this->removeDirectory($tempDir);
-            Session::flash('error', 'Backup recusado: assinatura inválida ou ausente. Gere um novo backup neste sistema antes de importar.');
+            Session::flash('error', 'Backup recusado: assinatura inválida ou ausente. Use um ZIP gerado por este sistema ou configure o mesmo BACKUP_KEY no localhost e na hospedagem antes de gerar/importar o backup.');
             redirect('/admin/backups');
         }
 

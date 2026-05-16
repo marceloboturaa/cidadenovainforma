@@ -222,7 +222,7 @@
         }
 
         const url = new URL(window.location.href);
-        ['edit_course', 'module_id', 'lesson_id'].forEach((name) => url.searchParams.delete(name));
+        ['edit_course', 'create_module', 'module_id', 'lesson_id'].forEach((name) => url.searchParams.delete(name));
         window.history.replaceState({}, '', url.pathname + url.search + url.hash);
     }
 

@@ -314,76 +314,78 @@ $embed = function (?string $url): ?string {
             <div class="empty-state">Esta aula ainda não tem sequência cadastrada.</div>
         <?php endif; ?>
 
-        <section class="panel education-course-forum" id="lesson-forum">
-            <div class="section-heading">
-                <h2>Fórum deste tema</h2>
-                <span><?= e((string) count($lessonForumTopics)) ?> tópico(s)</span>
-            </div>
-            <?php if ($canManage): ?>
-                <form method="post" action="<?= e(url('/admin/education/forum/topic?lesson_id=' . $lesson['id'])) ?>" class="education-sequence-form">
-                    <?= csrf_field() ?>
-                    <div class="sequence-title-field">
-                        <label class="form-label">Tema do fórum</label>
-                        <input class="form-control" name="title" maxlength="180" value="<?= e($lesson['title']) ?>" required>
-                    </div>
-                    <div class="grid-span-2">
-                        <label class="form-label">Mensagem inicial</label>
-                        <textarea class="form-control" name="body" rows="4" data-tinymce required></textarea>
-                    </div>
-                    <div class="form-action-cell">
-                        <button class="btn btn-primary icon-btn"><i class="bi bi-chat-dots" aria-hidden="true"></i>Criar fórum deste tema</button>
-                    </div>
-                </form>
-            <?php endif; ?>
-            <div class="forum-topic-list mt-3">
-                <?php foreach ($lessonForumTopics as $topic): ?>
-                    <?php $topicReplies = $lessonForumRepliesByTopic[(int) $topic['id']] ?? []; ?>
-                    <article class="forum-topic-item">
-                        <div class="forum-topic-main">
-                            <span class="forum-topic-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
-                            <span>
-                                <strong><?= e($topic['title']) ?></strong>
-                                <small><?= e(text_excerpt($topic['body'] ?? '', 150)) ?></small>
-                            </span>
+        <?php if ($canManage || $lessonForumTopics): ?>
+            <section class="panel education-course-forum" id="lesson-forum">
+                <div class="section-heading">
+                    <h2>Fórum deste tema</h2>
+                    <span><?= e((string) count($lessonForumTopics)) ?> tópico(s)</span>
+                </div>
+                <?php if ($canManage): ?>
+                    <form method="post" action="<?= e(url('/admin/education/forum/topic?lesson_id=' . $lesson['id'])) ?>" class="education-sequence-form">
+                        <?= csrf_field() ?>
+                        <div class="sequence-title-field">
+                            <label class="form-label">Tema do fórum</label>
+                            <input class="form-control" name="title" maxlength="180" value="<?= e($lesson['title']) ?>" required>
                         </div>
-                        <div class="forum-topic-meta">
-                            <span><?= e($topic['user_name'] ?? 'Usuário') ?></span>
-                            <span><?= e((string) ($topic['reply_count'] ?? 0)) ?> resposta(s)</span>
-                            <span><?= e($topic['created_at'] ?? '') ?></span>
+                        <div class="grid-span-2">
+                            <label class="form-label">Mensagem inicial</label>
+                            <textarea class="form-control" name="body" rows="4" data-tinymce required></textarea>
                         </div>
-                        <div class="education-forum-topic-actions">
-                            <?php if (!empty($topic['central_topic_id'])): ?>
-                                <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/forum/topic?id=' . $topic['central_topic_id'])) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Central de fóruns</a>
-                            <?php endif; ?>
-                            <?php if ($canManage): ?>
-                                <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/delete?topic_id=' . $topic['id'])) ?>" onsubmit="return confirm('Remover este fórum? A cópia da central também será ocultada.');">
-                                    <?= csrf_field() ?>
-                                    <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Remover fórum</button>
-                                </form>
-                            <?php endif; ?>
+                        <div class="form-action-cell">
+                            <button class="btn btn-primary icon-btn"><i class="bi bi-chat-dots" aria-hidden="true"></i>Criar fórum deste tema</button>
                         </div>
-                        <?php if ($topicReplies): ?>
-                            <div class="education-forum-replies">
-                                <?php foreach ($topicReplies as $reply): ?>
-                                    <div>
-                                        <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
-                                        <div><?= article_html($reply['body'] ?? '') ?></div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                        <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
-                            <?= csrf_field() ?>
-                            <textarea class="form-control" name="body" rows="2" placeholder="Responder este tema" required></textarea>
-                            <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
-                        </form>
-                    </article>
-                <?php endforeach; ?>
-                <?php if (!$lessonForumTopics): ?>
-                    <div class="empty-state"><?= $canManage ? 'Crie um fórum para discutir o tema desta aula.' : 'Nenhum fórum foi criado para esta aula ainda.' ?></div>
+                    </form>
                 <?php endif; ?>
-            </div>
-        </section>
+                <div class="forum-topic-list mt-3">
+                    <?php foreach ($lessonForumTopics as $topic): ?>
+                        <?php $topicReplies = $lessonForumRepliesByTopic[(int) $topic['id']] ?? []; ?>
+                        <article class="forum-topic-item">
+                            <div class="forum-topic-main">
+                                <span class="forum-topic-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
+                                <span>
+                                    <strong><?= e($topic['title']) ?></strong>
+                                    <small><?= e(text_excerpt($topic['body'] ?? '', 150)) ?></small>
+                                </span>
+                            </div>
+                            <div class="forum-topic-meta">
+                                <span><?= e($topic['user_name'] ?? 'Usuário') ?></span>
+                                <span><?= e((string) ($topic['reply_count'] ?? 0)) ?> resposta(s)</span>
+                                <span><?= e($topic['created_at'] ?? '') ?></span>
+                            </div>
+                            <div class="education-forum-topic-actions">
+                                <?php if (!empty($topic['central_topic_id'])): ?>
+                                    <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/forum/topic?id=' . $topic['central_topic_id'])) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Central de fóruns</a>
+                                <?php endif; ?>
+                                <?php if ($canManage): ?>
+                                    <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/delete?topic_id=' . $topic['id'])) ?>" onsubmit="return confirm('Remover este fórum? A cópia da central também será ocultada.');">
+                                        <?= csrf_field() ?>
+                                        <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Remover fórum</button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($topicReplies): ?>
+                                <div class="education-forum-replies">
+                                    <?php foreach ($topicReplies as $reply): ?>
+                                        <div>
+                                            <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
+                                            <div><?= article_html($reply['body'] ?? '') ?></div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                            <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
+                                <?= csrf_field() ?>
+                                <textarea class="form-control" name="body" rows="2" placeholder="Responder este tema" required></textarea>
+                                <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
+                            </form>
+                        </article>
+                    <?php endforeach; ?>
+                    <?php if (!$lessonForumTopics && $canManage): ?>
+                        <div class="empty-state">Crie um fórum para discutir o tema desta aula.</div>
+                    <?php endif; ?>
+                </div>
+            </section>
+        <?php endif; ?>
 
         <nav class="education-player-nav" aria-label="Navegação da playlist">
             <?php if ($previousLesson): ?>

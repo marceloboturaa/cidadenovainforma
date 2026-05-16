@@ -3,6 +3,7 @@ $editingLesson = $editingLesson ?? null;
 $editingModule = $editingModule ?? null;
 $canTakeAttendance = $canTakeAttendance ?? false;
 $editingCourseIntro = ($_GET['edit_course'] ?? '') === '1';
+$creatingModule = ($_GET['create_module'] ?? '') === '1';
 $modules = $modules ?? [];
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
@@ -25,6 +26,7 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
     <div class="heading-actions">
         <?php if ($canManage): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&edit_course=1')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar curso</a>
+            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&create_module=1')) ?>"><i class="bi bi-collection-play" aria-hidden="true"></i>Novo módulo</a>
         <?php endif; ?>
         <?php if ($canTakeAttendance): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Chamada</a>
@@ -40,33 +42,6 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
             <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" onerror="this.remove()">
         <?php endif; ?>
         <p><?= e($course['summary']) ?></p>
-    </section>
-<?php endif; ?>
-
-<?php if ($canManage): ?>
-    <section class="panel education-simple-panel">
-        <div class="section-heading">
-            <h2>Criar módulo</h2>
-            <span>Use módulos para organizar as aulas por etapas</span>
-        </div>
-        <form method="post" action="<?= e($moduleAction) ?>" class="education-module-form">
-            <?= csrf_field() ?>
-            <div>
-                <label class="form-label">Título do módulo</label>
-                <input class="form-control" name="title" maxlength="180" placeholder="Ex.: Módulo 01 [40 horas]" required>
-            </div>
-            <div>
-                <label class="form-label">Ordem</label>
-                <input class="form-control" name="sort_order" type="number" value="0">
-            </div>
-            <div class="grid-span-2">
-                <label class="form-label">Resumo</label>
-                <textarea class="form-control" name="summary" rows="3"></textarea>
-            </div>
-            <div class="form-action-cell split-actions">
-                <button class="btn btn-primary icon-btn"><i class="bi bi-collection-play" aria-hidden="true"></i>Criar módulo</button>
-            </div>
-        </form>
     </section>
 <?php endif; ?>
 
@@ -163,7 +138,12 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
         <?php endif; ?>
 
         <?php if (!$modules && !$lessons): ?>
-            <div class="empty-state">Crie o primeiro módulo. Depois aparecerá o botão para adicionar aulas dentro dele.</div>
+            <div class="empty-state">
+                Crie o primeiro módulo. Depois aparecerá o botão para adicionar aulas dentro dele.
+                <?php if ($canManage): ?>
+                    <a class="btn btn-primary icon-btn mt-3" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&create_module=1')) ?>"><i class="bi bi-collection-play" aria-hidden="true"></i>Novo módulo</a>
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
     </div>
 </section>
@@ -271,6 +251,40 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
                 </div>
                 <footer class="split-actions">
                     <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar curso</button>
+                    <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
+                </footer>
+            </form>
+        </section>
+    </div>
+<?php endif; ?>
+
+<?php if ($canManage && $creatingModule): ?>
+    <div class="forum-modal is-open education-edit-modal" id="education-module-create-modal" aria-hidden="false">
+        <div class="forum-modal-backdrop" data-modal-close></div>
+        <section class="forum-modal-dialog forum-modal-small" role="dialog" aria-modal="true" aria-labelledby="education-module-create-title">
+            <header>
+                <div>
+                    <span>Edição separada</span>
+                    <h2 id="education-module-create-title">Criar módulo</h2>
+                </div>
+                <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+            </header>
+            <form method="post" action="<?= e($moduleAction) ?>" class="education-modal-form">
+                <?= csrf_field() ?>
+                <div>
+                    <label class="form-label">Título do módulo</label>
+                    <input class="form-control" name="title" maxlength="180" placeholder="Ex.: Módulo 01 [40 horas]" required autofocus>
+                </div>
+                <div>
+                    <label class="form-label">Ordem</label>
+                    <input class="form-control" name="sort_order" type="number" value="0">
+                </div>
+                <div>
+                    <label class="form-label">Resumo</label>
+                    <textarea class="form-control" name="summary" rows="4"></textarea>
+                </div>
+                <footer class="split-actions">
+                    <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-collection-play" aria-hidden="true"></i>Criar módulo</button>
                     <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
                 </footer>
             </form>
