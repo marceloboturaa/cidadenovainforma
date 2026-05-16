@@ -904,11 +904,13 @@ class Education
             'UPDATE education_forum_topics
              SET title = :title,
                  body = :body,
+                 user_id = :user_id,
                  updated_at = NOW()
              WHERE id = :id'
         )->execute([
             'title' => trim((string) ($data['title'] ?? '')),
             'body' => trim((string) ($data['body'] ?? '')),
+            'user_id' => (int) ($data['user_id'] ?? 0),
             'id' => $id,
         ]);
     }

@@ -7,6 +7,8 @@ $hasVideo = $hasVideo ?? false;
 $videoWatched = $videoWatched ?? !$hasVideo;
 $lessonForumTopics = $lessonForumTopics ?? [];
 $lessonForumRepliesByTopic = $lessonForumRepliesByTopic ?? [];
+$canAssignForumAuthor = $canAssignForumAuthor ?? false;
+$forumAuthorOptions = $forumAuthorOptions ?? [];
 $playlist = $playlist ?? [];
 $modules = $modules ?? [];
 $playlistByModule = [];
@@ -363,6 +365,16 @@ $embed = function (?string $url): ?string {
                                             <?= csrf_field() ?>
                                             <label class="form-label">Título</label>
                                             <input class="form-control" name="title" maxlength="180" value="<?= e($topic['title'] ?? '') ?>" required>
+                                            <?php if ($canAssignForumAuthor): ?>
+                                                <label class="form-label">Autor exibido</label>
+                                                <select class="form-select" name="user_id">
+                                                    <?php foreach ($forumAuthorOptions as $item): ?>
+                                                        <option value="<?= e((string) $item['id']) ?>" <?= selected((string) $item['id'], (string) ($topic['user_id'] ?? '')) ?>>
+                                                            <?= e($item['name']) ?> - <?= e($item['role_names'] ?? $item['role_name']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            <?php endif; ?>
                                             <label class="form-label">Mensagem</label>
                                             <textarea class="form-control" name="body" rows="4" data-tinymce required><?= e($topic['body'] ?? '') ?></textarea>
                                             <button class="btn btn-sm btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar fórum</button>

@@ -163,6 +163,7 @@ class EducationController
             'canManage' => $canManage,
             'canAssignTeacher' => $this->canAssignTeacher(),
             'teacherOptions' => $this->teacherOptions(User::activeForAccessLists()),
+            'forumAuthorOptions' => User::activeForAccessLists(),
             'canTakeAttendance' => $canTakeAttendance,
             'editingLesson' => $this->lessonFromQuery(false, false),
             'editingModule' => $this->moduleFromQuery(false),
@@ -324,6 +325,8 @@ class EducationController
             'playlist' => $playlist,
             'lessonForumTopics' => $lessonForumTopics,
             'lessonForumRepliesByTopic' => Education::forumRepliesForTopics(array_column($lessonForumTopics, 'id'), $canManage),
+            'canAssignForumAuthor' => $this->canAssignTeacher(),
+            'forumAuthorOptions' => User::activeForAccessLists(),
         ]);
     }
 
@@ -572,14 +575,21 @@ class EducationController
             redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $topic['course_id'] . '#course-forum');
         }
 
+        $topicUserId = (int) $topic['user_id'];
+        if ($this->canAssignTeacher()) {
+            $requestedUserId = (int) ($_POST['user_id'] ?? 0);
+            $topicUserId = $requestedUserId > 0 ? $requestedUserId : $topicUserId;
+        }
+
         Education::updateForumTopic((int) $topic['id'], [
             'title' => $title,
             'body' => $body,
+            'user_id' => $topicUserId,
         ]);
 
         if (!empty($topic['central_topic_id'])) {
             $lesson = !empty($topic['lesson_id']) ? Education::findLesson((int) $topic['lesson_id']) : null;
-            $this->updateCentralForumCopy($course, $lesson, (int) $topic['central_topic_id'], $title, $body);
+            $this->updateCentralForumCopy($course, $lesson, (int) $topic['central_topic_id'], $title, $body, $topicUserId);
         }
 
         Session::flash('success', 'Fórum atualizado.');
@@ -944,12 +954,12 @@ class EducationController
         }
     }
 
-    private function updateCentralForumCopy(array $course, ?array $lesson, int $centralTopicId, string $title, string $body): void
+    private function updateCentralForumCopy(array $course, ?array $lesson, int $centralTopicId, string $title, string $body, int $userId): void
     {
         [$centralTitle, $centralBody] = $this->centralForumPayload($course, $lesson, $title, $body);
 
         try {
-            Forum::updateTopic($centralTopicId, $centralTitle, $centralBody);
+            Forum::updateTopic($centralTopicId, $centralTitle, $centralBody, $userId);
         } catch (\Throwable) {
             return;
         }

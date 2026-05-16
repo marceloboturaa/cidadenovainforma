@@ -14,6 +14,8 @@
     const educationClearVisible = document.querySelector('[data-education-clear-visible]');
     const educationVideoWatch = document.querySelector('[data-education-video-watch]');
     const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
+    const usersDirectory = document.querySelector('[data-users-directory]');
+    const usersSearch = document.querySelector('[data-users-search]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -139,6 +141,10 @@
         bindEducationVideoWatch(educationVideoWatch);
     }
 
+    if (usersDirectory && usersSearch) {
+        bindUsersSearch(usersDirectory, usersSearch);
+    }
+
     if (personForm) {
         const minorToggle = personForm.querySelector('[data-minor-toggle]');
         const guardianFields = personForm.querySelector('[data-guardian-fields]');
@@ -237,6 +243,48 @@
         if (input && value) {
             input.value = value;
         }
+    }
+
+    function bindUsersSearch(directory, searchInput) {
+        const cards = Array.from(directory.querySelectorAll('[data-user-card]'));
+        const empty = directory.querySelector('[data-users-empty]');
+        const countBadge = document.querySelector('[data-users-visible-count]');
+        const countLabel = document.querySelector('[data-users-visible-label]');
+
+        const applyFilter = () => {
+            const term = normalizeSearch(searchInput.value);
+            let visible = 0;
+
+            cards.forEach((card) => {
+                const haystack = normalizeSearch(card.dataset.userSearchText || card.textContent || '');
+                const matches = term === '' || haystack.includes(term);
+                card.classList.toggle('is-hidden', !matches);
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (countBadge) {
+                countBadge.textContent = String(visible);
+            }
+            if (countLabel) {
+                countLabel.textContent = String(visible);
+            }
+            if (empty) {
+                empty.hidden = visible > 0;
+            }
+        };
+
+        searchInput.addEventListener('input', applyFilter);
+        applyFilter();
+    }
+
+    function normalizeSearch(value) {
+        return String(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
     }
 
     function bindEducationVideoWatch(player) {

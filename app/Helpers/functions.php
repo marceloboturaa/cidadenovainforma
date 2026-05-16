@@ -232,7 +232,8 @@ function checked(bool $value): string
 
 function text_excerpt(?string $value, int $limit = 160): string
 {
-    $text = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)) ?? '');
+    $text = html_entity_decode(strip_tags((string) $value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = trim(preg_replace('/\s+/', ' ', $text) ?? '');
 
     if ($text === '' || $limit <= 0) {
         return '';

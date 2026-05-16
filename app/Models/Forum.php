@@ -295,21 +295,28 @@ class Forum
         return $topicId;
     }
 
-    public static function updateTopic(int $topicId, string $title, string $body): void
+    public static function updateTopic(int $topicId, string $title, string $body, ?int $userId = null): void
     {
         self::ensureSchema();
+
+        $userSql = $userId ? ', user_id = :user_id' : '';
+        $params = [
+            'title' => trim($title),
+            'body' => trim($body),
+            'id' => $topicId,
+        ];
+        if ($userId) {
+            $params['user_id'] = $userId;
+        }
 
         Database::connection()->prepare(
             'UPDATE forum_topics
              SET title = :title,
                  body = :body,
+                 ' . ltrim($userSql, ', ') . ($userSql ? ',' : '') . '
                  updated_at = NOW()
              WHERE id = :id'
-        )->execute([
-            'title' => trim($title),
-            'body' => trim($body),
-            'id' => $topicId,
-        ]);
+        )->execute($params);
     }
 
     public static function createReply(array $data): int
