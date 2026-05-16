@@ -357,6 +357,17 @@ $embed = function (?string $url): ?string {
                                     <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/forum/topic?id=' . $topic['central_topic_id'])) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Central de fóruns</a>
                                 <?php endif; ?>
                                 <?php if ($canManage): ?>
+                                    <details class="education-forum-edit">
+                                        <summary class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar fórum</summary>
+                                        <form method="post" action="<?= e(url('/admin/education/forum/topic/update?topic_id=' . $topic['id'])) ?>" class="education-forum-edit-form">
+                                            <?= csrf_field() ?>
+                                            <label class="form-label">Título</label>
+                                            <input class="form-control" name="title" maxlength="180" value="<?= e($topic['title'] ?? '') ?>" required>
+                                            <label class="form-label">Mensagem</label>
+                                            <textarea class="form-control" name="body" rows="4" required><?= e($topic['body'] ?? '') ?></textarea>
+                                            <button class="btn btn-sm btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar fórum</button>
+                                        </form>
+                                    </details>
                                     <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/delete?topic_id=' . $topic['id'])) ?>" onsubmit="return confirm('Remover este fórum? A cópia da central também será ocultada.');">
                                         <?= csrf_field() ?>
                                         <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Remover fórum</button>

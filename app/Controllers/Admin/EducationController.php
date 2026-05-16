@@ -549,6 +549,43 @@ class EducationController
         redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $topic['course_id'] . '#course-forum');
     }
 
+    public function updateForumTopic(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+
+        $topicId = filter_input(INPUT_GET, 'topic_id', FILTER_VALIDATE_INT);
+        $topic = $topicId ? Education::findForumTopic($topicId) : null;
+        if (!$topic || empty($topic['course_id'])) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $topic['course_id']);
+        $this->authorizeCourseManage($course);
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $body = trim((string) ($_POST['body'] ?? ''));
+        if ($title === '' || $body === '') {
+            Session::flash('error', 'Informe título e mensagem para editar o fórum.');
+            redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $topic['course_id'] . '#course-forum');
+        }
+
+        Education::updateForumTopic((int) $topic['id'], [
+            'title' => $title,
+            'body' => $body,
+        ]);
+
+        if (!empty($topic['central_topic_id'])) {
+            $lesson = !empty($topic['lesson_id']) ? Education::findLesson((int) $topic['lesson_id']) : null;
+            $this->updateCentralForumCopy($course, $lesson, (int) $topic['central_topic_id'], $title, $body);
+        }
+
+        Session::flash('success', 'Fórum atualizado.');
+        redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $topic['course_id'] . '#course-forum');
+    }
+
     public function deleteForumReply(): void
     {
         Middleware::auth();
@@ -869,13 +906,7 @@ class EducationController
             return null;
         }
 
-        $prefix = $lesson ? 'Aula: ' . ($lesson['title'] ?? '') : 'Curso: ' . ($course['title'] ?? '');
-        $centralTitle = trim($prefix . ' - ' . $title);
-        $centralBody = '<p><strong>Fórum vinculado ao ensino.</strong></p>'
-            . '<p><strong>Curso:</strong> ' . e($course['title'] ?? '') . '</p>'
-            . ($lesson ? '<p><strong>Aula:</strong> ' . e($lesson['title'] ?? '') . '</p>' : '')
-            . '<hr>'
-            . $body;
+        [$centralTitle, $centralBody] = $this->centralForumPayload($course, $lesson, $title, $body);
 
         try {
             return Forum::createTopic([
@@ -889,6 +920,30 @@ class EducationController
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function updateCentralForumCopy(array $course, ?array $lesson, int $centralTopicId, string $title, string $body): void
+    {
+        [$centralTitle, $centralBody] = $this->centralForumPayload($course, $lesson, $title, $body);
+
+        try {
+            Forum::updateTopic($centralTopicId, $centralTitle, $centralBody);
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    private function centralForumPayload(array $course, ?array $lesson, string $title, string $body): array
+    {
+        $prefix = $lesson ? 'Aula: ' . ($lesson['title'] ?? '') : 'Curso: ' . ($course['title'] ?? '');
+        $centralTitle = trim($prefix . ' - ' . $title);
+        $centralBody = '<p><strong>Fórum vinculado ao ensino.</strong></p>'
+            . '<p><strong>Curso:</strong> ' . e($course['title'] ?? '') . '</p>'
+            . ($lesson ? '<p><strong>Aula:</strong> ' . e($lesson['title'] ?? '') . '</p>' : '')
+            . '<hr>'
+            . $body;
+
+        return [$centralTitle, $centralBody];
     }
 
     private function storeBlockFile(): ?string

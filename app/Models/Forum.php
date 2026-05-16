@@ -295,6 +295,23 @@ class Forum
         return $topicId;
     }
 
+    public static function updateTopic(int $topicId, string $title, string $body): void
+    {
+        self::ensureSchema();
+
+        Database::connection()->prepare(
+            'UPDATE forum_topics
+             SET title = :title,
+                 body = :body,
+                 updated_at = NOW()
+             WHERE id = :id'
+        )->execute([
+            'title' => trim($title),
+            'body' => trim($body),
+            'id' => $topicId,
+        ]);
+    }
+
     public static function createReply(array $data): int
     {
         self::ensureSchema();

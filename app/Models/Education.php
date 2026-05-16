@@ -896,6 +896,23 @@ class Education
         return (int) Database::connection()->lastInsertId();
     }
 
+    public static function updateForumTopic(int $id, array $data): void
+    {
+        self::ensureSchema();
+
+        Database::connection()->prepare(
+            'UPDATE education_forum_topics
+             SET title = :title,
+                 body = :body,
+                 updated_at = NOW()
+             WHERE id = :id'
+        )->execute([
+            'title' => trim((string) ($data['title'] ?? '')),
+            'body' => trim((string) ($data['body'] ?? '')),
+            'id' => $id,
+        ]);
+    }
+
     public static function setForumTopicCentralId(int $topicId, int $centralTopicId): void
     {
         self::ensureSchema();

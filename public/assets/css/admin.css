@@ -3560,6 +3560,38 @@ body.editor-focus-mode {
     justify-content: flex-end;
 }
 
+.education-forum-edit {
+    position: relative;
+}
+
+.education-forum-edit summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.education-forum-edit summary::-webkit-details-marker {
+    display: none;
+}
+
+.education-forum-edit[open] {
+    flex-basis: 100%;
+}
+
+.education-forum-edit-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    text-align: left;
+}
+
+.education-forum-edit-form button {
+    justify-self: start;
+}
+
 .education-forum-reply-form {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
