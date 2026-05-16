@@ -3,7 +3,7 @@ $upcomingEvents = $upcomingEvents ?? [];
 $pastEvents = $pastEvents ?? [];
 $mode = $mode ?? 'all';
 $totalEvents = count($upcomingEvents) + count($pastEvents);
-$featuredEvent = $upcomingEvents[0] ?? $pastEvents[0] ?? null;
+$featuredEvent = $mode !== 'past' ? ($upcomingEvents[0] ?? null) : null;
 $formatDate = fn (?string $value): string => $value ? date('d/m/Y H:i', strtotime($value)) : 'Data a definir';
 $eventStatus = function (array $event): string {
     $start = !empty($event['starts_at']) ? strtotime($event['starts_at']) : null;
@@ -112,7 +112,9 @@ $eventStatus = function (array $event): string {
                 <span>Histórico</span>
                 <h2>Eventos já realizados</h2>
             </div>
-            <a href="<?= e(url('/eventos/realizados')) ?>">Ver somente realizados</a>
+            <?php if ($mode !== 'past'): ?>
+                <a href="<?= e(url('/eventos/realizados')) ?>">Ver somente realizados</a>
+            <?php endif; ?>
         </div>
         <?php if ($pastEvents): ?>
             <div class="events-history-list">
