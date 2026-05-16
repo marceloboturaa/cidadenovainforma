@@ -3,6 +3,7 @@ $isEdit = (bool) $editing;
 $teacherOptions = $teacherOptions ?? $users;
 $studentOptions = $studentOptions ?? $users;
 $canManageAll = $canManageAll ?? true;
+$canAssignTeacher = $canAssignTeacher ?? false;
 ?>
 
 <div class="page-heading">
@@ -34,7 +35,7 @@ $canManageAll = $canManageAll ?? true;
             <div class="education-course-advanced-grid">
                 <div>
                     <label class="form-label">Professor responsável</label>
-                    <?php if ($canManageAll): ?>
+                    <?php if ($canAssignTeacher): ?>
                         <select class="form-select" name="teacher_user_id">
                             <option value="">Definir depois</option>
                             <?php foreach ($teacherOptions as $item): ?>
@@ -44,8 +45,12 @@ $canManageAll = $canManageAll ?? true;
                             <?php endforeach; ?>
                         </select>
                     <?php else: ?>
-                        <input type="hidden" name="teacher_user_id" value="<?= e((string) (current_user()['id'] ?? '')) ?>">
-                        <input class="form-control" value="<?= e(current_user()['name'] ?? 'Professor') ?>" disabled>
+                        <?php
+                        $lockedTeacherId = $editing['teacher_user_id'] ?? (\App\Core\Auth::hasRole('professor') ? (current_user()['id'] ?? '') : '');
+                        $lockedTeacherName = $editing['teacher_name'] ?? (\App\Core\Auth::hasRole('professor') ? (current_user()['name'] ?? 'Professor') : 'Definir depois');
+                        ?>
+                        <input type="hidden" name="teacher_user_id" value="<?= e((string) $lockedTeacherId) ?>">
+                        <input class="form-control" value="<?= e($lockedTeacherName) ?>" disabled>
                     <?php endif; ?>
                 </div>
                 <div>

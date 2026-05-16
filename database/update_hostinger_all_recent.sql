@@ -294,6 +294,7 @@ VALUES
     ('MASTER', 'master', 100, NOW(), NOW()),
     ('ADMIN', 'admin', 80, NOW(), NOW()),
     ('ADMIN LOCAL', 'admin-local', 60, NOW(), NOW()),
+    ('DIRETOR', 'diretor', 50, NOW(), NOW()),
     ('JORNALISTA', 'jornalista', 40, NOW(), NOW()),
     ('COLUNISTA', 'colunista', 35, NOW(), NOW()),
     ('PROFESSOR', 'professor', 30, NOW(), NOW()),
@@ -326,7 +327,10 @@ VALUES
     ('Gerenciar ensino', 'education.manage', NOW()),
     ('Criar cursos e aulas', 'education.teach', NOW()),
     ('Acessar ensino', 'education.view', NOW()),
-    ('Participar do fórum de ensino', 'education.forum', NOW())
+    ('Participar do fórum de ensino', 'education.forum', NOW()),
+    ('Ver fóruns', 'forum.view', NOW()),
+    ('Criar tópicos no fórum', 'forum.create', NOW()),
+    ('Moderar fóruns', 'forum.moderate', NOW())
 ON DUPLICATE KEY UPDATE
     name = VALUES(name);
 
@@ -354,7 +358,10 @@ INNER JOIN permissions ON permissions.slug IN (
     'education.manage',
     'education.teach',
     'education.view',
-    'education.forum'
+    'education.forum',
+    'forum.view',
+    'forum.create',
+    'forum.moderate'
 )
 WHERE roles.slug = 'master';
 
@@ -372,15 +379,24 @@ INNER JOIN permissions ON permissions.slug IN (
     'ads.manage',
     'education.manage',
     'education.view',
-    'education.forum'
+    'education.forum',
+    'forum.view',
+    'forum.create',
+    'forum.moderate'
 )
 WHERE roles.slug = 'admin';
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
 FROM roles
-INNER JOIN permissions ON permissions.slug IN ('news.manage', 'news.approve', 'news.create', 'categories.manage')
+INNER JOIN permissions ON permissions.slug IN ('news.manage', 'news.approve', 'news.create', 'categories.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create')
 WHERE roles.slug = 'admin-local';
+
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN ('documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate')
+WHERE roles.slug = 'diretor';
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
@@ -391,8 +407,22 @@ WHERE roles.slug IN ('jornalista', 'colunista');
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
 FROM roles
-INNER JOIN permissions ON permissions.slug IN ('education.teach', 'education.view', 'education.forum')
+INNER JOIN permissions ON permissions.slug IN ('education.teach', 'education.view', 'education.forum', 'forum.view', 'forum.create')
 WHERE roles.slug = 'professor';
+
+DELETE role_permissions
+FROM role_permissions
+INNER JOIN roles ON roles.id = role_permissions.role_id
+INNER JOIN permissions ON permissions.id = role_permissions.permission_id
+WHERE roles.slug IN ('admin', 'admin-local', 'diretor')
+  AND permissions.slug = 'education.teach';
+
+DELETE role_permissions
+FROM role_permissions
+INNER JOIN roles ON roles.id = role_permissions.role_id
+INNER JOIN permissions ON permissions.id = role_permissions.permission_id
+WHERE roles.slug = 'professor'
+  AND permissions.slug = 'forum.moderate';
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id

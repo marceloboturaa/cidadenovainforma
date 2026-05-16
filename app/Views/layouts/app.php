@@ -55,7 +55,7 @@
                 <?php if ($user): ?>
                     <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-mortarboard" aria-hidden="true"></i>Ensino</a>
                 <?php endif; ?>
-                <?php if (array_intersect($roleSlugs, ['master', 'diretor', 'professor']) || \App\Core\Auth::can('education.teach')): ?>
+                <?php if (array_intersect($roleSlugs, ['master', 'admin', 'admin-local', 'diretor', 'professor']) || \App\Core\Auth::can('education.teach')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-journal-richtext" aria-hidden="true"></i>Cursos</a>
                 <?php endif; ?>
                 <?php if (\App\Core\Auth::can('forum.view') || \App\Core\Auth::can('forum.create') || \App\Core\Auth::can('forum.moderate')): ?>

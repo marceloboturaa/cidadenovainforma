@@ -59,6 +59,7 @@ class EducationController
             'teacherOptions' => $this->teacherOptions($users),
             'studentOptions' => $this->studentOptions($users),
             'canManageAll' => $this->canManageAll(),
+            'canAssignTeacher' => $this->canAssignTeacher(),
         ]);
     }
 
@@ -75,7 +76,9 @@ class EducationController
         }
 
         $userId = (int) (current_user()['id'] ?? 0);
-        $teacherUserId = $this->canManageAll() ? ($_POST['teacher_user_id'] ?? null) : $userId;
+        $teacherUserId = $this->canAssignTeacher()
+            ? ($_POST['teacher_user_id'] ?? null)
+            : ($this->canTeach() ? $userId : null);
         $id = Education::createCourse(array_merge($_POST, [
             'cover_image' => $this->courseCoverFromRequest(null),
             'teacher_user_id' => $teacherUserId,
@@ -104,7 +107,7 @@ class EducationController
         }
 
         $userId = (int) (current_user()['id'] ?? 0);
-        $teacherUserId = $this->canManageAll() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? $userId);
+        $teacherUserId = $this->canAssignTeacher() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? null);
         Education::updateCourse((int) $course['id'], array_merge($_POST, [
             'cover_image' => $this->courseCoverFromRequest($course['cover_image'] ?? null),
             'teacher_user_id' => $teacherUserId,
@@ -158,6 +161,8 @@ class EducationController
             'lessons' => $lessons,
             'modules' => Education::modulesForCourse((int) $course['id']),
             'canManage' => $canManage,
+            'canAssignTeacher' => $this->canAssignTeacher(),
+            'teacherOptions' => $this->teacherOptions(User::activeForAccessLists()),
             'canTakeAttendance' => $canTakeAttendance,
             'editingLesson' => $this->lessonFromQuery(false, false),
             'editingModule' => $this->moduleFromQuery(false),
@@ -544,6 +549,28 @@ class EducationController
         redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $topic['course_id'] . '#course-forum');
     }
 
+    public function deleteForumReply(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+
+        $replyId = filter_input(INPUT_GET, 'reply_id', FILTER_VALIDATE_INT);
+        $reply = $replyId ? Education::findForumReply($replyId) : null;
+        if (!$reply || empty($reply['course_id'])) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $reply['course_id']);
+        $this->authorizeCourseManage($course);
+
+        Education::hideForumReply((int) $reply['id']);
+
+        Session::flash('success', 'Comentário ocultado.');
+        redirect(!empty($reply['lesson_id']) ? '/admin/education/lesson?id=' . $reply['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $reply['course_id'] . '#course-forum');
+    }
+
     public function storeForumReply(): void
     {
         Middleware::auth();
@@ -701,7 +728,12 @@ class EducationController
 
     private function canManageAll(): bool
     {
-        return Auth::hasRole(['master', 'diretor']);
+        return Auth::hasRole(['master', 'admin', 'admin-local', 'diretor']);
+    }
+
+    private function canAssignTeacher(): bool
+    {
+        return Auth::hasRole('master');
     }
 
     private function canTeach(): bool

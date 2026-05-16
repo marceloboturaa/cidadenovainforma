@@ -3500,6 +3500,58 @@ body.editor-focus-mode {
     background: #f8fafc;
 }
 
+.education-forum-topic-starter {
+    border-radius: 8px;
+    border: 1px solid #fde2e2;
+    background: #fff8f8;
+}
+
+.education-forum-reply-card {
+    border-left-width: 4px;
+}
+
+.education-forum-reply-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.education-forum-reply-head strong {
+    overflow-wrap: anywhere;
+}
+
+.education-forum-reply-card.reply-tone-1 {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.education-forum-reply-card.reply-tone-2 {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.education-forum-reply-card.reply-tone-3 {
+    border-color: #fde68a;
+    background: #fffbeb;
+}
+
+.education-forum-reply-card.reply-tone-4 {
+    border-color: #ddd6fe;
+    background: #f5f3ff;
+}
+
+.education-forum-reply-card.reply-tone-5 {
+    border-color: #fecdd3;
+    background: #fff1f2;
+}
+
+.education-forum-reply-card.reply-tone-6 {
+    border-color: #99f6e4;
+    background: #f0fdfa;
+}
+
 .education-forum-topic-actions {
     display: flex;
     flex-wrap: wrap;

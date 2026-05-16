@@ -5,6 +5,8 @@ $canTakeAttendance = $canTakeAttendance ?? false;
 $editingCourseIntro = ($_GET['edit_course'] ?? '') === '1';
 $creatingModule = ($_GET['create_module'] ?? '') === '1';
 $modules = $modules ?? [];
+$canAssignTeacher = $canAssignTeacher ?? false;
+$teacherOptions = $teacherOptions ?? [];
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
 
@@ -172,7 +174,7 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
     <div class="forum-topic-list mt-3">
         <?php foreach ($forumTopics as $topic): ?>
             <?php $topicReplies = $forumRepliesByTopic[(int) $topic['id']] ?? []; ?>
-            <article class="forum-topic-item">
+            <article class="forum-topic-item education-forum-topic-starter">
                 <div class="forum-topic-main">
                     <span class="forum-topic-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
                     <span>
@@ -198,9 +200,17 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
                 </div>
                 <?php if ($topicReplies): ?>
                     <div class="education-forum-replies">
-                        <?php foreach ($topicReplies as $reply): ?>
-                            <div>
-                                <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
+                        <?php foreach ($topicReplies as $replyIndex => $reply): ?>
+                            <div class="education-forum-reply-card reply-tone-<?= e((string) (((int) $replyIndex % 6) + 1)) ?>">
+                                <div class="education-forum-reply-head">
+                                    <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
+                                    <?php if ($canManage): ?>
+                                        <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/reply/delete?reply_id=' . $reply['id'])) ?>" onsubmit="return confirm('Ocultar este comentário?');">
+                                            <?= csrf_field() ?>
+                                            <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-eye-slash" aria-hidden="true"></i>Ocultar</button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
                                 <div><?= article_html($reply['body'] ?? '') ?></div>
                             </div>
                         <?php endforeach; ?>
@@ -232,7 +242,21 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
             </header>
             <form method="post" action="<?= e(url('/admin/education/course/update?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-modal-form">
                 <?= csrf_field() ?>
-                <input type="hidden" name="teacher_user_id" value="<?= e((string) ($course['teacher_user_id'] ?? '')) ?>">
+                <?php if ($canAssignTeacher): ?>
+                    <div>
+                        <label class="form-label">Professor responsável</label>
+                        <select class="form-select" name="teacher_user_id">
+                            <option value="">Definir depois</option>
+                            <?php foreach ($teacherOptions as $item): ?>
+                                <option value="<?= e((string) $item['id']) ?>" <?= selected((string) $item['id'], (string) ($course['teacher_user_id'] ?? '')) ?>>
+                                    <?= e($item['name']) ?> - <?= e($item['role_names'] ?? $item['role_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php else: ?>
+                    <input type="hidden" name="teacher_user_id" value="<?= e((string) ($course['teacher_user_id'] ?? '')) ?>">
+                <?php endif; ?>
                 <div>
                     <label class="form-label">Título do curso</label>
                     <input class="form-control" name="title" maxlength="180" value="<?= e($course['title'] ?? '') ?>" required autofocus>

@@ -339,7 +339,7 @@ $embed = function (?string $url): ?string {
                 <div class="forum-topic-list mt-3">
                     <?php foreach ($lessonForumTopics as $topic): ?>
                         <?php $topicReplies = $lessonForumRepliesByTopic[(int) $topic['id']] ?? []; ?>
-                        <article class="forum-topic-item">
+                        <article class="forum-topic-item education-forum-topic-starter">
                             <div class="forum-topic-main">
                                 <span class="forum-topic-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
                                 <span>
@@ -365,9 +365,17 @@ $embed = function (?string $url): ?string {
                             </div>
                             <?php if ($topicReplies): ?>
                                 <div class="education-forum-replies">
-                                    <?php foreach ($topicReplies as $reply): ?>
-                                        <div>
-                                            <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
+                                    <?php foreach ($topicReplies as $replyIndex => $reply): ?>
+                                        <div class="education-forum-reply-card reply-tone-<?= e((string) (((int) $replyIndex % 6) + 1)) ?>">
+                                            <div class="education-forum-reply-head">
+                                                <strong><?= e($reply['user_name'] ?? 'Usuário') ?></strong>
+                                                <?php if ($canManage): ?>
+                                                    <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/reply/delete?reply_id=' . $reply['id'])) ?>" onsubmit="return confirm('Ocultar este comentário?');">
+                                                        <?= csrf_field() ?>
+                                                        <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-eye-slash" aria-hidden="true"></i>Ocultar</button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
                                             <div><?= article_html($reply['body'] ?? '') ?></div>
                                         </div>
                                     <?php endforeach; ?>

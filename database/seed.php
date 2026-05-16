@@ -464,7 +464,7 @@ $permissionIds = array_column($permissionRows, 'id', 'slug');
 $grants = [
     'master' => array_keys($permissionIds),
     'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
-    'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage'],
+    'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create'],
     'diretor' => ['documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
     'jornalista' => ['news.create'],
     'colunista' => ['news.create'],
@@ -487,6 +487,26 @@ $stmt = $pdo->prepare(
      INNER JOIN permissions ON permissions.id = role_permissions.permission_id
      WHERE roles.slug IN ("jornalista", "colunista", "equipe")
        AND permissions.slug IN ("education.manage", "education.teach")'
+);
+$stmt->execute();
+
+$stmt = $pdo->prepare(
+    'DELETE role_permissions
+     FROM role_permissions
+     INNER JOIN roles ON roles.id = role_permissions.role_id
+     INNER JOIN permissions ON permissions.id = role_permissions.permission_id
+     WHERE roles.slug IN ("admin", "admin-local", "diretor")
+       AND permissions.slug = "education.teach"'
+);
+$stmt->execute();
+
+$stmt = $pdo->prepare(
+    'DELETE role_permissions
+     FROM role_permissions
+     INNER JOIN roles ON roles.id = role_permissions.role_id
+     INNER JOIN permissions ON permissions.id = role_permissions.permission_id
+     WHERE roles.slug = "professor"
+       AND permissions.slug = "forum.moderate"'
 );
 $stmt->execute();
 

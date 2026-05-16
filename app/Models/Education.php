@@ -952,6 +952,29 @@ class Education
         return $grouped;
     }
 
+    public static function findForumReply(int $id): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_forum_replies.*,
+                    education_forum_topics.course_id,
+                    education_forum_topics.lesson_id,
+                    education_forum_topics.central_topic_id,
+                    users.name AS user_name
+             FROM education_forum_replies
+             INNER JOIN education_forum_topics ON education_forum_topics.id = education_forum_replies.topic_id
+             INNER JOIN users ON users.id = education_forum_replies.user_id
+             WHERE education_forum_replies.id = :id
+               AND education_forum_replies.active = 1
+               AND education_forum_topics.status <> "hidden"
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function forumReplies(int $topicId): array
     {
         self::ensureSchema();
@@ -984,6 +1007,15 @@ class Education
             ->execute(['id' => (int) $data['topic_id']]);
 
         return (int) Database::connection()->lastInsertId();
+    }
+
+    public static function hideForumReply(int $replyId): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('UPDATE education_forum_replies SET active = 0, updated_at = NOW() WHERE id = :id')
+            ->execute(['id' => $replyId]);
     }
 
     public static function closeForumTopic(int $topicId): void
