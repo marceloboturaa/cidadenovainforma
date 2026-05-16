@@ -1,4 +1,6 @@
 <?php $app = require dirname(__DIR__, 3) . '/config/app.php'; ?>
+<?php $assets = require dirname(__DIR__, 3) . '/config/assets.php'; ?>
+<?php $adminCssFiles = $assets['css']['admin'] ?? ['/public/assets/css/admin.css']; ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/favicon-secondary.svg'); ?>
 <?php $brandAssetVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/logo-cidade-nova-informa.svg'); ?>
 <!doctype html>
@@ -9,7 +11,9 @@
     <title><?= e($app['name']) ?></title>
     <link rel="icon" type="image/svg+xml" href="<?= e(url('/public/assets/img/favicon-secondary.svg') . '?v=' . $faviconVersion) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?= e(url('/public/assets/css/admin.css')) ?>" rel="stylesheet">
+    <?php foreach ($adminCssFiles as $cssFile): ?>
+        <link href="<?= e(versioned_asset_url($cssFile)) ?>" rel="stylesheet">
+    <?php endforeach; ?>
 </head>
 <body class="auth-page">
     <main class="auth-shell">

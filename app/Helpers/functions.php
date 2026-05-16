@@ -46,6 +46,15 @@ function url(string $path = ''): string
     return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
 }
 
+function versioned_asset_url(string $path): string
+{
+    $path = '/' . ltrim($path, '/');
+    $filePath = dirname(__DIR__, 2) . $path;
+    $version = is_file($filePath) ? filemtime($filePath) : time();
+
+    return url($path) . '?v=' . $version;
+}
+
 function media_url(string $path = ''): string
 {
     $path = normalize_media_path($path) ?? '';

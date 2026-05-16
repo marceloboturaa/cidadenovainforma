@@ -1,5 +1,6 @@
 <?php $app = require dirname(__DIR__, 3) . '/config/app.php'; ?>
-<?php $publicCssVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/css/public.css'); ?>
+<?php $assets = require dirname(__DIR__, 3) . '/config/assets.php'; ?>
+<?php $publicCssFiles = $assets['css']['public'] ?? ['/public/assets/css/public.css']; ?>
 <?php $publicJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/public-menu.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/public-menu.js') : time(); ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/favicon-primary.svg'); ?>
 <?php
@@ -43,7 +44,9 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
         <meta name="twitter:image" content="<?= e($ogImage) ?>">
     <?php endif; ?>
     <meta property="og:url" content="<?= e($currentUrl) ?>">
-    <link href="<?= e(url('/public/assets/css/public.css') . '?v=' . $publicCssVersion) ?>" rel="stylesheet">
+    <?php foreach ($publicCssFiles as $cssFile): ?>
+        <link href="<?= e(versioned_asset_url($cssFile)) ?>" rel="stylesheet">
+    <?php endforeach; ?>
 </head>
 <body>
     <header class="site-header">

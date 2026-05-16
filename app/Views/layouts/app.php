@@ -1,7 +1,8 @@
 <?php $app = require dirname(__DIR__, 3) . '/config/app.php'; ?>
+<?php $assets = require dirname(__DIR__, 3) . '/config/assets.php'; ?>
 <?php $user = current_user(); ?>
 <?php $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/admin', PHP_URL_PATH) ?: '/admin'; ?>
-<?php $adminCssVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/css/admin.css'); ?>
+<?php $adminCssFiles = $assets['css']['admin'] ?? ['/public/assets/css/admin.css']; ?>
 <?php $adminJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/admin.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/admin.js') : time(); ?>
 <?php $tinyMceJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/tinymce-init.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/tinymce-init.js') : time(); ?>
 <?php $faviconPath = str_starts_with($currentPath, '/admin/education') ? '/public/assets/img/favicon-education.svg' : '/public/assets/img/favicon-secondary.svg'; ?>
@@ -19,7 +20,9 @@
     <link rel="icon" type="image/svg+xml" href="<?= e(url($faviconPath) . '?v=' . $faviconVersion) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="<?= e(url('/public/assets/css/admin.css') . '?v=' . $adminCssVersion) ?>" rel="stylesheet">
+    <?php foreach ($adminCssFiles as $cssFile): ?>
+        <link href="<?= e(versioned_asset_url($cssFile)) ?>" rel="stylesheet">
+    <?php endforeach; ?>
 </head>
 <body>
     <div class="admin-menu-overlay" data-admin-menu-close></div>
