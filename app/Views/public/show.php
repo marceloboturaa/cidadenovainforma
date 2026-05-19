@@ -1,3 +1,5 @@
+<?php $usesMathJax = true; ?>
+
 <article class="article-page">
     <header class="article-header">
         <a class="article-category" href="<?= e(url('/categoria/' . ($news['category_slug'] ?? ''))) ?>"><?= e($news['category_name'] ?? 'Geral') ?></a>

@@ -97,5 +97,20 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
         <span>Jornalismo comunitário com qualidade e compromisso.</span>
     </footer>
     <script src="<?= e(url('/public/assets/js/public-menu.js') . '?v=' . $publicJsVersion) ?>"></script>
+    <?php if (!empty($usesMathJax)): ?>
+        <script>
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                    processEscapes: true
+                },
+                options: {
+                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+                }
+            };
+        </script>
+        <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <?php endif; ?>
 </body>
 </html>

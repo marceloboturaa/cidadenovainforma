@@ -275,6 +275,18 @@
     text-decoration: underline;
 }
 
+.article-content mjx-container {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.1em 0;
+}
+
+.article-content mjx-container[display="true"] {
+    margin: 1.2em 0;
+    padding: 0.35em 0;
+}
+
 .article-tags {
     display: flex;
     flex-wrap: wrap;

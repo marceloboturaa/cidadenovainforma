@@ -35,7 +35,7 @@ $status = $newsItem['status'] ?? 'draft';
                 <button class="btn btn-sm btn-outline-secondary editor-focus-toggle" type="button" data-editor-focus>Foco</button>
             </div>
             <textarea class="form-control tinymce-textarea" id="news-content" name="content" rows="18" data-tinymce required><?= e($newsItem['content'] ?? '') ?></textarea>
-            <p class="field-hint">Use a barra do editor para inserir imagens, videos, links, tabelas, listas e espacamento do texto.</p>
+            <p class="field-hint">Use a barra do editor para inserir imagens, videos, links, tabelas e espacamento. Para formulas, escreva \(a^2+b^2=c^2\) no texto ou $$E=mc^2$$ em uma linha separada.</p>
         </div>
     </section>
 
