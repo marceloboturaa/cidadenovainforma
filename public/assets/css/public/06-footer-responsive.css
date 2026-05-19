@@ -136,16 +136,31 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .institution-projects-showcase-head,
+    .institution-project-community-card {
+        grid-template-columns: 1fr;
+    }
+
+    .institution-projects-showcase-head > img,
+    .institution-project-community-card > img {
+        border-radius: 44px 8px 8px 44px;
+    }
+
     .institution-project-card-modern {
         grid-template-columns: 1fr;
     }
 
     .institution-project-card-modern .institution-project-media {
         width: 100%;
-        padding: 18px 18px 0 22px;
+        min-height: 220px;
+        border-radius: 54px 8px 8px 0;
     }
 
-    .institution-project-card-modern > div {
+    .institution-project-media img {
+        min-height: 220px;
+    }
+
+    .institution-project-card-copy {
         padding: 16px 18px 20px 22px;
     }
 
@@ -165,6 +180,13 @@
     .institution-project-grid,
     .institution-project-grid-modern {
         grid-template-columns: 1fr;
+    }
+
+    .institution-projects-showcase-head > img,
+    .institution-project-community-card > img,
+    .institution-project-card-modern .institution-project-media,
+    .institution-project-media img {
+        border-radius: 28px 8px 8px 28px;
     }
 
     .header-top {

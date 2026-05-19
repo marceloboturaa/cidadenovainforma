@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $landing = $landing ?? \App\Models\InstitutionLanding::get();
 $projects = $projects ?? [];
 $areas = $areas ?? [];
@@ -43,6 +43,14 @@ $projectIcon = static function (array $area): string {
 
     return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 11h24a6 6 0 0 1 6 6v22H14a6 6 0 0 1-6-6V11Z"/><path d="M15 19h15"/><path d="M15 27h12"/><path d="M38 17h2a4 4 0 0 1 4 4v12a6 6 0 0 1-6 6"/><path d="M10 8h18"/></svg>';
 };
+$communityImage = '';
+foreach ($projects as $project) {
+    if (!empty($project['cover_image'])) {
+        $communityImage = media_url($project['cover_image']);
+        break;
+    }
+}
+$communityImage = $communityImage ?: $heroImage;
 ?>
 
 <article class="institution-page institution-modern institution-social">
@@ -71,24 +79,28 @@ $projectIcon = static function (array $area): string {
     </section>
 
     <section class="institution-projects institution-landing-section" id="projetos">
-        <div class="institution-section-head">
-            <span>Nossos projetos</span>
-            <h2>Frentes de atuação social e cultural</h2>
+        <div class="institution-projects-showcase-head">
+            <div class="institution-projects-showcase-copy">
+                <span>Nossos projetos</span>
+                <h2>Frentes de atuação social e cultural</h2>
+                <i aria-hidden="true"></i>
+                <p>Atuamos em diferentes áreas para fortalecer vínculos, promover cidadania e transformar realidades no território.</p>
+            </div>
+            <img src="<?= e($communityImage) ?>" alt="" loading="lazy">
         </div>
 
         <div class="institution-project-grid institution-project-grid-modern">
             <?php foreach ($projects as $area): ?>
                 <?php
+                $projectImage = media_url($area['cover_image'] ?? $hero['image']);
                 $projectUrl = $linkHref($area['cta_url'] ?? '') ?: url('/instituicao/' . $area['slug']);
                 $projectLabel = trim((string) ($area['cta_label'] ?? '')) ?: 'Conhecer projeto';
                 ?>
                 <article class="institution-project-card institution-project-card-modern">
-                    <a class="institution-project-media" href="<?= e($projectUrl) ?>" aria-label="<?= e($projectLabel . ': ' . $area['name']) ?>">
+                    <div class="institution-project-card-copy">
                         <span class="institution-project-icon">
                             <?= $projectIcon($area) ?>
                         </span>
-                    </a>
-                    <div>
                         <span><?= e($area['kicker']) ?></span>
                         <h3><?= e($area['name']) ?></h3>
                         <p><?= e($area['summary']) ?></p>
@@ -96,6 +108,9 @@ $projectIcon = static function (array $area): string {
                             <?= e($projectLabel) ?>
                         </a>
                     </div>
+                    <a class="institution-project-media" href="<?= e($projectUrl) ?>" aria-label="<?= e($projectLabel . ': ' . $area['name']) ?>">
+                        <img src="<?= e($projectImage) ?>" alt="" loading="lazy">
+                    </a>
                 </article>
             <?php endforeach; ?>
             <?php if (empty($projects)): ?>
@@ -105,8 +120,18 @@ $projectIcon = static function (array $area): string {
                 </article>
             <?php endif; ?>
         </div>
-    </section>
 
+        <article class="institution-project-community-card">
+            <div class="institution-project-community-copy">
+                <span class="institution-project-icon">
+                    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 25a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"/><path d="M5 41c1.5-7.5 5.5-12 11-12s9.5 4.5 11 12"/><path d="M33 22a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path d="M28 32c1.6-3 4-4.5 7-4.5 4 0 7 3 8 8.5"/></svg>
+                </span>
+                <h3>Tudo isso só é possível graças à comunidade.</h3>
+                <p>Cada projeto é construído coletivamente, com participação, cuidado e compromisso com um futuro melhor para todos.</p>
+            </div>
+            <img src="<?= e($communityImage) ?>" alt="" loading="lazy">
+        </article>
+    </section>
     <section class="institution-gallery-showcase institution-landing-section" id="galeria">
         <div class="institution-section-head">
             <span><?= e($gallery['eyebrow']) ?></span>
@@ -176,3 +201,4 @@ $projectIcon = static function (array $area): string {
         </div>
     </section>
 </article>
+
