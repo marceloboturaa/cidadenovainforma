@@ -132,6 +132,100 @@
         });
     }
 
+    function latexDocumentToHtml(content) {
+        let text = String(content || '').replace(/\r\n?/g, '\n').trim();
+
+        if (/<[a-z][\s\S]*>/i.test(text)) {
+            const template = document.createElement('template');
+            template.innerHTML = text;
+            text = template.content.textContent || text;
+        }
+
+        if (!/\\documentclass|\\begin\{document\}|\\section\*?\{|\\\[/.test(text)) {
+            return '';
+        }
+
+        const beginDocument = text.indexOf('\\begin{document}');
+        if (beginDocument !== -1) {
+            text = text.slice(beginDocument + '\\begin{document}'.length);
+        }
+
+        text = text
+            .replace(/\\end\{document\}[\s\S]*$/g, '')
+            .replace(/\\usepackage(?:\[[^\]]*])?\{[^}]+}/g, '')
+            .replace(/\\documentclass(?:\[[^\]]*])?\{[^}]+}/g, '')
+            .replace(/\\begin\{(?:center|figure|table)\}/g, '\n\n')
+            .replace(/\\end\{(?:center|figure|table)\}/g, '\n\n')
+            .replace(/\\author\{[^}]*}/g, '')
+            .replace(/\\date\{[^}]*}/g, '')
+            .replace(/\\maketitle/g, '')
+            .replace(/\\title\{([\s\S]*?)}/g, function (match, title) {
+                return '\n\\section*{' + title.replace(/\\\\/g, ' - ').trim() + '}\n';
+            })
+            .replace(/\\newpage/g, '\n\n---PAGE---\n\n')
+            .replace(/\\section\*?\{([\s\S]*?)}/g, '\n\n## $1\n\n')
+            .replace(/\\subsection\*?\{([\s\S]*?)}/g, '\n\n### $1\n\n')
+            .replace(/\\\[((?:.|\n)*?)\\\]/g, function (match, formula) {
+                return '\n\n$$' + formula.trim() + '$$\n\n';
+            })
+            .replace(/\\begin\{equation\*?}([\s\S]*?)\\end\{equation\*?}/g, function (match, formula) {
+                return '\n\n$$' + formula.trim() + '$$\n\n';
+            })
+            .replace(/\\begin\{align\*?}([\s\S]*?)\\end\{align\*?}/g, function (match, formula) {
+                return '\n\n$$\\begin{aligned}' + formula.trim() + '\\end{aligned}$$\n\n';
+            })
+            .replace(/\\begin\{(?:tikzpicture|axis)\}[\s\S]*?\\end\{(?:tikzpicture|axis)\}/g, function (match) {
+                return '\n\n```latex\n' + match.trim() + '\n```\n\n';
+            })
+            .replace(/\\includegraphics(?:\[[^\]]*])?\{([^}]+)}/g, function (match, imagePath) {
+                return '\n\n[Imagem do LaTeX: ' + imagePath.trim() + ']\n\n';
+            })
+            .replace(/\\caption\{([^}]+)}/g, '\n\nLegenda: $1\n\n')
+            .replace(/\\begin\{(?:itemize|enumerate)\}/g, '\n\n')
+            .replace(/\\end\{(?:itemize|enumerate)\}/g, '\n\n')
+            .replace(/\\textbf\{([^}]+)}/g, '<strong>$1</strong>')
+            .replace(/\\emph\{([^}]+)}/g, '<em>$1</em>')
+            .replace(/\\item\s+/g, '\n- ');
+
+        const blocks = text.split(/\n{2,}/).map(function (block) {
+            return block.trim();
+        }).filter(Boolean);
+
+        return blocks.map(function (block) {
+            if (block === '---PAGE---') {
+                return '<hr>';
+            }
+
+            if (block.startsWith('## ')) {
+                return '<h2>' + escapeHtml(block.slice(3).trim()) + '</h2>';
+            }
+
+            if (block.startsWith('### ')) {
+                return '<h3>' + escapeHtml(block.slice(4).trim()) + '</h3>';
+            }
+
+            if (/^\$\$[\s\S]*\$\$$/.test(block)) {
+                return '<p>' + escapeHtml(block) + '</p>';
+            }
+
+            if (/^```latex[\s\S]*```$/.test(block)) {
+                return '<blockquote><p>Grafico LaTeX/TikZ detectado. Exporte este grafico como imagem e insira pelo botao de imagem do editor.</p><p>' + escapeHtml(block.replace(/^```latex|```$/g, '').trim()).replace(/\n/g, '<br>') + '</p></blockquote>';
+            }
+
+            if (/^- /m.test(block)) {
+                const items = block.split(/\n/).filter(function (line) {
+                    return line.trim().startsWith('- ');
+                }).map(function (line) {
+                    return '<li>' + escapeHtml(line.trim().slice(2)) + '</li>';
+                }).join('');
+
+                return '<ul>' + items + '</ul>';
+            }
+
+            return '<p>' + escapeHtml(block).replace(/\n/g, '<br>') + '</p>';
+        }).join('');
+    }
+
     tinymce.init({
         selector: 'textarea[data-tinymce]',
         language: 'pt_BR',
@@ -206,6 +300,13 @@
             'table{border-collapse:collapse;width:100%;}',
             'td,th{border:1px solid #d1d5db;padding:.5rem;}'
         ].join(''),
+        paste_preprocess: function (plugin, args) {
+            const latexHtml = latexDocumentToHtml(args.content);
+
+            if (latexHtml) {
+                args.content = latexHtml;
+            }
+        },
         images_upload_handler: function (blobInfo) {
             return uploadImage(blobInfo.blob(), blobInfo.filename());
         },

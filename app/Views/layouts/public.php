@@ -101,7 +101,7 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
         <script>
             window.MathJax = {
                 tex: {
-                    inlineMath: [['\\(', '\\)']],
+                    inlineMath: [['\\(', '\\)'], ['$', '$']],
                     displayMath: [['$$', '$$'], ['\\[', '\\]']],
                     processEscapes: true
                 },
