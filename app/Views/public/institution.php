@@ -18,31 +18,6 @@ $linkHref = static function (string $value): string {
 };
 $isExternal = static fn (string $value): bool => (bool) preg_match('#^https?://#i', $value);
 $heroImage = media_url($hero['image']);
-$projectIcon = static function (array $area): string {
-    $text = mb_strtolower(($area['slug'] ?? '') . ' ' . ($area['name'] ?? '') . ' ' . ($area['kicker'] ?? ''), 'UTF-8');
-
-    if (str_contains($text, 'esporte')) {
-        return '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16"/><path d="m24 14 7 5-3 8h-8l-3-8 7-5Z"/><path d="M20 27 15 34"/><path d="m28 27 5 7"/><path d="m17 19-7 2"/><path d="m31 19 7 2"/></svg>';
-    }
-
-    if (str_contains($text, 'biblioteca') || str_contains($text, 'leitura')) {
-        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 12h13a5 5 0 0 1 5 5v22H15a5 5 0 0 0-5 5V12Z"/><path d="M38 12H28a5 5 0 0 0-5 5v22h10a5 5 0 0 1 5 5V12Z"/><path d="M16 20h6"/><path d="M30 20h3"/><path d="M16 27h6"/><path d="M30 27h3"/></svg>';
-    }
-
-    if (str_contains($text, 'educa')) {
-        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m7 18 17-8 17 8-17 8-17-8Z"/><path d="M15 24v7c0 4 4 7 9 7s9-3 9-7v-7"/><path d="M39 19v10"/></svg>';
-    }
-
-    if (str_contains($text, 'horta') || str_contains($text, 'ambiental')) {
-        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 41V22"/><path d="M24 23c-8 0-13-5-13-13 8 0 13 5 13 13Z"/><path d="M24 29c8 0 13-5 13-13-8 0-13 5-13 13Z"/><path d="M15 41h18"/><path d="M18 35h12"/></svg>';
-    }
-
-    if (str_contains($text, 'idos')) {
-        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 22a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"/><path d="M7 41c1.4-8 6-13 12-13s10.6 5 12 13"/><path d="M31 18a5 5 0 1 0 0-10"/><path d="M31 29c5 1 8 5 9 12"/></svg>';
-    }
-
-    return '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="17" y="8" width="14" height="22" rx="7"/><path d="M24 30v7"/><path d="M14 22v2a10 10 0 0 0 20 0v-2"/><path d="M18 40h12"/><path d="M21 15h6"/></svg>';
-};
 ?>
 
 <article class="institution-page institution-modern institution-social">
@@ -89,9 +64,6 @@ $projectIcon = static function (array $area): string {
                 ?>
                 <article class="institution-project-card institution-project-card-modern">
                     <div class="institution-project-card-copy">
-                        <span class="institution-project-icon">
-                            <?= $projectIcon($area) ?>
-                        </span>
                         <span><?= e($area['kicker']) ?></span>
                         <h3><?= e($area['name']) ?></h3>
                         <p><?= e($area['summary']) ?></p>
