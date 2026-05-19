@@ -52,6 +52,86 @@
         });
     }
 
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value;
+        return div.innerHTML;
+    }
+
+    function latexFromSelection(editor) {
+        const selected = editor.selection.getContent({ format: 'text' }).trim();
+        const blockMatch = selected.match(/^\$\$([\s\S]*)\$\$$/);
+        const bracketMatch = selected.match(/^\\\[([\s\S]*)\\\]$/);
+        const inlineMatch = selected.match(/^\\\(([\s\S]*)\\\)$/);
+
+        if (blockMatch) {
+            return { formula: blockMatch[1].trim(), display: true };
+        }
+
+        if (bracketMatch) {
+            return { formula: bracketMatch[1].trim(), display: true };
+        }
+
+        if (inlineMatch) {
+            return { formula: inlineMatch[1].trim(), display: false };
+        }
+
+        return { formula: selected, display: false };
+    }
+
+    function openLatexDialog(editor) {
+        const initialData = latexFromSelection(editor);
+
+        editor.windowManager.open({
+            title: 'Formula LaTeX',
+            body: {
+                type: 'panel',
+                items: [
+                    {
+                        type: 'textarea',
+                        name: 'formula',
+                        label: 'Formula'
+                    },
+                    {
+                        type: 'checkbox',
+                        name: 'display',
+                        label: 'Exibir em linha separada'
+                    }
+                ]
+            },
+            buttons: [
+                {
+                    type: 'cancel',
+                    text: 'Cancelar'
+                },
+                {
+                    type: 'submit',
+                    text: 'Inserir',
+                    primary: true
+                }
+            ],
+            initialData: initialData,
+            onSubmit: function (api) {
+                const data = api.getData();
+                const formula = String(data.formula || '').trim();
+
+                if (!formula) {
+                    api.close();
+                    return;
+                }
+
+                const safeFormula = escapeHtml(formula);
+                const html = data.display
+                    ? '<p>$$' + safeFormula + '$$</p>'
+                    : '\\(' + safeFormula + '\\)';
+
+                editor.insertContent(html);
+                editor.save();
+                api.close();
+            }
+        });
+    }
+
     tinymce.init({
         selector: 'textarea[data-tinymce]',
         language: 'pt_BR',
@@ -71,7 +151,7 @@
         toolbar: [
             'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor',
             'alignleft aligncenter alignright alignjustify | bullist numlist | outdent indent | lineheight',
-            'styles | link image media table | blockquote hr removeformat | preview code fullscreen'
+            'styles | link image media table latex | blockquote hr removeformat | preview code fullscreen'
         ].join(' | '),
         block_formats: 'Paragrafo=p; Titulo=h2; Subtitulo=h3; Destaque=h4; Citacao=blockquote',
         font_size_formats: '12px 14px 16px 18px 20px 24px 28px 32px',
@@ -130,6 +210,14 @@
             return uploadImage(blobInfo.blob(), blobInfo.filename());
         },
         setup: function (editor) {
+            editor.ui.registry.addButton('latex', {
+                text: 'LaTeX',
+                tooltip: 'Inserir ou editar formula LaTeX',
+                onAction: function () {
+                    openLatexDialog(editor);
+                }
+            });
+
             editor.on('change keyup blur', function () {
                 editor.save();
             });

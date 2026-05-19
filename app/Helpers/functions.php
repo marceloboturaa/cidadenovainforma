@@ -150,19 +150,51 @@ function news_public_image(array $news): ?string
 
 function normalize_media_path(?string $path): ?string
 {
-    $path = trim((string) $path);
+    $path = trim(html_entity_decode((string) $path, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
     if ($path === '') {
         return null;
     }
 
-    if (preg_match('#^(https?:)?//#i', $path)) {
+    if (preg_match('#^https?://#i', $path)) {
+        $parts = parse_url($path);
+        $urlHost = strtolower((string) ($parts['host'] ?? ''));
+        $urlPath = (string) ($parts['path'] ?? '');
+        $config = require dirname(__DIR__, 2) . '/config/app.php';
+        $knownHosts = array_filter([
+            parse_url($config['base_url'] ?? '', PHP_URL_HOST) ?: null,
+            $_SERVER['HTTP_HOST'] ?? null,
+            $_SERVER['SERVER_NAME'] ?? null,
+            ...($config['trusted_hosts'] ?? []),
+            'localhost',
+            '127.0.0.1',
+        ]);
+        $knownHosts = array_map(
+            fn (string $host): string => strtolower(preg_replace('/:\d+$/', '', $host) ?: $host),
+            $knownHosts
+        );
+        $normalizedUrlHost = preg_replace('/:\d+$/', '', $urlHost) ?: $urlHost;
+
+        if ($urlPath !== '' && in_array($normalizedUrlHost, array_unique($knownHosts), true)) {
+            $path = $urlPath;
+        } else {
+            return $path;
+        }
+    } elseif (str_starts_with($path, '//')) {
         return $path;
     }
 
     $config = require dirname(__DIR__, 2) . '/config/app.php';
-    $basePath = parse_url($config['base_url'] ?? '', PHP_URL_PATH);
-    if (is_string($basePath) && $basePath !== '' && $basePath !== '/') {
+    $basePaths = [
+        parse_url($config['base_url'] ?? '', PHP_URL_PATH),
+        str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')),
+    ];
+
+    foreach (array_unique(array_filter($basePaths, 'is_string')) as $basePath) {
+        if ($basePath === '' || $basePath === '/' || $basePath === '.') {
+            continue;
+        }
+
         $basePath = '/' . trim($basePath, '/');
         if ($path === $basePath) {
             return '/';
@@ -401,10 +433,6 @@ function clean_article_html(string $html): string
         $url = normalize_media_path($src[2] ?? '') ?? '';
 
         if (!preg_match('#^(https?://|/)#i', $url)) {
-            return '';
-        }
-
-        if (!media_available($url)) {
             return '';
         }
 

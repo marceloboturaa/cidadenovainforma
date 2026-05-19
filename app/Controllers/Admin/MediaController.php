@@ -61,6 +61,6 @@ class MediaController
             return;
         }
 
-        echo json_encode(['location' => url('/public/uploads/editor/' . $filename)], JSON_UNESCAPED_SLASHES);
+        echo json_encode(['location' => '/public/uploads/editor/' . $filename], JSON_UNESCAPED_SLASHES);
     }
 }
