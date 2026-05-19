@@ -805,11 +805,13 @@
     display: grid;
     width: 54px;
     aspect-ratio: 1 / 1;
+    flex: 0 0 54px;
     place-items: center;
     border: 0;
     border-radius: 50%;
     background: var(--project-soft, #d8f2c2);
     color: var(--project-accent, var(--inst-green-dark));
+    line-height: 0;
     box-shadow: none;
     transition: transform 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
 }
@@ -823,13 +825,15 @@
 
 .institution-project-icon svg {
     display: block;
-    width: 30px;
-    height: 30px;
+    width: 31px;
+    height: 31px;
     fill: none;
+    overflow: visible;
     stroke: currentColor;
     stroke-width: 2.2;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transform-origin: center;
 }
 
 .institution-project-card-copy {
