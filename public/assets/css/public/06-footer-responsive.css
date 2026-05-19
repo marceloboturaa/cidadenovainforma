@@ -123,14 +123,17 @@
     }
 
     .institution-values,
-    .institution-project-grid,
     .institution-download-grid,
     .institution-gallery-grid,
-    .institution-project-grid-modern,
     .institution-media-grid,
     .institution-impact-grid,
     .institution-support-grid {
         grid-template-columns: 1fr;
+    }
+
+    .institution-project-grid,
+    .institution-project-grid-modern {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .institution-project-card-modern {
@@ -153,6 +156,11 @@
         top: 0;
         z-index: 20;
         box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    }
+
+    .institution-project-grid,
+    .institution-project-grid-modern {
+        grid-template-columns: 1fr;
     }
 
     .header-top {
