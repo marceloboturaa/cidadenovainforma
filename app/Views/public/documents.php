@@ -9,7 +9,6 @@
             <div>
                 <span><?= e(strtoupper(pathinfo($document['original_name'], PATHINFO_EXTENSION) ?: 'ARQ')) ?></span>
                 <h2><?= e($document['title']) ?></h2>
-                <p><?= e($document['original_name']) ?> · <?= e(number_format(((int) $document['size_bytes']) / 1024, 1, ',', '.')) ?> KB</p>
             </div>
             <a href="<?= e(url('/documentos/download?id=' . $document['id'])) ?>">Baixar</a>
         </article>
