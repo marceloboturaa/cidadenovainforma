@@ -687,7 +687,7 @@
 
 .institution-project-card-modern {
     display: grid;
-    grid-template-columns: minmax(180px, 180px) minmax(0, 1fr);
+    grid-template-columns: 180px minmax(0, 1fr);
     gap: 0;
     overflow: hidden;
     padding: 0;
@@ -697,6 +697,8 @@
 
 .institution-project-card-modern .institution-project-media {
     display: block;
+    width: 180px;
+    height: 180px;
     aspect-ratio: 1 / 1;
     min-height: 0;
     margin: 0;
@@ -710,6 +712,7 @@
     display: block;
     width: 100%;
     height: 100%;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
 }
 
