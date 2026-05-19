@@ -27,6 +27,9 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
         <h1><?= e($course['title']) ?></h1>
     </div>
     <div class="heading-actions">
+        <?php if ($forumTopics): ?>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forum')) ?>"><i class="bi bi-chat-dots" aria-hidden="true"></i>Fórum do curso</a>
+        <?php endif; ?>
         <?php if ($canManage): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&edit_course=1')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar curso</a>
             <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&create_module=1')) ?>"><i class="bi bi-collection-play" aria-hidden="true"></i>Novo módulo</a>
