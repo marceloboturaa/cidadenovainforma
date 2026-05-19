@@ -428,6 +428,10 @@
         grid-template-columns: 1fr;
     }
 
+    .public-document-filters {
+        grid-template-columns: 1fr;
+    }
+
     .public-document-card {
         align-items: stretch;
         flex-direction: column;
