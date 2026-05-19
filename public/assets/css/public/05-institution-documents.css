@@ -707,8 +707,28 @@
     position: absolute;
     inset: 0 auto 0 0;
     width: 5px;
-    background: linear-gradient(180deg, var(--inst-green), var(--inst-blue));
+    background: linear-gradient(180deg, var(--inst-green), var(--project-accent, var(--inst-blue)));
     opacity: 0.88;
+}
+
+.institution-project-card-modern:nth-child(2n) {
+    --project-accent: #1d4ed8;
+    --project-soft: #eaf3ff;
+}
+
+.institution-project-card-modern:nth-child(3n) {
+    --project-accent: #0f766e;
+    --project-soft: #e7fbf6;
+}
+
+.institution-project-card-modern:nth-child(4n) {
+    --project-accent: #15803d;
+    --project-soft: #e8f8ee;
+}
+
+.institution-project-card-modern:nth-child(5n) {
+    --project-accent: #a16207;
+    --project-soft: #fff7df;
 }
 
 .institution-project-card-modern:hover,
@@ -732,15 +752,15 @@
 
 .institution-project-icon {
     display: grid;
-    width: 58px;
+    width: 64px;
     aspect-ratio: 1 / 1;
     place-items: center;
     border: 1px solid rgba(19, 122, 70, 0.16);
-    border-radius: 16px;
+    border-radius: 20px;
     background:
         radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.72)),
-        linear-gradient(135deg, #e6f8ed, #eaf3ff);
-    color: var(--inst-green-dark);
+        linear-gradient(135deg, #e6f8ed, var(--project-soft, #eaf3ff));
+    color: var(--project-accent, var(--inst-green-dark));
     box-shadow: 0 14px 28px rgba(15, 95, 57, 0.12);
     transition: transform 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
 }
@@ -753,11 +773,12 @@
 }
 
 .institution-project-icon svg {
-    width: 30px;
-    height: 30px;
+    display: block;
+    width: 39px;
+    height: 39px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.8;
+    stroke-width: 2.4;
     stroke-linecap: round;
     stroke-linejoin: round;
 }

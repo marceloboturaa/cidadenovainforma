@@ -21,23 +21,27 @@ $heroImage = media_url($hero['image']);
 $projectIcon = static function (array $area): string {
     $text = mb_strtolower(($area['slug'] ?? '') . ' ' . ($area['name'] ?? '') . ' ' . ($area['kicker'] ?? ''), 'UTF-8');
 
+    if (str_contains($text, 'esporte')) {
+        return '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16"/><path d="M24 8c4.2 4 6.3 9.3 6.3 16S28.2 36 24 40"/><path d="M24 8c-4.2 4-6.3 9.3-6.3 16S19.8 36 24 40"/><path d="M9.8 18.5c4.3 2.2 9 3.3 14.2 3.3s9.9-1.1 14.2-3.3"/><path d="M9.8 29.5c4.3-2.2 9-3.3 14.2-3.3s9.9 1.1 14.2 3.3"/></svg>';
+    }
+
     if (str_contains($text, 'biblioteca') || str_contains($text, 'leitura')) {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H7a3 3 0 0 0-3 3V5.5Z"/><path d="M7 19V3"/><path d="M9.5 7H17"/><path d="M9.5 11H16"/></svg>';
+        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 12.5A4.5 4.5 0 0 1 14.5 8H40v29H16a6 6 0 0 0-6 6V12.5Z"/><path d="M16 37V8"/><path d="M22 16h11"/><path d="M22 23h11"/><path d="M22 30h8"/></svg>';
     }
 
     if (str_contains($text, 'educa')) {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 8 9-4 9 4-9 4-9-4Z"/><path d="m7 10.5v5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5v-5"/><path d="M21 8v6"/></svg>';
+        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m5 17 19-9 19 9-19 9L5 17Z"/><path d="M13 22v10c0 4 5 7 11 7s11-3 11-7V22"/><path d="M42 17v12"/><path d="M42 32v.2"/></svg>';
     }
 
     if (str_contains($text, 'horta') || str_contains($text, 'ambiental')) {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V10"/><path d="M12 10c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 14c4.5 0 7-2.5 7-7-4.5 0-7 2.5-7 7Z"/></svg>';
+        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 42V22"/><path d="M24 22c-9 0-14-5-14-14 9 0 14 5 14 14Z"/><path d="M24 29c9 0 14-5 14-14-9 0-14 5-14 14Z"/><path d="M12 42h24"/></svg>';
     }
 
     if (str_contains($text, 'idos')) {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-8 0"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M18 4v5"/><path d="M20.5 6.5H15.5"/></svg>';
+        return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 22a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"/><path d="M6 41c1.5-8 6-13 12-13s10.5 5 12 13"/><path d="M34 12c4 0 7 3 7 7 0 7-7 11-7 11s-7-4-7-11c0-4 3-7 7-7Z"/><path d="M31 19h6"/><path d="M34 16v6"/></svg>';
     }
 
-    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h12a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3V5Z"/><path d="M8 9h7"/><path d="M8 13h7"/><path d="M19 8h1a2 2 0 0 1 2 2v6a3 3 0 0 1-3 3"/></svg>';
+    return '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 11h24a6 6 0 0 1 6 6v22H14a6 6 0 0 1-6-6V11Z"/><path d="M15 19h15"/><path d="M15 27h12"/><path d="M38 17h2a4 4 0 0 1 4 4v12a6 6 0 0 1-6 6"/><path d="M10 8h18"/></svg>';
 };
 ?>
 

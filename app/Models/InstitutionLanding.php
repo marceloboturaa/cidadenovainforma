@@ -82,7 +82,7 @@ class InstitutionLanding
                     ['value' => '11+', 'label' => 'anos de atuação', 'description' => 'História construída com comunicação comunitária e presença no território.'],
                     ['value' => '100+', 'label' => 'ações realizadas', 'description' => 'Atividades sociais, culturais, educativas e de mobilização local.'],
                     ['value' => 'Milhares', 'label' => 'pessoas impactadas', 'description' => 'Moradores alcançados por informações, projetos e ações comunitárias.'],
-                    ['value' => '5', 'label' => 'projetos desenvolvidos', 'description' => 'Frentes institucionais integradas à comunicação, educação e cultura.'],
+                    ['value' => '6', 'label' => 'projetos desenvolvidos', 'description' => 'Frentes institucionais integradas à comunicação, educação, esporte e cultura.'],
                 ],
             ],
             'support' => [
