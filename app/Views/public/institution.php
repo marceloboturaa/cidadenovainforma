@@ -18,6 +18,27 @@ $linkHref = static function (string $value): string {
 };
 $isExternal = static fn (string $value): bool => (bool) preg_match('#^https?://#i', $value);
 $heroImage = media_url($hero['image']);
+$projectIcon = static function (array $area): string {
+    $text = mb_strtolower(($area['slug'] ?? '') . ' ' . ($area['name'] ?? '') . ' ' . ($area['kicker'] ?? ''), 'UTF-8');
+
+    if (str_contains($text, 'biblioteca') || str_contains($text, 'leitura')) {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H7a3 3 0 0 0-3 3V5.5Z"/><path d="M7 19V3"/><path d="M9.5 7H17"/><path d="M9.5 11H16"/></svg>';
+    }
+
+    if (str_contains($text, 'educa')) {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 8 9-4 9 4-9 4-9-4Z"/><path d="m7 10.5v5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5v-5"/><path d="M21 8v6"/></svg>';
+    }
+
+    if (str_contains($text, 'horta') || str_contains($text, 'ambiental')) {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V10"/><path d="M12 10c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z"/><path d="M12 14c4.5 0 7-2.5 7-7-4.5 0-7 2.5-7 7Z"/></svg>';
+    }
+
+    if (str_contains($text, 'idos')) {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-8 0"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M18 4v5"/><path d="M20.5 6.5H15.5"/></svg>';
+    }
+
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h12a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3V5Z"/><path d="M8 9h7"/><path d="M8 13h7"/><path d="M19 8h1a2 2 0 0 1 2 2v6a3 3 0 0 1-3 3"/></svg>';
+};
 ?>
 
 <article class="institution-page institution-modern institution-social">
@@ -54,13 +75,14 @@ $heroImage = media_url($hero['image']);
         <div class="institution-project-grid institution-project-grid-modern">
             <?php foreach ($projects as $area): ?>
                 <?php
-                $projectImage = media_url($area['cover_image'] ?? $hero['image']);
                 $projectUrl = $linkHref($area['cta_url'] ?? '') ?: url('/instituicao/' . $area['slug']);
                 $projectLabel = trim((string) ($area['cta_label'] ?? '')) ?: 'Conhecer projeto';
                 ?>
                 <article class="institution-project-card institution-project-card-modern">
-                    <a class="institution-project-media" href="<?= e($projectUrl) ?>">
-                        <img src="<?= e($projectImage) ?>" alt="<?= e($area['name']) ?>" loading="lazy">
+                    <a class="institution-project-media" href="<?= e($projectUrl) ?>" aria-label="<?= e($projectLabel . ': ' . $area['name']) ?>">
+                        <span class="institution-project-icon">
+                            <?= $projectIcon($area) ?>
+                        </span>
                     </a>
                     <div>
                         <span><?= e($area['kicker']) ?></span>
