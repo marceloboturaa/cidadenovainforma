@@ -136,14 +136,8 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .institution-projects-showcase-head,
-    .institution-project-community-card {
+    .institution-projects-showcase-head {
         grid-template-columns: 1fr;
-    }
-
-    .institution-projects-showcase-head > img,
-    .institution-project-community-card > img {
-        border-radius: 44px 8px 8px 44px;
     }
 
     .institution-project-card-modern {
@@ -182,8 +176,6 @@
         grid-template-columns: 1fr;
     }
 
-    .institution-projects-showcase-head > img,
-    .institution-project-community-card > img,
     .institution-project-card-modern .institution-project-media,
     .institution-project-media img {
         border-radius: 28px 8px 8px 28px;

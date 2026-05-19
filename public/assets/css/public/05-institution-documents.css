@@ -686,9 +686,7 @@
 
 .institution-projects-showcase-head {
     display: grid;
-    grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.22fr);
-    gap: 28px;
-    align-items: center;
+    max-width: 760px;
 }
 
 .institution-projects-showcase-copy {
@@ -725,14 +723,6 @@
     margin: 0;
     color: #53616f;
     line-height: 1.65;
-}
-
-.institution-projects-showcase-head > img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 7;
-    object-fit: cover;
-    border-radius: 96px 8px 8px 96px;
 }
 
 .institution-project-grid-modern {
@@ -903,46 +893,6 @@
     transform: translateX(3px);
     background: transparent;
     box-shadow: none;
-}
-
-.institution-project-community-card {
-    display: grid;
-    grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
-    overflow: hidden;
-    border: 1px solid rgba(19, 122, 70, 0.12);
-    border-radius: 8px;
-    background: linear-gradient(120deg, #f9fbf4, #ffffff);
-}
-
-.institution-project-community-copy {
-    display: grid;
-    gap: 10px;
-    align-content: center;
-    padding: 28px;
-}
-
-.institution-project-community-copy h3 {
-    max-width: 410px;
-    margin: 0;
-    color: #0f172a;
-    font-size: 1.55rem;
-    line-height: 1.12;
-}
-
-.institution-project-community-copy p {
-    max-width: 430px;
-    margin: 0;
-    color: #53616f;
-    line-height: 1.62;
-}
-
-.institution-project-community-card > img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    min-height: 250px;
-    object-fit: cover;
-    border-radius: 96px 8px 8px 0;
 }
 
 .institution-media-grid {
