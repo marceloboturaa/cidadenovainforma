@@ -34,8 +34,8 @@
                     </div>
                     <div class="radio-player-card">
                         <div class="radio-links">
-                            <a href="https://radiowebcni.ismyradio.com/" target="_blank" rel="noopener">Abrir Radio Web CNI</a>
-                            <a href="https://radio.cidadenovainforma.com.br/" target="_blank" rel="noopener">Abrir rádio oficial</a>
+                            <a href="https://radiowebcni.ismyradio.com/">Abrir Radio Web CNI</a>
+                            <a href="https://radio.cidadenovainforma.com.br/">Abrir rádio oficial</a>
                         </div>
                         <div class="radio-embed">
                             <div class="cstrEmbed" data-type="newStreamPlayer" data-publicToken="9fd14a3e-a30a-4bee-aa36-5c190d33a579" data-theme="light" data-color="ED0000" data-channelId="" data-rendered="false">
@@ -57,7 +57,7 @@
                     <div class="institution-gallery-grid">
                         <?php foreach ($area['galleries'] as $gallery): ?>
                             <article class="institution-gallery-card">
-                                <a class="institution-gallery-cover" href="<?= e($gallery['url']) ?>" target="_blank" rel="noopener" aria-label="Abrir galeria <?= e($gallery['title']) ?>">
+                                <a class="institution-gallery-cover" href="<?= e($gallery['url']) ?>" aria-label="Abrir galeria <?= e($gallery['title']) ?>">
                                     <?php if (!empty($gallery['cover'])): ?>
                                         <img src="<?= e(media_url($gallery['cover'])) ?>" alt="<?= e($gallery['title']) ?>" loading="lazy">
                                     <?php else: ?>
@@ -69,7 +69,7 @@
                                     <?php if (!empty($gallery['description'])): ?>
                                         <p><?= e($gallery['description']) ?></p>
                                     <?php endif; ?>
-                                    <a class="institution-gallery-button" href="<?= e($gallery['url']) ?>" target="_blank" rel="noopener">Abrir Galeria</a>
+                                    <a class="institution-gallery-button" href="<?= e($gallery['url']) ?>">Abrir Galeria</a>
                                 </div>
                             </article>
                         <?php endforeach; ?>
@@ -87,7 +87,7 @@
                         <?php foreach ($photos as $photo): ?>
                             <figure>
                                 <img src="<?= e(media_url($photo)) ?>" alt="<?= e($area['name']) ?>" loading="lazy">
-                                <a href="<?= e(media_url($photo)) ?>" target="_blank" rel="noopener">Abrir imagem</a>
+                                <a href="<?= e(media_url($photo)) ?>">Abrir imagem</a>
                             </figure>
                         <?php endforeach; ?>
                     </div>
@@ -127,14 +127,14 @@
                 <h2><?= $isRadioArea ? 'Acessos da rádio' : 'Informações da área' ?></h2>
                 <ul>
                     <?php if ($isRadioArea): ?>
-                        <li><a href="https://radiowebcni.ismyradio.com/" target="_blank" rel="noopener">Radio Web CNI</a></li>
-                        <li><a href="https://radio.cidadenovainforma.com.br/" target="_blank" rel="noopener">Rádio Cidade Nova Informa</a></li>
+                        <li><a href="https://radiowebcni.ismyradio.com/">Radio Web CNI</a></li>
+                        <li><a href="https://radio.cidadenovainforma.com.br/">Rádio Cidade Nova Informa</a></li>
                     <?php else: ?>
                         <?php foreach ($area['materials'] as $material): ?>
                             <?php $line = link_line($material); ?>
                             <li>
                                 <?php if ($line['url']): ?>
-                                    <a href="<?= e($line['url']) ?>" target="_blank" rel="noopener"><?= e($line['label']) ?></a>
+                                    <a href="<?= e($line['url']) ?>"><?= e($line['label']) ?></a>
                                 <?php else: ?>
                                     <?= e($line['label']) ?>
                                 <?php endif; ?>
@@ -160,3 +160,4 @@
 <?php if ($isRadioArea): ?>
     <script src="//cdn.cloud.caster.fm//widgets/embed.js"></script>
 <?php endif; ?>
+

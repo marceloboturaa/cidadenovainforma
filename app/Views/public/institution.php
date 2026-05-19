@@ -28,7 +28,7 @@ $heroImage = media_url($hero['image']);
             <p><?= e($hero['subtitle']) ?></p>
             <?php $heroButtonUrl = $linkHref($hero['button_url']); ?>
             <?php if ($heroButtonUrl !== ''): ?>
-                <a class="institution-primary-action" href="<?= e($heroButtonUrl) ?>" <?= $isExternal($heroButtonUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                <a class="institution-primary-action" href="<?= e($heroButtonUrl) ?>">
                     <?= e($hero['button_label']) ?>
                 </a>
             <?php endif; ?>
@@ -59,14 +59,14 @@ $heroImage = media_url($hero['image']);
                 $projectLabel = trim((string) ($area['cta_label'] ?? '')) ?: 'Conhecer projeto';
                 ?>
                 <article class="institution-project-card institution-project-card-modern">
-                    <a class="institution-project-media" href="<?= e($projectUrl) ?>" <?= $isExternal($projectUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                    <a class="institution-project-media" href="<?= e($projectUrl) ?>">
                         <img src="<?= e($projectImage) ?>" alt="<?= e($area['name']) ?>" loading="lazy">
                     </a>
                     <div>
                         <span><?= e($area['kicker']) ?></span>
                         <h3><?= e($area['name']) ?></h3>
                         <p><?= e($area['summary']) ?></p>
-                        <a href="<?= e($projectUrl) ?>" <?= $isExternal($projectUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                        <a href="<?= e($projectUrl) ?>">
                             <?= e($projectLabel) ?>
                         </a>
                     </div>
@@ -95,7 +95,7 @@ $heroImage = media_url($hero['image']);
                 $tagName = $itemUrl !== '' ? 'a' : 'div';
                 $cover = media_url($item['cover'] ?: $hero['image']);
                 ?>
-                <<?= $tagName ?> class="institution-media-card" <?= $itemUrl !== '' ? 'href="' . e($itemUrl) . '"' : '' ?> <?= $itemUrl !== '' && $isExternal($itemUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                <<?= $tagName ?> class="institution-media-card" <?= $itemUrl !== '' ? 'href="' . e($itemUrl) . '"' : '' ?>>
                     <img src="<?= e($cover) ?>" alt="<?= e($item['title']) ?>" loading="lazy">
                     <div>
                         <span><?= e($item['type']) ?></span>
@@ -141,7 +141,7 @@ $heroImage = media_url($hero['image']);
                     <h3><?= e($item['title']) ?></h3>
                     <p><?= e($item['description']) ?></p>
                     <?php if ($supportUrl !== ''): ?>
-                        <a href="<?= e($supportUrl) ?>" <?= $isExternal($supportUrl) ? 'target="_blank" rel="noopener"' : '' ?>>
+                        <a href="<?= e($supportUrl) ?>">
                             <?= e($item['button_label']) ?>
                         </a>
                     <?php endif; ?>
