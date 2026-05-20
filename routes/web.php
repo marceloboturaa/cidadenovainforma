@@ -128,6 +128,7 @@ $router->post('/admin/documents/update', [DocumentController::class, 'update']);
 $router->post('/admin/documents/formats', [DocumentController::class, 'formats']);
 $router->get('/admin/documents/download', [DocumentController::class, 'download']);
 $router->post('/admin/documents/access', [DocumentController::class, 'access']);
+$router->post('/admin/documents/uploaders', [DocumentController::class, 'uploaders']);
 $router->post('/admin/documents/delete', [DocumentController::class, 'delete']);
 
 $router->get('/admin/education', [EducationController::class, 'index']);

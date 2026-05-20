@@ -100,6 +100,7 @@ class DocumentController
             'users' => User::activeForAccessLists(),
             'canManage' => $this->canManageDocuments(),
             'canUpload' => $this->canUploadDocuments(),
+            'documentUploadUserIds' => Document::uploadUserIds(),
             'canManageFormats' => $this->currentUserIsMaster(),
             'allowedExtensions' => $this->allowedExtensions(),
             'allowedExtensionsText' => implode(', ', $this->allowedExtensions()),
@@ -113,12 +114,12 @@ class DocumentController
         $this->validateCsrf();
 
         if (empty($_FILES['document']['name']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
-            Session::flash('error', 'Envie um documento válido.');
+            Session::flash('error', 'Envie um documento valido.');
             redirect('/admin/documents');
         }
 
         if ($_FILES['document']['size'] > self::MAX_FILE_SIZE) {
-            Session::flash('error', 'O documento deve ter no máximo 10MB.');
+            Session::flash('error', 'O documento deve ter no maximo 10MB.');
             redirect('/admin/documents');
         }
 
@@ -126,7 +127,7 @@ class DocumentController
         $extension = strtolower(pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION));
 
         if (!$this->documentExtensionIsAllowed($extension, $mime)) {
-            Session::flash('error', 'Tipo de documento não permitido. Formatos liberados: ' . implode(', ', $this->allowedExtensions()) . '.');
+            Session::flash('error', 'Tipo de documento nao permitido. Formatos liberados: ' . implode(', ', $this->allowedExtensions()) . '.');
             redirect('/admin/documents');
         }
 
@@ -139,7 +140,7 @@ class DocumentController
         $target = $directory . '/' . $filename;
 
         if (!move_uploaded_file($_FILES['document']['tmp_name'], $target)) {
-            Session::flash('error', 'Não foi possível salvar o documento.');
+            Session::flash('error', 'Nao foi possivel salvar o documento.');
             redirect('/admin/documents');
         }
 
@@ -177,7 +178,7 @@ class DocumentController
 
         $title = trim((string) ($_POST['title'] ?? ''));
         if ($title === '') {
-            Session::flash('error', 'Informe o tÃ­tulo do documento.');
+            Session::flash('error', 'Informe o titulo do documento.');
             redirect('/admin/documents');
         }
 
@@ -279,12 +280,12 @@ class DocumentController
         $file = $_FILES[$field] ?? null;
 
         if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-            Session::flash('error', 'Envie um documento vÃ¡lido.');
+            Session::flash('error', 'Envie um documento valido.');
             redirect('/admin/documents');
         }
 
         if ((int) $file['size'] > self::MAX_FILE_SIZE) {
-            Session::flash('error', 'O documento deve ter no mÃ¡ximo 10MB.');
+            Session::flash('error', 'O documento deve ter no maximo 10MB.');
             redirect('/admin/documents');
         }
 
@@ -292,7 +293,7 @@ class DocumentController
         $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
 
         if (!$this->documentExtensionIsAllowed($extension, $mime)) {
-            Session::flash('error', 'Tipo de documento nÃ£o permitido. Formatos liberados: ' . implode(', ', $this->allowedExtensions()) . '.');
+            Session::flash('error', 'Tipo de documento nao permitido. Formatos liberados: ' . implode(', ', $this->allowedExtensions()) . '.');
             redirect('/admin/documents');
         }
 
@@ -302,7 +303,7 @@ class DocumentController
         }
 
         if (!is_writable($directory)) {
-            Session::flash('error', 'A pasta de documentos nÃ£o estÃ¡ gravÃ¡vel no servidor.');
+            Session::flash('error', 'A pasta de documentos nao esta gravavel no servidor.');
             redirect('/admin/documents');
         }
 
@@ -310,7 +311,7 @@ class DocumentController
         $target = $directory . '/' . $filename;
 
         if (!move_uploaded_file((string) $file['tmp_name'], $target)) {
-            Session::flash('error', 'NÃ£o foi possÃ­vel salvar o documento.');
+            Session::flash('error', 'Nao foi possivel salvar o documento.');
             redirect('/admin/documents');
         }
 
@@ -387,6 +388,16 @@ class DocumentController
 
         Document::updateAccess((int) $document['id'], isset($_POST['is_public']), $_POST['user_ids'] ?? []);
         Session::flash('success', 'Acesso do documento atualizado.');
+        redirect('/admin/documents');
+    }
+
+    public function uploaders(): void
+    {
+        $this->authorizeManage();
+        $this->validateCsrf();
+
+        Document::syncUploadUsers($_POST['user_ids'] ?? []);
+        Session::flash('success', 'Usuarios autorizados a enviar documentos foram atualizados.');
         redirect('/admin/documents');
     }
 

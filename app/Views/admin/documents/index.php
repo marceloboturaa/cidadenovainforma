@@ -30,11 +30,49 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
     </article>
 </section>
 
+<?php if ($canManage): ?>
+    <section class="panel document-rule-panel">
+        <div class="section-heading">
+            <h2>Permiss&otilde;es desta &aacute;rea</h2>
+            <span>Acesso e envio s&atilde;o controles separados</span>
+        </div>
+        <div class="document-rule-grid">
+            <article>
+                <strong>Quem pode ver ou baixar</strong>
+                <p>&Eacute; definido em cada documento, na op&ccedil;&atilde;o <b>Usu&aacute;rios com acesso</b>. Essa libera&ccedil;&atilde;o n&atilde;o permite enviar arquivos.</p>
+            </article>
+            <article>
+                <strong>Quem pode enviar arquivos</strong>
+                <p>Administradores desta &aacute;rea j&aacute; podem enviar. Al&eacute;m deles, os usu&aacute;rios marcados abaixo tamb&eacute;m poder&atilde;o subir novos documentos para o servidor.</p>
+            </article>
+        </div>
+        <form method="post" action="<?= e(url('/admin/documents/uploaders')) ?>" class="document-uploaders-form">
+            <?= csrf_field() ?>
+            <span class="form-label">Usu&aacute;rios autorizados a enviar documentos</span>
+            <div class="document-access-options compact">
+                <?php foreach ($users as $user): ?>
+                    <?php
+                    $roleSlugs = array_filter(explode(',', (string) ($user['role_slugs'] ?? $user['role_slug'] ?? '')));
+                    if (in_array('master', $roleSlugs, true)) {
+                        continue;
+                    }
+                    ?>
+                    <label>
+                        <input type="checkbox" name="user_ids[]" value="<?= e((string) $user['id']) ?>" <?= checked(in_array((int) $user['id'], $documentUploadUserIds ?? [], true)) ?>>
+                        <span><?= e($user['name']) ?> <small><?= e($user['role_names'] ?? $user['role_name']) ?></small></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+            <button class="btn btn-sm btn-outline-primary">Salvar quem pode enviar</button>
+        </form>
+    </section>
+<?php endif; ?>
+
 <?php if ($canUpload): ?>
     <section class="panel document-upload-panel">
         <div class="section-heading">
             <h2>Novo documento</h2>
-            <span>Envie o arquivo e escolha a visibilidade</span>
+            <span>Esta parte s&oacute; aparece para quem tem permiss&atilde;o de envio</span>
         </div>
         <form method="post" action="<?= e(url('/admin/documents')) ?>" enctype="multipart/form-data" class="document-upload-form">
             <?= csrf_field() ?>
@@ -61,7 +99,7 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             </div>
             <?php if ($canManage): ?>
                 <details class="document-access-details">
-                    <summary>Liberar para usu&aacute;rios espec&iacute;ficos</summary>
+                    <summary>Quem poder&aacute; ver ou baixar este documento</summary>
                     <div class="document-access-options">
                         <?php foreach ($users as $user): ?>
                             <label>
@@ -160,7 +198,7 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                                     <span class="form-check-label">Publicar tamb&eacute;m no site</span>
                                 </label>
                                 <details class="document-access-details compact">
-                                    <summary>Usu&aacute;rios com acesso</summary>
+                                    <summary>Usu&aacute;rios que podem ver ou baixar</summary>
                                     <div class="document-access-options compact">
                                         <?php foreach ($users as $user): ?>
                                             <label>
