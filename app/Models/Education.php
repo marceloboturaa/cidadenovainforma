@@ -1334,8 +1334,20 @@ class Education
                  VALUES (:form_id, :user_id, NOW(), NOW())
                  ON DUPLICATE KEY UPDATE updated_at = NOW()'
             )->execute(['form_id' => $formId, 'user_id' => $userId]);
-            $response = self::formResponse($formId, $userId);
-            $responseId = (int) ($response['id'] ?? 0);
+            $responseId = (int) $db->lastInsertId();
+
+            if ($responseId === 0) {
+                $stmt = $db->prepare(
+                    'SELECT id FROM education_form_responses WHERE form_id = :form_id AND user_id = :user_id LIMIT 1'
+                );
+                $stmt->execute(['form_id' => $formId, 'user_id' => $userId]);
+                $responseId = (int) $stmt->fetchColumn();
+            }
+
+            if ($responseId <= 0) {
+                throw new \RuntimeException('Nao foi possivel registrar a resposta do formulario.');
+            }
+
             $stmt = $db->prepare(
                 'INSERT INTO education_form_answers (response_id, question_id, answer, updated_at)
                  VALUES (:response_id, :question_id, :answer, NOW())
