@@ -789,6 +789,35 @@ class EducationController
         redirect($this->formRedirect($form));
     }
 
+    public function gradeFormResponse(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+
+        $id = filter_input(INPUT_GET, 'response_id', FILTER_VALIDATE_INT);
+        $response = $id ? Education::findFormResponse($id) : null;
+        if (!$response) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $response['course_id']);
+        $this->authorizeCourseManage($course);
+
+        Education::gradeFormResponse(
+            (int) $response['id'],
+            (string) ($_POST['correction_status'] ?? 'pending'),
+            (string) ($_POST['grade'] ?? ''),
+            (string) ($_POST['feedback'] ?? ''),
+            (int) (current_user()['id'] ?? 0)
+        );
+
+        Session::flash('success', 'Correcao do formulario salva.');
+        redirect($this->formRedirect($response));
+    }
+
     public function submitAssignment(): void
     {
         Middleware::auth();
@@ -820,6 +849,36 @@ class EducationController
         Education::saveAssignmentSubmission((int) $block['id'], (int) $user['id'], $textAnswer, $file);
         Session::flash('success', 'Tarefa enviada.');
         redirect('/admin/education/lesson?id=' . $block['lesson_id']);
+    }
+
+    public function gradeAssignment(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+
+        $id = filter_input(INPUT_GET, 'submission_id', FILTER_VALIDATE_INT);
+        $submission = $id ? $this->assignmentSubmissionById($id) : null;
+        if (!$submission) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $block = Education::findLessonBlock((int) $submission['block_id']);
+        $course = $block ? Education::findCourse((int) $block['course_id']) : null;
+        $this->authorizeCourseManage($course);
+
+        Education::gradeAssignmentSubmission(
+            (int) $submission['id'],
+            (string) ($_POST['correction_status'] ?? 'pending'),
+            (string) ($_POST['grade'] ?? ''),
+            (string) ($_POST['feedback'] ?? ''),
+            (int) (current_user()['id'] ?? 0)
+        );
+
+        Session::flash('success', 'Correcao da tarefa salva.');
+        redirect('/admin/education/lesson?id=' . ($block['lesson_id'] ?? ''));
     }
 
     public function downloadSubmission(): void

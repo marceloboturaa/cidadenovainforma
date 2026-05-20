@@ -321,6 +321,14 @@ $embed = function (?string $url): ?string {
                             <?php if (!empty($mySubmission['file_path'])): ?>
                                 <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/assignment/download?id=' . $mySubmission['id'])) ?>"><i class="bi bi-download" aria-hidden="true"></i>Minha entrega atual</a>
                             <?php endif; ?>
+                            <?php if ($mySubmission && (($mySubmission['correction_status'] ?? 'pending') !== 'pending' || !empty($mySubmission['grade']) || !empty($mySubmission['feedback']))): ?>
+                                <div class="education-correction-note">
+                                    <strong>Correcao do professor</strong>
+                                    <span><?= e(['corrected' => 'Corrigido', 'redo' => 'Refazer', 'pending' => 'Pendente'][$mySubmission['correction_status'] ?? 'pending'] ?? 'Pendente') ?></span>
+                                    <?php if (!empty($mySubmission['grade'])): ?><p><b>Nota:</b> <?= e($mySubmission['grade']) ?></p><?php endif; ?>
+                                    <?php if (!empty($mySubmission['feedback'])): ?><p><?= e($mySubmission['feedback']) ?></p><?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                             <button class="btn btn-sm btn-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i><?= $mySubmission ? 'Atualizar entrega' : 'Enviar tarefa' ?></button>
                         </form>
                     <?php else: ?>
@@ -335,6 +343,26 @@ $embed = function (?string $url): ?string {
                                         <?php if (!empty($submission['file_path'])): ?>
                                             <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/education/assignment/download?id=' . $submission['id'])) ?>">Baixar arquivo</a>
                                         <?php endif; ?>
+                                        <form method="post" action="<?= e(url('/admin/education/assignment/grade?submission_id=' . $submission['id'])) ?>" class="education-correction-form">
+                                            <?= csrf_field() ?>
+                                            <label class="form-label">
+                                                Situacao
+                                                <select class="form-control" name="correction_status">
+                                                    <option value="pending" <?= ($submission['correction_status'] ?? 'pending') === 'pending' ? 'selected' : '' ?>>Pendente</option>
+                                                    <option value="corrected" <?= ($submission['correction_status'] ?? '') === 'corrected' ? 'selected' : '' ?>>Corrigido</option>
+                                                    <option value="redo" <?= ($submission['correction_status'] ?? '') === 'redo' ? 'selected' : '' ?>>Refazer</option>
+                                                </select>
+                                            </label>
+                                            <label class="form-label">
+                                                Nota
+                                                <input class="form-control" name="grade" maxlength="40" value="<?= e($submission['grade'] ?? '') ?>">
+                                            </label>
+                                            <label class="form-label grid-span-2">
+                                                Comentario da correcao
+                                                <textarea class="form-control" name="feedback" rows="3"><?= e($submission['feedback'] ?? '') ?></textarea>
+                                            </label>
+                                            <button class="btn btn-sm btn-outline-primary">Salvar correcao</button>
+                                        </form>
                                     </article>
                                 <?php endforeach; ?>
                                 <?php if (!$blockSubmissions): ?><p class="form-text">Nenhum estudante enviou esta tarefa ainda.</p><?php endif; ?>
@@ -425,6 +453,26 @@ $embed = function (?string $url): ?string {
                                             <?php foreach ($questions as $question): ?>
                                                 <p><b><?= e($question['question']) ?>:</b> <?= e($itemAnswers[(int) $question['id']] ?? '-') ?></p>
                                             <?php endforeach; ?>
+                                            <form method="post" action="<?= e(url('/admin/education/form/grade?response_id=' . $item['id'])) ?>" class="education-correction-form">
+                                                <?= csrf_field() ?>
+                                                <label class="form-label">
+                                                    Situacao
+                                                    <select class="form-control" name="correction_status">
+                                                        <option value="pending" <?= ($item['correction_status'] ?? 'pending') === 'pending' ? 'selected' : '' ?>>Pendente</option>
+                                                        <option value="corrected" <?= ($item['correction_status'] ?? '') === 'corrected' ? 'selected' : '' ?>>Corrigido</option>
+                                                        <option value="redo" <?= ($item['correction_status'] ?? '') === 'redo' ? 'selected' : '' ?>>Refazer</option>
+                                                    </select>
+                                                </label>
+                                                <label class="form-label">
+                                                    Nota
+                                                    <input class="form-control" name="grade" maxlength="40" value="<?= e($item['grade'] ?? '') ?>">
+                                                </label>
+                                                <label class="form-label grid-span-2">
+                                                    Comentario da correcao
+                                                    <textarea class="form-control" name="feedback" rows="3"><?= e($item['feedback'] ?? '') ?></textarea>
+                                                </label>
+                                                <button class="btn btn-sm btn-outline-primary">Salvar correcao</button>
+                                            </form>
                                         </div>
                                     <?php endforeach; ?>
                                     <?php if (!$responses): ?><p class="form-text">Nenhuma resposta enviada ainda.</p><?php endif; ?>
@@ -440,6 +488,14 @@ $embed = function (?string $url): ?string {
                                 <?php foreach ($questions as $question): ?>
                                     <label class="form-label"><?= e($question['question']) ?><textarea class="form-control" name="answers[<?= e((string) $question['id']) ?>]" rows="3" required><?= e($answers[(int) $question['id']] ?? '') ?></textarea></label>
                                 <?php endforeach; ?>
+                                <?php if ($response && (($response['correction_status'] ?? 'pending') !== 'pending' || !empty($response['grade']) || !empty($response['feedback']))): ?>
+                                    <div class="education-correction-note">
+                                        <strong>Correcao do professor</strong>
+                                        <span><?= e(['corrected' => 'Corrigido', 'redo' => 'Refazer', 'pending' => 'Pendente'][$response['correction_status'] ?? 'pending'] ?? 'Pendente') ?></span>
+                                        <?php if (!empty($response['grade'])): ?><p><b>Nota:</b> <?= e($response['grade']) ?></p><?php endif; ?>
+                                        <?php if (!empty($response['feedback'])): ?><p><?= e($response['feedback']) ?></p><?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                                 <button class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
                             </form>
                         <?php endif; ?>

@@ -1231,6 +1231,46 @@
     background: #f8fafc;
 }
 
+.education-correction-form {
+    display: grid;
+    grid-template-columns: minmax(140px, 0.7fr) minmax(120px, 0.5fr);
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.education-correction-form .grid-span-2 {
+    grid-column: 1 / -1;
+}
+
+.education-correction-note {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1e3a8a;
+}
+
+.education-correction-note strong {
+    color: #1e3a8a;
+}
+
+.education-correction-note span {
+    width: max-content;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #dbeafe;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.education-correction-note p {
+    margin: 0;
+}
+
 .education-assignment-form {
     margin-top: 14px;
     padding: 14px;

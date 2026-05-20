@@ -226,6 +226,26 @@ $courseForms = $courseForms ?? [];
                                     <?php foreach ($questions as $question): ?>
                                         <p><b><?= e($question['question']) ?>:</b> <?= e($itemAnswers[(int) $question['id']] ?? '-') ?></p>
                                     <?php endforeach; ?>
+                                    <form method="post" action="<?= e(url('/admin/education/form/grade?response_id=' . $item['id'])) ?>" class="education-correction-form">
+                                        <?= csrf_field() ?>
+                                        <label class="form-label">
+                                            Situacao
+                                            <select class="form-control" name="correction_status">
+                                                <option value="pending" <?= ($item['correction_status'] ?? 'pending') === 'pending' ? 'selected' : '' ?>>Pendente</option>
+                                                <option value="corrected" <?= ($item['correction_status'] ?? '') === 'corrected' ? 'selected' : '' ?>>Corrigido</option>
+                                                <option value="redo" <?= ($item['correction_status'] ?? '') === 'redo' ? 'selected' : '' ?>>Refazer</option>
+                                            </select>
+                                        </label>
+                                        <label class="form-label">
+                                            Nota
+                                            <input class="form-control" name="grade" maxlength="40" value="<?= e($item['grade'] ?? '') ?>">
+                                        </label>
+                                        <label class="form-label grid-span-2">
+                                            Comentario da correcao
+                                            <textarea class="form-control" name="feedback" rows="3"><?= e($item['feedback'] ?? '') ?></textarea>
+                                        </label>
+                                        <button class="btn btn-sm btn-outline-primary">Salvar correcao</button>
+                                    </form>
                                 </div>
                             <?php endforeach; ?>
                             <?php if (!$responses): ?><p class="form-text">Nenhuma resposta enviada ainda.</p><?php endif; ?>
@@ -241,6 +261,14 @@ $courseForms = $courseForms ?? [];
                         <?php foreach ($questions as $question): ?>
                             <label class="form-label"><?= e($question['question']) ?><textarea class="form-control" name="answers[<?= e((string) $question['id']) ?>]" rows="3" required><?= e($answers[(int) $question['id']] ?? '') ?></textarea></label>
                         <?php endforeach; ?>
+                        <?php if ($response && (($response['correction_status'] ?? 'pending') !== 'pending' || !empty($response['grade']) || !empty($response['feedback']))): ?>
+                            <div class="education-correction-note">
+                                <strong>Correcao do professor</strong>
+                                <span><?= e(['corrected' => 'Corrigido', 'redo' => 'Refazer', 'pending' => 'Pendente'][$response['correction_status'] ?? 'pending'] ?? 'Pendente') ?></span>
+                                <?php if (!empty($response['grade'])): ?><p><b>Nota:</b> <?= e($response['grade']) ?></p><?php endif; ?>
+                                <?php if (!empty($response['feedback'])): ?><p><?= e($response['feedback']) ?></p><?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                         <button class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
                     </form>
                 <?php endif; ?>

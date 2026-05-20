@@ -154,7 +154,9 @@ $router->post('/admin/education/form', [EducationController::class, 'storeForm']
 $router->post('/admin/education/form/update', [EducationController::class, 'updateForm']);
 $router->post('/admin/education/form/delete', [EducationController::class, 'deleteForm']);
 $router->post('/admin/education/form/submit', [EducationController::class, 'submitForm']);
+$router->post('/admin/education/form/grade', [EducationController::class, 'gradeFormResponse']);
 $router->post('/admin/education/assignment/submit', [EducationController::class, 'submitAssignment']);
+$router->post('/admin/education/assignment/grade', [EducationController::class, 'gradeAssignment']);
 $router->get('/admin/education/assignment/download', [EducationController::class, 'downloadSubmission']);
 $router->post('/admin/education/block', [EducationController::class, 'storeBlock']);
 $router->post('/admin/education/block/update', [EducationController::class, 'updateBlock']);

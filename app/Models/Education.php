@@ -259,6 +259,14 @@ class Education
                 CONSTRAINT fk_education_assignment_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+
+        foreach (['education_form_responses', 'education_assignment_submissions'] as $table) {
+            self::ensureColumn($table, 'correction_status', "VARCHAR(20) NOT NULL DEFAULT 'pending' AFTER updated_at");
+            self::ensureColumn($table, 'grade', 'VARCHAR(40) NULL AFTER correction_status');
+            self::ensureColumn($table, 'feedback', 'TEXT NULL AFTER grade');
+            self::ensureColumn($table, 'corrected_by', 'BIGINT UNSIGNED NULL AFTER feedback');
+            self::ensureColumn($table, 'corrected_at', 'DATETIME NULL AFTER corrected_by');
+        }
     }
 
     public static function coursesForManagement(?int $teacherUserId = null): array
@@ -1311,15 +1319,33 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'SELECT education_form_responses.*, users.name AS user_name, users.email AS user_email
+            'SELECT education_form_responses.*, users.name AS user_name, users.email AS user_email,
+                    corrector.name AS corrector_name
              FROM education_form_responses
              INNER JOIN users ON users.id = education_form_responses.user_id
+             LEFT JOIN users AS corrector ON corrector.id = education_form_responses.corrected_by
              WHERE education_form_responses.form_id = :form_id
              ORDER BY education_form_responses.updated_at DESC, education_form_responses.created_at DESC'
         );
         $stmt->execute(['form_id' => $formId]);
 
         return $stmt->fetchAll();
+    }
+
+    public static function findFormResponse(int $id): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_form_responses.*, education_forms.course_id, education_forms.lesson_id
+             FROM education_form_responses
+             INNER JOIN education_forms ON education_forms.id = education_form_responses.form_id
+             WHERE education_form_responses.id = :id
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
     }
 
     public static function saveFormResponse(int $formId, int $userId, array $answers): void
@@ -1332,7 +1358,13 @@ class Education
             $db->prepare(
                 'INSERT INTO education_form_responses (form_id, user_id, created_at, updated_at)
                  VALUES (:form_id, :user_id, NOW(), NOW())
-                 ON DUPLICATE KEY UPDATE updated_at = NOW()'
+                 ON DUPLICATE KEY UPDATE
+                    updated_at = NOW(),
+                    correction_status = \'pending\',
+                    grade = NULL,
+                    feedback = NULL,
+                    corrected_by = NULL,
+                    corrected_at = NULL'
             )->execute(['form_id' => $formId, 'user_id' => $userId]);
             $responseId = (int) $db->lastInsertId();
 
@@ -1365,6 +1397,27 @@ class Education
             $db->rollBack();
             throw $exception;
         }
+    }
+
+    public static function gradeFormResponse(int $responseId, string $status, string $grade, string $feedback, int $correctedBy): void
+    {
+        self::ensureSchema();
+
+        Database::connection()->prepare(
+            'UPDATE education_form_responses
+             SET correction_status = :status,
+                 grade = :grade,
+                 feedback = :feedback,
+                 corrected_by = :corrected_by,
+                 corrected_at = NOW()
+             WHERE id = :id'
+        )->execute([
+            'id' => $responseId,
+            'status' => self::correctionStatus($status),
+            'grade' => self::nullable($grade),
+            'feedback' => self::nullable($feedback),
+            'corrected_by' => $correctedBy,
+        ]);
     }
 
     public static function assignmentSubmission(int $blockId, int $userId): ?array
@@ -1401,9 +1454,11 @@ class Education
 
         $placeholders = implode(',', array_fill(0, count($blockIds), '?'));
         $stmt = Database::connection()->prepare(
-            'SELECT education_assignment_submissions.*, users.name AS user_name, users.email AS user_email
+            'SELECT education_assignment_submissions.*, users.name AS user_name, users.email AS user_email,
+                    corrector.name AS corrector_name
              FROM education_assignment_submissions
              INNER JOIN users ON users.id = education_assignment_submissions.user_id
+             LEFT JOIN users AS corrector ON corrector.id = education_assignment_submissions.corrected_by
              WHERE education_assignment_submissions.block_id IN (' . $placeholders . ')
              ORDER BY education_assignment_submissions.updated_at DESC, education_assignment_submissions.created_at DESC'
         );
@@ -1431,7 +1486,12 @@ class Education
                 file_path = COALESCE(VALUES(file_path), file_path),
                 original_name = COALESCE(VALUES(original_name), original_name),
                 size_bytes = COALESCE(VALUES(size_bytes), size_bytes),
-                updated_at = NOW()'
+                updated_at = NOW(),
+                correction_status = \'pending\',
+                grade = NULL,
+                feedback = NULL,
+                corrected_by = NULL,
+                corrected_at = NULL'
         )->execute([
             'block_id' => $blockId,
             'user_id' => $userId,
@@ -1439,6 +1499,27 @@ class Education
             'file_path' => $file['file_path'] ?? null,
             'original_name' => $file['original_name'] ?? null,
             'size_bytes' => $file['size_bytes'] ?? null,
+        ]);
+    }
+
+    public static function gradeAssignmentSubmission(int $submissionId, string $status, string $grade, string $feedback, int $correctedBy): void
+    {
+        self::ensureSchema();
+
+        Database::connection()->prepare(
+            'UPDATE education_assignment_submissions
+             SET correction_status = :status,
+                 grade = :grade,
+                 feedback = :feedback,
+                 corrected_by = :corrected_by,
+                 corrected_at = NOW()
+             WHERE id = :id'
+        )->execute([
+            'id' => $submissionId,
+            'status' => self::correctionStatus($status),
+            'grade' => self::nullable($grade),
+            'feedback' => self::nullable($feedback),
+            'corrected_by' => $correctedBy,
         ]);
     }
 
@@ -1519,5 +1600,24 @@ class Education
     {
         $value = trim((string) ($value ?? ''));
         return $value !== '' ? $value : null;
+    }
+
+    private static function correctionStatus(string $status): string
+    {
+        $status = strtolower(trim($status));
+        return in_array($status, ['pending', 'corrected', 'redo'], true) ? $status : 'pending';
+    }
+
+    private static function ensureColumn(string $table, string $column, string $definition): void
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return;
+        }
+
+        $db = Database::connection();
+        $stmt = $db->query("SHOW COLUMNS FROM `{$table}` LIKE " . $db->quote($column));
+        if (!$stmt->fetch()) {
+            $db->exec("ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$definition}");
+        }
     }
 }
