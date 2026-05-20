@@ -174,7 +174,7 @@ $onlineCount = count($onlineUserIds ?? []);
             </div>
             <form method="post" action="<?= e(url('/admin/users/document-uploads')) ?>" class="user-stacked-form">
                 <?= csrf_field() ?>
-                <p class="field-hint">UsuÃ¡rios marcados podem subir documentos internos; a gestÃ£o completa continua restrita a quem gerencia documentos.</p>
+                <p class="field-hint">Usu&aacute;rios marcados podem enviar documentos internos. A gest&atilde;o completa continua restrita a quem gerencia documentos.</p>
                 <div class="responsibility-options">
                     <?php foreach ($users as $item): ?>
                         <?php
@@ -189,7 +189,7 @@ $onlineCount = count($onlineUserIds ?? []);
                         </label>
                     <?php endforeach; ?>
                 </div>
-                <button class="btn btn-sm btn-outline-primary">Salvar permissÃµes de envio</button>
+                <button class="btn btn-sm btn-outline-primary">Salvar permiss&otilde;es de envio</button>
             </form>
         </section>
     <?php endif; ?>
