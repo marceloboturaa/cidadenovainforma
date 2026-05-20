@@ -41,6 +41,14 @@ class Document
             ) ENGINE=InnoDB'
         );
 
+        Database::connection()->exec(
+            'CREATE TABLE IF NOT EXISTS team_document_upload_users (
+                user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+                created_at TIMESTAMP NULL,
+                CONSTRAINT fk_team_document_upload_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
         self::migratePublicDocumentsToStorage();
     }
 
@@ -162,10 +170,23 @@ class Document
     {
         self::ensureSchema();
 
-        $stmt = Database::connection()->prepare('SELECT * FROM team_documents WHERE id = :id AND active = 1 LIMIT 1');
+        $stmt = Database::connection()->prepare(
+            'SELECT team_documents.*, users.name AS uploader_name
+             FROM team_documents
+             INNER JOIN users ON users.id = team_documents.uploaded_by
+             WHERE team_documents.id = :id AND team_documents.active = 1
+             LIMIT 1'
+        );
         $stmt->execute(['id' => $id]);
 
         return $stmt->fetch() ?: null;
+    }
+
+    public static function fileExistsOnServer(array $document): bool
+    {
+        $path = self::absolutePath($document);
+
+        return $path !== null && is_file($path);
     }
 
     public static function userCanAccess(int $documentId, int $userId): bool
@@ -227,6 +248,31 @@ class Document
         return (int) Database::connection()->lastInsertId();
     }
 
+    public static function update(int $id, array $data): void
+    {
+        self::ensureSchema();
+
+        $fields = [
+            'title = :title',
+            'updated_at = NOW()',
+        ];
+        $params = [
+            'id' => $id,
+            'title' => trim((string) $data['title']),
+        ];
+
+        foreach (['path', 'mime_type', 'original_name', 'size_bytes'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $fields[] = $field . ' = :' . $field;
+                $params[$field] = $data[$field];
+            }
+        }
+
+        Database::connection()
+            ->prepare('UPDATE team_documents SET ' . implode(', ', $fields) . ' WHERE id = :id')
+            ->execute($params);
+    }
+
     public static function updateAccess(int $id, bool $isPublic, array $userIds): void
     {
         self::ensureSchema();
@@ -273,6 +319,54 @@ class Document
         $stmt->execute(['document_id' => $id]);
 
         return array_map('intval', array_column($stmt->fetchAll(), 'user_id'));
+    }
+
+    public static function uploadUserIds(): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->query('SELECT user_id FROM team_document_upload_users');
+
+        return array_map('intval', array_column($stmt->fetchAll(), 'user_id'));
+    }
+
+    public static function userCanUpload(int $userId): bool
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT 1 FROM team_document_upload_users WHERE user_id = :user_id LIMIT 1'
+        );
+        $stmt->execute(['user_id' => $userId]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    public static function syncUploadUsers(array $userIds): void
+    {
+        self::ensureSchema();
+
+        $db = Database::connection();
+        $db->beginTransaction();
+
+        try {
+            $db->exec('DELETE FROM team_document_upload_users');
+            $stmt = $db->prepare(
+                'INSERT IGNORE INTO team_document_upload_users (user_id, created_at)
+                 VALUES (:user_id, NOW())'
+            );
+
+            foreach (array_unique(array_map('intval', $userIds)) as $userId) {
+                if ($userId > 0) {
+                    $stmt->execute(['user_id' => $userId]);
+                }
+            }
+
+            $db->commit();
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
     }
 
     public static function deactivate(int $id): void

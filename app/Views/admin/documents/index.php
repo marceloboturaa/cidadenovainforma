@@ -5,7 +5,7 @@
     </div>
 </div>
 
-<?php if ($canManage): ?>
+<?php if ($canUpload): ?>
     <section class="panel document-upload-panel">
         <div class="section-heading">
             <h2>Novo documento</h2>
@@ -22,6 +22,7 @@
                 <input class="form-control" name="document" type="file" accept="<?= e($allowedAccept ?? '') ?>" required>
                 <small class="form-text">Formatos liberados: <?= e($allowedExtensionsText ?? '') ?></small>
             </div>
+            <?php if ($canManage): ?>
             <div>
                 <label class="form-label">Visibilidade</label>
                 <label class="form-check">
@@ -29,9 +30,11 @@
                     <span class="form-check-label">Documento público no site</span>
                 </label>
             </div>
+            <?php endif; ?>
             <div class="form-action-cell">
                 <button class="btn btn-primary w-100">Enviar</button>
             </div>
+            <?php if ($canManage): ?>
             <details class="document-access-details">
                 <summary>Liberar para usuários específicos</summary>
                 <div class="document-access-options">
@@ -43,6 +46,7 @@
                     <?php endforeach; ?>
                 </div>
             </details>
+            <?php endif; ?>
         </form>
     </section>
 <?php endif; ?>
@@ -73,7 +77,11 @@
 
     <div class="document-list">
         <?php foreach ($documents as $document): ?>
-            <?php $accessUserIds = $canManage ? \App\Models\Document::accessUserIds((int) $document['id']) : []; ?>
+            <?php
+            $accessUserIds = $canManage ? \App\Models\Document::accessUserIds((int) $document['id']) : [];
+            $fileExists = \App\Models\Document::fileExistsOnServer($document);
+            $canEditDocument = $canManage || ($canUpload && (int) $document['uploaded_by'] === (int) (current_user()['id'] ?? 0));
+            ?>
             <article class="document-row">
                 <div class="document-file-icon">
                     <?= e(strtoupper(pathinfo($document['original_name'], PATHINFO_EXTENSION) ?: 'ARQ')) ?>
@@ -81,9 +89,11 @@
                 <div class="document-main">
                     <div class="document-title-line">
                         <h3><?= e($document['title']) ?></h3>
+                        <span class="state-pill <?= $fileExists ? 'is-active' : 'is-pending' ?>"><?= $fileExists ? 'No servidor' : 'Arquivo ausente' ?></span>
                         <span class="state-pill <?= !empty($document['is_public']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['is_public']) ? 'Público' : 'Restrito' ?></span>
                     </div>
                     <p><?= e($document['original_name']) ?></p>
+                    <p><?= e($document['path']) ?></p>
                     <small>
                         <?= e(number_format(((int) $document['size_bytes']) / 1024, 1, ',', '.')) ?> KB
                         · Enviado por <?= e($document['uploader_name']) ?>
@@ -101,6 +111,37 @@
                         </form>
                     <?php endif; ?>
                 </div>
+                <?php if ($canEditDocument): ?>
+                    <details class="document-row-access">
+                        <summary>Editar documento</summary>
+                        <form method="post" action="<?= e(url('/admin/documents/update?id=' . $document['id'])) ?>" enctype="multipart/form-data">
+                            <?= csrf_field() ?>
+                            <label class="form-label">
+                                TÃ­tulo
+                                <input class="form-control form-control-sm" name="title" value="<?= e($document['title']) ?>" maxlength="180" required>
+                            </label>
+                            <label class="form-label">
+                                Trocar arquivo
+                                <input class="form-control form-control-sm" name="document" type="file" accept="<?= e($allowedAccept ?? '') ?>">
+                            </label>
+                            <?php if ($canManage): ?>
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_public" value="1" <?= checked((bool) $document['is_public']) ?>>
+                                    <span class="form-check-label">Documento pÃºblico no site</span>
+                                </label>
+                                <div class="document-access-options compact">
+                                    <?php foreach ($users as $user): ?>
+                                        <label>
+                                            <input type="checkbox" name="user_ids[]" value="<?= e((string) $user['id']) ?>" <?= checked(in_array((int) $user['id'], $accessUserIds, true)) ?>>
+                                            <span><?= e($user['name']) ?> <small><?= e($user['role_name']) ?></small></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                            <button class="btn btn-sm btn-outline-primary">Salvar documento</button>
+                        </form>
+                    </details>
+                <?php endif; ?>
                 <?php if ($canManage): ?>
                     <details class="document-row-access">
                         <summary>Editar acesso</summary>

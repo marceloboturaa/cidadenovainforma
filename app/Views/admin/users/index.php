@@ -163,6 +163,35 @@ $onlineCount = count($onlineUserIds ?? []);
                 <?php endif; ?>
             </div>
         </section>
+
+        <section class="users-panel">
+            <div class="users-panel-heading">
+                <div>
+                    <span class="eyebrow">Documentos</span>
+                    <h2>Quem pode enviar</h2>
+                </div>
+                <i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i>
+            </div>
+            <form method="post" action="<?= e(url('/admin/users/document-uploads')) ?>" class="user-stacked-form">
+                <?= csrf_field() ?>
+                <p class="field-hint">UsuÃ¡rios marcados podem subir documentos internos; a gestÃ£o completa continua restrita a quem gerencia documentos.</p>
+                <div class="responsibility-options">
+                    <?php foreach ($users as $item): ?>
+                        <?php
+                        $itemRoleSlugs = array_filter(explode(',', (string) ($item['role_slugs'] ?? $item['role_slug'] ?? '')));
+                        if (in_array('master', $itemRoleSlugs, true)) {
+                            continue;
+                        }
+                        ?>
+                        <label>
+                            <input type="checkbox" name="user_ids[]" value="<?= e((string) $item['id']) ?>" <?= checked(in_array((int) $item['id'], $documentUploadUserIds ?? [], true)) ?>>
+                            <span><?= e($item['name']) ?> <small><?= e($item['role_names'] ?? $item['role_name']) ?></small></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <button class="btn btn-sm btn-outline-primary">Salvar permissÃµes de envio</button>
+            </form>
+        </section>
     <?php endif; ?>
 
     <section class="users-panel">

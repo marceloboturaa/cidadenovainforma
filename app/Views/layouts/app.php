@@ -53,7 +53,7 @@
                 <?php if (\App\Core\Auth::can('events.manage')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/library-events') ? 'active' : '' ?>" href="<?= e(url('/admin/library-events')) ?>"><i class="bi bi-calendar-event" aria-hidden="true"></i>Eventos</a>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && \App\Models\Document::userHasAnyAccess((int) $user['id']))): ?>
+                <?php if (\App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && (\App\Models\Document::userCanUpload((int) $user['id']) || \App\Models\Document::userHasAnyAccess((int) $user['id'])))): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>Documentos</a>
                 <?php endif; ?>
                 <?php if ($user): ?>

@@ -99,6 +99,7 @@ class DocumentController
             'documents' => $this->canManageDocuments() ? Document::all() : Document::visibleForUser((int) current_user()['id']),
             'users' => User::activeForAccessLists(),
             'canManage' => $this->canManageDocuments(),
+            'canUpload' => $this->canUploadDocuments(),
             'canManageFormats' => $this->currentUserIsMaster(),
             'allowedExtensions' => $this->allowedExtensions(),
             'allowedExtensionsText' => implode(', ', $this->allowedExtensions()),
@@ -108,7 +109,7 @@ class DocumentController
 
     public function store(): void
     {
-        $this->authorizeManage();
+        $this->authorizeUpload();
         $this->validateCsrf();
 
         if (empty($_FILES['document']['name']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
@@ -149,11 +150,49 @@ class DocumentController
             'mime_type' => $mime ?: 'application/octet-stream',
             'original_name' => $_FILES['document']['name'],
             'size_bytes' => (int) $_FILES['document']['size'],
-            'is_public' => isset($_POST['is_public']),
+            'is_public' => $this->canManageDocuments() && isset($_POST['is_public']),
         ]);
-        Document::updateAccess($documentId, isset($_POST['is_public']), $_POST['user_ids'] ?? []);
+        Document::updateAccess(
+            $documentId,
+            $this->canManageDocuments() && isset($_POST['is_public']),
+            $this->canManageDocuments() ? ($_POST['user_ids'] ?? []) : [(int) current_user()['id']]
+        );
 
         Session::flash('success', 'Documento enviado.');
+        redirect('/admin/documents');
+    }
+
+    public function update(): void
+    {
+        $this->validateCsrf();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $document = $id ? Document::find($id) : null;
+
+        if (!$document || !$this->canEditDocument($document)) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        if ($title === '') {
+            Session::flash('error', 'Informe o tÃ­tulo do documento.');
+            redirect('/admin/documents');
+        }
+
+        $data = ['title' => $title];
+        if (!empty($_FILES['document']['name']) && ($_FILES['document']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $data = array_merge($data, $this->storeUploadedDocument('document'));
+        }
+
+        Document::update((int) $document['id'], $data);
+
+        if ($this->canManageDocuments()) {
+            Document::updateAccess((int) $document['id'], isset($_POST['is_public']), $_POST['user_ids'] ?? []);
+        }
+
+        Session::flash('success', 'Documento atualizado.');
         redirect('/admin/documents');
     }
 
@@ -235,6 +274,54 @@ class DocumentController
             : 'application/octet-stream';
     }
 
+    private function storeUploadedDocument(string $field): array
+    {
+        $file = $_FILES[$field] ?? null;
+
+        if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Envie um documento vÃ¡lido.');
+            redirect('/admin/documents');
+        }
+
+        if ((int) $file['size'] > self::MAX_FILE_SIZE) {
+            Session::flash('error', 'O documento deve ter no mÃ¡ximo 10MB.');
+            redirect('/admin/documents');
+        }
+
+        $mime = mime_content_type((string) $file['tmp_name']) ?: '';
+        $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
+
+        if (!$this->documentExtensionIsAllowed($extension, $mime)) {
+            Session::flash('error', 'Tipo de documento nÃ£o permitido. Formatos liberados: ' . implode(', ', $this->allowedExtensions()) . '.');
+            redirect('/admin/documents');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/storage/documents';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        if (!is_writable($directory)) {
+            Session::flash('error', 'A pasta de documentos nÃ£o estÃ¡ gravÃ¡vel no servidor.');
+            redirect('/admin/documents');
+        }
+
+        $filename = bin2hex(random_bytes(16)) . '.' . $extension;
+        $target = $directory . '/' . $filename;
+
+        if (!move_uploaded_file((string) $file['tmp_name'], $target)) {
+            Session::flash('error', 'NÃ£o foi possÃ­vel salvar o documento.');
+            redirect('/admin/documents');
+        }
+
+        return [
+            'path' => '/storage/documents/' . $filename,
+            'mime_type' => $mime ?: 'application/octet-stream',
+            'original_name' => (string) $file['name'],
+            'size_bytes' => (int) $file['size'],
+        ];
+    }
+
     private function allowedExtensions(): array
     {
         $saved = SiteSetting::get(self::DOCUMENT_FORMATS_SETTING, implode(',', self::DEFAULT_ALLOWED_EXTENSIONS));
@@ -309,7 +396,7 @@ class DocumentController
 
         if (
             !$user
-            || (!Auth::can('documents.view') && !$this->canManageDocuments() && !Document::userHasAnyAccess((int) $user['id']))
+            || (!Auth::can('documents.view') && !$this->canManageDocuments() && !$this->canUploadDocuments() && !Document::userHasAnyAccess((int) $user['id']))
         ) {
             http_response_code(403);
             View::render('errors/403');
@@ -320,6 +407,15 @@ class DocumentController
     private function authorizeManage(): void
     {
         if (!$this->canManageDocuments()) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+    }
+
+    private function authorizeUpload(): void
+    {
+        if (!$this->canUploadDocuments()) {
             http_response_code(403);
             View::render('errors/403');
             exit;
@@ -344,6 +440,22 @@ class DocumentController
     private function canManageDocuments(): bool
     {
         return Auth::can('documents.manage') && !Auth::hasRole('diretor');
+    }
+
+    private function canUploadDocuments(): bool
+    {
+        $user = current_user();
+
+        return $this->canManageDocuments()
+            || ($user && Document::userCanUpload((int) $user['id']));
+    }
+
+    private function canEditDocument(array $document): bool
+    {
+        $user = current_user();
+
+        return $this->canManageDocuments()
+            || ($user && $this->canUploadDocuments() && (int) $document['uploaded_by'] === (int) $user['id']);
     }
 
     private function validateCsrf(): void

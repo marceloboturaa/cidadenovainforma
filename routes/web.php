@@ -62,6 +62,7 @@ $router->post('/admin/users/status', [UserController::class, 'status']);
 $router->post('/admin/users/registrations', [UserController::class, 'toggleRegistrations']);
 $router->post('/admin/users/approve', [UserController::class, 'approve']);
 $router->post('/admin/users/responsibilities', [UserController::class, 'responsibilities']);
+$router->post('/admin/users/document-uploads', [UserController::class, 'documentUploads']);
 $router->post('/admin/users/role', [UserController::class, 'updateRole']);
 $router->post('/admin/users/reset-password', [UserController::class, 'resetPassword']);
 
@@ -123,6 +124,7 @@ $router->post('/admin/backups/news/import', [BackupController::class, 'importNew
 
 $router->get('/admin/documents', [DocumentController::class, 'index']);
 $router->post('/admin/documents', [DocumentController::class, 'store']);
+$router->post('/admin/documents/update', [DocumentController::class, 'update']);
 $router->post('/admin/documents/formats', [DocumentController::class, 'formats']);
 $router->get('/admin/documents/download', [DocumentController::class, 'download']);
 $router->post('/admin/documents/access', [DocumentController::class, 'access']);

@@ -7,6 +7,7 @@ use App\Core\Logger;
 use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Document;
 use App\Models\InstitutionPage;
 use App\Models\Role;
 use App\Models\SiteSetting;
@@ -29,6 +30,7 @@ class UserController
             'registrationEnabled' => SiteSetting::registrationEnabled(),
             'institutionPages' => InstitutionPage::all(),
             'userResponsibilities' => $this->userResponsibilities($users),
+            'documentUploadUserIds' => Document::uploadUserIds(),
             'roles' => $this->assignableRoles(),
         ]);
     }
@@ -172,6 +174,18 @@ class UserController
             Session::flash('error', 'Não foi possível atualizar os responsáveis. Verifique o banco e tente novamente.');
         }
 
+        redirect('/admin/users');
+    }
+
+    public function documentUploads(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        Document::syncUploadUsers($_POST['user_ids'] ?? []);
+        Logger::info('users.document_uploads', 'PermissÃµes de envio de documentos atualizadas.', current_user()['id'] ?? null);
+        Session::flash('success', 'UsuÃ¡rios autorizados a enviar documentos foram atualizados.');
         redirect('/admin/users');
     }
 
