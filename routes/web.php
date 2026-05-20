@@ -150,6 +150,12 @@ $router->post('/admin/education/forum/reply', [EducationController::class, 'stor
 $router->post('/admin/education/forum/reply/delete', [EducationController::class, 'deleteForumReply']);
 $router->post('/admin/education/forum/reply/restore', [EducationController::class, 'restoreForumReply']);
 $router->post('/admin/education/forum/delete', [EducationController::class, 'deleteForumTopic']);
+$router->post('/admin/education/form', [EducationController::class, 'storeForm']);
+$router->post('/admin/education/form/update', [EducationController::class, 'updateForm']);
+$router->post('/admin/education/form/delete', [EducationController::class, 'deleteForm']);
+$router->post('/admin/education/form/submit', [EducationController::class, 'submitForm']);
+$router->post('/admin/education/assignment/submit', [EducationController::class, 'submitAssignment']);
+$router->get('/admin/education/assignment/download', [EducationController::class, 'downloadSubmission']);
 $router->post('/admin/education/block', [EducationController::class, 'storeBlock']);
 $router->post('/admin/education/block/update', [EducationController::class, 'updateBlock']);
 $router->post('/admin/education/block/delete', [EducationController::class, 'deleteBlock']);

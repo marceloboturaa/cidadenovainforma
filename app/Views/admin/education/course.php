@@ -19,6 +19,7 @@ foreach ($lessons as $lessonItem) {
 $moduleAction = url('/admin/education/module?id=' . $course['id']);
 $forumTopics = $forumTopics ?? [];
 $forumRepliesByTopic = $forumRepliesByTopic ?? [];
+$courseForms = $courseForms ?? [];
 ?>
 
 <div class="page-heading">
@@ -29,6 +30,9 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
     <div class="heading-actions">
         <?php if ($forumTopics): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forum')) ?>"><i class="bi bi-chat-dots" aria-hidden="true"></i>Fórum do curso</a>
+        <?php endif; ?>
+        <?php if ($courseForms): ?>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forms')) ?>"><i class="bi bi-ui-checks" aria-hidden="true"></i>Formularios</a>
         <?php endif; ?>
         <?php if ($canManage): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&edit_course=1')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar curso</a>
@@ -151,6 +155,98 @@ $forumRepliesByTopic = $forumRepliesByTopic ?? [];
                 <?php endif; ?>
             </div>
         <?php endif; ?>
+    </div>
+</section>
+
+<section class="panel education-course-forum education-form-board" id="course-forms">
+    <div class="section-heading">
+        <h2>Formularios do curso</h2>
+        <span><?= e((string) count($courseForms)) ?> formulario(s)</span>
+    </div>
+    <?php if ($canManage): ?>
+        <form method="post" action="<?= e(url('/admin/education/form?id=' . $course['id'])) ?>" class="education-sequence-form">
+            <?= csrf_field() ?>
+            <div class="sequence-title-field">
+                <label class="form-label">Titulo do formulario</label>
+                <input class="form-control" name="title" maxlength="180" placeholder="Ex.: Avaliacao do curso" required>
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Descricao</label>
+                <textarea class="form-control" name="description" rows="3"></textarea>
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Perguntas</label>
+                <textarea class="form-control" name="questions[]" rows="2" placeholder="Pergunta 1" required></textarea>
+                <textarea class="form-control mt-2" name="questions[]" rows="2" placeholder="Pergunta 2"></textarea>
+                <textarea class="form-control mt-2" name="questions[]" rows="2" placeholder="Pergunta 3"></textarea>
+            </div>
+            <div class="form-action-cell">
+                <button class="btn btn-primary icon-btn"><i class="bi bi-ui-checks" aria-hidden="true"></i>Criar formulario</button>
+            </div>
+        </form>
+    <?php endif; ?>
+    <div class="education-form-list">
+        <?php foreach ($courseForms as $form): ?>
+            <?php
+            $questions = \App\Models\Education::formQuestions((int) $form['id']);
+            $response = \App\Models\Education::formResponse((int) $form['id'], (int) (current_user()['id'] ?? 0));
+            $answers = \App\Models\Education::formAnswersForResponse((int) ($response['id'] ?? 0));
+            $responses = $canManage ? \App\Models\Education::formResponses((int) $form['id']) : [];
+            ?>
+            <article class="education-form-card">
+                <header>
+                    <div>
+                        <strong><?= e($form['title']) ?></strong>
+                        <?php if (!empty($form['description'])): ?><p><?= e($form['description']) ?></p><?php endif; ?>
+                    </div>
+                    <span class="state-pill is-active"><?= e((string) ($form['response_count'] ?? 0)) ?> resposta(s)</span>
+                </header>
+                <?php if ($canManage): ?>
+                    <details>
+                        <summary>Editar e ver respostas</summary>
+                        <form method="post" action="<?= e(url('/admin/education/form/update?form_id=' . $form['id'])) ?>" class="education-form-manage">
+                            <?= csrf_field() ?>
+                            <label class="form-label">Titulo</label>
+                            <input class="form-control" name="title" value="<?= e($form['title']) ?>" required>
+                            <label class="form-label">Descricao</label>
+                            <textarea class="form-control" name="description" rows="3"><?= e($form['description'] ?? '') ?></textarea>
+                            <label class="form-label">Perguntas</label>
+                            <?php foreach ($questions as $question): ?>
+                                <textarea class="form-control" name="questions[]" rows="2" required><?= e($question['question']) ?></textarea>
+                            <?php endforeach; ?>
+                            <textarea class="form-control" name="questions[]" rows="2" placeholder="Nova pergunta"></textarea>
+                            <button class="btn btn-sm btn-outline-primary">Salvar formulario</button>
+                        </form>
+                        <div class="education-response-list">
+                            <?php foreach ($responses as $item): ?>
+                                <?php $itemAnswers = \App\Models\Education::formAnswersForResponse((int) $item['id']); ?>
+                                <div>
+                                    <strong><?= e($item['user_name']) ?></strong>
+                                    <small><?= e($item['updated_at'] ?? $item['created_at'] ?? '') ?></small>
+                                    <?php foreach ($questions as $question): ?>
+                                        <p><b><?= e($question['question']) ?>:</b> <?= e($itemAnswers[(int) $question['id']] ?? '-') ?></p>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endforeach; ?>
+                            <?php if (!$responses): ?><p class="form-text">Nenhuma resposta enviada ainda.</p><?php endif; ?>
+                        </div>
+                        <form method="post" action="<?= e(url('/admin/education/form/delete?form_id=' . $form['id'])) ?>" onsubmit="return confirm('Remover este formulario?');">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-sm btn-outline-danger">Remover formulario</button>
+                        </form>
+                    </details>
+                <?php else: ?>
+                    <form method="post" action="<?= e(url('/admin/education/form/submit?form_id=' . $form['id'])) ?>" class="education-form-answer">
+                        <?= csrf_field() ?>
+                        <?php foreach ($questions as $question): ?>
+                            <label class="form-label"><?= e($question['question']) ?><textarea class="form-control" name="answers[<?= e((string) $question['id']) ?>]" rows="3" required><?= e($answers[(int) $question['id']] ?? '') ?></textarea></label>
+                        <?php endforeach; ?>
+                        <button class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
+                    </form>
+                <?php endif; ?>
+            </article>
+        <?php endforeach; ?>
+        <?php if (!$courseForms): ?><div class="empty-state">Nenhum formulario criado para este curso.</div><?php endif; ?>
     </div>
 </section>
 

@@ -20,7 +20,11 @@ class EducationController
 
     private const MAX_BLOCK_FILE_SIZE = 50 * 1024 * 1024;
 
+    private const MAX_ASSIGNMENT_FILE_SIZE = 25 * 1024 * 1024;
+
     private const BLOCKED_BLOCK_EXTENSIONS = ['bat', 'cmd', 'com', 'exe', 'htaccess', 'html', 'htm', 'js', 'msi', 'phtml', 'phar', 'php', 'pl', 'ps1', 'py', 'sh', 'shtml', 'vbs'];
+
+    private const ALLOWED_ASSIGNMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'odt', 'txt', 'rtf', 'xls', 'xlsx', 'ods', 'ppt', 'pptx', 'odp', 'jpg', 'jpeg', 'png', 'webp', 'zip', 'rar', '7z'];
 
     public function index(): void
     {
@@ -155,6 +159,7 @@ class EducationController
             $canManage
         );
         $forumTopics = Education::forumTopics((int) $course['id']);
+        $courseForms = Education::formsForCourse((int) $course['id']);
 
         View::render('admin/education/course', [
             'course' => $course,
@@ -169,6 +174,7 @@ class EducationController
             'editingModule' => $this->moduleFromQuery(false),
             'forumTopics' => $forumTopics,
             'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id'), $canManage),
+            'courseForms' => $courseForms,
         ]);
     }
 
@@ -310,12 +316,15 @@ class EducationController
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
         $videoWatched = !$hasVideo || $canManage || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
         $lessonForumTopics = Education::forumTopics((int) $lesson['course_id'], (int) $lesson['id']);
+        $blocks = $isLocked ? [] : Education::blocksForLesson((int) $lesson['id']);
+        $assignmentBlocks = array_values(array_filter($blocks, fn (array $block): bool => ($block['type'] ?? '') === 'assignment'));
+        $lessonForms = $isLocked ? [] : Education::formsForCourse((int) $lesson['course_id'], (int) $lesson['id']);
 
         View::render('admin/education/lesson', [
             'lesson' => $lesson,
             'course' => $course,
             'videoEmbedUrl' => $isLocked ? null : $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
-            'blocks' => $isLocked ? [] : Education::blocksForLesson((int) $lesson['id']),
+            'blocks' => $blocks,
             'editingBlock' => $this->blockFromQuery(false),
             'canManage' => $canManage,
             'isLocked' => $isLocked,
@@ -327,6 +336,8 @@ class EducationController
             'lessonForumRepliesByTopic' => Education::forumRepliesForTopics(array_column($lessonForumTopics, 'id'), $canManage),
             'canAssignForumAuthor' => $this->canAssignTeacher(),
             'forumAuthorOptions' => User::activeForAccessLists(),
+            'lessonForms' => $lessonForms,
+            'assignmentSubmissionsByBlock' => $canManage ? Education::assignmentSubmissionsForBlocks(array_column($assignmentBlocks, 'id')) : [],
         ]);
     }
 
@@ -678,6 +689,181 @@ class EducationController
         redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
     }
 
+    public function storeForm(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+        [$course, $lesson] = $this->formScopeFromRequest();
+        $this->authorizeCourseManage($course);
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $questions = $this->formQuestionsFromRequest();
+        if ($title === '' || !$questions) {
+            Session::flash('error', 'Informe o titulo e pelo menos uma pergunta.');
+            redirect($lesson ? '/admin/education/lesson?id=' . $lesson['id'] . '#lesson-forms' : '/admin/education/course?id=' . $course['id'] . '#course-forms');
+        }
+
+        Education::createForm([
+            'course_id' => $course['id'],
+            'lesson_id' => $lesson['id'] ?? null,
+            'created_by' => current_user()['id'] ?? 0,
+            'title' => $title,
+            'description' => $_POST['description'] ?? '',
+        ], $questions);
+
+        Session::flash('success', 'Formulario criado.');
+        redirect($lesson ? '/admin/education/lesson?id=' . $lesson['id'] . '#lesson-forms' : '/admin/education/course?id=' . $course['id'] . '#course-forms');
+    }
+
+    public function updateForm(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+        $form = $this->formFromQuery();
+        $course = Education::findCourse((int) $form['course_id']);
+        $this->authorizeCourseManage($course);
+
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $questions = $this->formQuestionsFromRequest();
+        if ($title === '' || !$questions) {
+            Session::flash('error', 'Informe o titulo e pelo menos uma pergunta.');
+            redirect($this->formRedirect($form));
+        }
+
+        Education::updateForm((int) $form['id'], [
+            'title' => $title,
+            'description' => $_POST['description'] ?? '',
+        ], $questions);
+
+        Session::flash('success', 'Formulario atualizado.');
+        redirect($this->formRedirect($form));
+    }
+
+    public function deleteForm(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+        $form = $this->formFromQuery();
+        $course = Education::findCourse((int) $form['course_id']);
+        $this->authorizeCourseManage($course);
+
+        Education::deactivateForm((int) $form['id']);
+        Session::flash('success', 'Formulario removido.');
+        redirect($this->formRedirect($form));
+    }
+
+    public function submitForm(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+        $user = current_user();
+        $form = $this->formFromQuery();
+        $course = Education::findCourse((int) $form['course_id']);
+        $canManage = $this->canManageCourse($course);
+
+        if (!$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+        if (!empty($form['lesson_id'])) {
+            $lesson = Education::findLesson((int) $form['lesson_id']);
+            if (!$lesson || (!empty($lesson['locked']) && !$canManage) || !Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)) {
+                http_response_code(403);
+                View::render('errors/403');
+                return;
+            }
+        }
+
+        $questions = Education::formQuestions((int) $form['id']);
+        $answers = [];
+        foreach ($questions as $question) {
+            $answers[(int) $question['id']] = trim((string) ($_POST['answers'][(int) $question['id']] ?? ''));
+        }
+
+        Education::saveFormResponse((int) $form['id'], (int) $user['id'], $answers);
+        Session::flash('success', 'Formulario enviado.');
+        redirect($this->formRedirect($form));
+    }
+
+    public function submitAssignment(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+        $user = current_user();
+        $block = $this->blockFromQuery();
+        $course = Education::findCourse((int) $block['course_id']);
+        $canManage = $this->canManageCourse($course);
+
+        if (($block['type'] ?? '') !== 'assignment' || !$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+        $lesson = Education::findLesson((int) $block['lesson_id']);
+        if (!$lesson || (!empty($lesson['locked']) && !$canManage) || !Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $textAnswer = trim((string) ($_POST['text_answer'] ?? ''));
+        $file = $this->storeAssignmentFile((int) $block['id'], (int) $user['id']);
+        if ($textAnswer === '' && !$file && !Education::assignmentSubmission((int) $block['id'], (int) $user['id'])) {
+            Session::flash('error', 'Envie um arquivo ou escreva uma resposta.');
+            redirect('/admin/education/lesson?id=' . $block['lesson_id']);
+        }
+
+        Education::saveAssignmentSubmission((int) $block['id'], (int) $user['id'], $textAnswer, $file);
+        Session::flash('success', 'Tarefa enviada.');
+        redirect('/admin/education/lesson?id=' . $block['lesson_id']);
+    }
+
+    public function downloadSubmission(): void
+    {
+        Middleware::auth();
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $submission = $id ? $this->assignmentSubmissionById($id) : null;
+        if (!$submission) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $block = Education::findLessonBlock((int) $submission['block_id']);
+        if (!$block) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $block['course_id']);
+        $user = current_user();
+        if (!$this->canManageCourse($course) && (int) $submission['user_id'] !== (int) $user['id']) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $path = dirname(__DIR__, 3) . '/' . ltrim((string) $submission['file_path'], '/');
+        if (!is_file($path)) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $downloadName = str_replace(['"', "\r", "\n"], '', basename((string) ($submission['original_name'] ?: $path)));
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
+    }
+
     public function attendance(): void
     {
         Middleware::auth();
@@ -740,6 +926,103 @@ class EducationController
         }
 
         return $course;
+    }
+
+    private function formFromQuery(): array
+    {
+        $id = filter_input(INPUT_GET, 'form_id', FILTER_VALIDATE_INT) ?: filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $form = $id ? Education::findForm($id) : null;
+
+        if (!$form) {
+            http_response_code(404);
+            View::render('errors/404');
+            exit;
+        }
+
+        return $form;
+    }
+
+    private function formScopeFromRequest(): array
+    {
+        $lessonId = filter_input(INPUT_GET, 'lesson_id', FILTER_VALIDATE_INT);
+        if ($lessonId) {
+            $lesson = Education::findLesson($lessonId);
+            if (!$lesson) {
+                http_response_code(404);
+                View::render('errors/404');
+                exit;
+            }
+
+            return [Education::findCourse((int) $lesson['course_id']), $lesson];
+        }
+
+        $course = $this->courseFromQuery();
+        return [$course, null];
+    }
+
+    private function formQuestionsFromRequest(): array
+    {
+        $questions = is_array($_POST['questions'] ?? null) ? $_POST['questions'] : [];
+
+        return array_values(array_filter(array_map(
+            fn (mixed $question): string => trim((string) $question),
+            $questions
+        )));
+    }
+
+    private function formRedirect(array $form): string
+    {
+        return !empty($form['lesson_id'])
+            ? '/admin/education/lesson?id=' . $form['lesson_id'] . '#lesson-forms'
+            : '/admin/education/course?id=' . $form['course_id'] . '#course-forms';
+    }
+
+    private function storeAssignmentFile(int $blockId, int $userId): ?array
+    {
+        if (empty($_FILES['assignment_file']['name']) || ($_FILES['assignment_file']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (($_FILES['assignment_file']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK || (int) $_FILES['assignment_file']['size'] > self::MAX_ASSIGNMENT_FILE_SIZE) {
+            Session::flash('error', 'O arquivo da tarefa deve ter no maximo 25MB.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $extension = strtolower(pathinfo((string) $_FILES['assignment_file']['name'], PATHINFO_EXTENSION));
+        if ($extension === '' || !in_array($extension, self::ALLOWED_ASSIGNMENT_EXTENSIONS, true)) {
+            Session::flash('error', 'Tipo de arquivo nao permitido para tarefa.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/storage/documents/education/submissions';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        if (!is_dir($directory) || !is_writable($directory)) {
+            Session::flash('error', 'A pasta de entregas nao esta gravavel.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $base = slugify(pathinfo((string) $_FILES['assignment_file']['name'], PATHINFO_FILENAME));
+        $filename = 'tarefa-' . $blockId . '-' . $userId . '-' . $base . '-' . bin2hex(random_bytes(6)) . '.' . $extension;
+        $target = $directory . '/' . $filename;
+
+        if (!move_uploaded_file($_FILES['assignment_file']['tmp_name'], $target)) {
+            Session::flash('error', 'Nao foi possivel salvar a entrega.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        return [
+            'file_path' => '/storage/documents/education/submissions/' . $filename,
+            'original_name' => (string) $_FILES['assignment_file']['name'],
+            'size_bytes' => (int) $_FILES['assignment_file']['size'],
+        ];
+    }
+
+    private function assignmentSubmissionById(int $id): ?array
+    {
+        return Education::findAssignmentSubmission($id);
     }
 
     private function lessonFromQuery(bool $required = true, bool $allowIdParam = true): ?array

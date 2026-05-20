@@ -185,6 +185,80 @@ class Education
                 CONSTRAINT fk_education_replies_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_forms (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                course_id BIGINT UNSIGNED NOT NULL,
+                lesson_id BIGINT UNSIGNED NULL,
+                created_by BIGINT UNSIGNED NOT NULL,
+                title VARCHAR(180) NOT NULL,
+                description TEXT NULL,
+                active TINYINT(1) NOT NULL DEFAULT 1,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                INDEX idx_education_forms_course (course_id),
+                INDEX idx_education_forms_lesson (lesson_id),
+                CONSTRAINT fk_education_forms_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_forms_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_forms_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_form_questions (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                form_id BIGINT UNSIGNED NOT NULL,
+                question TEXT NOT NULL,
+                sort_order INT NOT NULL DEFAULT 0,
+                required TINYINT(1) NOT NULL DEFAULT 1,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                CONSTRAINT fk_education_form_questions_form FOREIGN KEY (form_id) REFERENCES education_forms(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_form_responses (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                form_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                UNIQUE KEY uq_education_form_response_user (form_id, user_id),
+                CONSTRAINT fk_education_form_responses_form FOREIGN KEY (form_id) REFERENCES education_forms(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_form_responses_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_form_answers (
+                response_id BIGINT UNSIGNED NOT NULL,
+                question_id BIGINT UNSIGNED NOT NULL,
+                answer TEXT NULL,
+                updated_at TIMESTAMP NULL,
+                PRIMARY KEY (response_id, question_id),
+                CONSTRAINT fk_education_form_answers_response FOREIGN KEY (response_id) REFERENCES education_form_responses(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_form_answers_question FOREIGN KEY (question_id) REFERENCES education_form_questions(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_assignment_submissions (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                block_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                text_answer TEXT NULL,
+                file_path VARCHAR(255) NULL,
+                original_name VARCHAR(190) NULL,
+                size_bytes BIGINT UNSIGNED NULL,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                UNIQUE KEY uq_education_assignment_user (block_id, user_id),
+                CONSTRAINT fk_education_assignment_block FOREIGN KEY (block_id) REFERENCES education_lesson_blocks(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_assignment_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
     }
 
     public static function coursesForManagement(?int $teacherUserId = null): array
@@ -1066,6 +1140,294 @@ class Education
         Database::connection()
             ->prepare('UPDATE education_forum_topics SET status = "hidden", updated_at = NOW() WHERE id = :id')
             ->execute(['id' => $topicId]);
+    }
+
+    public static function formsForCourse(int $courseId, ?int $lessonId = null): array
+    {
+        self::ensureSchema();
+
+        $scope = $lessonId ? 'lesson_id = :lesson_id' : 'course_id = :course_id AND lesson_id IS NULL';
+        $params = $lessonId ? ['lesson_id' => $lessonId] : ['course_id' => $courseId];
+        $stmt = Database::connection()->prepare(
+            'SELECT education_forms.*,
+                    users.name AS creator_name,
+                    (SELECT COUNT(*) FROM education_form_questions WHERE education_form_questions.form_id = education_forms.id) AS question_count,
+                    (SELECT COUNT(*) FROM education_form_responses WHERE education_form_responses.form_id = education_forms.id) AS response_count
+             FROM education_forms
+             INNER JOIN users ON users.id = education_forms.created_by
+             WHERE education_forms.active = 1 AND ' . $scope . '
+             ORDER BY education_forms.created_at DESC, education_forms.id DESC'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function findForm(int $id): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_forms.*, education_courses.teacher_user_id
+             FROM education_forms
+             INNER JOIN education_courses ON education_courses.id = education_forms.course_id
+             WHERE education_forms.id = :id AND education_forms.active = 1 AND education_courses.active = 1
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function formQuestions(int $formId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM education_form_questions WHERE form_id = :form_id ORDER BY sort_order ASC, id ASC'
+        );
+        $stmt->execute(['form_id' => $formId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function createForm(array $data, array $questions): int
+    {
+        self::ensureSchema();
+        $db = Database::connection();
+        $db->beginTransaction();
+
+        try {
+            $stmt = $db->prepare(
+                'INSERT INTO education_forms (course_id, lesson_id, created_by, title, description, active, created_at, updated_at)
+                 VALUES (:course_id, :lesson_id, :created_by, :title, :description, 1, NOW(), NOW())'
+            );
+            $stmt->execute([
+                'course_id' => (int) ($data['course_id'] ?? 0),
+                'lesson_id' => !empty($data['lesson_id']) ? (int) $data['lesson_id'] : null,
+                'created_by' => (int) ($data['created_by'] ?? 0),
+                'title' => trim((string) ($data['title'] ?? '')),
+                'description' => self::nullable($data['description'] ?? null),
+            ]);
+            $formId = (int) $db->lastInsertId();
+
+            self::replaceFormQuestions($formId, $questions);
+            $db->commit();
+
+            return $formId;
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+    }
+
+    public static function updateForm(int $id, array $data, array $questions): void
+    {
+        self::ensureSchema();
+        $db = Database::connection();
+        $db->beginTransaction();
+
+        try {
+            $db->prepare(
+                'UPDATE education_forms
+                 SET title = :title, description = :description, updated_at = NOW()
+                 WHERE id = :id'
+            )->execute([
+                'id' => $id,
+                'title' => trim((string) ($data['title'] ?? '')),
+                'description' => self::nullable($data['description'] ?? null),
+            ]);
+            $db->prepare('DELETE FROM education_form_questions WHERE form_id = :form_id')->execute(['form_id' => $id]);
+            self::replaceFormQuestions($id, $questions);
+            $db->commit();
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+    }
+
+    private static function replaceFormQuestions(int $formId, array $questions): void
+    {
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO education_form_questions (form_id, question, sort_order, required, created_at, updated_at)
+             VALUES (:form_id, :question, :sort_order, 1, NOW(), NOW())'
+        );
+        $sort = 10;
+        foreach ($questions as $question) {
+            $question = trim((string) $question);
+            if ($question === '') {
+                continue;
+            }
+            $stmt->execute([
+                'form_id' => $formId,
+                'question' => $question,
+                'sort_order' => $sort,
+            ]);
+            $sort += 10;
+        }
+    }
+
+    public static function deactivateForm(int $id): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('UPDATE education_forms SET active = 0, updated_at = NOW() WHERE id = :id')
+            ->execute(['id' => $id]);
+    }
+
+    public static function formResponse(int $formId, int $userId): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM education_form_responses WHERE form_id = :form_id AND user_id = :user_id LIMIT 1'
+        );
+        $stmt->execute(['form_id' => $formId, 'user_id' => $userId]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function formAnswersForResponse(?int $responseId): array
+    {
+        if (!$responseId) {
+            return [];
+        }
+
+        self::ensureSchema();
+        $stmt = Database::connection()->prepare('SELECT question_id, answer FROM education_form_answers WHERE response_id = :response_id');
+        $stmt->execute(['response_id' => $responseId]);
+
+        $answers = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $answers[(int) $row['question_id']] = $row['answer'];
+        }
+
+        return $answers;
+    }
+
+    public static function formResponses(int $formId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_form_responses.*, users.name AS user_name, users.email AS user_email
+             FROM education_form_responses
+             INNER JOIN users ON users.id = education_form_responses.user_id
+             WHERE education_form_responses.form_id = :form_id
+             ORDER BY education_form_responses.updated_at DESC, education_form_responses.created_at DESC'
+        );
+        $stmt->execute(['form_id' => $formId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function saveFormResponse(int $formId, int $userId, array $answers): void
+    {
+        self::ensureSchema();
+        $db = Database::connection();
+        $db->beginTransaction();
+
+        try {
+            $db->prepare(
+                'INSERT INTO education_form_responses (form_id, user_id, created_at, updated_at)
+                 VALUES (:form_id, :user_id, NOW(), NOW())
+                 ON DUPLICATE KEY UPDATE updated_at = NOW()'
+            )->execute(['form_id' => $formId, 'user_id' => $userId]);
+            $response = self::formResponse($formId, $userId);
+            $responseId = (int) ($response['id'] ?? 0);
+            $stmt = $db->prepare(
+                'INSERT INTO education_form_answers (response_id, question_id, answer, updated_at)
+                 VALUES (:response_id, :question_id, :answer, NOW())
+                 ON DUPLICATE KEY UPDATE answer = VALUES(answer), updated_at = NOW()'
+            );
+            foreach ($answers as $questionId => $answer) {
+                $stmt->execute([
+                    'response_id' => $responseId,
+                    'question_id' => (int) $questionId,
+                    'answer' => self::nullable($answer),
+                ]);
+            }
+            $db->commit();
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+    }
+
+    public static function assignmentSubmission(int $blockId, int $userId): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM education_assignment_submissions WHERE block_id = :block_id AND user_id = :user_id LIMIT 1'
+        );
+        $stmt->execute(['block_id' => $blockId, 'user_id' => $userId]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function findAssignmentSubmission(int $id): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM education_assignment_submissions WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function assignmentSubmissionsForBlocks(array $blockIds): array
+    {
+        self::ensureSchema();
+        $blockIds = array_values(array_unique(array_filter(array_map('intval', $blockIds))));
+        if (!$blockIds) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($blockIds), '?'));
+        $stmt = Database::connection()->prepare(
+            'SELECT education_assignment_submissions.*, users.name AS user_name, users.email AS user_email
+             FROM education_assignment_submissions
+             INNER JOIN users ON users.id = education_assignment_submissions.user_id
+             WHERE education_assignment_submissions.block_id IN (' . $placeholders . ')
+             ORDER BY education_assignment_submissions.updated_at DESC, education_assignment_submissions.created_at DESC'
+        );
+        $stmt->execute($blockIds);
+
+        $grouped = [];
+        foreach ($stmt->fetchAll() as $submission) {
+            $grouped[(int) $submission['block_id']][] = $submission;
+        }
+
+        return $grouped;
+    }
+
+    public static function saveAssignmentSubmission(int $blockId, int $userId, string $textAnswer, ?array $file): void
+    {
+        self::ensureSchema();
+
+        Database::connection()->prepare(
+            'INSERT INTO education_assignment_submissions
+                (block_id, user_id, text_answer, file_path, original_name, size_bytes, created_at, updated_at)
+             VALUES
+                (:block_id, :user_id, :text_answer, :file_path, :original_name, :size_bytes, NOW(), NOW())
+             ON DUPLICATE KEY UPDATE
+                text_answer = VALUES(text_answer),
+                file_path = COALESCE(VALUES(file_path), file_path),
+                original_name = COALESCE(VALUES(original_name), original_name),
+                size_bytes = COALESCE(VALUES(size_bytes), size_bytes),
+                updated_at = NOW()'
+        )->execute([
+            'block_id' => $blockId,
+            'user_id' => $userId,
+            'text_answer' => self::nullable($textAnswer),
+            'file_path' => $file['file_path'] ?? null,
+            'original_name' => $file['original_name'] ?? null,
+            'size_bytes' => $file['size_bytes'] ?? null,
+        ]);
     }
 
     private static function coursePayload(array $data): array

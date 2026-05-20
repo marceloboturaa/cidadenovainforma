@@ -9,6 +9,8 @@ $lessonForumTopics = $lessonForumTopics ?? [];
 $lessonForumRepliesByTopic = $lessonForumRepliesByTopic ?? [];
 $canAssignForumAuthor = $canAssignForumAuthor ?? false;
 $forumAuthorOptions = $forumAuthorOptions ?? [];
+$lessonForms = $lessonForms ?? [];
+$assignmentSubmissionsByBlock = $assignmentSubmissionsByBlock ?? [];
 $playlist = $playlist ?? [];
 $modules = $modules ?? [];
 $playlistByModule = [];
@@ -300,6 +302,47 @@ $embed = function (?string $url): ?string {
                     </a>
                 <?php endif; ?>
 
+                <?php if ($type === 'assignment'): ?>
+                    <?php
+                    $mySubmission = \App\Models\Education::assignmentSubmission((int) $block['id'], (int) (current_user()['id'] ?? 0));
+                    $blockSubmissions = $assignmentSubmissionsByBlock[(int) $block['id']] ?? [];
+                    ?>
+                    <?php if (!$canManage): ?>
+                        <form method="post" action="<?= e(url('/admin/education/assignment/submit?id=' . $block['id'])) ?>" enctype="multipart/form-data" class="education-assignment-form">
+                            <?= csrf_field() ?>
+                            <label class="form-label">
+                                Resposta da tarefa
+                                <textarea class="form-control" name="text_answer" rows="4" placeholder="Escreva uma observacao ou resposta"><?= e($mySubmission['text_answer'] ?? '') ?></textarea>
+                            </label>
+                            <label class="form-label">
+                                Enviar arquivo
+                                <input class="form-control" name="assignment_file" type="file" accept=".pdf,.doc,.docx,.odt,.txt,.rtf,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.jpg,.jpeg,.png,.webp,.zip,.rar,.7z">
+                            </label>
+                            <?php if (!empty($mySubmission['file_path'])): ?>
+                                <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/assignment/download?id=' . $mySubmission['id'])) ?>"><i class="bi bi-download" aria-hidden="true"></i>Minha entrega atual</a>
+                            <?php endif; ?>
+                            <button class="btn btn-sm btn-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i><?= $mySubmission ? 'Atualizar entrega' : 'Enviar tarefa' ?></button>
+                        </form>
+                    <?php else: ?>
+                        <details class="education-assignment-submissions">
+                            <summary><?= e((string) count($blockSubmissions)) ?> entrega(s) recebida(s)</summary>
+                            <div>
+                                <?php foreach ($blockSubmissions as $submission): ?>
+                                    <article>
+                                        <strong><?= e($submission['user_name']) ?></strong>
+                                        <small><?= e($submission['updated_at'] ?? $submission['created_at'] ?? '') ?></small>
+                                        <?php if (!empty($submission['text_answer'])): ?><p><?= e($submission['text_answer']) ?></p><?php endif; ?>
+                                        <?php if (!empty($submission['file_path'])): ?>
+                                            <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/education/assignment/download?id=' . $submission['id'])) ?>">Baixar arquivo</a>
+                                        <?php endif; ?>
+                                    </article>
+                                <?php endforeach; ?>
+                                <?php if (!$blockSubmissions): ?><p class="form-text">Nenhum estudante enviou esta tarefa ainda.</p><?php endif; ?>
+                            </div>
+                        </details>
+                    <?php endif; ?>
+                <?php endif; ?>
+
                 <?php if ($canManage): ?>
                     <div class="education-block-actions">
                         <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&block_id=' . $block['id'])) ?>">Editar</a>
@@ -315,6 +358,96 @@ $embed = function (?string $url): ?string {
         <?php if (!$blocks && empty($videoEmbedUrl) && empty($lesson['description']) && empty($lesson['image_url'])): ?>
             <div class="empty-state">Esta aula ainda não tem sequência cadastrada.</div>
         <?php endif; ?>
+
+        <section class="panel education-course-forum education-form-board" id="lesson-forms">
+            <div class="section-heading">
+                <h2>Formularios desta aula</h2>
+                <span><?= e((string) count($lessonForms)) ?> formulario(s)</span>
+            </div>
+            <?php if ($canManage): ?>
+                <form method="post" action="<?= e(url('/admin/education/form?lesson_id=' . $lesson['id'])) ?>" class="education-sequence-form">
+                    <?= csrf_field() ?>
+                    <div class="sequence-title-field">
+                        <label class="form-label">Titulo do formulario</label>
+                        <input class="form-control" name="title" maxlength="180" placeholder="Ex.: Revisao da aula" required>
+                    </div>
+                    <div class="grid-span-2">
+                        <label class="form-label">Descricao</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="grid-span-2">
+                        <label class="form-label">Perguntas</label>
+                        <textarea class="form-control" name="questions[]" rows="2" placeholder="Pergunta 1" required></textarea>
+                        <textarea class="form-control mt-2" name="questions[]" rows="2" placeholder="Pergunta 2"></textarea>
+                        <textarea class="form-control mt-2" name="questions[]" rows="2" placeholder="Pergunta 3"></textarea>
+                    </div>
+                    <div class="form-action-cell">
+                        <button class="btn btn-primary icon-btn"><i class="bi bi-ui-checks" aria-hidden="true"></i>Criar formulario</button>
+                    </div>
+                </form>
+            <?php endif; ?>
+            <div class="education-form-list">
+                <?php foreach ($lessonForms as $form): ?>
+                    <?php
+                    $questions = \App\Models\Education::formQuestions((int) $form['id']);
+                    $response = \App\Models\Education::formResponse((int) $form['id'], (int) (current_user()['id'] ?? 0));
+                    $answers = \App\Models\Education::formAnswersForResponse((int) ($response['id'] ?? 0));
+                    $responses = $canManage ? \App\Models\Education::formResponses((int) $form['id']) : [];
+                    ?>
+                    <article class="education-form-card">
+                        <header>
+                            <div>
+                                <strong><?= e($form['title']) ?></strong>
+                                <?php if (!empty($form['description'])): ?><p><?= e($form['description']) ?></p><?php endif; ?>
+                            </div>
+                            <span class="state-pill is-active"><?= e((string) ($form['response_count'] ?? 0)) ?> resposta(s)</span>
+                        </header>
+                        <?php if ($canManage): ?>
+                            <details>
+                                <summary>Editar e ver respostas</summary>
+                                <form method="post" action="<?= e(url('/admin/education/form/update?form_id=' . $form['id'])) ?>" class="education-form-manage">
+                                    <?= csrf_field() ?>
+                                    <label class="form-label">Titulo</label>
+                                    <input class="form-control" name="title" value="<?= e($form['title']) ?>" required>
+                                    <label class="form-label">Descricao</label>
+                                    <textarea class="form-control" name="description" rows="3"><?= e($form['description'] ?? '') ?></textarea>
+                                    <label class="form-label">Perguntas</label>
+                                    <?php foreach ($questions as $question): ?><textarea class="form-control" name="questions[]" rows="2" required><?= e($question['question']) ?></textarea><?php endforeach; ?>
+                                    <textarea class="form-control" name="questions[]" rows="2" placeholder="Nova pergunta"></textarea>
+                                    <button class="btn btn-sm btn-outline-primary">Salvar formulario</button>
+                                </form>
+                                <div class="education-response-list">
+                                    <?php foreach ($responses as $item): ?>
+                                        <?php $itemAnswers = \App\Models\Education::formAnswersForResponse((int) $item['id']); ?>
+                                        <div>
+                                            <strong><?= e($item['user_name']) ?></strong>
+                                            <small><?= e($item['updated_at'] ?? $item['created_at'] ?? '') ?></small>
+                                            <?php foreach ($questions as $question): ?>
+                                                <p><b><?= e($question['question']) ?>:</b> <?= e($itemAnswers[(int) $question['id']] ?? '-') ?></p>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                    <?php if (!$responses): ?><p class="form-text">Nenhuma resposta enviada ainda.</p><?php endif; ?>
+                                </div>
+                                <form method="post" action="<?= e(url('/admin/education/form/delete?form_id=' . $form['id'])) ?>" onsubmit="return confirm('Remover este formulario?');">
+                                    <?= csrf_field() ?>
+                                    <button class="btn btn-sm btn-outline-danger">Remover formulario</button>
+                                </form>
+                            </details>
+                        <?php else: ?>
+                            <form method="post" action="<?= e(url('/admin/education/form/submit?form_id=' . $form['id'])) ?>" class="education-form-answer">
+                                <?= csrf_field() ?>
+                                <?php foreach ($questions as $question): ?>
+                                    <label class="form-label"><?= e($question['question']) ?><textarea class="form-control" name="answers[<?= e((string) $question['id']) ?>]" rows="3" required><?= e($answers[(int) $question['id']] ?? '') ?></textarea></label>
+                                <?php endforeach; ?>
+                                <button class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
+                            </form>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+                <?php if (!$lessonForms && !$canManage): ?><div class="empty-state">Nenhum formulario criado para esta aula.</div><?php endif; ?>
+            </div>
+        </section>
 
         <?php if ($canManage || $lessonForumTopics): ?>
             <section class="panel education-course-forum" id="lesson-forum">
