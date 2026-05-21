@@ -18,6 +18,8 @@ class EducationController
 
     private const MAX_COURSE_COVER_SIZE = 8 * 1024 * 1024;
 
+    private const MAX_CERTIFICATE_BACKGROUND_SIZE = 12 * 1024 * 1024;
+
     private const MAX_BLOCK_FILE_SIZE = 50 * 1024 * 1024;
 
     private const MAX_ASSIGNMENT_FILE_SIZE = 25 * 1024 * 1024;
@@ -112,7 +114,7 @@ class EducationController
 
         $userId = (int) (current_user()['id'] ?? 0);
         $teacherUserId = $this->canAssignTeacher() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? null);
-        Education::updateCourse((int) $course['id'], array_merge($_POST, [
+        Education::updateCourse((int) $course['id'], array_merge($this->certificateFieldsFromCourse($course), $_POST, [
             'cover_image' => $this->courseCoverFromRequest($course['cover_image'] ?? null),
             'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
@@ -160,6 +162,7 @@ class EducationController
         );
         $forumTopics = Education::forumTopics((int) $course['id']);
         $courseForms = Education::formsForCourse((int) $course['id']);
+        $certificateStatus = Education::certificateStatusForCourseUser((int) $course['id'], (int) $user['id']);
 
         View::render('admin/education/course', [
             'course' => $course,
@@ -175,6 +178,7 @@ class EducationController
             'forumTopics' => $forumTopics,
             'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id'), $canManage),
             'courseForms' => $courseForms,
+            'certificateStatus' => $certificateStatus,
         ]);
     }
 
@@ -973,6 +977,84 @@ class EducationController
         ]);
     }
 
+    public function updateCertificate(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->authorizeCourseManage($course);
+        $this->validateCsrf('/admin/education/course?id=' . $course['id']);
+
+        $title = trim((string) ($_POST['certificate_title'] ?? ''));
+        $text = trim((string) ($_POST['certificate_text'] ?? ''));
+        if (!empty($_POST['certificate_enabled']) && ($title === '' || $text === '')) {
+            Session::flash('error', 'Informe o titulo e o texto do certificado para liberar a emissao.');
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+        }
+
+        Education::updateCourse((int) $course['id'], array_merge($course, [
+            'certificate_enabled' => !empty($_POST['certificate_enabled']) ? 1 : 0,
+            'certificate_title' => $title,
+            'certificate_text' => $text,
+            'certificate_background' => $this->certificateBackgroundFromRequest($course['certificate_background'] ?? null),
+            'certificate_min_frequency' => $_POST['certificate_min_frequency'] ?? 0,
+            'updated_by' => (int) (current_user()['id'] ?? 0) ?: null,
+        ]));
+
+        Session::flash('success', 'Certificado do curso atualizado.');
+        redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+    }
+
+    public function requestCertificate(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->validateCsrf('/admin/education/course?id=' . $course['id']);
+        $userId = (int) (current_user()['id'] ?? 0);
+
+        if (!Education::userCanAccessCourse((int) $course['id'], $userId, false)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $status = Education::certificateStatusForCourseUser((int) $course['id'], $userId);
+        if (empty($status['eligible'])) {
+            Session::flash('error', 'O certificado ainda nao foi liberado. Conclua o curso e confira a frequencia exigida.');
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+        }
+
+        Education::issueCertificate((int) $course['id'], $userId);
+        Logger::info('education.certificate_issued', 'Certificado emitido para o curso: ' . ($course['title'] ?? ''), $userId ?: null);
+        redirect('/admin/education/certificate?id=' . $course['id']);
+    }
+
+    public function certificate(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $userId = (int) (current_user()['id'] ?? 0);
+
+        if (!Education::userCanAccessCourse((int) $course['id'], $userId, false)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $certificate = Education::certificateForCourseUser((int) $course['id'], $userId);
+        if (!$certificate) {
+            Session::flash('error', 'Solicite o certificado quando o curso estiver concluido.');
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+        }
+
+        $status = Education::certificateStatusForCourseUser((int) $course['id'], $userId);
+        View::render('admin/education/certificate', [
+            'course' => $course,
+            'certificate' => $certificate,
+            'certificateStatus' => $status,
+            'certificateText' => $this->certificateText($course, $certificate, $status),
+        ]);
+    }
+
     private function courseFromQuery(bool $required = true): ?array
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -1259,6 +1341,35 @@ class EducationController
         return [$startDate, $endDate];
     }
 
+    private function certificateFieldsFromCourse(array $course): array
+    {
+        return [
+            'certificate_enabled' => $course['certificate_enabled'] ?? 0,
+            'certificate_title' => $course['certificate_title'] ?? null,
+            'certificate_text' => $course['certificate_text'] ?? null,
+            'certificate_background' => $course['certificate_background'] ?? null,
+            'certificate_min_frequency' => $course['certificate_min_frequency'] ?? 0,
+        ];
+    }
+
+    private function certificateText(array $course, array $certificate, array $status): string
+    {
+        $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : date('d/m/Y');
+        $text = trim((string) ($course['certificate_text'] ?? ''));
+        if ($text === '') {
+            $text = 'Certificamos que {student_name} concluiu o curso {course_title}.';
+        }
+
+        return strtr($text, [
+            '{student_name}' => (string) ($certificate['student_name'] ?? ''),
+            '{course_title}' => (string) ($course['title'] ?? ''),
+            '{teacher_name}' => (string) ($course['teacher_name'] ?? ''),
+            '{frequency}' => (string) ((int) ($status['frequency'] ?? 0)) . '%',
+            '{issued_at}' => $issuedAt,
+            '{verification_code}' => (string) ($certificate['verification_code'] ?? ''),
+        ]);
+    }
+
     private function videoEmbedUrl(string $url): ?string
     {
         $url = trim($url);
@@ -1447,6 +1558,53 @@ class EducationController
         if (!move_uploaded_file($tmpName, $target)) {
             Session::flash('error', 'Não foi possível salvar a capa do curso.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education/manage');
+        }
+
+        return '/public/uploads/education/' . $filename;
+    }
+
+    private function certificateBackgroundFromRequest(?string $existing): ?string
+    {
+        $background = trim((string) ($_POST['certificate_background'] ?? ''));
+
+        if (empty($_FILES['certificate_background_upload']['name']) || ($_FILES['certificate_background_upload']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return $background !== '' ? $background : $existing;
+        }
+
+        if (($_FILES['certificate_background_upload']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Nao foi possivel enviar o fundo do certificado.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $tmpName = (string) ($_FILES['certificate_background_upload']['tmp_name'] ?? '');
+        $size = (int) ($_FILES['certificate_background_upload']['size'] ?? 0);
+        $imageInfo = $tmpName !== '' ? @getimagesize($tmpName) : false;
+        $allowedTypes = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+        ];
+
+        if (!$imageInfo || !isset($allowedTypes[$imageInfo[2] ?? 0]) || $size <= 0 || $size > self::MAX_CERTIFICATE_BACKGROUND_SIZE) {
+            Session::flash('error', 'Use um fundo JPG, PNG ou WEBP com ate 12MB.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/public/uploads/education';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        if (!is_dir($directory) || !is_writable($directory)) {
+            Session::flash('error', 'A pasta de imagens do certificado nao esta gravavel.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $filename = 'certificate-' . bin2hex(random_bytes(12)) . '.' . $allowedTypes[$imageInfo[2]];
+        $target = $directory . '/' . $filename;
+        if (!move_uploaded_file($tmpName, $target)) {
+            Session::flash('error', 'Nao foi possivel salvar o fundo do certificado.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
         }
 
         return '/public/uploads/education/' . $filename;

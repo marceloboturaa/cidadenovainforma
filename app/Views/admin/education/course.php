@@ -20,6 +20,7 @@ $moduleAction = url('/admin/education/module?id=' . $course['id']);
 $forumTopics = $forumTopics ?? [];
 $forumRepliesByTopic = $forumRepliesByTopic ?? [];
 $courseForms = $courseForms ?? [];
+$certificateStatus = $certificateStatus ?? [];
 ?>
 
 <div class="page-heading">
@@ -157,6 +158,77 @@ $courseForms = $courseForms ?? [];
         <?php endif; ?>
     </div>
 </section>
+
+<?php if ($canManage || !empty($course['certificate_enabled'])): ?>
+<section class="panel education-certificate-panel" id="course-certificate">
+    <div class="section-heading">
+        <h2>Certificado do curso</h2>
+        <span><?= !empty($course['certificate_enabled']) ? 'Emissao liberada por solicitacao do aluno' : 'Configure o modelo antes de liberar' ?></span>
+    </div>
+
+    <?php if ($canManage): ?>
+        <form method="post" action="<?= e(url('/admin/education/certificate/settings?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-certificate-settings">
+            <?= csrf_field() ?>
+            <label class="forum-check-line grid-span-2">
+                <input type="checkbox" name="certificate_enabled" value="1" <?= checked(!empty($course['certificate_enabled'])) ?>>
+                <span>Liberar certificado quando o aluno concluir o curso</span>
+            </label>
+            <div>
+                <label class="form-label">Titulo do certificado</label>
+                <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusao">
+            </div>
+            <div>
+                <label class="form-label">Frequencia minima</label>
+                <input class="form-control" name="certificate_min_frequency" type="number" min="0" max="100" value="<?= e((string) ($course['certificate_min_frequency'] ?? 0)) ?>">
+                <small class="field-hint">Use 0 para nao bloquear a emissao pela chamada.</small>
+            </div>
+            <div>
+                <label class="form-label">Fundo por link</label>
+                <input class="form-control" name="certificate_background" value="<?= e($course['certificate_background'] ?? '') ?>" placeholder="/public/uploads/... ou URL">
+            </div>
+            <div>
+                <label class="form-label">Enviar imagem de fundo</label>
+                <input class="form-control" name="certificate_background_upload" type="file" accept="image/jpeg,image/png,image/webp">
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Texto do certificado</label>
+                <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title} em {issued_at}."><?= e($course['certificate_text'] ?? '') ?></textarea>
+                <small class="field-hint">Campos automaticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {issued_at}, {verification_code}.</small>
+            </div>
+            <div class="form-action-cell">
+                <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Salvar certificado</button>
+            </div>
+        </form>
+    <?php else: ?>
+        <div class="education-certificate-request">
+            <div class="education-certificate-checks">
+                <div>
+                    <span>Aulas concluidas</span>
+                    <strong><?= e((string) ($certificateStatus['completed_count'] ?? 0)) ?>/<?= e((string) ($certificateStatus['lesson_count'] ?? 0)) ?></strong>
+                </div>
+                <div>
+                    <span>Frequencia</span>
+                    <strong><?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</strong>
+                </div>
+                <div>
+                    <span>Minimo exigido</span>
+                    <strong><?= e((string) ($certificateStatus['minimum_frequency'] ?? 0)) ?>%</strong>
+                </div>
+            </div>
+            <?php if (!empty($certificateStatus['certificate'])): ?>
+                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'])) ?>"><i class="bi bi-printer" aria-hidden="true"></i>Abrir certificado</a>
+            <?php elseif (!empty($certificateStatus['eligible'])): ?>
+                <form method="post" action="<?= e(url('/admin/education/certificate/request?id=' . $course['id'])) ?>">
+                    <?= csrf_field() ?>
+                    <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Solicitar certificado</button>
+                </form>
+            <?php else: ?>
+                <p class="field-hint mb-0">O certificado aparece aqui depois que o curso estiver concluido e a frequencia minima for atingida.</p>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</section>
+<?php endif; ?>
 
 <?php if ($canManage || $courseForms): ?>
 <section class="panel education-course-forum education-form-board" id="course-forms">

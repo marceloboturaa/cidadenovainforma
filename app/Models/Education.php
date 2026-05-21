@@ -16,6 +16,11 @@ class Education
                 title VARCHAR(180) NOT NULL,
                 summary TEXT NULL,
                 cover_image VARCHAR(255) NULL,
+                certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
+                certificate_title VARCHAR(180) NULL,
+                certificate_text TEXT NULL,
+                certificate_background VARCHAR(255) NULL,
+                certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
                 teacher_user_id BIGINT UNSIGNED NULL,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_by BIGINT UNSIGNED NULL,
@@ -185,6 +190,28 @@ class Education
                 CONSTRAINT fk_education_replies_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_certificates (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                course_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                verification_code VARCHAR(48) NOT NULL,
+                issued_at DATETIME NOT NULL,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
+                UNIQUE KEY uq_education_certificate_code (verification_code),
+                CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image');
+        self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
+        self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
+        self::ensureColumn('education_courses', 'certificate_background', 'VARCHAR(255) NULL AFTER certificate_text');
+        self::ensureColumn('education_courses', 'certificate_min_frequency', 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_background');
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_forms (
@@ -688,9 +715,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_enabled, certificate_title, certificate_text, certificate_background, certificate_min_frequency, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_enabled, :certificate_title, :certificate_text, :certificate_background, :certificate_min_frequency, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -709,6 +736,11 @@ class Education
              SET title = :title,
                  summary = :summary,
                  cover_image = :cover_image,
+                 certificate_enabled = :certificate_enabled,
+                 certificate_title = :certificate_title,
+                 certificate_text = :certificate_text,
+                 certificate_background = :certificate_background,
+                 certificate_min_frequency = :certificate_min_frequency,
                  teacher_user_id = :teacher_user_id,
                  updated_by = :updated_by,
                  updated_at = NOW()
@@ -925,6 +957,71 @@ class Education
         ]);
 
         return $stmt->fetchAll();
+    }
+
+    public static function certificateStatusForCourseUser(int $courseId, int $userId): array
+    {
+        self::ensureSchema();
+        $course = self::findCourse($courseId);
+        $progress = self::courseProgressForUser($courseId, $userId);
+        $attendance = self::attendanceSummaryForCourseUser($courseId, $userId);
+        $minimumFrequency = (int) ($course['certificate_min_frequency'] ?? 0);
+        $courseCompleted = $progress['lesson_count'] > 0 && $progress['completed_count'] >= $progress['lesson_count'];
+        $frequencyReady = $minimumFrequency <= 0 || $attendance['frequency'] >= $minimumFrequency;
+
+        return [
+            'enabled' => !empty($course['certificate_enabled']),
+            'lesson_count' => $progress['lesson_count'],
+            'completed_count' => $progress['completed_count'],
+            'course_completed' => $courseCompleted,
+            'attendance_records' => $attendance['records'],
+            'frequency' => $attendance['frequency'],
+            'minimum_frequency' => $minimumFrequency,
+            'frequency_ready' => $frequencyReady,
+            'eligible' => !empty($course['certificate_enabled']) && $courseCompleted && $frequencyReady,
+            'certificate' => self::certificateForCourseUser($courseId, $userId),
+        ];
+    }
+
+    public static function issueCertificate(int $courseId, int $userId): array
+    {
+        self::ensureSchema();
+        $certificate = self::certificateForCourseUser($courseId, $userId);
+        if ($certificate) {
+            return $certificate;
+        }
+
+        Database::connection()->prepare(
+            'INSERT IGNORE INTO education_certificates
+                (course_id, user_id, verification_code, issued_at, created_at, updated_at)
+             VALUES
+                (:course_id, :user_id, :verification_code, NOW(), NOW(), NOW())'
+        )->execute([
+            'course_id' => $courseId,
+            'user_id' => $userId,
+            'verification_code' => self::certificateCode($courseId, $userId),
+        ]);
+
+        return self::certificateForCourseUser($courseId, $userId) ?? [];
+    }
+
+    public static function certificateForCourseUser(int $courseId, int $userId): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_certificates.*,
+                    users.name AS student_name,
+                    users.email AS student_email
+             FROM education_certificates
+             INNER JOIN users ON users.id = education_certificates.user_id
+             WHERE education_certificates.course_id = :course_id
+               AND education_certificates.user_id = :user_id
+             LIMIT 1'
+        );
+        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
+
+        return $stmt->fetch() ?: null;
     }
 
     public static function markLesson(int $lessonId, int $userId, bool $completed): void
@@ -1586,10 +1683,61 @@ class Education
             'title' => trim((string) ($data['title'] ?? '')),
             'summary' => self::nullable($data['summary'] ?? null),
             'cover_image' => self::nullable($data['cover_image'] ?? null),
+            'certificate_enabled' => !empty($data['certificate_enabled']) ? 1 : 0,
+            'certificate_title' => self::nullable($data['certificate_title'] ?? null),
+            'certificate_text' => self::nullable($data['certificate_text'] ?? null),
+            'certificate_background' => self::nullable($data['certificate_background'] ?? null),
+            'certificate_min_frequency' => max(0, min(100, (int) ($data['certificate_min_frequency'] ?? 0))),
             'teacher_user_id' => !empty($data['teacher_user_id']) ? (int) $data['teacher_user_id'] : null,
             'created_by' => $data['created_by'] ?? null,
             'updated_by' => $data['updated_by'] ?? null,
         ];
+    }
+
+    private static function courseProgressForUser(int $courseId, int $userId): array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT COUNT(DISTINCT education_lessons.id) AS lesson_count,
+                    COUNT(DISTINCT CASE WHEN progress.completed_at IS NOT NULL THEN education_lessons.id END) AS completed_count
+             FROM education_lessons
+             LEFT JOIN education_lesson_progress progress
+                ON progress.lesson_id = education_lessons.id
+               AND progress.user_id = :user_id
+             WHERE education_lessons.course_id = :course_id
+               AND education_lessons.active = 1'
+        );
+        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
+        $row = $stmt->fetch() ?: [];
+
+        return [
+            'lesson_count' => (int) ($row['lesson_count'] ?? 0),
+            'completed_count' => (int) ($row['completed_count'] ?? 0),
+        ];
+    }
+
+    private static function attendanceSummaryForCourseUser(int $courseId, int $userId): array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT COUNT(*) AS records,
+                    SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) AS present_count
+             FROM education_attendance
+             WHERE course_id = :course_id
+               AND user_id = :user_id'
+        );
+        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
+        $row = $stmt->fetch() ?: [];
+        $records = (int) ($row['records'] ?? 0);
+        $present = (int) ($row['present_count'] ?? 0);
+
+        return [
+            'records' => $records,
+            'frequency' => $records > 0 ? (int) round(($present / $records) * 100) : 0,
+        ];
+    }
+
+    private static function certificateCode(int $courseId, int $userId): string
+    {
+        return strtoupper(substr(hash('sha256', $courseId . ':' . $userId . ':' . microtime(true) . ':' . random_bytes(16)), 0, 20));
     }
 
     private static function modulePayload(array $data): array

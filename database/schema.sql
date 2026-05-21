@@ -305,6 +305,11 @@ CREATE TABLE IF NOT EXISTS education_courses (
     title VARCHAR(180) NOT NULL,
     summary TEXT NULL,
     cover_image VARCHAR(255) NULL,
+    certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    certificate_title VARCHAR(180) NULL,
+    certificate_text TEXT NULL,
+    certificate_background VARCHAR(255) NULL,
+    certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
     teacher_user_id BIGINT UNSIGNED NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_by BIGINT UNSIGNED NULL,
@@ -404,6 +409,20 @@ CREATE TABLE IF NOT EXISTS education_attendance (
     CONSTRAINT fk_education_attendance_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_attendance_recorder FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS education_certificates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    course_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    verification_code VARCHAR(48) NOT NULL,
+    issued_at DATETIME NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
+    UNIQUE KEY uq_education_certificate_code (verification_code),
+    CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS education_forum_topics (
