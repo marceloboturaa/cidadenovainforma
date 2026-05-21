@@ -60,6 +60,7 @@
     </section>
 </div>
 
+<?php if (!($isStudent ?? false)): ?>
 <section class="panel">
     <div class="section-heading">
         <h2>Notícias recentes</h2>
@@ -89,6 +90,58 @@
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
+
+<?php if ($isStudent ?? false): ?>
+    <?php
+    $responseStatusLabels = ['pending' => 'Aguardando correção', 'corrected' => 'Corrigido', 'redo' => 'Refazer'];
+    $studentForms = $studentResponses['forms'] ?? [];
+    $studentAssignments = $studentResponses['assignments'] ?? [];
+    ?>
+    <section class="panel student-response-panel">
+        <div class="section-heading">
+            <h2>Minhas respostas</h2>
+            <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/education')) ?>">Meus cursos</a>
+        </div>
+        <div class="student-response-grid">
+            <div>
+                <h3>Formulários enviados</h3>
+                <div class="admin-card-list compact-list">
+                    <?php foreach ($studentForms as $response): ?>
+                        <?php $responseHref = !empty($response['lesson_id']) ? '/admin/education/lesson?id=' . $response['lesson_id'] . '#lesson-forms' : '/admin/education/course?id=' . $response['course_id'] . '#course-forms'; ?>
+                        <article class="admin-list-card student-response-card">
+                            <div class="admin-list-main">
+                                <a class="admin-list-title" href="<?= e(url($responseHref)) ?>"><?= e($response['item_title']) ?></a>
+                                <p class="admin-list-description"><?= e($response['course_title']) ?><?= !empty($response['lesson_title']) ? ' / ' . e($response['lesson_title']) : '' ?></p>
+                                <?php if (!empty($response['grade'])): ?><p class="student-response-feedback"><b>Nota:</b> <?= e($response['grade']) ?></p><?php endif; ?>
+                                <?php if (!empty($response['feedback'])): ?><p class="student-response-feedback"><?= e($response['feedback']) ?></p><?php endif; ?>
+                            </div>
+                            <span class="state-pill <?= ($response['correction_status'] ?? 'pending') === 'corrected' ? 'is-active' : 'is-pending' ?>"><?= e($responseStatusLabels[$response['correction_status'] ?? 'pending'] ?? $responseStatusLabels['pending']) ?></span>
+                        </article>
+                    <?php endforeach; ?>
+                    <?php if (!$studentForms): ?><div class="empty-state">Você ainda não enviou formulários.</div><?php endif; ?>
+                </div>
+            </div>
+            <div>
+                <h3>Tarefas entregues</h3>
+                <div class="admin-card-list compact-list">
+                    <?php foreach ($studentAssignments as $submission): ?>
+                        <article class="admin-list-card student-response-card">
+                            <div class="admin-list-main">
+                                <a class="admin-list-title" href="<?= e(url('/admin/education/lesson?id=' . $submission['lesson_id'])) ?>"><?= e($submission['item_title'] ?: 'Tarefa enviada') ?></a>
+                                <p class="admin-list-description"><?= e($submission['course_title']) ?> / <?= e($submission['lesson_title']) ?></p>
+                                <?php if (!empty($submission['grade'])): ?><p class="student-response-feedback"><b>Nota:</b> <?= e($submission['grade']) ?></p><?php endif; ?>
+                                <?php if (!empty($submission['feedback'])): ?><p class="student-response-feedback"><?= e($submission['feedback']) ?></p><?php endif; ?>
+                            </div>
+                            <span class="state-pill <?= ($submission['correction_status'] ?? 'pending') === 'corrected' ? 'is-active' : 'is-pending' ?>"><?= e($responseStatusLabels[$submission['correction_status'] ?? 'pending'] ?? $responseStatusLabels['pending']) ?></span>
+                        </article>
+                    <?php endforeach; ?>
+                    <?php if (!$studentAssignments): ?><div class="empty-state">Você ainda não entregou tarefas.</div><?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+<?php endif; ?>
 
 <?php if ($showsAllLogs ?? false): ?>
     <section class="panel">
@@ -126,6 +179,7 @@
     </section>
 <?php endif; ?>
 
+<?php if (!($isStudent ?? false)): ?>
 <section class="panel">
     <h2><?= ($showsAllLogs ?? false) ? 'Logs recentes' : 'Meus logs recentes' ?></h2>
     <div class="admin-card-list compact-list">
@@ -152,3 +206,4 @@
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>

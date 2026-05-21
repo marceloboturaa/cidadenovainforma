@@ -332,6 +332,63 @@ class Education
         return $stmt->fetchAll();
     }
 
+    public static function studentResponsesForDashboard(int $userId): array
+    {
+        self::ensureSchema();
+
+        $forms = Database::connection()->prepare(
+            'SELECT education_form_responses.id,
+                    education_form_responses.updated_at,
+                    education_form_responses.correction_status,
+                    education_form_responses.grade,
+                    education_form_responses.feedback,
+                    education_forms.title AS item_title,
+                    education_forms.course_id,
+                    education_forms.lesson_id,
+                    education_courses.title AS course_title,
+                    education_lessons.title AS lesson_title
+             FROM education_form_responses
+             INNER JOIN education_forms ON education_forms.id = education_form_responses.form_id
+             INNER JOIN education_courses ON education_courses.id = education_forms.course_id
+             LEFT JOIN education_lessons ON education_lessons.id = education_forms.lesson_id
+             WHERE education_form_responses.user_id = :user_id
+               AND education_forms.active = 1
+               AND education_courses.active = 1
+             ORDER BY education_form_responses.updated_at DESC, education_form_responses.id DESC
+             LIMIT 8'
+        );
+        $forms->execute(['user_id' => $userId]);
+
+        $assignments = Database::connection()->prepare(
+            'SELECT education_assignment_submissions.id,
+                    education_assignment_submissions.updated_at,
+                    education_assignment_submissions.correction_status,
+                    education_assignment_submissions.grade,
+                    education_assignment_submissions.feedback,
+                    education_lesson_blocks.title AS item_title,
+                    education_lesson_blocks.lesson_id,
+                    education_lessons.course_id,
+                    education_courses.title AS course_title,
+                    education_lessons.title AS lesson_title
+             FROM education_assignment_submissions
+             INNER JOIN education_lesson_blocks ON education_lesson_blocks.id = education_assignment_submissions.block_id
+             INNER JOIN education_lessons ON education_lessons.id = education_lesson_blocks.lesson_id
+             INNER JOIN education_courses ON education_courses.id = education_lessons.course_id
+             WHERE education_assignment_submissions.user_id = :user_id
+               AND education_lesson_blocks.active = 1
+               AND education_lessons.active = 1
+               AND education_courses.active = 1
+             ORDER BY education_assignment_submissions.updated_at DESC, education_assignment_submissions.id DESC
+             LIMIT 8'
+        );
+        $assignments->execute(['user_id' => $userId]);
+
+        return [
+            'forms' => $forms->fetchAll(),
+            'assignments' => $assignments->fetchAll(),
+        ];
+    }
+
     public static function findCourse(int $id): ?array
     {
         self::ensureSchema();

@@ -163,7 +163,6 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                             <span><?= e((string) count($accessUserIds)) ?> usu&aacute;rio(s) liberado(s)</span>
                         <?php endif; ?>
                     </div>
-                    <code class="document-storage-path"><?= e($document['path']) ?></code>
                 </div>
 
                 <div class="document-actions">

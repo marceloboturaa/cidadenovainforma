@@ -82,6 +82,7 @@
     }
 
     .dashboard-grid,
+    .student-response-grid,
     .editor-grid {
         grid-template-columns: 1fr;
     }

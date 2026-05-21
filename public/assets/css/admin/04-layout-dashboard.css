@@ -190,6 +190,29 @@
     gap: 16px;
 }
 
+.student-response-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.student-response-grid h3 {
+    margin: 0 0 10px;
+    color: var(--ink);
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.student-response-card {
+    align-items: start;
+}
+
+.student-response-feedback {
+    margin: 7px 0 0;
+    color: #374151;
+    overflow-wrap: anywhere;
+}
+
 .status-board {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
