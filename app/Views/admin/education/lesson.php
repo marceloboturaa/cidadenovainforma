@@ -160,8 +160,9 @@ $embed = function (?string $url): ?string {
                             <option value="assignment" <?= selected((string) ($editingBlock['type'] ?? ''), 'assignment') ?>>Tarefa</option>
                             <option value="certificate" <?= selected((string) ($editingBlock['type'] ?? ''), 'certificate') ?>>Certificado</option>
                             <option value="image" <?= selected((string) ($editingBlock['type'] ?? ''), 'image') ?>>Imagem</option>
-                            <option value="file" <?= selected((string) ($editingBlock['type'] ?? ''), 'file') ?>>Arquivo</option>
+                            <option value="file" <?= selected((string) ($editingBlock['type'] ?? ''), 'file') ?>>Documento para baixar</option>
                         </select>
+                        <small class="form-text">Use Documento para baixar quando o aluno precisar receber PDF, DOC ou outro material da aula.</small>
                     </div>
                     <div class="sequence-order-field">
                         <label class="form-label">Ordem</label>
@@ -184,12 +185,13 @@ $embed = function (?string $url): ?string {
                                 <label class="form-label">Link externo</label>
                                 <input class="form-control" name="media_url" value="<?= e($editingBlock['media_url'] ?? '') ?>" placeholder="YouTube, Vimeo, imagem ou arquivo externo">
                             </div>
-                            <div>
-                                <label class="form-label">Enviar arquivo</label>
-                                <input class="form-control" name="block_file" type="file">
-                            </div>
                         </div>
                     </details>
+                    <div class="grid-span-2 education-block-document-field">
+                        <label class="form-label">Enviar imagem, documento ou arquivo da aula</label>
+                        <input class="form-control" name="block_file" type="file">
+                        <small class="form-text">Com o tipo Documento para baixar, este arquivo fica disponivel para o aluno baixar na aula.</small>
+                    </div>
                     <div class="form-action-cell split-actions">
                         <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i><?= $editingBlock ? 'Atualizar item' : 'Adicionar à sequência' ?></button>
                         <?php if ($editingBlock): ?>
@@ -252,7 +254,7 @@ $embed = function (?string $url): ?string {
             $blockTitle = $block['title'] ?: match ($type) {
                 'video' => 'Vídeo da aula',
                 'image' => 'Imagem da aula',
-                'file' => 'Arquivo para baixar',
+                'file' => 'Documento para baixar',
                 'assignment' => 'Tarefa da aula',
                 'certificate' => 'Certificado',
                 default => 'Material da aula',
@@ -267,7 +269,7 @@ $embed = function (?string $url): ?string {
                         <?php elseif ($type === 'image'): ?>
                             <i class="bi bi-image" aria-hidden="true"></i> Imagem
                         <?php elseif ($type === 'file'): ?>
-                            <i class="bi bi-download" aria-hidden="true"></i> Arquivo
+                            <i class="bi bi-download" aria-hidden="true"></i> Documento
                         <?php elseif ($type === 'assignment'): ?>
                             <i class="bi bi-clipboard-check" aria-hidden="true"></i> Tarefa
                         <?php elseif ($type === 'certificate'): ?>
@@ -298,12 +300,12 @@ $embed = function (?string $url): ?string {
                 <?php if (in_array($type, ['file', 'assignment', 'certificate'], true) && !empty($block['file_path'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(url('/admin/education/block/download?id=' . $block['id'])) ?>">
                         <i class="bi bi-download" aria-hidden="true"></i>
-                        Baixar arquivo
+                        Baixar documento
                     </a>
                 <?php elseif (in_array($type, ['file', 'assignment', 'certificate'], true) && !empty($block['media_url'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(media_url($block['media_url'])) ?>" target="_blank" rel="noopener">
                         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-                        Abrir arquivo
+                        Abrir documento
                     </a>
                 <?php endif; ?>
 
@@ -392,6 +394,7 @@ $embed = function (?string $url): ?string {
             <div class="empty-state">Esta aula ainda não tem sequência cadastrada.</div>
         <?php endif; ?>
 
+        <?php if ($canManage || $lessonForms): ?>
         <section class="panel education-course-forum education-form-board" id="lesson-forms">
             <div class="section-heading">
                 <h2>Formularios desta aula</h2>
@@ -435,6 +438,14 @@ $embed = function (?string $url): ?string {
                             </div>
                             <span class="state-pill is-active"><?= e((string) ($form['response_count'] ?? 0)) ?> resposta(s)</span>
                         </header>
+                        <div class="education-form-question-preview">
+                            <strong>Perguntas</strong>
+                            <ol>
+                                <?php foreach ($questions as $question): ?>
+                                    <li><?= e($question['question']) ?></li>
+                                <?php endforeach; ?>
+                            </ol>
+                        </div>
                         <?php if ($canManage): ?>
                             <details>
                                 <summary>Editar e ver respostas</summary>
@@ -509,6 +520,7 @@ $embed = function (?string $url): ?string {
                 <?php if (!$lessonForms && !$canManage): ?><div class="empty-state">Nenhum formulario criado para esta aula.</div><?php endif; ?>
             </div>
         </section>
+        <?php endif; ?>
 
         <?php if ($canManage || $lessonForumTopics): ?>
             <section class="panel education-course-forum" id="lesson-forum">

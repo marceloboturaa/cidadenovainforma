@@ -158,6 +158,7 @@ $courseForms = $courseForms ?? [];
     </div>
 </section>
 
+<?php if ($canManage || $courseForms): ?>
 <section class="panel education-course-forum education-form-board" id="course-forms">
     <div class="section-heading">
         <h2>Formularios do curso</h2>
@@ -201,6 +202,14 @@ $courseForms = $courseForms ?? [];
                     </div>
                     <span class="state-pill is-active"><?= e((string) ($form['response_count'] ?? 0)) ?> resposta(s)</span>
                 </header>
+                <div class="education-form-question-preview">
+                    <strong>Perguntas</strong>
+                    <ol>
+                        <?php foreach ($questions as $question): ?>
+                            <li><?= e($question['question']) ?></li>
+                        <?php endforeach; ?>
+                    </ol>
+                </div>
                 <?php if ($canManage): ?>
                     <details>
                         <summary>Editar e ver respostas</summary>
@@ -277,7 +286,9 @@ $courseForms = $courseForms ?? [];
         <?php if (!$courseForms): ?><div class="empty-state">Nenhum formulario criado para este curso.</div><?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
 
+<?php if ($canManage || $forumTopics): ?>
 <section class="panel education-course-forum" id="course-forum">
     <div class="section-heading">
         <h2>Fórum do curso</h2>
@@ -390,6 +401,7 @@ $courseForms = $courseForms ?? [];
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
 
 <?php if ($canManage && $editingCourseIntro): ?>
     <div class="forum-modal is-open education-edit-modal" id="education-course-edit-modal" aria-hidden="false">
