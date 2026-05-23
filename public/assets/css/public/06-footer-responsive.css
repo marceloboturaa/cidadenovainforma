@@ -56,6 +56,7 @@
 
     .news-grid,
     .compact-grid,
+    .public-courses-grid,
     .public-events-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -365,6 +366,7 @@
     .events-hub-tabs,
     .events-hub-tabs a,
     .event-show-actions a,
+    .public-course-more,
     .public-event-more,
     .events-card-link {
         width: 100%;
@@ -447,10 +449,12 @@
 
     .news-grid,
     .compact-grid,
+    .public-courses-grid,
     .public-events-grid {
         grid-template-columns: 1fr;
     }
 
+    .public-courses-heading,
     .public-events-heading {
         align-items: flex-start;
         flex-direction: column;

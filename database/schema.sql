@@ -305,6 +305,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     title VARCHAR(180) NOT NULL,
     summary TEXT NULL,
     cover_image VARCHAR(255) NULL,
+    public_enabled TINYINT(1) NOT NULL DEFAULT 0,
     certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
     certificate_title VARCHAR(180) NULL,
     certificate_text TEXT NULL,

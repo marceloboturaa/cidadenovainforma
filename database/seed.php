@@ -277,6 +277,7 @@ $pdo->exec(
         title VARCHAR(180) NOT NULL,
         summary TEXT NULL,
         cover_image VARCHAR(255) NULL,
+        public_enabled TINYINT(1) NOT NULL DEFAULT 0,
         certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
         certificate_title VARCHAR(180) NULL,
         certificate_text TEXT NULL,
@@ -299,7 +300,8 @@ $pdo->exec(
 
 $courseColumns = $pdo->query('SHOW COLUMNS FROM education_courses')->fetchAll(PDO::FETCH_COLUMN);
 $courseCertificateColumns = [
-    'certificate_enabled' => 'ALTER TABLE education_courses ADD COLUMN certificate_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image',
+    'public_enabled' => 'ALTER TABLE education_courses ADD COLUMN public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image',
+    'certificate_enabled' => 'ALTER TABLE education_courses ADD COLUMN certificate_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled',
     'certificate_title' => 'ALTER TABLE education_courses ADD COLUMN certificate_title VARCHAR(180) NULL AFTER certificate_enabled',
     'certificate_text' => 'ALTER TABLE education_courses ADD COLUMN certificate_text TEXT NULL AFTER certificate_title',
     'certificate_background' => 'ALTER TABLE education_courses ADD COLUMN certificate_background VARCHAR(255) NULL AFTER certificate_text',

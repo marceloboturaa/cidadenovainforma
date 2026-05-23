@@ -69,6 +69,32 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
     </div>
 <?php endif; ?>
 
+<?php if (!empty($publicCourses)): ?>
+    <section class="section-heading public-courses-heading" id="cursos">
+        <span>Formação aberta</span>
+        <h2>Cursos públicos</h2>
+    </section>
+
+    <section class="public-courses-grid">
+        <?php foreach ($publicCourses as $course): ?>
+            <article class="public-course-card">
+                <?php if (!empty($course['cover_image'])): ?>
+                    <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" loading="lazy" onerror="this.remove()">
+                <?php endif; ?>
+                <div class="public-course-body">
+                    <span><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
+                    <h3><?= e($course['title']) ?></h3>
+                    <p><?= e(text_excerpt($course['summary'] ?? '', 150)) ?></p>
+                    <?php if (!empty($course['teacher_name'])): ?>
+                        <small>Professor: <?= e($course['teacher_name']) ?></small>
+                    <?php endif; ?>
+                    <a class="public-course-more" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">Acessar curso</a>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </section>
+<?php endif; ?>
+
 <?php if (!empty($libraryEvents)): ?>
     <section class="section-heading public-events-heading" id="eventos">
         <span>Agenda da comunidade</span>

@@ -62,6 +62,14 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                     <input class="form-control" name="course_cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
                     <small class="field-hint">Se enviar arquivo, ele será salvo no banco como caminho da capa.</small>
                 </div>
+                <?php if ($canManageAll): ?>
+                    <label class="forum-check-line">
+                        <input type="checkbox" name="public_enabled" value="1" <?= checked(!empty($editing['public_enabled'])) ?>>
+                        <span>Curso público na página inicial</span>
+                    </label>
+                <?php elseif ($isEdit): ?>
+                    <input type="hidden" name="public_enabled" value="<?= e((string) ($editing['public_enabled'] ?? 0)) ?>">
+                <?php endif; ?>
             </div>
         </details>
         <details class="education-access-details">
@@ -109,6 +117,9 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($course['title']) ?></strong>
                         <span class="state-pill is-active"><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
+                        <?php if (!empty($course['public_enabled'])): ?>
+                            <span class="state-pill is-active">Público</span>
+                        <?php endif; ?>
                     </div>
                     <dl class="admin-list-meta">
                         <div><dt>Professor</dt><dd><?= e($course['teacher_name'] ?? '-') ?></dd></div>

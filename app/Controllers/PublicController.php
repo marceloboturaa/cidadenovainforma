@@ -6,6 +6,7 @@ use App\Core\Database;
 use App\Core\View;
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\Education;
 use App\Models\InstitutionLanding;
 use App\Models\InstitutionPage;
 use App\Models\LibraryEvent;
@@ -24,6 +25,7 @@ class PublicController
             'urgent' => News::publicList(['urgent' => true], 4),
             'latest' => News::publicList([], 50),
             'popular' => News::popular(5),
+            'publicCourses' => Education::publicCourses(6),
             'libraryEvents' => LibraryEvent::publicUpcoming(6),
             'menuItems' => MenuItem::visible(),
             'pageTitle' => 'Cidade Nova Informa',

@@ -16,6 +16,7 @@ class Education
                 title VARCHAR(180) NOT NULL,
                 summary TEXT NULL,
                 cover_image VARCHAR(255) NULL,
+                public_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_title VARCHAR(180) NULL,
                 certificate_text TEXT NULL,
@@ -223,7 +224,8 @@ class Education
         self::ensureColumn('education_certificates', 'name_change_reviewed_by', 'BIGINT UNSIGNED NULL AFTER name_change_requested_at');
         self::ensureColumn('education_certificates', 'name_change_reviewed_at', 'DATETIME NULL AFTER name_change_reviewed_by');
 
-        self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image');
+        self::ensureColumn('education_courses', 'public_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image');
+        self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled');
         self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
         self::ensureColumn('education_courses', 'certificate_background', 'VARCHAR(255) NULL AFTER certificate_text');
@@ -374,6 +376,29 @@ class Education
             'progress_user_id' => $userId,
             'enrolled_user_id' => $userId,
         ]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function publicCourses(int $limit = 6): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_courses.*,
+                    teacher.name AS teacher_name,
+                    COUNT(DISTINCT education_lessons.id) AS lesson_count
+             FROM education_courses
+             LEFT JOIN users teacher ON teacher.id = education_courses.teacher_user_id
+             LEFT JOIN education_lessons ON education_lessons.course_id = education_courses.id AND education_lessons.active = 1
+             WHERE education_courses.active = 1
+               AND education_courses.public_enabled = 1
+             GROUP BY education_courses.id
+             ORDER BY education_courses.updated_at DESC, education_courses.created_at DESC, education_courses.id DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue('limit', max(1, min(12, $limit)), \PDO::PARAM_INT);
+        $stmt->execute();
 
         return $stmt->fetchAll();
     }
@@ -734,9 +759,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_enabled, certificate_title, certificate_text, certificate_background, certificate_min_frequency, certificate_program_enabled, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, public_enabled, certificate_enabled, certificate_title, certificate_text, certificate_background, certificate_min_frequency, certificate_program_enabled, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_enabled, :certificate_title, :certificate_text, :certificate_background, :certificate_min_frequency, :certificate_program_enabled, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :public_enabled, :certificate_enabled, :certificate_title, :certificate_text, :certificate_background, :certificate_min_frequency, :certificate_program_enabled, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -755,6 +780,7 @@ class Education
              SET title = :title,
                  summary = :summary,
                  cover_image = :cover_image,
+                 public_enabled = :public_enabled,
                  certificate_enabled = :certificate_enabled,
                  certificate_title = :certificate_title,
                  certificate_text = :certificate_text,
@@ -1792,6 +1818,7 @@ class Education
             'title' => trim((string) ($data['title'] ?? '')),
             'summary' => self::nullable($data['summary'] ?? null),
             'cover_image' => self::nullable($data['cover_image'] ?? null),
+            'public_enabled' => !empty($data['public_enabled']) ? 1 : 0,
             'certificate_enabled' => !empty($data['certificate_enabled']) ? 1 : 0,
             'certificate_title' => self::nullable($data['certificate_title'] ?? null),
             'certificate_text' => self::nullable($data['certificate_text'] ?? null),

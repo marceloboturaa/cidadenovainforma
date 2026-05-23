@@ -1,7 +1,8 @@
 -- Atualizacao: certificados emitidos ao final dos cursos.
 
 ALTER TABLE education_courses
-    ADD COLUMN IF NOT EXISTS certificate_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image,
+    ADD COLUMN IF NOT EXISTS public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image,
+    ADD COLUMN IF NOT EXISTS certificate_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled,
     ADD COLUMN IF NOT EXISTS certificate_title VARCHAR(180) NULL AFTER certificate_enabled,
     ADD COLUMN IF NOT EXISTS certificate_text TEXT NULL AFTER certificate_title,
     ADD COLUMN IF NOT EXISTS certificate_background VARCHAR(255) NULL AFTER certificate_text,
