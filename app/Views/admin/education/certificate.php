@@ -26,12 +26,15 @@ $background = trim((string) ($course['certificate_background'] ?? ''));
             <div><?= nl2br(e($certificateText)) ?></div>
             <footer>
                 <strong><?= e($certificate['student_name'] ?? '') ?></strong>
-                <small>Emitido em <?= e($issuedAt) ?> | Codigo <?= e($certificate['verification_code'] ?? '') ?></small>
-                <?php if (!empty($course['teacher_name'])): ?>
-                    <small>Professor: <?= e($course['teacher_name']) ?></small>
-                <?php endif; ?>
-                <small>Frequencia registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</small>
             </footer>
         </div>
+        <footer class="education-certificate-footnote">
+            <span>Emitido em <?= e($issuedAt) ?></span>
+            <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
+            <?php if (!empty($course['teacher_name'])): ?>
+                <span>Professor: <?= e($course['teacher_name']) ?></span>
+            <?php endif; ?>
+            <span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span>
+        </footer>
     </article>
 </section>

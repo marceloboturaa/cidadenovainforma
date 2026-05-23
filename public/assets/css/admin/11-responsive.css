@@ -268,12 +268,19 @@
     }
 
     .education-certificate-copy h2 {
-        font-size: 2rem;
+        font-size: 1.55rem;
     }
 
     .education-certificate-copy > div {
         font-size: 1rem;
         line-height: 1.5;
+    }
+
+    .education-certificate-footnote {
+        right: 18px;
+        bottom: 14px;
+        left: 18px;
+        font-size: 0.72rem;
     }
 
     .users-hero,

@@ -1050,8 +1050,8 @@
 .education-certificate-copy h2 {
     margin: 0;
     max-width: 100%;
-    font-size: clamp(2.2rem, 5vw, 3.5rem);
-    line-height: 1.08;
+    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+    line-height: 1.12;
     overflow-wrap: anywhere;
 }
 
@@ -1075,6 +1075,24 @@
 
 .education-certificate-copy footer small {
     color: #475569;
+}
+
+.education-certificate-footnote {
+    position: absolute;
+    right: clamp(28px, 4vw, 56px);
+    bottom: clamp(18px, 3vw, 36px);
+    left: clamp(28px, 4vw, 56px);
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(23, 32, 51, 0.18);
+    color: #475569;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    text-align: center;
 }
 
 @media print {
