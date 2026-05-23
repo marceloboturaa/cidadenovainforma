@@ -1179,15 +1179,9 @@
     margin-bottom: 5px;
 }
 
-.education-certificate-program-module strong,
-.education-certificate-program-module span {
+.education-certificate-program-module strong {
     display: block;
     overflow-wrap: anywhere;
-}
-
-.education-certificate-program-module span {
-    color: #64748b;
-    font-size: 0.78rem;
 }
 
 .education-certificate-program-empty {

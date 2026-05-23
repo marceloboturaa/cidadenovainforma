@@ -1369,8 +1369,8 @@ class EducationController
             $moduleId = (int) ($module['id'] ?? 0);
             $knownModuleIds[$moduleId] = true;
             $program[$moduleId] = [
-                'title' => trim((string) ($module['title'] ?? 'Módulo')),
-                'summary' => trim((string) ($module['summary'] ?? '')),
+                'title' => $this->certificateProgramLine($module['title'] ?? 'Módulo', 90),
+                'summary' => $this->certificateProgramLine($module['summary'] ?? '', 130),
                 'lessons' => [],
             ];
         }
@@ -1389,12 +1389,32 @@ class EducationController
             }
 
             $program[$moduleId]['lessons'][] = [
-                'title' => trim((string) ($lesson['title'] ?? 'Aula')),
-                'description' => trim((string) ($lesson['description'] ?? '')),
+                'title' => $this->certificateProgramLine($lesson['title'] ?? 'Aula', 120),
             ];
         }
 
         return array_values(array_filter($program, static fn (array $module): bool => !empty($module['lessons']) || $module['summary'] !== ''));
+    }
+
+    private function certificateProgramLine(?string $value, int $limit): string
+    {
+        $text = html_entity_decode(strip_tags((string) $value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace('/\s+/u', ' ', $text) ?: '';
+        $text = trim($text);
+
+        if ($text === '') {
+            return '';
+        }
+
+        if (function_exists('mb_strlen') && mb_strlen($text, 'UTF-8') > $limit) {
+            return rtrim(mb_substr($text, 0, max(0, $limit - 3), 'UTF-8'), ' .,;:') . '...';
+        }
+
+        if (!function_exists('mb_strlen') && strlen($text) > $limit) {
+            return rtrim(substr($text, 0, max(0, $limit - 3)), ' .,;:') . '...';
+        }
+
+        return $text;
     }
 
     private function certificateText(array $course, array $certificate, array $status): string

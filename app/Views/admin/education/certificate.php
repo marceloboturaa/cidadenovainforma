@@ -67,9 +67,6 @@ $certificateProgram = $certificateProgram ?? [];
                                 <?php foreach ($module['lessons'] as $lesson): ?>
                                     <li>
                                         <strong><?= e($lesson['title'] ?? 'Aula') ?></strong>
-                                        <?php if (!empty($lesson['description'])): ?>
-                                            <span><?= e($lesson['description']) ?></span>
-                                        <?php endif; ?>
                                     </li>
                                 <?php endforeach; ?>
                             </ol>
