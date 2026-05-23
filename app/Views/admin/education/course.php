@@ -163,7 +163,7 @@ $certificateStatus = $certificateStatus ?? [];
 <section class="panel education-certificate-panel" id="course-certificate">
     <div class="section-heading">
         <h2>Certificado do curso</h2>
-        <span><?= !empty($course['certificate_enabled']) ? 'Emissao liberada por solicitacao do aluno' : 'Configure o modelo antes de liberar' ?></span>
+        <span><?= !empty($course['certificate_enabled']) ? 'Emissão liberada por solicitação do aluno' : 'Configure o modelo antes de liberar' ?></span>
     </div>
 
     <?php if ($canManage): ?>
@@ -174,13 +174,13 @@ $certificateStatus = $certificateStatus ?? [];
                 <span>Liberar certificado quando o aluno concluir o curso</span>
             </label>
             <div>
-                <label class="form-label">Titulo do certificado</label>
-                <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusao">
+                <label class="form-label">Título do certificado</label>
+                <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusão">
             </div>
             <div>
-                <label class="form-label">Frequencia minima</label>
+                <label class="form-label">Frequência mínima</label>
                 <input class="form-control" name="certificate_min_frequency" type="number" min="0" max="100" value="<?= e((string) ($course['certificate_min_frequency'] ?? 0)) ?>">
-                <small class="field-hint">Use 0 para nao bloquear a emissao pela chamada.</small>
+                <small class="field-hint">Use 0 para não bloquear a emissão pela chamada.</small>
             </div>
             <div>
                 <label class="form-label">Fundo por link</label>
@@ -193,7 +193,7 @@ $certificateStatus = $certificateStatus ?? [];
             <div class="grid-span-2">
                 <label class="form-label">Texto do certificado</label>
                 <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title} em {issued_at}."><?= e($course['certificate_text'] ?? '') ?></textarea>
-                <small class="field-hint">Campos automaticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {issued_at}, {verification_code}.</small>
+                <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {issued_at}, {verification_code}.</small>
             </div>
             <div class="form-action-cell">
                 <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Salvar certificado</button>

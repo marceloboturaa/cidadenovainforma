@@ -987,7 +987,7 @@ class EducationController
         $title = trim((string) ($_POST['certificate_title'] ?? ''));
         $text = trim((string) ($_POST['certificate_text'] ?? ''));
         if (!empty($_POST['certificate_enabled']) && ($title === '' || $text === '')) {
-            Session::flash('error', 'Informe o titulo e o texto do certificado para liberar a emissao.');
+            Session::flash('error', 'Informe o título e o texto do certificado para liberar a emissão.');
             redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
         }
 
@@ -1019,7 +1019,7 @@ class EducationController
 
         $status = Education::certificateStatusForCourseUser((int) $course['id'], $userId);
         if (empty($status['eligible'])) {
-            Session::flash('error', 'O certificado ainda nao foi liberado. Conclua o curso e confira a frequencia exigida.');
+            Session::flash('error', 'O certificado ainda não foi liberado. Conclua o curso e confira a frequência exigida.');
             redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
         }
 

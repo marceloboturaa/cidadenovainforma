@@ -1,6 +1,9 @@
 <?php
 $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : date('d/m/Y');
-$title = trim((string) ($course['certificate_title'] ?? 'Certificado de conclusao'));
+$title = trim((string) ($course['certificate_title'] ?? ''));
+if ($title === '') {
+    $title = 'Certificado de conclusão';
+}
 $background = trim((string) ($course['certificate_background'] ?? ''));
 ?>
 

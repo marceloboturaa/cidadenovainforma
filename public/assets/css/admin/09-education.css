@@ -1049,8 +1049,10 @@
 
 .education-certificate-copy h2 {
     margin: 0;
-    font-size: 3.5rem;
+    max-width: 100%;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
     line-height: 1.08;
+    overflow-wrap: anywhere;
 }
 
 .education-certificate-copy > div {
