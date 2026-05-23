@@ -15,11 +15,26 @@ CREATE TABLE IF NOT EXISTS education_certificates (
     course_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     verification_code VARCHAR(48) NOT NULL,
+    student_name VARCHAR(180) NULL,
+    requested_student_name VARCHAR(180) NULL,
+    name_change_status VARCHAR(20) NULL,
+    name_change_requested_at DATETIME NULL,
+    name_change_reviewed_by BIGINT UNSIGNED NULL,
+    name_change_reviewed_at DATETIME NULL,
     issued_at DATETIME NOT NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
     UNIQUE KEY uq_education_certificate_code (verification_code),
     CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
-    CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_certificate_reviewer FOREIGN KEY (name_change_reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+
+ALTER TABLE education_certificates
+    ADD COLUMN IF NOT EXISTS student_name VARCHAR(180) NULL AFTER verification_code,
+    ADD COLUMN IF NOT EXISTS requested_student_name VARCHAR(180) NULL AFTER student_name,
+    ADD COLUMN IF NOT EXISTS name_change_status VARCHAR(20) NULL AFTER requested_student_name,
+    ADD COLUMN IF NOT EXISTS name_change_requested_at DATETIME NULL AFTER name_change_status,
+    ADD COLUMN IF NOT EXISTS name_change_reviewed_by BIGINT UNSIGNED NULL AFTER name_change_requested_at,
+    ADD COLUMN IF NOT EXISTS name_change_reviewed_at DATETIME NULL AFTER name_change_reviewed_by;

@@ -169,6 +169,8 @@ $router->post('/admin/education/attendance', [EducationController::class, 'saveA
 $router->get('/admin/education/attendance/report', [EducationController::class, 'attendanceReport']);
 $router->post('/admin/education/certificate/settings', [EducationController::class, 'updateCertificate']);
 $router->post('/admin/education/certificate/request', [EducationController::class, 'requestCertificate']);
+$router->post('/admin/education/certificate/name-change', [EducationController::class, 'requestCertificateNameChange']);
+$router->post('/admin/education/certificate/name-review', [EducationController::class, 'reviewCertificateNameChange']);
 $router->get('/admin/education/certificate', [EducationController::class, 'certificate']);
 
 $router->get('/admin/forum', [ForumController::class, 'index']);

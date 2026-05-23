@@ -200,15 +200,28 @@ class Education
                 course_id BIGINT UNSIGNED NOT NULL,
                 user_id BIGINT UNSIGNED NOT NULL,
                 verification_code VARCHAR(48) NOT NULL,
+                student_name VARCHAR(180) NULL,
+                requested_student_name VARCHAR(180) NULL,
+                name_change_status VARCHAR(20) NULL,
+                name_change_requested_at DATETIME NULL,
+                name_change_reviewed_by BIGINT UNSIGNED NULL,
+                name_change_reviewed_at DATETIME NULL,
                 issued_at DATETIME NOT NULL,
                 created_at TIMESTAMP NULL,
                 updated_at TIMESTAMP NULL,
                 UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
                 UNIQUE KEY uq_education_certificate_code (verification_code),
                 CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
-                CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_certificate_reviewer FOREIGN KEY (name_change_reviewed_by) REFERENCES users(id) ON DELETE SET NULL
             ) ENGINE=InnoDB'
         );
+        self::ensureColumn('education_certificates', 'student_name', 'VARCHAR(180) NULL AFTER verification_code');
+        self::ensureColumn('education_certificates', 'requested_student_name', 'VARCHAR(180) NULL AFTER student_name');
+        self::ensureColumn('education_certificates', 'name_change_status', 'VARCHAR(20) NULL AFTER requested_student_name');
+        self::ensureColumn('education_certificates', 'name_change_requested_at', 'DATETIME NULL AFTER name_change_status');
+        self::ensureColumn('education_certificates', 'name_change_reviewed_by', 'BIGINT UNSIGNED NULL AFTER name_change_requested_at');
+        self::ensureColumn('education_certificates', 'name_change_reviewed_at', 'DATETIME NULL AFTER name_change_reviewed_by');
 
         self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image');
         self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
@@ -1000,15 +1013,18 @@ class Education
             return $certificate;
         }
 
+        $user = User::find($userId);
+
         Database::connection()->prepare(
             'INSERT IGNORE INTO education_certificates
-                (course_id, user_id, verification_code, issued_at, created_at, updated_at)
+                (course_id, user_id, verification_code, student_name, issued_at, created_at, updated_at)
              VALUES
-                (:course_id, :user_id, :verification_code, NOW(), NOW(), NOW())'
+                (:course_id, :user_id, :verification_code, :student_name, NOW(), NOW(), NOW())'
         )->execute([
             'course_id' => $courseId,
             'user_id' => $userId,
             'verification_code' => self::certificateCode($courseId, $userId),
+            'student_name' => $user['name'] ?? null,
         ]);
 
         return self::certificateForCourseUser($courseId, $userId) ?? [];
@@ -1020,7 +1036,8 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'SELECT education_certificates.*,
-                    users.name AS student_name,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name) AS student_name,
+                    users.name AS user_name,
                     users.email AS student_email
              FROM education_certificates
              INNER JOIN users ON users.id = education_certificates.user_id
@@ -1030,6 +1047,89 @@ class Education
         );
         $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
 
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function requestCertificateNameChange(int $courseId, int $userId, string $requestedName): void
+    {
+        self::ensureSchema();
+        Database::connection()->prepare(
+            'UPDATE education_certificates
+             SET requested_student_name = :requested_student_name,
+                 name_change_status = "pending",
+                 name_change_requested_at = NOW(),
+                 name_change_reviewed_by = NULL,
+                 name_change_reviewed_at = NULL,
+                 updated_at = NOW()
+             WHERE course_id = :course_id AND user_id = :user_id'
+        )->execute([
+            'course_id' => $courseId,
+            'user_id' => $userId,
+            'requested_student_name' => trim($requestedName),
+        ]);
+    }
+
+    public static function certificateNameRequestsForCourse(int $courseId): array
+    {
+        self::ensureSchema();
+        $stmt = Database::connection()->prepare(
+            'SELECT education_certificates.*,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name) AS student_name,
+                    users.name AS user_name,
+                    users.email AS student_email
+             FROM education_certificates
+             INNER JOIN users ON users.id = education_certificates.user_id
+             WHERE education_certificates.course_id = :course_id
+               AND education_certificates.name_change_status = "pending"
+             ORDER BY education_certificates.name_change_requested_at ASC'
+        );
+        $stmt->execute(['course_id' => $courseId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function reviewCertificateNameChange(int $certificateId, bool $approved, int $reviewedBy): ?array
+    {
+        self::ensureSchema();
+        $certificate = self::certificateById($certificateId);
+        if (!$certificate || ($certificate['name_change_status'] ?? '') !== 'pending') {
+            return $certificate;
+        }
+
+        Database::connection()->prepare(
+            'UPDATE education_certificates
+             SET student_name = CASE WHEN :approved = 1 THEN requested_student_name ELSE student_name END,
+                 requested_student_name = NULL,
+                 name_change_status = :status,
+                 name_change_reviewed_by = :reviewed_by,
+                 name_change_reviewed_at = NOW(),
+                 updated_at = NOW()
+             WHERE id = :id'
+        )->execute([
+            'id' => $certificateId,
+            'approved' => $approved ? 1 : 0,
+            'status' => $approved ? 'approved' : 'rejected',
+            'reviewed_by' => $reviewedBy,
+        ]);
+
+        return self::certificateById($certificateId);
+    }
+
+    public static function certificateById(int $certificateId): ?array
+    {
+        self::ensureSchema();
+        $stmt = Database::connection()->prepare(
+            'SELECT education_certificates.*,
+                    education_courses.title AS course_title,
+                    education_courses.teacher_user_id,
+                    users.name AS user_name,
+                    users.email AS student_email
+             FROM education_certificates
+             INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             INNER JOIN users ON users.id = education_certificates.user_id
+             WHERE education_certificates.id = :id
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $certificateId]);
         return $stmt->fetch() ?: null;
     }
 

@@ -268,7 +268,7 @@
     }
 
     .education-certificate-copy > span {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
     }
 
     .education-certificate-copy h2 {
@@ -294,6 +294,13 @@
     .education-certificate-program-list {
         column-count: 1;
         font-size: 0.8rem;
+    }
+
+    .education-certificate-name-form,
+    .education-certificate-name-requests article {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .users-hero,

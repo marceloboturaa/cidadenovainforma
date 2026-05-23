@@ -179,6 +179,7 @@ class EducationController
             'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id'), $canManage),
             'courseForms' => $courseForms,
             'certificateStatus' => $certificateStatus,
+            'certificateNameRequests' => $canManage ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
         ]);
     }
 
@@ -1058,6 +1059,64 @@ class EducationController
             'certificateText' => $this->certificateText($course, $certificate, $status),
             'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), $lessons),
         ]);
+    }
+
+    public function requestCertificateNameChange(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->validateCsrf('/admin/education/certificate?id=' . $course['id']);
+        $userId = (int) (current_user()['id'] ?? 0);
+
+        if (!Education::userCanAccessCourse((int) $course['id'], $userId, false)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $certificate = Education::certificateForCourseUser((int) $course['id'], $userId);
+        if (!$certificate) {
+            Session::flash('error', 'Solicite o certificado antes de pedir alteração de nome.');
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+        }
+
+        $requestedName = trim((string) ($_POST['requested_student_name'] ?? ''));
+        if ($requestedName === '' || mb_strlen($requestedName, 'UTF-8') < 5 || mb_strlen($requestedName, 'UTF-8') > 180) {
+            Session::flash('error', 'Informe o nome completo para o certificado.');
+            redirect('/admin/education/certificate?id=' . $course['id']);
+        }
+
+        Education::requestCertificateNameChange((int) $course['id'], $userId, $requestedName);
+        Logger::info('education.certificate_name_change_requested', 'Alteração de nome solicitada no certificado: ' . ($course['title'] ?? ''), $userId ?: null);
+        Session::flash('success', 'Solicitação enviada. O nome será atualizado no certificado após autorização.');
+        redirect('/admin/education/certificate?id=' . $course['id']);
+    }
+
+    public function reviewCertificateNameChange(): void
+    {
+        Middleware::auth();
+        $certificateId = filter_input(INPUT_GET, 'certificate_id', FILTER_VALIDATE_INT) ?: filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $certificate = $certificateId ? Education::certificateById($certificateId) : null;
+        if (!$certificate) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $certificate['course_id']);
+        $this->authorizeCourseManage($course);
+        $this->validateCsrf('/admin/education/course?id=' . ($certificate['course_id'] ?? '') . '#course-certificate');
+
+        $decision = (string) ($_POST['decision'] ?? '');
+        if (!in_array($decision, ['approve', 'reject'], true)) {
+            Session::flash('error', 'Informe se a alteração será aprovada ou recusada.');
+            redirect('/admin/education/course?id=' . ($certificate['course_id'] ?? '') . '#course-certificate');
+        }
+
+        Education::reviewCertificateNameChange($certificateId, $decision === 'approve', (int) (current_user()['id'] ?? 0));
+        Logger::info('education.certificate_name_change_reviewed', 'Solicitação de nome do certificado revisada: ' . $decision, current_user()['id'] ?? null);
+        Session::flash('success', $decision === 'approve' ? 'Nome atualizado no certificado.' : 'Alteração de nome recusada.');
+        redirect('/admin/education/course?id=' . ($certificate['course_id'] ?? '') . '#course-certificate');
     }
 
     private function courseFromQuery(bool $required = true): ?array

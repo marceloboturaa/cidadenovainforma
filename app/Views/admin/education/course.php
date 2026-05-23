@@ -212,6 +212,25 @@ $certificateStatus = $certificateStatus ?? [];
                 <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Salvar certificado</button>
             </div>
         </form>
+        <?php if (!empty($certificateNameRequests)): ?>
+            <div class="education-certificate-name-requests">
+                <h3>Alterações de nome pendentes</h3>
+                <?php foreach ($certificateNameRequests as $request): ?>
+                    <article>
+                        <div>
+                            <strong><?= e($request['student_name'] ?? $request['user_name'] ?? '') ?></strong>
+                            <span><?= e($request['student_email'] ?? '') ?></span>
+                            <small>Solicitado: <?= e($request['requested_student_name'] ?? '') ?></small>
+                        </div>
+                        <form method="post" action="<?= e(url('/admin/education/certificate/name-review?certificate_id=' . $request['id'])) ?>">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-sm btn-outline-primary" name="decision" value="approve">Autorizar</button>
+                            <button class="btn btn-sm btn-outline-danger" name="decision" value="reject">Recusar</button>
+                        </form>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     <?php else: ?>
         <div class="education-certificate-request">
             <div class="education-certificate-checks">

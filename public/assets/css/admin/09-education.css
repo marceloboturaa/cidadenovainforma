@@ -1044,7 +1044,7 @@
 
 .education-certificate-copy > span {
     color: #8b1e2d;
-    font-size: clamp(1.4rem, 2.8vw, 2.25rem);
+    font-size: clamp(1.25rem, 2.4vw, 1.95rem);
     font-weight: 900;
     text-transform: uppercase;
 }
@@ -1189,6 +1189,57 @@
     text-align: center;
 }
 
+.education-certificate-name-panel,
+.education-certificate-name-form,
+.education-certificate-name-requests {
+    display: grid;
+    gap: 12px;
+}
+
+.education-certificate-name-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+}
+
+.education-certificate-name-requests {
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+
+.education-certificate-name-requests h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.education-certificate-name-requests article {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-certificate-name-requests article > div,
+.education-certificate-name-requests form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.education-certificate-name-requests strong,
+.education-certificate-name-requests span,
+.education-certificate-name-requests small {
+    overflow-wrap: anywhere;
+}
+
+.education-certificate-name-requests span,
+.education-certificate-name-requests small {
+    color: var(--muted);
+}
+
 @media print {
     @page {
         size: A4 landscape;
@@ -1202,6 +1253,7 @@
     .sidebar,
     .topbar,
     .certificate-toolbar,
+    .education-certificate-name-panel,
     .alert {
         display: none !important;
     }

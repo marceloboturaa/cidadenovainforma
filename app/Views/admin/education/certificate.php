@@ -80,3 +80,23 @@ $certificateProgram = $certificateProgram ?? [];
         </article>
     <?php endif; ?>
 </section>
+
+<section class="panel education-certificate-name-panel">
+    <div class="section-heading">
+        <h2>Nome no certificado</h2>
+        <span><?= e($certificate['student_name'] ?? '') ?></span>
+    </div>
+    <?php if (($certificate['name_change_status'] ?? '') === 'pending'): ?>
+        <p class="field-hint mb-0">Solicitação pendente para: <strong><?= e($certificate['requested_student_name'] ?? '') ?></strong></p>
+    <?php else: ?>
+        <form method="post" action="<?= e(url('/admin/education/certificate/name-change?id=' . $course['id'])) ?>" class="education-certificate-name-form">
+            <?= csrf_field() ?>
+            <label>
+                <span class="form-label">Solicitar alteração do nome completo</span>
+                <input class="form-control" name="requested_student_name" maxlength="180" value="<?= e($certificate['student_name'] ?? '') ?>" required>
+            </label>
+            <button class="btn btn-outline-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar para autorização</button>
+        </form>
+        <small class="field-hint">A alteração precisa ser autorizada por professor, diretor ou master do curso.</small>
+    <?php endif; ?>
+</section>
