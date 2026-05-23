@@ -997,6 +997,9 @@ class EducationController
             'certificate_text' => $text,
             'certificate_background' => $this->certificateBackgroundFromRequest($course['certificate_background'] ?? null),
             'certificate_min_frequency' => $_POST['certificate_min_frequency'] ?? 0,
+            'certificate_program_enabled' => !empty($_POST['certificate_program_enabled']) ? 1 : 0,
+            'certificate_program_extra' => $_POST['certificate_program_extra'] ?? null,
+            'certificate_program_columns' => $_POST['certificate_program_columns'] ?? 2,
             'updated_by' => (int) (current_user()['id'] ?? 0) ?: null,
         ]));
 
@@ -1047,11 +1050,13 @@ class EducationController
         }
 
         $status = Education::certificateStatusForCourseUser((int) $course['id'], $userId);
+        $lessons = Education::lessonsForCourse((int) $course['id'], $userId);
         View::render('admin/education/certificate', [
             'course' => $course,
             'certificate' => $certificate,
             'certificateStatus' => $status,
             'certificateText' => $this->certificateText($course, $certificate, $status),
+            'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), $lessons),
         ]);
     }
 
@@ -1349,7 +1354,47 @@ class EducationController
             'certificate_text' => $course['certificate_text'] ?? null,
             'certificate_background' => $course['certificate_background'] ?? null,
             'certificate_min_frequency' => $course['certificate_min_frequency'] ?? 0,
+            'certificate_program_enabled' => $course['certificate_program_enabled'] ?? 1,
+            'certificate_program_extra' => $course['certificate_program_extra'] ?? null,
+            'certificate_program_columns' => $course['certificate_program_columns'] ?? 2,
         ];
+    }
+
+    private function certificateProgram(array $modules, array $lessons): array
+    {
+        $program = [];
+        $knownModuleIds = [];
+
+        foreach ($modules as $module) {
+            $moduleId = (int) ($module['id'] ?? 0);
+            $knownModuleIds[$moduleId] = true;
+            $program[$moduleId] = [
+                'title' => trim((string) ($module['title'] ?? 'Módulo')),
+                'summary' => trim((string) ($module['summary'] ?? '')),
+                'lessons' => [],
+            ];
+        }
+
+        foreach ($lessons as $lesson) {
+            $moduleId = (int) ($lesson['module_id'] ?? 0);
+            if ($moduleId <= 0 || !isset($knownModuleIds[$moduleId])) {
+                $moduleId = 0;
+                if (!isset($program[$moduleId])) {
+                    $program[$moduleId] = [
+                        'title' => 'Aulas complementares',
+                        'summary' => '',
+                        'lessons' => [],
+                    ];
+                }
+            }
+
+            $program[$moduleId]['lessons'][] = [
+                'title' => trim((string) ($lesson['title'] ?? 'Aula')),
+                'description' => trim((string) ($lesson['description'] ?? '')),
+            ];
+        }
+
+        return array_values(array_filter($program, static fn (array $module): bool => !empty($module['lessons']) || $module['summary'] !== ''));
     }
 
     private function certificateText(array $course, array $certificate, array $status): string

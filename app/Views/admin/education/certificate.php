@@ -5,6 +5,10 @@ if ($title === '') {
     $title = 'Certificado de conclusão';
 }
 $background = trim((string) ($course['certificate_background'] ?? ''));
+$programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
+$programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
+$programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
+$certificateProgram = $certificateProgram ?? [];
 ?>
 
 <div class="page-heading certificate-toolbar">
@@ -37,4 +41,45 @@ $background = trim((string) ($course['certificate_background'] ?? ''));
             <span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span>
         </footer>
     </article>
+    <?php if ($programEnabled): ?>
+        <article class="education-certificate-sheet education-certificate-program-sheet" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
+            <header class="education-certificate-program-header">
+                <span>Verso do certificado</span>
+                <h2>Programação cursada</h2>
+                <p><?= e($course['title'] ?? '') ?></p>
+            </header>
+
+            <?php if ($programExtra !== ''): ?>
+                <section class="education-certificate-program-extra">
+                    <?= nl2br(e($programExtra)) ?>
+                </section>
+            <?php endif; ?>
+
+            <section class="education-certificate-program-list">
+                <?php foreach ($certificateProgram as $module): ?>
+                    <article class="education-certificate-program-module">
+                        <h3><?= e($module['title'] ?? 'Módulo') ?></h3>
+                        <?php if (!empty($module['summary'])): ?>
+                            <p><?= e($module['summary']) ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($module['lessons'])): ?>
+                            <ol>
+                                <?php foreach ($module['lessons'] as $lesson): ?>
+                                    <li>
+                                        <strong><?= e($lesson['title'] ?? 'Aula') ?></strong>
+                                        <?php if (!empty($lesson['description'])): ?>
+                                            <span><?= e($lesson['description']) ?></span>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ol>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+                <?php if (!$certificateProgram): ?>
+                    <p class="education-certificate-program-empty">Nenhuma aula cadastrada para este curso.</p>
+                <?php endif; ?>
+            </section>
+        </article>
+    <?php endif; ?>
 </section>

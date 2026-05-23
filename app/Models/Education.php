@@ -21,6 +21,9 @@ class Education
                 certificate_text TEXT NULL,
                 certificate_background VARCHAR(255) NULL,
                 certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1,
+                certificate_program_extra TEXT NULL,
+                certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2,
                 teacher_user_id BIGINT UNSIGNED NULL,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_by BIGINT UNSIGNED NULL,
@@ -212,6 +215,9 @@ class Education
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
         self::ensureColumn('education_courses', 'certificate_background', 'VARCHAR(255) NULL AFTER certificate_text');
         self::ensureColumn('education_courses', 'certificate_min_frequency', 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_background');
+        self::ensureColumn('education_courses', 'certificate_program_enabled', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_min_frequency');
+        self::ensureColumn('education_courses', 'certificate_program_extra', 'TEXT NULL AFTER certificate_program_enabled');
+        self::ensureColumn('education_courses', 'certificate_program_columns', 'TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER certificate_program_extra');
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_forms (
@@ -715,9 +721,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_enabled, certificate_title, certificate_text, certificate_background, certificate_min_frequency, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_enabled, certificate_title, certificate_text, certificate_background, certificate_min_frequency, certificate_program_enabled, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_enabled, :certificate_title, :certificate_text, :certificate_background, :certificate_min_frequency, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_enabled, :certificate_title, :certificate_text, :certificate_background, :certificate_min_frequency, :certificate_program_enabled, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -741,6 +747,9 @@ class Education
                  certificate_text = :certificate_text,
                  certificate_background = :certificate_background,
                  certificate_min_frequency = :certificate_min_frequency,
+                 certificate_program_enabled = :certificate_program_enabled,
+                 certificate_program_extra = :certificate_program_extra,
+                 certificate_program_columns = :certificate_program_columns,
                  teacher_user_id = :teacher_user_id,
                  updated_by = :updated_by,
                  updated_at = NOW()
@@ -1688,6 +1697,9 @@ class Education
             'certificate_text' => self::nullable($data['certificate_text'] ?? null),
             'certificate_background' => self::nullable($data['certificate_background'] ?? null),
             'certificate_min_frequency' => max(0, min(100, (int) ($data['certificate_min_frequency'] ?? 0))),
+            'certificate_program_enabled' => array_key_exists('certificate_program_enabled', $data) ? (!empty($data['certificate_program_enabled']) ? 1 : 0) : 1,
+            'certificate_program_extra' => self::nullable($data['certificate_program_extra'] ?? null),
+            'certificate_program_columns' => max(1, min(4, (int) ($data['certificate_program_columns'] ?? 2))),
             'teacher_user_id' => !empty($data['teacher_user_id']) ? (int) $data['teacher_user_id'] : null,
             'created_by' => $data['created_by'] ?? null,
             'updated_by' => $data['updated_by'] ?? null,

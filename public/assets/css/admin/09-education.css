@@ -1002,6 +1002,8 @@
 }
 
 .education-certificate-sheet-panel {
+    display: grid;
+    gap: 22px;
     overflow: auto;
 }
 
@@ -1042,7 +1044,7 @@
 
 .education-certificate-copy > span {
     color: #8b1e2d;
-    font-size: 0.88rem;
+    font-size: clamp(1.4rem, 2.8vw, 2.25rem);
     font-weight: 900;
     text-transform: uppercase;
 }
@@ -1050,7 +1052,7 @@
 .education-certificate-copy h2 {
     margin: 0;
     max-width: 100%;
-    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+    font-size: clamp(1.35rem, 2.35vw, 2rem);
     line-height: 1.12;
     overflow-wrap: anywhere;
 }
@@ -1095,6 +1097,104 @@
     text-align: center;
 }
 
+.education-certificate-program-sheet {
+    align-content: start;
+    gap: 18px;
+    padding: clamp(34px, 4vw, 58px);
+    background: #ffffff;
+    page-break-before: always;
+}
+
+.education-certificate-program-header {
+    display: grid;
+    gap: 5px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid rgba(23, 32, 51, 0.16);
+    text-align: center;
+}
+
+.education-certificate-program-header span {
+    color: #8b1e2d;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.education-certificate-program-header h2 {
+    margin: 0;
+    color: #172033;
+    font-size: clamp(1.45rem, 2.4vw, 2.1rem);
+    line-height: 1.15;
+}
+
+.education-certificate-program-header p {
+    margin: 0;
+    color: #475569;
+    font-weight: 700;
+}
+
+.education-certificate-program-extra {
+    padding: 10px 14px;
+    border: 1px solid rgba(23, 32, 51, 0.12);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.education-certificate-program-list {
+    column-count: var(--certificate-program-columns, 2);
+    column-gap: 24px;
+    color: #172033;
+    font-size: 0.84rem;
+    line-height: 1.35;
+}
+
+.education-certificate-program-module {
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 14px;
+    break-inside: avoid;
+}
+
+.education-certificate-program-module h3 {
+    margin: 0 0 6px;
+    color: #8b1e2d;
+    font-size: 0.98rem;
+    line-height: 1.18;
+}
+
+.education-certificate-program-module p {
+    margin: 0 0 6px;
+    color: #475569;
+}
+
+.education-certificate-program-module ol {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.education-certificate-program-module li {
+    margin-bottom: 5px;
+}
+
+.education-certificate-program-module strong,
+.education-certificate-program-module span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.education-certificate-program-module span {
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.education-certificate-program-empty {
+    margin: 0;
+    text-align: center;
+}
+
 @media print {
     @page {
         size: A4 landscape;
@@ -1135,6 +1235,10 @@
         box-shadow: none;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
+    }
+
+    .education-certificate-program-sheet {
+        page-break-before: always;
     }
 }
 

@@ -5,7 +5,10 @@ ALTER TABLE education_courses
     ADD COLUMN IF NOT EXISTS certificate_title VARCHAR(180) NULL AFTER certificate_enabled,
     ADD COLUMN IF NOT EXISTS certificate_text TEXT NULL AFTER certificate_title,
     ADD COLUMN IF NOT EXISTS certificate_background VARCHAR(255) NULL AFTER certificate_text,
-    ADD COLUMN IF NOT EXISTS certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_background;
+    ADD COLUMN IF NOT EXISTS certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_background,
+    ADD COLUMN IF NOT EXISTS certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_min_frequency,
+    ADD COLUMN IF NOT EXISTS certificate_program_extra TEXT NULL AFTER certificate_program_enabled,
+    ADD COLUMN IF NOT EXISTS certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER certificate_program_extra;
 
 CREATE TABLE IF NOT EXISTS education_certificates (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

@@ -195,6 +195,19 @@ $certificateStatus = $certificateStatus ?? [];
                 <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title} em {issued_at}."><?= e($course['certificate_text'] ?? '') ?></textarea>
                 <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {issued_at}, {verification_code}.</small>
             </div>
+            <label class="forum-check-line">
+                <input type="checkbox" name="certificate_program_enabled" value="1" <?= checked((int) ($course['certificate_program_enabled'] ?? 1) === 1) ?>>
+                <span>Incluir programação no verso</span>
+            </label>
+            <div>
+                <label class="form-label">Colunas do verso</label>
+                <input class="form-control" name="certificate_program_columns" type="number" min="1" max="4" value="<?= e((string) ($course['certificate_program_columns'] ?? 2)) ?>">
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Informações extras do verso</label>
+                <textarea class="form-control" name="certificate_program_extra" rows="4" placeholder="Ex.: carga horária, critérios de avaliação, observações ou conteúdo complementar."><?= e($course['certificate_program_extra'] ?? '') ?></textarea>
+                <small class="field-hint">A programação lista automaticamente os módulos e aulas cadastrados no curso.</small>
+            </div>
             <div class="form-action-cell">
                 <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Salvar certificado</button>
             </div>

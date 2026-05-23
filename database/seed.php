@@ -282,6 +282,9 @@ $pdo->exec(
         certificate_text TEXT NULL,
         certificate_background VARCHAR(255) NULL,
         certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        certificate_program_extra TEXT NULL,
+        certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2,
         teacher_user_id BIGINT UNSIGNED NULL,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_by BIGINT UNSIGNED NULL,
@@ -301,6 +304,9 @@ $courseCertificateColumns = [
     'certificate_text' => 'ALTER TABLE education_courses ADD COLUMN certificate_text TEXT NULL AFTER certificate_title',
     'certificate_background' => 'ALTER TABLE education_courses ADD COLUMN certificate_background VARCHAR(255) NULL AFTER certificate_text',
     'certificate_min_frequency' => 'ALTER TABLE education_courses ADD COLUMN certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_background',
+    'certificate_program_enabled' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_min_frequency',
+    'certificate_program_extra' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_extra TEXT NULL AFTER certificate_program_enabled',
+    'certificate_program_columns' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER certificate_program_extra',
 ];
 foreach ($courseCertificateColumns as $column => $sql) {
     if (!in_array($column, $courseColumns, true)) {

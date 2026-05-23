@@ -267,8 +267,12 @@
         padding: 24px;
     }
 
+    .education-certificate-copy > span {
+        font-size: 1.4rem;
+    }
+
     .education-certificate-copy h2 {
-        font-size: 1.55rem;
+        font-size: 1.25rem;
     }
 
     .education-certificate-copy > div {
@@ -281,6 +285,15 @@
         bottom: 14px;
         left: 18px;
         font-size: 0.72rem;
+    }
+
+    .education-certificate-program-sheet {
+        padding: 24px;
+    }
+
+    .education-certificate-program-list {
+        column-count: 1;
+        font-size: 0.8rem;
     }
 
     .users-hero,
