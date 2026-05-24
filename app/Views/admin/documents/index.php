@@ -158,10 +158,11 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             <?php
             $accessUserIds = $canManage ? \App\Models\Document::accessUserIds((int) $document['id']) : [];
             $isLink = \App\Models\Document::isExternalLink($document);
+            $isGoogleDocument = \App\Models\Document::googlePreviewUrl($document) !== null;
             $fileExists = \App\Models\Document::fileExistsOnServer($document);
             $canEditDocument = $canManage || ($canUpload && (int) $document['uploaded_by'] === (int) (current_user()['id'] ?? 0));
             $documentType = \App\Models\Document::typeLabel($document);
-            $canDownloadDocument = $canManage || !empty($document['allow_download']);
+            $canDownloadDocument = !$isGoogleDocument && ($canManage || !empty($document['allow_download']));
             ?>
             <article class="document-row">
                 <div class="document-file-icon"><?= e($documentType) ?></div>
@@ -169,7 +170,7 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                 <div class="document-main">
                     <div class="document-title-line">
                         <h3><?= e($document['title']) ?></h3>
-                        <span class="state-pill <?= ($fileExists || $isLink) ? 'is-active' : 'is-pending' ?>"><?= $isLink ? 'Link externo' : ($fileExists ? 'Arquivo no servidor' : 'Arquivo ausente') ?></span>
+                        <span class="state-pill <?= ($fileExists || $isLink) ? 'is-active' : 'is-pending' ?>"><?= $isGoogleDocument ? 'Google Docs' : ($isLink ? 'Link externo' : ($fileExists ? 'Arquivo no servidor' : 'Arquivo ausente')) ?></span>
                         <span class="state-pill <?= !empty($document['is_public']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['is_public']) ? 'P&uacute;blico' : 'Restrito' ?></span>
                         <span class="state-pill <?= !empty($document['allow_download']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['allow_download']) ? 'Download liberado' : 'Download bloqueado' ?></span>
                     </div>

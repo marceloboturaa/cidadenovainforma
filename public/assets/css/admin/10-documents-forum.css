@@ -327,6 +327,22 @@
     font-weight: 800;
 }
 
+.document-google-viewer {
+    overflow: hidden;
+    min-height: 78vh;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.document-google-viewer iframe {
+    display: block;
+    width: 100%;
+    min-height: 78vh;
+    border: 0;
+    background: #ffffff;
+}
+
 .document-row-access form {
     display: grid;
     gap: 10px;

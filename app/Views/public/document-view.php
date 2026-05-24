@@ -30,6 +30,10 @@
             </div>
             <p data-pdf-error hidden>N&atilde;o foi poss&iacute;vel carregar o PDF dentro da p&aacute;gina.</p>
         </div>
+    <?php elseif (($viewerType ?? '') === 'google'): ?>
+        <div class="document-google-viewer">
+            <iframe src="<?= e($documentSrc) ?>" title="<?= e($document['title'] ?? 'Documento') ?>" referrerpolicy="no-referrer"></iframe>
+        </div>
     <?php elseif (($viewerType ?? '') === 'external'): ?>
         <div class="public-document-notice">
             <strong>Documento externo</strong>

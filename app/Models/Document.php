@@ -89,6 +89,71 @@ class Document
         return preg_match('#^https?://#i', (string) ($document['path'] ?? '')) === 1;
     }
 
+    public static function googlePreviewUrl(array $document): ?string
+    {
+        $url = (string) ($document['path'] ?? '');
+        if ($url === '' || !self::isExternalLink($document)) {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $path = (string) ($parts['path'] ?? '');
+
+        if ($host === 'docs.google.com') {
+            if (preg_match('#^/(document|spreadsheets|presentation)(?:/u/\d+)?/d/([^/]+)#', $path, $matches)) {
+                return 'https://docs.google.com/' . $matches[1] . '/d/' . rawurlencode($matches[2]) . '/preview';
+            }
+
+            if (preg_match('#^/forms/d/e/([^/]+)#', $path, $matches)) {
+                return 'https://docs.google.com/forms/d/e/' . rawurlencode($matches[1]) . '/viewform?embedded=true';
+            }
+        }
+
+        if ($host === 'drive.google.com') {
+            if (preg_match('#^/file/d/([^/]+)#', $path, $matches)) {
+                return 'https://drive.google.com/file/d/' . rawurlencode($matches[1]) . '/preview';
+            }
+
+            parse_str((string) ($parts['query'] ?? ''), $query);
+            if (!empty($query['id']) && is_string($query['id']) && preg_match('/^[A-Za-z0-9_-]+$/', $query['id'])) {
+                return 'https://drive.google.com/file/d/' . rawurlencode($query['id']) . '/preview';
+            }
+        }
+
+        return null;
+    }
+
+    public static function googlePdfExportUrl(array $document): ?string
+    {
+        $url = (string) ($document['path'] ?? '');
+        if ($url === '' || !self::isExternalLink($document)) {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $path = (string) ($parts['path'] ?? '');
+
+        if ($host !== 'docs.google.com') {
+            return null;
+        }
+
+        if (preg_match('#^/document(?:/u/\d+)?/d/([^/]+)#', $path, $matches)) {
+            return 'https://docs.google.com/document/d/' . rawurlencode($matches[1]) . '/export?format=pdf';
+        }
+
+        if (preg_match('#^/spreadsheets(?:/u/\d+)?/d/([^/]+)#', $path, $matches)) {
+            return 'https://docs.google.com/spreadsheets/d/' . rawurlencode($matches[1]) . '/export?format=pdf';
+        }
+
+        if (preg_match('#^/presentation(?:/u/\d+)?/d/([^/]+)#', $path, $matches)) {
+            return 'https://docs.google.com/presentation/d/' . rawurlencode($matches[1]) . '/export/pdf';
+        }
+
+        return null;
+    }
+
     public static function publicUrl(array $document): string
     {
         return url('/documentos/visualizar?id=' . $document['id']);
@@ -97,7 +162,7 @@ class Document
     public static function typeLabel(array $document): string
     {
         if (self::isExternalLink($document)) {
-            return 'LINK';
+            return self::googlePreviewUrl($document) ? 'GOOGLE' : 'LINK';
         }
 
         return strtoupper(pathinfo($document['original_name'] ?? '', PATHINFO_EXTENSION) ?: 'ARQ');

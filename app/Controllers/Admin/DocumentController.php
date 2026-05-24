@@ -217,6 +217,12 @@ class DocumentController
         }
 
         if (Document::isExternalLink($document)) {
+            if (Document::googlePreviewUrl($document)) {
+                http_response_code(404);
+                View::render('errors/404');
+                return;
+            }
+
             header('Location: ' . $document['path']);
             exit;
         }
@@ -255,6 +261,25 @@ class DocumentController
         }
 
         if (Document::isExternalLink($document)) {
+            $googlePreviewUrl = Document::googlePreviewUrl($document);
+            $googlePdfUrl = Document::googlePdfExportUrl($document);
+
+            if (isset($_GET['inline']) && $googlePdfUrl) {
+                $this->streamGooglePdf($googlePdfUrl, (string) ($document['original_name'] ?? 'documento.pdf'));
+                return;
+            }
+
+            if ($googlePdfUrl || $googlePreviewUrl) {
+                View::render('admin/documents/view', [
+                    'document' => $document,
+                    'canDownload' => false,
+                    'viewerType' => $googlePdfUrl ? 'pdf' : 'google',
+                    'documentSrc' => $googlePdfUrl ? url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1') : $googlePreviewUrl,
+                    'documentText' => '',
+                ]);
+                return;
+            }
+
             View::render('admin/documents/view-link', [
                 'document' => $document,
                 'canDownload' => $this->canManageDocuments() || !empty($document['allow_download']),
@@ -355,6 +380,36 @@ class DocumentController
             'src' => '',
             'text' => '',
         ];
+    }
+
+    private function streamGooglePdf(string $url, string $filename): void
+    {
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 20,
+                'follow_location' => 1,
+                'ignore_errors' => true,
+                'header' => "User-Agent: CidadeNovaInforma/1.0\r\n",
+            ],
+        ]);
+        $pdf = @file_get_contents($url, false, $context);
+
+        if (!$pdf || strncmp($pdf, '%PDF', 4) !== 0) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $safeName = str_replace(['"', "\r", "\n"], '', pathinfo($filename, PATHINFO_FILENAME) ?: 'documento');
+
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . $safeName . '.pdf"');
+        header('Content-Length: ' . strlen($pdf));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+
+        echo $pdf;
+        exit;
     }
 
     private function storeUploadedDocument(string $field): array

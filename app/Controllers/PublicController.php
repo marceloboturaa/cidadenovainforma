@@ -210,6 +210,12 @@ class PublicController
         }
 
         if (Document::isExternalLink($document)) {
+            if (Document::googlePreviewUrl($document)) {
+                http_response_code(404);
+                View::render('errors/404', [], 'public');
+                return;
+            }
+
             header('Location: ' . $document['path']);
             exit;
         }
@@ -247,14 +253,22 @@ class PublicController
         }
 
         if (Document::isExternalLink($document)) {
+            $googlePreviewUrl = Document::googlePreviewUrl($document);
+            $googlePdfUrl = Document::googlePdfExportUrl($document);
+
+            if (isset($_GET['inline']) && $googlePdfUrl) {
+                $this->streamGooglePdf($googlePdfUrl, (string) ($document['original_name'] ?? 'documento.pdf'), true);
+                return;
+            }
+
             $this->logAccess();
             View::render('public/document-view', [
                 'document' => $document,
-                'viewerType' => 'external',
-                'documentSrc' => '',
+                'viewerType' => $googlePdfUrl ? 'pdf' : ($googlePreviewUrl ? 'google' : 'external'),
+                'documentSrc' => $googlePdfUrl ? url('/documentos/visualizar?id=' . $document['id'] . '&inline=1') : ($googlePreviewUrl ?: ''),
                 'documentText' => '',
                 'externalUrl' => (string) $document['path'],
-                'downloadUrl' => !empty($document['allow_download']) ? (string) $document['path'] : null,
+                'downloadUrl' => (!$googlePreviewUrl && !empty($document['allow_download'])) ? (string) $document['path'] : null,
                 'menuItems' => MenuItem::visible(),
                 'query' => '',
                 'pageTitle' => ($document['title'] ?? 'Documento') . ' - Documentos - Cidade Nova Informa',
@@ -519,6 +533,36 @@ class PublicController
             'src' => '',
             'text' => '',
         ];
+    }
+
+    private function streamGooglePdf(string $url, string $filename, bool $publicCache): void
+    {
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 20,
+                'follow_location' => 1,
+                'ignore_errors' => true,
+                'header' => "User-Agent: CidadeNovaInforma/1.0\r\n",
+            ],
+        ]);
+        $pdf = @file_get_contents($url, false, $context);
+
+        if (!$pdf || strncmp($pdf, '%PDF', 4) !== 0) {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        $safeName = str_replace(['"', "\r", "\n"], '', pathinfo($filename, PATHINFO_FILENAME) ?: 'documento');
+
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . $safeName . '.pdf"');
+        header('Content-Length: ' . strlen($pdf));
+        header('Cache-Control: ' . ($publicCache ? 'public, max-age=600' : 'private, max-age=0, must-revalidate'));
+
+        echo $pdf;
+        exit;
     }
 
     private function institutionAreas(): array
