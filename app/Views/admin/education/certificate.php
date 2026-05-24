@@ -39,7 +39,6 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
             <div class="education-certificate-footnote-text">
                 <span>Emitido em <?= e($issuedAt) ?></span>
                 <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
-                <span>Valide em <?= e($verificationUrl) ?></span>
                 <?php if (!empty($course['teacher_name'])): ?>
                     <span>Professor: <?= e($course['teacher_name']) ?></span>
                 <?php endif; ?>
