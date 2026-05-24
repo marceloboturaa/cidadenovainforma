@@ -35,6 +35,19 @@ $heroImage = media_url($hero['image']);
         </div>
     </header>
 
+    <section class="institution-service-links" aria-label="Serviços institucionais">
+        <a href="<?= e(url('/documentos')) ?>">
+            <span>Transparência</span>
+            <strong>Documentos públicos</strong>
+            <small>Acesse arquivos e registros oficiais disponibilizados pela instituição.</small>
+        </a>
+        <a href="<?= e(url('/certificado/validar')) ?>">
+            <span>Certificados</span>
+            <strong>Verificar certificado</strong>
+            <small>Consulte a autenticidade de certificados emitidos pelo Cidade Nova Informa.</small>
+        </a>
+    </section>
+
     <section class="institution-about" id="quem-somos">
         <div class="institution-section-head">
             <span><?= e($about['eyebrow']) ?></span>

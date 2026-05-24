@@ -65,9 +65,7 @@ $socialImage = $ogImage ?? url('/public/assets/img/institution-hero-community.jp
             <div class="header-actions">
                 <a class="event-link" href="<?= e(url('/eventos')) ?>">Eventos</a>
                 <a class="course-link" href="<?= e(url('/#cursos')) ?>">Cursos</a>
-                <a class="certificate-link" href="<?= e(url('/certificado/validar')) ?>">Verificar certificado</a>
                 <a class="institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
-                <a class="institution-link" href="<?= e(url('/documentos')) ?>">Documentos</a>
                 <a class="admin-link" href="<?= e(url('/login')) ?>">Entrar</a>
             </div>
         </div>
@@ -88,9 +86,7 @@ $socialImage = $ogImage ?? url('/public/assets/img/institution-hero-community.jp
             <nav class="mobile-actions" aria-label="Ações rápidas">
                 <a class="mobile-institution-link" href="<?= e(url('/eventos')) ?>">Eventos</a>
                 <a class="mobile-institution-link" href="<?= e(url('/#cursos')) ?>">Cursos</a>
-                <a class="mobile-certificate-link" href="<?= e(url('/certificado/validar')) ?>">Verificar certificado</a>
                 <a class="mobile-institution-link" href="<?= e(url('/instituicao')) ?>">Instituição</a>
-                <a class="mobile-institution-link" href="<?= e(url('/documentos')) ?>">Documentos</a>
                 <a class="mobile-login-link" href="<?= e(url('/login')) ?>">Entrar no painel</a>
             </nav>
         </div>

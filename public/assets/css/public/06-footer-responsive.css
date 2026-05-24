@@ -119,7 +119,8 @@
     .institution-intro,
     .institution-story,
     .area-layout,
-    .institution-about {
+    .institution-about,
+    .institution-service-links {
         grid-template-columns: 1fr;
     }
 
@@ -404,6 +405,10 @@
 
     .institution-landing-hero-copy {
         padding: 24px;
+    }
+
+    .institution-service-links {
+        margin-top: -18px;
     }
 
     .institution-landing-hero-copy h1 {
