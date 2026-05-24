@@ -15,21 +15,25 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
 
 <section class="document-summary-grid" aria-label="Resumo dos documentos">
     <article>
+        <i class="bi bi-files" aria-hidden="true"></i>
         <span>Total</span>
         <strong><?= e((string) $totalDocuments) ?></strong>
         <small>documento(s) cadastrado(s)</small>
     </article>
     <article>
+        <i class="bi bi-hdd-network" aria-hidden="true"></i>
         <span>No servidor</span>
         <strong><?= e((string) $documentsOnServer) ?></strong>
         <small>arquivo(s) confirmado(s)</small>
     </article>
     <article>
+        <i class="bi bi-link-45deg" aria-hidden="true"></i>
         <span>Links</span>
         <strong><?= e((string) $linkedDocuments) ?></strong>
         <small>atalho(s) externo(s)</small>
     </article>
     <article>
+        <i class="bi bi-lock" aria-hidden="true"></i>
         <span>Restritos</span>
         <strong><?= e((string) $restrictedDocuments) ?></strong>
         <small>vis&iacute;veis apenas para liberados</small>
@@ -162,22 +166,43 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             $fileExists = \App\Models\Document::fileExistsOnServer($document);
             $canEditDocument = $canManage || ($canUpload && (int) $document['uploaded_by'] === (int) (current_user()['id'] ?? 0));
             $documentType = \App\Models\Document::typeLabel($document);
-            $canDownloadDocument = !$isGoogleDocument && ($canManage || !empty($document['allow_download']));
+            $canDownloadDocument = !$isGoogleDocument && (!$isLink || $canManage) && ($canManage || !empty($document['allow_download']));
+            $displayOriginalName = $isGoogleDocument ? 'Documento Google vinculado' : (string) $document['original_name'];
+            $documentIcon = match (true) {
+                $isGoogleDocument => 'bi-google',
+                $documentType === 'PDF' => 'bi-file-earmark-pdf',
+                in_array($documentType, ['JPG', 'JPEG', 'PNG', 'GIF', 'WEBP', 'SVG'], true) => 'bi-file-earmark-image',
+                in_array($documentType, ['DOC', 'DOCX', 'ODT', 'RTF'], true) => 'bi-file-earmark-word',
+                in_array($documentType, ['XLS', 'XLSX', 'ODS', 'CSV'], true) => 'bi-file-earmark-spreadsheet',
+                in_array($documentType, ['PPT', 'PPTX', 'ODP'], true) => 'bi-file-earmark-slides',
+                in_array($documentType, ['ZIP', 'RAR', '7Z'], true) => 'bi-file-earmark-zip',
+                $isLink => 'bi-link-45deg',
+                default => 'bi-file-earmark-text',
+            };
+            $storageLabel = $isGoogleDocument ? 'Google Drive' : ($isLink ? 'Link externo' : ($fileExists ? 'Servidor' : 'Ausente'));
+            $storageIcon = $isGoogleDocument ? 'bi-google' : ($isLink ? 'bi-link-45deg' : ($fileExists ? 'bi-hdd-network' : 'bi-exclamation-triangle'));
             ?>
             <article class="document-row">
-                <div class="document-file-icon"><?= e($documentType) ?></div>
+                <div class="document-file-icon <?= $isGoogleDocument ? 'is-google' : '' ?>">
+                    <i class="bi <?= e($documentIcon) ?>" aria-hidden="true"></i>
+                    <span><?= e($documentType) ?></span>
+                </div>
 
                 <div class="document-main">
                     <div class="document-title-line">
                         <h3><?= e($document['title']) ?></h3>
-                        <span class="state-pill <?= ($fileExists || $isLink) ? 'is-active' : 'is-pending' ?>"><?= $isGoogleDocument ? 'Google Docs' : ($isLink ? 'Link externo' : ($fileExists ? 'Arquivo no servidor' : 'Arquivo ausente')) ?></span>
-                        <span class="state-pill <?= !empty($document['is_public']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['is_public']) ? 'P&uacute;blico' : 'Restrito' ?></span>
-                        <span class="state-pill <?= !empty($document['allow_download']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['allow_download']) ? 'Download liberado' : 'Download bloqueado' ?></span>
+                        <span class="state-pill document-state <?= ($fileExists || $isLink) ? 'is-active' : 'is-pending' ?>"><i class="bi <?= e($storageIcon) ?>" aria-hidden="true"></i><?= e($storageLabel) ?></span>
+                        <span class="state-pill document-state <?= !empty($document['is_public']) ? 'is-active' : 'is-muted' ?>"><i class="bi <?= !empty($document['is_public']) ? 'bi-globe2' : 'bi-lock' ?>" aria-hidden="true"></i><?= !empty($document['is_public']) ? 'P&uacute;blico' : 'Restrito' ?></span>
+                        <span class="state-pill document-state <?= !empty($document['allow_download']) && !$isGoogleDocument ? 'is-active' : 'is-muted' ?>"><i class="bi <?= !empty($document['allow_download']) && !$isGoogleDocument ? 'bi-download' : 'bi-eye' ?>" aria-hidden="true"></i><?= !empty($document['allow_download']) && !$isGoogleDocument ? 'Baixar' : 'Somente ver' ?></span>
                     </div>
                     <div class="document-meta-grid">
-                        <span><?= e($document['original_name']) ?></span>
-                        <span><?= $isLink ? 'Link' : e(number_format(((int) $document['size_bytes']) / 1024, 1, ',', '.')) . ' KB' ?></span>
-                        <span>Enviado por <?= e($document['uploader_name']) ?></span>
+                        <?php if ($canManage): ?>
+                            <span><i class="bi bi-file-text" aria-hidden="true"></i><?= e($displayOriginalName) ?></span>
+                            <span><i class="bi bi-database" aria-hidden="true"></i><?= $isLink ? e($storageLabel) : e(number_format(((int) $document['size_bytes']) / 1024, 1, ',', '.')) . ' KB' ?></span>
+                        <?php else: ?>
+                            <span><i class="bi <?= e($storageIcon) ?>" aria-hidden="true"></i><?= e($storageLabel) ?></span>
+                        <?php endif; ?>
+                        <span><i class="bi bi-person" aria-hidden="true"></i>Enviado por <?= e($document['uploader_name']) ?></span>
                         <?php if ($canManage && !$document['is_public']): ?>
                             <span><?= e((string) count($accessUserIds)) ?> usu&aacute;rio(s) liberado(s)</span>
                         <?php endif; ?>
@@ -211,10 +236,12 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                                     Trocar arquivo
                                     <input class="form-control form-control-sm" name="document" type="file" accept="<?= e($allowedAccept ?? '') ?>">
                                 </label>
-                                <label class="form-label">
-                                    Trocar por link
-                                    <input class="form-control form-control-sm" name="document_url" type="url" maxlength="255" value="<?= $isLink ? e($document['path']) : '' ?>" placeholder="https://...">
-                                </label>
+                                <?php if ($canManage): ?>
+                                    <label class="form-label">
+                                        Trocar por link
+                                        <input class="form-control form-control-sm" name="document_url" type="url" maxlength="255" value="<?= $isLink ? e($document['path']) : '' ?>" placeholder="https://...">
+                                    </label>
+                                <?php endif; ?>
                             </div>
 
                             <?php if ($canManage): ?>

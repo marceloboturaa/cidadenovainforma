@@ -8,11 +8,21 @@
 }
 
 .document-summary-grid article {
+    position: relative;
+    overflow: hidden;
     padding: 16px;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #ffffff;
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.document-summary-grid article > i {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    color: rgba(185, 28, 28, 0.12);
+    font-size: 1.8rem;
 }
 
 .document-summary-grid span,
@@ -127,7 +137,7 @@
 
 .document-row {
     display: grid;
-    grid-template-columns: 58px minmax(0, 1fr) auto;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
     gap: 14px;
     align-items: start;
     padding: 16px;
@@ -138,14 +148,30 @@
 
 .document-file-icon {
     display: grid;
-    width: 52px;
-    height: 52px;
+    width: 58px;
+    height: 58px;
     place-items: center;
+    gap: 2px;
     border-radius: 8px;
     background: #fff1f2;
     color: var(--brand);
-    font-size: 0.78rem;
     font-weight: 900;
+}
+
+.document-file-icon i {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.document-file-icon span {
+    color: inherit;
+    font-size: 0.68rem;
+    line-height: 1;
+}
+
+.document-file-icon.is-google {
+    background: #ecfdf5;
+    color: #047857;
 }
 
 .document-main {
@@ -178,11 +204,29 @@
 .document-meta-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 12px;
+    gap: 7px 14px;
     margin-top: 8px;
     color: var(--muted);
     font-size: 0.84rem;
     font-weight: 800;
+}
+
+.document-meta-grid span {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.document-meta-grid i {
+    color: #94a3b8;
+}
+
+.document-state {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
 }
 
 .document-storage-path {

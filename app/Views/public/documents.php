@@ -79,7 +79,7 @@ sort($documentTypes);
         $isLink = \App\Models\Document::isExternalLink($document);
         $isGoogleDocument = \App\Models\Document::googlePreviewUrl($document) !== null;
         $viewUrl = \App\Models\Document::publicUrl($document);
-        $canDownload = !empty($document['allow_download']) && !$isGoogleDocument;
+        $canDownload = !empty($document['allow_download']) && !$isGoogleDocument && !$isLink;
         ?>
         <article class="public-document-card" data-document-card data-title="<?= e(mb_strtolower($document['title'] ?? '', 'UTF-8')) ?>" data-type="<?= e($documentType) ?>">
             <div>

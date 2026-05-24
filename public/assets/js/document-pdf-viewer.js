@@ -19,7 +19,7 @@
         const context = canvas.getContext('2d');
 
         let pdf = null;
-        let pageNumber = 1;
+        let pageNumber = Math.max(1, parseInt(viewer.dataset.pdfStartPage || '1', 10) || 1);
         let zoom = 1;
         let rendering = false;
         let pending = false;
@@ -108,6 +108,7 @@
 
         window.pdfjsLib.getDocument({ url: url, withCredentials: true }).promise.then(function (loadedPdf) {
             pdf = loadedPdf;
+            pageNumber = Math.min(pageNumber, pdf.numPages);
             renderPage();
         }).catch(function () {
             showError(viewer);

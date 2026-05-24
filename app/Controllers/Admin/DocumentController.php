@@ -276,6 +276,7 @@ class DocumentController
                     'viewerType' => $googlePdfUrl ? 'pdf' : 'google',
                     'documentSrc' => $googlePdfUrl ? url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1') : $googlePreviewUrl,
                     'documentText' => '',
+                    'pdfStartPage' => $googlePdfUrl ? 2 : 1,
                 ]);
                 return;
             }
@@ -302,6 +303,7 @@ class DocumentController
                 'viewerType' => $viewer['type'],
                 'documentSrc' => $viewer['src'],
                 'documentText' => $viewer['text'],
+                'pdfStartPage' => 1,
             ]);
             return;
         }
@@ -478,6 +480,16 @@ class DocumentController
 
     private function documentLinkPayload(string $url, string $title): array
     {
+        $probe = ['path' => $url];
+        if (Document::googlePreviewUrl($probe)) {
+            return [
+                'path' => $url,
+                'mime_type' => 'text/uri-list',
+                'original_name' => $title !== '' ? $title : 'Documento Google',
+                'size_bytes' => 0,
+            ];
+        }
+
         $host = parse_url($url, PHP_URL_HOST) ?: 'link';
         $path = parse_url($url, PHP_URL_PATH) ?: '';
         $basename = basename($path);

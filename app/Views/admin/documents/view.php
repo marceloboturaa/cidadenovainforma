@@ -17,7 +17,7 @@
     <?php elseif (($viewerType ?? '') === 'text'): ?>
         <pre><?= e($documentText ?? '') ?></pre>
     <?php elseif (($viewerType ?? '') === 'pdf'): ?>
-        <div class="document-pdf-viewer" data-pdf-viewer data-pdf-url="<?= e($documentSrc) ?>">
+        <div class="document-pdf-viewer" data-pdf-viewer data-pdf-url="<?= e($documentSrc) ?>" data-pdf-start-page="<?= e((string) ($pdfStartPage ?? 1)) ?>">
             <div class="document-pdf-toolbar">
                 <button type="button" data-pdf-prev>Anterior</button>
                 <span data-pdf-status>Carregando PDF...</span>

@@ -210,14 +210,9 @@ class PublicController
         }
 
         if (Document::isExternalLink($document)) {
-            if (Document::googlePreviewUrl($document)) {
-                http_response_code(404);
-                View::render('errors/404', [], 'public');
-                return;
-            }
-
-            header('Location: ' . $document['path']);
-            exit;
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
         }
 
         $path = Document::absolutePath($document);
@@ -267,8 +262,9 @@ class PublicController
                 'viewerType' => $googlePdfUrl ? 'pdf' : ($googlePreviewUrl ? 'google' : 'external'),
                 'documentSrc' => $googlePdfUrl ? url('/documentos/visualizar?id=' . $document['id'] . '&inline=1') : ($googlePreviewUrl ?: ''),
                 'documentText' => '',
+                'pdfStartPage' => $googlePdfUrl ? 2 : 1,
                 'externalUrl' => (string) $document['path'],
-                'downloadUrl' => (!$googlePreviewUrl && !empty($document['allow_download'])) ? (string) $document['path'] : null,
+                'downloadUrl' => null,
                 'menuItems' => MenuItem::visible(),
                 'query' => '',
                 'pageTitle' => ($document['title'] ?? 'Documento') . ' - Documentos - Cidade Nova Informa',
@@ -293,6 +289,7 @@ class PublicController
                 'viewerType' => $viewer['type'],
                 'documentSrc' => $viewer['src'],
                 'documentText' => $viewer['text'],
+                'pdfStartPage' => 1,
                 'externalUrl' => '',
                 'downloadUrl' => !empty($document['allow_download']) ? url('/documentos/download?id=' . $document['id']) : null,
                 'menuItems' => MenuItem::visible(),
