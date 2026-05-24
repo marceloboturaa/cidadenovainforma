@@ -235,6 +235,44 @@ class DocumentController
         exit;
     }
 
+    public function view(): void
+    {
+        $this->authorizeView();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $document = $id ? Document::find($id) : null;
+
+        if (!$document || (!$this->canManageDocuments() && !Document::userCanAccess((int) $document['id'], (int) current_user()['id']))) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        if (Document::isExternalLink($document)) {
+            View::render('admin/documents/view-link', [
+                'document' => $document,
+            ]);
+            return;
+        }
+
+        $path = Document::absolutePath($document);
+        if (!$path || !is_file($path)) {
+            Session::flash('error', 'Arquivo não encontrado no servidor.');
+            redirect('/admin/documents');
+        }
+
+        $filename = str_replace(['"', "\r", "\n"], '', basename($document['original_name']));
+
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Type: ' . $this->safeMimeType((string) $document['mime_type']));
+        header('Content-Disposition: inline; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($path));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+
+        readfile($path);
+        exit;
+    }
+
     private function documentExtensionIsAllowed(string $extension, string $mime): bool
     {
         if (!in_array($extension, $this->allowedExtensions(), true)) {

@@ -93,7 +93,8 @@
 }
 
 .document-access-details,
-.document-row-access {
+.document-row-access,
+.document-row-preview {
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #f8fafc;
@@ -108,7 +109,8 @@
 }
 
 .document-access-details summary,
-.document-row-access summary {
+.document-row-access summary,
+.document-row-preview summary {
     cursor: pointer;
     font-weight: 800;
 }
@@ -207,6 +209,30 @@
 .document-row-access {
     grid-column: 2 / -1;
     padding: 10px 12px;
+}
+
+.document-row-preview {
+    grid-column: 2 / -1;
+    padding: 10px 12px;
+}
+
+.document-row-preview summary {
+    color: var(--brand);
+}
+
+.document-row-preview iframe,
+.document-inline-panel iframe {
+    display: block;
+    width: 100%;
+    min-height: 680px;
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.document-inline-panel iframe {
+    margin-top: 0;
 }
 
 .document-row-access form {

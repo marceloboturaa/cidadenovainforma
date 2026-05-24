@@ -126,6 +126,7 @@ $router->post('/admin/backups/news/export', [BackupController::class, 'exportNew
 $router->post('/admin/backups/news/import', [BackupController::class, 'importNews']);
 
 $router->get('/admin/documents', [DocumentController::class, 'index']);
+$router->get('/admin/documents/visualizar', [DocumentController::class, 'view']);
 $router->post('/admin/documents', [DocumentController::class, 'store']);
 $router->post('/admin/documents/update', [DocumentController::class, 'update']);
 $router->post('/admin/documents/formats', [DocumentController::class, 'formats']);

@@ -157,6 +157,8 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             $fileExists = \App\Models\Document::fileExistsOnServer($document);
             $canEditDocument = $canManage || ($canUpload && (int) $document['uploaded_by'] === (int) (current_user()['id'] ?? 0));
             $documentType = \App\Models\Document::typeLabel($document);
+            $documentViewUrl = $isLink ? (string) $document['path'] : url('/admin/documents/visualizar?id=' . $document['id']);
+            $documentCanPreview = $isLink || \App\Models\Document::canPreviewInline($document);
             ?>
             <article class="document-row">
                 <div class="document-file-icon"><?= e($documentType) ?></div>
@@ -178,7 +180,10 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                 </div>
 
                 <div class="document-actions">
-                    <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/documents/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir link' : 'Baixar' ?></a>
+                    <?php if ($documentCanPreview): ?>
+                        <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/documents/visualizar?id=' . $document['id'])) ?>">Ver</a>
+                    <?php endif; ?>
+                    <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/documents/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir' : 'Baixar' ?></a>
                     <?php if ($canManage): ?>
                         <form class="inline-form" method="post" action="<?= e(url('/admin/documents/delete?id=' . $document['id'])) ?>">
                             <?= csrf_field() ?>
@@ -186,6 +191,16 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                         </form>
                     <?php endif; ?>
                 </div>
+
+                <?php if ($documentCanPreview): ?>
+                    <details class="document-row-preview">
+                        <summary>Visualizar sem sair do painel</summary>
+                        <iframe src="<?= e($documentViewUrl) ?>" title="<?= e($document['title']) ?>"></iframe>
+                        <?php if ($isLink): ?>
+                            <p class="form-text mb-0">Se o conteúdo não aparecer, o site de origem bloqueou a visualização incorporada.</p>
+                        <?php endif; ?>
+                    </details>
+                <?php endif; ?>
 
                 <?php if ($canEditDocument): ?>
                     <details class="document-row-access">
