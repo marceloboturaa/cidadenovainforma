@@ -23,6 +23,8 @@ $faviconPath = in_array($requestPath, $secondaryPublicPaths, true)
     : '/public/assets/img/favicon-primary.svg';
 $currentUrl = $canonicalUrl ?? url('/');
 $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa traz notícias, serviços, cultura e informações de interesse público para os moradores de Cidade Nova e região.');
+$socialTitle = $pageTitle ?? $app['name'];
+$socialImage = $ogImage ?? url('/public/assets/img/institution-hero-community.jpg');
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -33,17 +35,19 @@ $description = $metaDescription ?? ($app['description'] ?? 'Cidade Nova Informa 
     <link rel="icon" type="image/svg+xml" href="<?= e(url($faviconPath) . '?v=' . $faviconVersion) ?>">
     <meta name="description" content="<?= e($description) ?>">
     <link rel="canonical" href="<?= e($canonicalUrl ?? ((!empty($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/'))) ?>">
-    <meta property="og:title" content="<?= e($pageTitle ?? $app['name']) ?>">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="<?= e($app['name']) ?>">
+    <meta property="og:title" content="<?= e($socialTitle) ?>">
     <meta property="og:description" content="<?= e($description) ?>">
     <meta property="og:type" content="<?= e($ogType ?? 'website') ?>">
-    <meta name="twitter:description" content="<?= e($description) ?>">
-    <?php if (!empty($ogImage)): ?>
-        <meta property="og:image" content="<?= e($ogImage) ?>">
-        <meta property="og:image:secure_url" content="<?= e(preg_replace('#^http://#i', 'https://', $ogImage)) ?>">
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:image" content="<?= e($ogImage) ?>">
-    <?php endif; ?>
     <meta property="og:url" content="<?= e($currentUrl) ?>">
+    <meta property="og:image" content="<?= e($socialImage) ?>">
+    <meta property="og:image:secure_url" content="<?= e(preg_replace('#^http://#i', 'https://', $socialImage)) ?>">
+    <meta property="og:image:alt" content="<?= e($socialTitle) ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= e($socialTitle) ?>">
+    <meta name="twitter:description" content="<?= e($description) ?>">
+    <meta name="twitter:image" content="<?= e($socialImage) ?>">
     <?php foreach ($publicCssFiles as $cssFile): ?>
         <link href="<?= e(versioned_asset_url($cssFile)) ?>" rel="stylesheet">
     <?php endforeach; ?>
