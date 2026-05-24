@@ -40,8 +40,17 @@ class EducationController
 
         View::render('admin/education/index', [
             'courses' => $courses,
-            'certificates' => Education::certificatesForUser((int) $user['id']),
             'canManage' => $this->canManage(),
+        ]);
+    }
+
+    public function certificates(): void
+    {
+        Middleware::auth();
+        $user = current_user();
+
+        View::render('admin/education/certificates', [
+            'certificates' => Education::certificatesForUser((int) $user['id']),
         ]);
     }
 

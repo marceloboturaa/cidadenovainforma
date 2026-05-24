@@ -3,6 +3,7 @@
     const toggle = document.querySelector('.admin-menu-toggle');
     const overlay = document.querySelector('[data-admin-menu-close]');
     const sidebarLinks = document.querySelectorAll('.sidebar nav a');
+    const sidebarCollapseToggle = document.querySelector('[data-sidebar-collapse-toggle]');
     const focusButtons = document.querySelectorAll('[data-editor-focus]');
     const galleryList = document.querySelector('[data-gallery-list]');
     const galleryAdd = document.querySelector('[data-gallery-add]');
@@ -27,6 +28,16 @@
 
     if (overlay) {
         overlay.addEventListener('click', closeMenu);
+    }
+
+    setSidebarCollapsed(localStorage.getItem('admin-sidebar-collapsed') === '1');
+
+    if (sidebarCollapseToggle) {
+        sidebarCollapseToggle.addEventListener('click', () => {
+            const collapsed = !body.classList.contains('admin-sidebar-collapsed');
+            setSidebarCollapsed(collapsed);
+            localStorage.setItem('admin-sidebar-collapsed', collapsed ? '1' : '0');
+        });
     }
 
     sidebarLinks.forEach((link) => {
@@ -217,6 +228,22 @@
         body.classList.remove('admin-menu-open');
         if (toggle) {
             toggle.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function setSidebarCollapsed(collapsed) {
+        body.classList.toggle('admin-sidebar-collapsed', collapsed);
+
+        if (!sidebarCollapseToggle) {
+            return;
+        }
+
+        sidebarCollapseToggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+        sidebarCollapseToggle.setAttribute('aria-label', collapsed ? 'Mostrar menu lateral' : 'Ocultar menu lateral');
+        sidebarCollapseToggle.setAttribute('title', collapsed ? 'Mostrar menu' : 'Ocultar menu');
+        const icon = sidebarCollapseToggle.querySelector('i');
+        if (icon) {
+            icon.className = collapsed ? 'bi bi-layout-sidebar-inset-reverse' : 'bi bi-layout-sidebar-inset';
         }
     }
 
