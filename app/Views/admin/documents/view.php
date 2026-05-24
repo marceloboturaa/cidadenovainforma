@@ -17,9 +17,9 @@
     <?php elseif (($viewerType ?? '') === 'text'): ?>
         <pre><?= e($documentText ?? '') ?></pre>
     <?php elseif (($viewerType ?? '') === 'pdf'): ?>
-        <embed src="<?= e($documentSrc) ?>" type="application/pdf">
         <div class="document-view-notice">
-            <p>Se o PDF nao carregar nesta area, abra a visualizacao protegida em uma nova aba.</p>
+            <strong>PDF disponivel para visualizacao</strong>
+            <p>Para evitar bloqueio do navegador, o PDF abre em uma aba protegida do proprio painel.</p>
             <a class="btn btn-sm btn-outline-primary" href="<?= e($documentSrc) ?>" target="_blank" rel="noopener">Abrir PDF</a>
         </div>
     <?php else: ?>

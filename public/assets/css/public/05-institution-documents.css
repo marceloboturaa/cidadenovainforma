@@ -568,7 +568,6 @@
 }
 
 .public-document-viewer img,
-.public-document-viewer embed,
 .public-document-viewer pre {
     display: block;
     width: 100%;
@@ -582,10 +581,6 @@
     min-height: 0;
     max-height: 82vh;
     object-fit: contain;
-}
-
-.public-document-viewer embed {
-    height: 76vh;
 }
 
 .public-document-viewer pre {
@@ -622,9 +617,6 @@
     font-weight: 800;
 }
 
-.public-document-viewer-action {
-    margin-top: 10px;
-}
 
 .public-document-card[hidden],
 .public-document-no-results[hidden] {

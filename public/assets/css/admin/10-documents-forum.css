@@ -221,7 +221,6 @@
 }
 
 .document-inline-panel img,
-.document-inline-panel embed,
 .document-inline-panel pre {
     display: block;
     width: 100%;
@@ -244,12 +243,7 @@
     overflow: auto;
 }
 
-.document-inline-panel embed {
-    height: 78vh;
-}
-
 .document-inline-panel img,
-.document-inline-panel embed,
 .document-inline-panel pre {
     margin-top: 0;
 }
