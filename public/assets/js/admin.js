@@ -30,7 +30,8 @@
         overlay.addEventListener('click', closeMenu);
     }
 
-    setSidebarCollapsed(localStorage.getItem('admin-sidebar-collapsed') === '1');
+    const storedSidebarState = localStorage.getItem('admin-sidebar-collapsed');
+    setSidebarCollapsed(storedSidebarState === null ? true : storedSidebarState === '1');
 
     if (sidebarCollapseToggle) {
         sidebarCollapseToggle.addEventListener('click', () => {

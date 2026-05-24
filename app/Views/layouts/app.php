@@ -25,7 +25,7 @@
         <link href="<?= e(versioned_asset_url($cssFile)) ?>" rel="stylesheet">
     <?php endforeach; ?>
 </head>
-<body>
+<body class="admin-sidebar-collapsed">
     <div class="admin-menu-overlay" data-admin-menu-close></div>
     <div class="admin-layout">
         <aside class="sidebar" id="admin-sidebar">
