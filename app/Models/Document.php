@@ -18,6 +18,7 @@ class Document
                 original_name VARCHAR(190) NOT NULL,
                 size_bytes BIGINT UNSIGNED NOT NULL,
                 is_public TINYINT(1) NOT NULL DEFAULT 0,
+                allow_download TINYINT(1) NOT NULL DEFAULT 1,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
                 updated_at TIMESTAMP NULL,
@@ -28,6 +29,9 @@ class Document
         $columns = Database::connection()->query('SHOW COLUMNS FROM team_documents')->fetchAll(\PDO::FETCH_COLUMN);
         if (!in_array('is_public', $columns, true)) {
             Database::connection()->exec('ALTER TABLE team_documents ADD COLUMN is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes');
+        }
+        if (!in_array('allow_download', $columns, true)) {
+            Database::connection()->exec('ALTER TABLE team_documents ADD COLUMN allow_download TINYINT(1) NOT NULL DEFAULT 1 AFTER is_public');
         }
 
         Database::connection()->exec(
@@ -87,9 +91,7 @@ class Document
 
     public static function publicUrl(array $document): string
     {
-        return self::isExternalLink($document)
-            ? (string) $document['path']
-            : url('/documentos/visualizar?id=' . $document['id']);
+        return url('/documentos/visualizar?id=' . $document['id']);
     }
 
     public static function typeLabel(array $document): string
@@ -271,8 +273,8 @@ class Document
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO team_documents (uploaded_by, title, path, mime_type, original_name, size_bytes, is_public, active, created_at, updated_at)
-             VALUES (:uploaded_by, :title, :path, :mime_type, :original_name, :size_bytes, :is_public, 1, NOW(), NOW())'
+            'INSERT INTO team_documents (uploaded_by, title, path, mime_type, original_name, size_bytes, is_public, allow_download, active, created_at, updated_at)
+             VALUES (:uploaded_by, :title, :path, :mime_type, :original_name, :size_bytes, :is_public, :allow_download, 1, NOW(), NOW())'
         );
         $stmt->execute([
             'uploaded_by' => $data['uploaded_by'],
@@ -282,6 +284,7 @@ class Document
             'original_name' => $data['original_name'],
             'size_bytes' => $data['size_bytes'],
             'is_public' => (int) !empty($data['is_public']),
+            'allow_download' => (int) !empty($data['allow_download']),
         ]);
 
         return (int) Database::connection()->lastInsertId();
@@ -312,7 +315,7 @@ class Document
             ->execute($params);
     }
 
-    public static function updateAccess(int $id, bool $isPublic, array $userIds): void
+    public static function updateAccess(int $id, bool $isPublic, array $userIds, bool $allowDownload = true): void
     {
         self::ensureSchema();
 
@@ -320,10 +323,11 @@ class Document
         $db->beginTransaction();
 
         try {
-            $db->prepare('UPDATE team_documents SET is_public = :is_public, updated_at = NOW() WHERE id = :id')
+            $db->prepare('UPDATE team_documents SET is_public = :is_public, allow_download = :allow_download, updated_at = NOW() WHERE id = :id')
                 ->execute([
                     'id' => $id,
                     'is_public' => (int) $isPublic,
+                    'allow_download' => (int) $allowDownload,
                 ]);
 
             $db->prepare('DELETE FROM team_document_users WHERE document_id = :document_id')

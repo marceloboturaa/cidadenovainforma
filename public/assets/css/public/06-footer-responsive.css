@@ -446,11 +446,19 @@
     }
 
     .public-document-card {
+        grid-template-columns: 1fr;
         align-items: stretch;
-        flex-direction: column;
     }
 
-    .public-document-card a {
+    .public-document-card-actions,
+    .public-document-view-head,
+    .public-document-view-actions {
+        justify-content: stretch;
+    }
+
+    .public-document-card-actions a,
+    .public-document-view-actions a {
+        flex: 1 1 140px;
         text-align: center;
     }
 

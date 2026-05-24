@@ -78,13 +78,19 @@ sort($documentTypes);
         $documentType = \App\Models\Document::typeLabel($document);
         $isLink = \App\Models\Document::isExternalLink($document);
         $viewUrl = \App\Models\Document::publicUrl($document);
+        $canDownload = !empty($document['allow_download']);
         ?>
         <article class="public-document-card" data-document-card data-title="<?= e(mb_strtolower($document['title'] ?? '', 'UTF-8')) ?>" data-type="<?= e($documentType) ?>">
             <div>
                 <span><?= e($documentType) ?></span>
                 <h2><?= e($document['title']) ?></h2>
             </div>
-            <a href="<?= e($isLink ? $viewUrl : url('/documentos/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir' : 'Baixar' ?></a>
+            <div class="public-document-card-actions">
+                <a href="<?= e($viewUrl) ?>">Ver</a>
+                <?php if ($canDownload): ?>
+                    <a href="<?= e(url('/documentos/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir' : 'Baixar' ?></a>
+                <?php endif; ?>
+            </div>
         </article>
     <?php endforeach; ?>
 

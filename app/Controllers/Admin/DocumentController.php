@@ -133,11 +133,13 @@ class DocumentController
             'original_name' => $payload['original_name'],
             'size_bytes' => $payload['size_bytes'],
             'is_public' => $this->canManageDocuments() && isset($_POST['is_public']),
+            'allow_download' => !$this->canManageDocuments() || isset($_POST['allow_download']),
         ]);
         Document::updateAccess(
             $documentId,
             $this->canManageDocuments() && isset($_POST['is_public']),
-            $this->canManageDocuments() ? ($_POST['user_ids'] ?? []) : [(int) current_user()['id']]
+            $this->canManageDocuments() ? ($_POST['user_ids'] ?? []) : [(int) current_user()['id']],
+            !$this->canManageDocuments() || isset($_POST['allow_download'])
         );
 
         Session::flash('success', $hasFile ? 'Documento enviado.' : 'Link cadastrado.');
@@ -173,7 +175,7 @@ class DocumentController
         Document::update((int) $document['id'], $data);
 
         if ($this->canManageDocuments()) {
-            Document::updateAccess((int) $document['id'], isset($_POST['is_public']), $_POST['user_ids'] ?? []);
+            Document::updateAccess((int) $document['id'], isset($_POST['is_public']), $_POST['user_ids'] ?? [], isset($_POST['allow_download']));
         }
 
         Session::flash('success', 'Documento atualizado.');
@@ -204,7 +206,11 @@ class DocumentController
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         $document = $id ? Document::find($id) : null;
 
-        if (!$document || (!$this->canManageDocuments() && !Document::userCanAccess((int) $document['id'], (int) current_user()['id']))) {
+        if (
+            !$document
+            || (!$this->canManageDocuments() && !Document::userCanAccess((int) $document['id'], (int) current_user()['id']))
+            || (!$this->canManageDocuments() && empty($document['allow_download']))
+        ) {
             http_response_code(404);
             View::render('errors/404');
             return;
@@ -251,6 +257,7 @@ class DocumentController
         if (Document::isExternalLink($document)) {
             View::render('admin/documents/view-link', [
                 'document' => $document,
+                'canDownload' => $this->canManageDocuments() || !empty($document['allow_download']),
             ]);
             return;
         }
@@ -259,6 +266,14 @@ class DocumentController
         if (!$path || !is_file($path)) {
             Session::flash('error', 'Arquivo não encontrado no servidor.');
             redirect('/admin/documents');
+        }
+
+        if (!isset($_GET['inline'])) {
+            View::render('admin/documents/view', [
+                'document' => $document,
+                'canDownload' => $this->canManageDocuments() || !empty($document['allow_download']),
+            ]);
+            return;
         }
 
         $filename = str_replace(['"', "\r", "\n"], '', basename($document['original_name']));
@@ -443,7 +458,7 @@ class DocumentController
             redirect('/admin/documents');
         }
 
-        Document::updateAccess((int) $document['id'], isset($_POST['is_public']), $_POST['user_ids'] ?? []);
+        Document::updateAccess((int) $document['id'], isset($_POST['is_public']), $_POST['user_ids'] ?? [], isset($_POST['allow_download']));
         Session::flash('success', 'Acesso do documento atualizado.');
         redirect('/admin/documents');
     }

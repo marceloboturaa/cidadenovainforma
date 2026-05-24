@@ -285,6 +285,7 @@ CREATE TABLE IF NOT EXISTS team_documents (
     original_name VARCHAR(190) NOT NULL,
     size_bytes BIGINT UNSIGNED NOT NULL,
     is_public TINYINT(1) NOT NULL DEFAULT 0,
+    allow_download TINYINT(1) NOT NULL DEFAULT 1,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,

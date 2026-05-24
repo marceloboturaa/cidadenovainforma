@@ -203,7 +203,7 @@ class PublicController
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         $document = $id ? Document::find($id) : null;
 
-        if (!$document || empty($document['is_public'])) {
+        if (!$document || empty($document['is_public']) || empty($document['allow_download'])) {
             http_response_code(404);
             View::render('errors/404', [], 'public');
             return;
@@ -247,14 +247,39 @@ class PublicController
         }
 
         if (Document::isExternalLink($document)) {
-            header('Location: ' . $document['path']);
-            exit;
+            $this->logAccess();
+            View::render('public/document-view', [
+                'document' => $document,
+                'documentSrc' => (string) $document['path'],
+                'downloadUrl' => !empty($document['allow_download']) ? (string) $document['path'] : null,
+                'menuItems' => MenuItem::visible(),
+                'query' => '',
+                'pageTitle' => ($document['title'] ?? 'Documento') . ' - Documentos - Cidade Nova Informa',
+                'metaDescription' => 'Visualizacao de documento publico do Cidade Nova Informa.',
+                'canonicalUrl' => url('/documentos/visualizar?id=' . $document['id']),
+            ], 'public');
+            return;
         }
 
         $path = Document::absolutePath($document);
         if (!$path || !is_file($path)) {
             http_response_code(404);
             View::render('errors/404', [], 'public');
+            return;
+        }
+
+        if (!isset($_GET['inline'])) {
+            $this->logAccess();
+            View::render('public/document-view', [
+                'document' => $document,
+                'documentSrc' => url('/documentos/visualizar?id=' . $document['id'] . '&inline=1'),
+                'downloadUrl' => !empty($document['allow_download']) ? url('/documentos/download?id=' . $document['id']) : null,
+                'menuItems' => MenuItem::visible(),
+                'query' => '',
+                'pageTitle' => ($document['title'] ?? 'Documento') . ' - Documentos - Cidade Nova Informa',
+                'metaDescription' => 'Visualizacao de documento publico do Cidade Nova Informa.',
+                'canonicalUrl' => url('/documentos/visualizar?id=' . $document['id']),
+            ], 'public');
             return;
         }
 

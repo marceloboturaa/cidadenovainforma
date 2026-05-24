@@ -521,14 +521,65 @@
     overflow-wrap: anywhere;
 }
 
-.public-document-card > a,
-.public-document-link-preview a {
+.public-document-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.public-document-card-actions a,
+.public-document-link-preview a,
+.public-document-view-actions a {
     flex: 0 0 auto;
     padding: 9px 13px;
     border-radius: 8px;
     background: var(--brand);
     color: #ffffff;
     font-weight: 800;
+}
+
+.public-document-card-actions a:first-child,
+.public-document-view-actions a:first-child {
+    border: 1px solid var(--line);
+    background: #ffffff;
+    color: var(--brand);
+}
+
+.public-document-view-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    max-width: 1100px;
+}
+
+.public-document-view-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.public-document-viewer {
+    display: grid;
+    gap: 10px;
+    max-width: 1100px;
+}
+
+.public-document-viewer iframe {
+    display: block;
+    width: 100%;
+    min-height: 76vh;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.public-document-viewer p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
 }
 
 .public-document-card[hidden],

@@ -6,12 +6,11 @@
     <div class="heading-actions">
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/documents')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
         <?php if (!empty($canDownload)): ?>
-            <a class="btn btn-primary icon-btn" href="<?= e($document['path'] ?? '#') ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Abrir</a>
+            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/documents/download?id=' . $document['id'])) ?>"><i class="bi bi-download" aria-hidden="true"></i>Baixar</a>
         <?php endif; ?>
     </div>
 </div>
 
 <section class="panel document-inline-panel">
-    <iframe src="<?= e($document['path'] ?? '') ?>" title="<?= e($document['title'] ?? 'Documento') ?>"></iframe>
-    <p class="form-text mb-0">Se o conteúdo não aparecer, o site de origem bloqueou a visualização incorporada.</p>
+    <iframe src="<?= e(url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1')) ?>" title="<?= e($document['title'] ?? 'Documento') ?>"></iframe>
 </section>

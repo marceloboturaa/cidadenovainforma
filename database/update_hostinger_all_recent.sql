@@ -210,6 +210,7 @@ CREATE TABLE IF NOT EXISTS team_documents (
     original_name VARCHAR(190) NOT NULL,
     size_bytes BIGINT UNSIGNED NOT NULL,
     is_public TINYINT(1) NOT NULL DEFAULT 0,
+    allow_download TINYINT(1) NOT NULL DEFAULT 1,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
@@ -512,6 +513,7 @@ ALTER TABLE news ADD COLUMN IF NOT EXISTS original_url VARCHAR(255) NULL AFTER o
 ALTER TABLE news ADD COLUMN IF NOT EXISTS archive_note TEXT NULL AFTER original_url;
 
 ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes;
+ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS allow_download TINYINT(1) NOT NULL DEFAULT 1 AFTER is_public;
 
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS module_id BIGINT UNSIGNED NULL AFTER course_id;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER video_url;

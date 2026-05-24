@@ -248,6 +248,7 @@ $pdo->exec(
         original_name VARCHAR(190) NOT NULL,
         size_bytes BIGINT UNSIGNED NOT NULL,
         is_public TINYINT(1) NOT NULL DEFAULT 0,
+        allow_download TINYINT(1) NOT NULL DEFAULT 1,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
@@ -258,6 +259,9 @@ $pdo->exec(
 $teamDocumentColumns = $pdo->query('SHOW COLUMNS FROM team_documents')->fetchAll(PDO::FETCH_COLUMN);
 if (!in_array('is_public', $teamDocumentColumns, true)) {
     $pdo->exec('ALTER TABLE team_documents ADD COLUMN is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes');
+}
+if (!in_array('allow_download', $teamDocumentColumns, true)) {
+    $pdo->exec('ALTER TABLE team_documents ADD COLUMN allow_download TINYINT(1) NOT NULL DEFAULT 1 AFTER is_public');
 }
 
 $pdo->exec(

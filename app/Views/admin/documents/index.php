@@ -44,8 +44,8 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
         </div>
         <div class="document-rule-grid">
             <article>
-                <strong>Quem pode ver ou baixar</strong>
-                <p>&Eacute; definido em cada documento, na op&ccedil;&atilde;o <b>Usu&aacute;rios com acesso</b>. Essa libera&ccedil;&atilde;o n&atilde;o permite enviar arquivos.</p>
+                <strong>Quem pode ver</strong>
+                <p>&Eacute; definido em cada documento, na op&ccedil;&atilde;o <b>Usu&aacute;rios com acesso</b>. Ver e baixar s&atilde;o permiss&otilde;es separadas.</p>
             </article>
             <article>
                 <strong>Quem pode enviar arquivos</strong>
@@ -103,6 +103,10 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                         <input class="form-check-input" type="checkbox" name="is_public" value="1">
                         <span class="form-check-label">Publicar tamb&eacute;m no site</span>
                     </label>
+                    <label class="form-check">
+                        <input class="form-check-input" type="checkbox" name="allow_download" value="1" checked>
+                        <span class="form-check-label">Permitir baixar o documento</span>
+                    </label>
                 </div>
             <?php endif; ?>
             <div class="form-action-cell">
@@ -110,7 +114,7 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             </div>
             <?php if ($canManage): ?>
                 <details class="document-access-details">
-                    <summary>Quem poder&aacute; ver ou baixar este documento</summary>
+                    <summary>Quem poder&aacute; ver este documento</summary>
                     <div class="document-access-options">
                         <?php foreach ($users as $user): ?>
                             <label>
@@ -157,8 +161,7 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             $fileExists = \App\Models\Document::fileExistsOnServer($document);
             $canEditDocument = $canManage || ($canUpload && (int) $document['uploaded_by'] === (int) (current_user()['id'] ?? 0));
             $documentType = \App\Models\Document::typeLabel($document);
-            $documentViewUrl = $isLink ? (string) $document['path'] : url('/admin/documents/visualizar?id=' . $document['id']);
-            $documentCanPreview = $isLink || \App\Models\Document::canPreviewInline($document);
+            $canDownloadDocument = $canManage || !empty($document['allow_download']);
             ?>
             <article class="document-row">
                 <div class="document-file-icon"><?= e($documentType) ?></div>
@@ -168,6 +171,7 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                         <h3><?= e($document['title']) ?></h3>
                         <span class="state-pill <?= ($fileExists || $isLink) ? 'is-active' : 'is-pending' ?>"><?= $isLink ? 'Link externo' : ($fileExists ? 'Arquivo no servidor' : 'Arquivo ausente') ?></span>
                         <span class="state-pill <?= !empty($document['is_public']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['is_public']) ? 'P&uacute;blico' : 'Restrito' ?></span>
+                        <span class="state-pill <?= !empty($document['allow_download']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['allow_download']) ? 'Download liberado' : 'Download bloqueado' ?></span>
                     </div>
                     <div class="document-meta-grid">
                         <span><?= e($document['original_name']) ?></span>
@@ -180,10 +184,10 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                 </div>
 
                 <div class="document-actions">
-                    <?php if ($documentCanPreview): ?>
-                        <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/documents/visualizar?id=' . $document['id'])) ?>">Ver</a>
+                    <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/documents/visualizar?id=' . $document['id'])) ?>">Ver</a>
+                    <?php if ($canDownloadDocument): ?>
+                        <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/documents/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir' : 'Baixar' ?></a>
                     <?php endif; ?>
-                    <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/documents/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir' : 'Baixar' ?></a>
                     <?php if ($canManage): ?>
                         <form class="inline-form" method="post" action="<?= e(url('/admin/documents/delete?id=' . $document['id'])) ?>">
                             <?= csrf_field() ?>
@@ -191,16 +195,6 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                         </form>
                     <?php endif; ?>
                 </div>
-
-                <?php if ($documentCanPreview): ?>
-                    <details class="document-row-preview">
-                        <summary>Visualizar sem sair do painel</summary>
-                        <iframe src="<?= e($documentViewUrl) ?>" title="<?= e($document['title']) ?>"></iframe>
-                        <?php if ($isLink): ?>
-                            <p class="form-text mb-0">Se o conteúdo não aparecer, o site de origem bloqueou a visualização incorporada.</p>
-                        <?php endif; ?>
-                    </details>
-                <?php endif; ?>
 
                 <?php if ($canEditDocument): ?>
                     <details class="document-row-access">
@@ -227,8 +221,12 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                                     <input class="form-check-input" type="checkbox" name="is_public" value="1" <?= checked((bool) $document['is_public']) ?>>
                                     <span class="form-check-label">Publicar tamb&eacute;m no site</span>
                                 </label>
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="allow_download" value="1" <?= checked((bool) ($document['allow_download'] ?? true)) ?>>
+                                    <span class="form-check-label">Permitir baixar o documento</span>
+                                </label>
                                 <details class="document-access-details compact">
-                                    <summary>Usu&aacute;rios que podem ver ou baixar</summary>
+                                    <summary>Usu&aacute;rios que podem ver</summary>
                                     <div class="document-access-options compact">
                                         <?php foreach ($users as $user): ?>
                                             <label>
