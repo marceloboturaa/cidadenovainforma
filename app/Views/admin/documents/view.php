@@ -17,9 +17,11 @@
     <?php elseif (($viewerType ?? '') === 'text'): ?>
         <pre><?= e($documentText ?? '') ?></pre>
     <?php elseif (($viewerType ?? '') === 'pdf'): ?>
-        <object data="<?= e($documentSrc) ?>" type="application/pdf">
-            <p>Este navegador nao conseguiu exibir o PDF nesta pagina.</p>
-        </object>
+        <embed src="<?= e($documentSrc) ?>" type="application/pdf">
+        <div class="document-view-notice">
+            <p>Se o PDF nao carregar nesta area, abra a visualizacao protegida em uma nova aba.</p>
+            <a class="btn btn-sm btn-outline-primary" href="<?= e($documentSrc) ?>" target="_blank" rel="noopener">Abrir PDF</a>
+        </div>
     <?php else: ?>
         <div class="document-view-notice">
             <strong>Visualizacao protegida indisponivel</strong>

@@ -568,7 +568,7 @@
 }
 
 .public-document-viewer img,
-.public-document-viewer object,
+.public-document-viewer embed,
 .public-document-viewer pre {
     display: block;
     width: 100%;
@@ -584,7 +584,7 @@
     object-fit: contain;
 }
 
-.public-document-viewer object {
+.public-document-viewer embed {
     height: 76vh;
 }
 
@@ -620,6 +620,10 @@
     background: var(--brand);
     color: #ffffff;
     font-weight: 800;
+}
+
+.public-document-viewer-action {
+    margin-top: 10px;
 }
 
 .public-document-card[hidden],
