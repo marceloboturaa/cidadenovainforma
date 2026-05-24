@@ -266,6 +266,67 @@
     color: var(--muted);
 }
 
+.document-pdf-viewer {
+    display: grid;
+    gap: 12px;
+}
+
+.document-pdf-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.document-pdf-toolbar span {
+    flex: 1 1 180px;
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+.document-pdf-toolbar button {
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ink);
+    font-weight: 800;
+}
+
+.document-pdf-toolbar button:disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+}
+
+.document-pdf-canvas-shell {
+    overflow: auto;
+    min-height: 72vh;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #eef2f7;
+    text-align: center;
+}
+
+.document-pdf-canvas-shell canvas {
+    max-width: 100%;
+    background: #ffffff;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.16);
+}
+
+.document-pdf-viewer [data-pdf-error] {
+    margin: 0;
+    color: #b91c1c;
+    font-weight: 800;
+}
+
 .document-row-access form {
     display: grid;
     gap: 10px;

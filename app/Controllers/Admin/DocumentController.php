@@ -342,7 +342,7 @@ class DocumentController
             ];
         }
 
-        if (($mime === 'application/pdf' || $extension === 'pdf') && $canDownload) {
+        if ($mime === 'application/pdf' || $extension === 'pdf') {
             return [
                 'type' => 'pdf',
                 'src' => url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1'),

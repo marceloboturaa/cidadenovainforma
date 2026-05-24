@@ -17,10 +17,18 @@
     <?php elseif (($viewerType ?? '') === 'text'): ?>
         <pre><?= e($documentText ?? '') ?></pre>
     <?php elseif (($viewerType ?? '') === 'pdf'): ?>
-        <div class="document-view-notice">
-            <strong>PDF disponivel para visualizacao</strong>
-            <p>Para evitar bloqueio do navegador, o PDF abre em uma aba protegida do proprio painel.</p>
-            <a class="btn btn-sm btn-outline-primary" href="<?= e($documentSrc) ?>" target="_blank" rel="noopener">Abrir PDF</a>
+        <div class="document-pdf-viewer" data-pdf-viewer data-pdf-url="<?= e($documentSrc) ?>">
+            <div class="document-pdf-toolbar">
+                <button type="button" data-pdf-prev>Anterior</button>
+                <span data-pdf-status>Carregando PDF...</span>
+                <button type="button" data-pdf-next>Pr&oacute;xima</button>
+                <button type="button" data-pdf-zoom-out>Menos zoom</button>
+                <button type="button" data-pdf-zoom-in>Mais zoom</button>
+            </div>
+            <div class="document-pdf-canvas-shell">
+                <canvas data-pdf-canvas></canvas>
+            </div>
+            <p data-pdf-error hidden>N&atilde;o foi poss&iacute;vel carregar o PDF dentro da p&aacute;gina.</p>
         </div>
     <?php else: ?>
         <div class="document-view-notice">
@@ -29,3 +37,8 @@
         </div>
     <?php endif; ?>
 </section>
+
+<?php if (($viewerType ?? '') === 'pdf'): ?>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="<?= e(versioned_asset_url('/public/assets/js/document-pdf-viewer.js')) ?>"></script>
+<?php endif; ?>

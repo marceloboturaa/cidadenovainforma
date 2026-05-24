@@ -506,7 +506,7 @@ class PublicController
             ];
         }
 
-        if (($mime === 'application/pdf' || $extension === 'pdf') && $canDownload) {
+        if ($mime === 'application/pdf' || $extension === 'pdf') {
             return [
                 'type' => 'pdf',
                 'src' => url('/documentos/visualizar?id=' . $document['id'] . '&inline=1'),
