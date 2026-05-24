@@ -116,6 +116,8 @@ a {
 
 .admin-link,
 .institution-link,
+.course-link,
+.certificate-link,
 .event-link {
     border: 0;
     background: var(--brand);
@@ -126,10 +128,11 @@ a {
 
 .header-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+    justify-content: flex-end;
     justify-self: end;
-    white-space: nowrap;
 }
 
 .admin-link {
@@ -143,6 +146,8 @@ a {
 }
 
 .institution-link,
+.course-link,
+.certificate-link,
 .event-link {
     border: 1px solid #fecaca;
     border-radius: 999px;
@@ -151,21 +156,30 @@ a {
     padding: 8px 13px;
     font-size: 0.9rem;
     line-height: 1;
+    white-space: nowrap;
 }
 
-.event-link {
+.event-link,
+.certificate-link {
     background: var(--brand);
     color: white;
     border-color: var(--brand);
 }
 
+.course-link {
+    background: #ffffff;
+}
+
 .admin-link:hover,
 .institution-link:hover,
+.course-link:hover,
+.certificate-link:hover,
 .event-link:hover {
     border-color: var(--brand);
     color: var(--brand);
 }
 
+.certificate-link:hover,
 .event-link:hover {
     background: #fff1f2;
 }

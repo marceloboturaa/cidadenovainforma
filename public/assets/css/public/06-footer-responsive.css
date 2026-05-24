@@ -26,8 +26,8 @@
     }
 
     .header-actions {
-        grid-column: 2;
-        grid-row: 1;
+        grid-column: 1 / -1;
+        grid-row: 2;
         justify-self: end;
         align-self: center;
     }
@@ -314,10 +314,16 @@
         color: var(--muted);
     }
 
-    .mobile-actions .mobile-institution-link {
+    .mobile-actions .mobile-institution-link,
+    .mobile-actions .mobile-certificate-link {
         border-color: #fecaca;
         background: #fff1f2;
         color: var(--brand);
+    }
+
+    .mobile-actions .mobile-certificate-link {
+        background: var(--brand);
+        color: white;
     }
 
     .breaking-strip {
