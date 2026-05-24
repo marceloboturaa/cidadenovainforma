@@ -40,6 +40,7 @@ class EducationController
 
         View::render('admin/education/index', [
             'courses' => $courses,
+            'certificates' => Education::certificatesForUser((int) $user['id']),
             'canManage' => $this->canManage(),
         ]);
     }

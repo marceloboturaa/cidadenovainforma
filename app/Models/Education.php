@@ -1076,6 +1076,29 @@ class Education
         return $stmt->fetch() ?: null;
     }
 
+    public static function certificatesForUser(int $userId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_certificates.*,
+                    education_courses.title AS course_title,
+                    education_courses.certificate_title,
+                    education_courses.teacher_user_id,
+                    teacher.name AS teacher_name,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name) AS student_name
+             FROM education_certificates
+             INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             INNER JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN users AS teacher ON teacher.id = education_courses.teacher_user_id
+             WHERE education_certificates.user_id = :user_id
+             ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC'
+        );
+        $stmt->execute(['user_id' => $userId]);
+
+        return $stmt->fetchAll();
+    }
+
     public static function requestCertificateNameChange(int $courseId, int $userId, string $requestedName): void
     {
         self::ensureSchema();

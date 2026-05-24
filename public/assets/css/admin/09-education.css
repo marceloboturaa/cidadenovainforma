@@ -1008,6 +1008,65 @@
     align-items: center;
 }
 
+.education-my-certificates-panel {
+    margin-top: 18px;
+}
+
+.education-certificate-list {
+    display: grid;
+    gap: 12px;
+}
+
+.education-certificate-card {
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.education-certificate-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    border-radius: 8px;
+    background: #fff7ed;
+    color: #b45309;
+    font-size: 1.45rem;
+}
+
+.education-certificate-card span,
+.education-certificate-card small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+.education-certificate-card h3 {
+    margin: 3px 0;
+    color: var(--ink);
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+}
+
+.education-certificate-card p {
+    margin: 0 0 3px;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.education-certificate-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
 .education-certificate-sheet-panel {
     display: grid;
     gap: 22px;
