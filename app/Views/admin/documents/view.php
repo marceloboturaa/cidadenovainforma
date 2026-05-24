@@ -12,5 +12,18 @@
 </div>
 
 <section class="panel document-inline-panel">
-    <iframe src="<?= e(url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1')) ?>" title="<?= e($document['title'] ?? 'Documento') ?>"></iframe>
+    <?php if (($viewerType ?? '') === 'image'): ?>
+        <img src="<?= e($documentSrc) ?>" alt="<?= e($document['title'] ?? 'Documento') ?>">
+    <?php elseif (($viewerType ?? '') === 'text'): ?>
+        <pre><?= e($documentText ?? '') ?></pre>
+    <?php elseif (($viewerType ?? '') === 'pdf'): ?>
+        <object data="<?= e($documentSrc) ?>" type="application/pdf">
+            <p>Este navegador nao conseguiu exibir o PDF nesta pagina.</p>
+        </object>
+    <?php else: ?>
+        <div class="document-view-notice">
+            <strong>Visualizacao protegida indisponivel</strong>
+            <p>Este formato nao pode ser exibido com seguranca no painel sem liberar o arquivo para download.</p>
+        </div>
+    <?php endif; ?>
 </section>

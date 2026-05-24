@@ -12,8 +12,24 @@
 </section>
 
 <section class="public-document-viewer">
-    <iframe src="<?= e($documentSrc) ?>" title="<?= e($document['title'] ?? 'Documento') ?>"></iframe>
-    <?php if (\App\Models\Document::isExternalLink($document)): ?>
-        <p>Se o conteudo nao aparecer, o site de origem bloqueou a visualizacao incorporada.</p>
+    <?php if (($viewerType ?? '') === 'image'): ?>
+        <img src="<?= e($documentSrc) ?>" alt="<?= e($document['title'] ?? 'Documento') ?>">
+    <?php elseif (($viewerType ?? '') === 'text'): ?>
+        <pre><?= e($documentText ?? '') ?></pre>
+    <?php elseif (($viewerType ?? '') === 'pdf'): ?>
+        <object data="<?= e($documentSrc) ?>" type="application/pdf">
+            <p>Este navegador nao conseguiu exibir o PDF nesta pagina.</p>
+        </object>
+    <?php elseif (($viewerType ?? '') === 'external'): ?>
+        <div class="public-document-notice">
+            <strong>Documento externo</strong>
+            <p>Por seguranca, links externos nao sao carregados dentro da pagina.</p>
+            <a href="<?= e($externalUrl ?? '#') ?>" target="_blank" rel="noopener">Abrir documento</a>
+        </div>
+    <?php else: ?>
+        <div class="public-document-notice">
+            <strong>Visualizacao protegida indisponivel</strong>
+            <p>Este formato nao pode ser exibido com seguranca no site sem liberar o arquivo para download.</p>
+        </div>
     <?php endif; ?>
 </section>

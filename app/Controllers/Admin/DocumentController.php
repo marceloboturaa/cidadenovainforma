@@ -269,9 +269,14 @@ class DocumentController
         }
 
         if (!isset($_GET['inline'])) {
+            $canDownload = $this->canManageDocuments() || !empty($document['allow_download']);
+            $viewer = $this->documentViewerData($document, $path, $canDownload);
             View::render('admin/documents/view', [
                 'document' => $document,
-                'canDownload' => $this->canManageDocuments() || !empty($document['allow_download']),
+                'canDownload' => $canDownload,
+                'viewerType' => $viewer['type'],
+                'documentSrc' => $viewer['src'],
+                'documentText' => $viewer['text'],
             ]);
             return;
         }
@@ -314,6 +319,42 @@ class DocumentController
         return preg_match('/^[A-Za-z0-9.+-]+\/[A-Za-z0-9.+-]+$/', $mime)
             ? $mime
             : 'application/octet-stream';
+    }
+
+    private function documentViewerData(array $document, string $path, bool $canDownload): array
+    {
+        $mime = strtolower((string) ($document['mime_type'] ?? ''));
+        $extension = strtolower(pathinfo((string) ($document['original_name'] ?? ''), PATHINFO_EXTENSION));
+
+        if (str_starts_with($mime, 'image/') || in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true)) {
+            return [
+                'type' => 'image',
+                'src' => url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1'),
+                'text' => '',
+            ];
+        }
+
+        if (in_array($mime, ['text/plain', 'text/csv'], true) || in_array($extension, ['txt', 'csv'], true)) {
+            return [
+                'type' => 'text',
+                'src' => '',
+                'text' => (string) file_get_contents($path),
+            ];
+        }
+
+        if (($mime === 'application/pdf' || $extension === 'pdf') && $canDownload) {
+            return [
+                'type' => 'pdf',
+                'src' => url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1'),
+                'text' => '',
+            ];
+        }
+
+        return [
+            'type' => 'unavailable',
+            'src' => '',
+            'text' => '',
+        ];
     }
 
     private function storeUploadedDocument(string $field): array

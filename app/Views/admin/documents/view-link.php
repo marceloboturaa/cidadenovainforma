@@ -12,6 +12,9 @@
 </div>
 
 <section class="panel document-inline-panel">
-    <iframe src="<?= e($document['path'] ?? '') ?>" title="<?= e($document['title'] ?? 'Documento') ?>"></iframe>
-    <p class="form-text mb-0">Se o conteúdo não aparecer, o site de origem bloqueou a visualização incorporada.</p>
+    <div class="document-view-notice">
+        <strong>Documento externo</strong>
+        <p>Por seguranca, links externos nao sao carregados dentro do painel.</p>
+        <a class="btn btn-sm btn-outline-primary" href="<?= e($document['path'] ?? '#') ?>" target="_blank" rel="noopener">Abrir documento</a>
+    </div>
 </section>
