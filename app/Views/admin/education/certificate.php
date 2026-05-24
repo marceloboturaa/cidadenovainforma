@@ -51,7 +51,7 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
         </footer>
     </article>
     <?php if ($programEnabled): ?>
-        <article class="education-certificate-sheet education-certificate-program-sheet" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
+        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
             <header class="education-certificate-program-header">
                 <span>Verso do certificado</span>
                 <h2>Programação cursada</h2>

@@ -1093,6 +1093,7 @@
     display: grid;
     gap: 22px;
     overflow: auto;
+    padding-bottom: 8px;
 }
 
 .education-certificate-sheet {
@@ -1100,7 +1101,6 @@
     display: grid;
     width: min(1120px, 100%);
     aspect-ratio: 1.414 / 1;
-    min-height: 620px;
     margin: 0 auto;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -1228,6 +1228,11 @@
     page-break-before: always;
 }
 
+.education-certificate-program-sheet.is-multi-column {
+    gap: 14px;
+    padding: clamp(28px, 3.4vw, 46px);
+}
+
 .education-certificate-program-header {
     display: grid;
     gap: 5px;
@@ -1269,9 +1274,28 @@
 .education-certificate-program-list {
     column-count: var(--certificate-program-columns, 2);
     column-gap: 24px;
+    column-fill: balance;
     color: #172033;
     font-size: 0.84rem;
     line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.education-certificate-program-sheet.is-multi-column .education-certificate-program-list {
+    column-rule: 1px solid rgba(23, 32, 51, 0.08);
+}
+
+.education-certificate-program-columns-3 .education-certificate-program-list,
+.education-certificate-program-columns-4 .education-certificate-program-list {
+    column-gap: 18px;
+    font-size: 0.78rem;
+    line-height: 1.28;
+}
+
+.education-certificate-program-columns-4 .education-certificate-program-list {
+    column-gap: 14px;
+    font-size: 0.72rem;
+    line-height: 1.22;
 }
 
 .education-certificate-program-module {
@@ -1299,7 +1323,7 @@
 }
 
 .education-certificate-program-module li {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .education-certificate-program-module strong {
@@ -1398,6 +1422,7 @@
     .education-certificate-sheet {
         width: 297mm;
         height: 210mm;
+        aspect-ratio: auto;
         min-height: 0;
         border: 0;
         border-radius: 0;
@@ -1408,6 +1433,39 @@
 
     .education-certificate-program-sheet {
         page-break-before: always;
+        padding: 12mm;
+    }
+
+    .education-certificate-program-sheet.is-multi-column {
+        padding: 10mm;
+    }
+
+    .education-certificate-program-columns-3 .education-certificate-program-header,
+    .education-certificate-program-columns-4 .education-certificate-program-header {
+        padding-bottom: 9px;
+    }
+
+    .education-certificate-program-columns-3 .education-certificate-program-extra,
+    .education-certificate-program-columns-4 .education-certificate-program-extra {
+        padding: 7px 10px;
+        font-size: 0.74rem;
+        line-height: 1.25;
+    }
+
+    .education-certificate-program-columns-3 .education-certificate-program-module,
+    .education-certificate-program-columns-4 .education-certificate-program-module {
+        margin-bottom: 9px;
+    }
+
+    .education-certificate-program-columns-3 .education-certificate-program-module h3,
+    .education-certificate-program-columns-4 .education-certificate-program-module h3 {
+        margin-bottom: 4px;
+        font-size: 0.78rem;
+    }
+
+    .education-certificate-program-columns-3 .education-certificate-program-module ol,
+    .education-certificate-program-columns-4 .education-certificate-program-module ol {
+        padding-left: 14px;
     }
 }
 
