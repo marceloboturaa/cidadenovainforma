@@ -180,6 +180,24 @@ class PublicController
         ], 'public');
     }
 
+    public function verifyCertificate(): void
+    {
+        $code = strtoupper(preg_replace('/[^A-Z0-9]/i', '', (string) ($_GET['codigo'] ?? $_GET['code'] ?? '')) ?? '');
+        $certificate = $code !== '' ? Education::certificateByVerificationCode($code) : null;
+
+        $this->logAccess();
+
+        View::render('public/certificate-verify', [
+            'code' => $code,
+            'certificate' => $certificate,
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => 'Verificar certificado - Cidade Nova Informa',
+            'metaDescription' => 'Consulte a autenticidade de certificados emitidos pelo Cidade Nova Informa.',
+            'canonicalUrl' => url('/certificado/validar'),
+        ], 'public');
+    }
+
     public function downloadDocument(): void
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);

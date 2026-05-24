@@ -1159,6 +1159,34 @@ class Education
         return $stmt->fetch() ?: null;
     }
 
+    public static function certificateByVerificationCode(string $code): ?array
+    {
+        self::ensureSchema();
+
+        $code = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $code) ?? '');
+        if ($code === '') {
+            return null;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_certificates.*,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name) AS student_name,
+                    users.name AS user_name,
+                    education_courses.title AS course_title,
+                    education_courses.certificate_min_frequency,
+                    teacher.name AS teacher_name
+             FROM education_certificates
+             INNER JOIN users ON users.id = education_certificates.user_id
+             INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             LEFT JOIN users AS teacher ON teacher.id = education_courses.teacher_user_id
+             WHERE education_certificates.verification_code = :code
+             LIMIT 1'
+        );
+        $stmt->execute(['code' => $code]);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function markLesson(int $lessonId, int $userId, bool $completed): void
     {
         self::ensureSchema();

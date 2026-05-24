@@ -9,6 +9,7 @@ $programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
+$verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? ''));
 ?>
 
 <div class="page-heading certificate-toolbar">
@@ -35,6 +36,7 @@ $certificateProgram = $certificateProgram ?? [];
         <footer class="education-certificate-footnote">
             <span>Emitido em <?= e($issuedAt) ?></span>
             <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
+            <span>Valide em <?= e($verificationUrl) ?></span>
             <?php if (!empty($course['teacher_name'])): ?>
                 <span>Professor: <?= e($course['teacher_name']) ?></span>
             <?php endif; ?>
