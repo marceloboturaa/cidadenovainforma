@@ -94,15 +94,17 @@ sort($documentTypes);
                     <p><?= e(parse_url($viewUrl, PHP_URL_HOST) ?: $viewUrl) ?></p>
                 <?php endif; ?>
             </div>
-            <a href="<?= e($isLink ? $viewUrl : url('/documentos/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir link' : 'Baixar' ?></a>
+            <a href="<?= e($isLink ? $viewUrl : url('/documentos/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir/baixar' : 'Baixar' ?></a>
             <?php if ($isImage || $isPdf || $isText || $isOffice || $isLink): ?>
-                <details class="public-document-preview">
+                <details class="public-document-preview" open>
                     <summary>Ver na página</summary>
                     <?php if ($isLink): ?>
                         <div class="public-document-link-preview">
                             <strong><?= e($viewUrl) ?></strong>
                             <a href="<?= e($viewUrl) ?>" target="_blank" rel="noopener">Abrir em nova aba</a>
                         </div>
+                        <iframe src="<?= e($viewUrl) ?>" title="<?= e($document['title']) ?>"></iframe>
+                        <p>Alguns sites bloqueiam visualização incorporada. Se o conteúdo não carregar acima, use a opção Abrir/baixar.</p>
                     <?php elseif ($isImage): ?>
                         <img src="<?= e($viewUrl) ?>" alt="<?= e($document['title']) ?>" loading="lazy">
                     <?php elseif ($isPdf || $isText): ?>
