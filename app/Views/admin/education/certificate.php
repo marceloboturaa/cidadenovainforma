@@ -10,6 +10,7 @@ $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ??
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
 $verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? ''));
+$verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' . rawurlencode($verificationUrl);
 ?>
 
 <div class="page-heading certificate-toolbar">
@@ -19,6 +20,7 @@ $verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? '
     </div>
     <div class="heading-actions">
         <button class="btn btn-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
+        <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-certificate')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar ao curso</a>
     </div>
 </div>
@@ -34,13 +36,19 @@ $verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? '
             </footer>
         </div>
         <footer class="education-certificate-footnote">
-            <span>Emitido em <?= e($issuedAt) ?></span>
-            <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
-            <span>Valide em <?= e($verificationUrl) ?></span>
-            <?php if (!empty($course['teacher_name'])): ?>
-                <span>Professor: <?= e($course['teacher_name']) ?></span>
-            <?php endif; ?>
-            <span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span>
+            <div class="education-certificate-footnote-text">
+                <span>Emitido em <?= e($issuedAt) ?></span>
+                <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
+                <span>Valide em <?= e($verificationUrl) ?></span>
+                <?php if (!empty($course['teacher_name'])): ?>
+                    <span>Professor: <?= e($course['teacher_name']) ?></span>
+                <?php endif; ?>
+                <span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span>
+            </div>
+            <figure class="education-certificate-qr">
+                <img src="<?= e($verificationQrUrl) ?>" alt="QR Code para verificar o certificado">
+                <figcaption>Verificar autenticidade</figcaption>
+            </figure>
         </footer>
     </article>
     <?php if ($programEnabled): ?>

@@ -21,6 +21,9 @@ $forumTopics = $forumTopics ?? [];
 $forumRepliesByTopic = $forumRepliesByTopic ?? [];
 $courseForms = $courseForms ?? [];
 $certificateStatus = $certificateStatus ?? [];
+$certificateVerificationUrl = !empty($certificateStatus['certificate']['verification_code'] ?? null)
+    ? url('/certificado/' . $certificateStatus['certificate']['verification_code'])
+    : null;
 ?>
 
 <div class="page-heading">
@@ -248,7 +251,12 @@ $certificateStatus = $certificateStatus ?? [];
                 </div>
             </div>
             <?php if (!empty($certificateStatus['certificate'])): ?>
-                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'])) ?>"><i class="bi bi-printer" aria-hidden="true"></i>Abrir certificado</a>
+                <div class="education-certificate-actions">
+                    <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'])) ?>"><i class="bi bi-printer" aria-hidden="true"></i>Abrir certificado</a>
+                    <?php if ($certificateVerificationUrl): ?>
+                        <a class="btn btn-outline-primary icon-btn" href="<?= e($certificateVerificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
+                    <?php endif; ?>
+                </div>
             <?php elseif (!empty($certificateStatus['eligible'])): ?>
                 <form method="post" action="<?= e(url('/admin/education/certificate/request?id=' . $course['id'])) ?>">
                     <?= csrf_field() ?>
