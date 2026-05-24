@@ -61,6 +61,8 @@ class Education
                 video_url VARCHAR(255) NULL,
                 image_url VARCHAR(255) NULL,
                 locked TINYINT(1) NOT NULL DEFAULT 0,
+                available_at DATETIME NULL,
+                attendance_mode VARCHAR(20) NOT NULL DEFAULT "video",
                 sort_order INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
@@ -79,6 +81,12 @@ class Education
         }
         if (!in_array('locked', $lessonColumns, true)) {
             $db->exec('ALTER TABLE education_lessons ADD COLUMN locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
+        }
+        if (!in_array('available_at', $lessonColumns, true)) {
+            $db->exec('ALTER TABLE education_lessons ADD COLUMN available_at DATETIME NULL AFTER locked');
+        }
+        if (!in_array('attendance_mode', $lessonColumns, true)) {
+            $db->exec('ALTER TABLE education_lessons ADD COLUMN attendance_mode VARCHAR(20) NOT NULL DEFAULT "video" AFTER available_at');
         }
 
         $db->exec(
@@ -138,19 +146,37 @@ class Education
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 course_id BIGINT UNSIGNED NOT NULL,
                 user_id BIGINT UNSIGNED NOT NULL,
+                lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
                 attendance_date DATE NOT NULL,
                 status ENUM("present","absent","justified") NOT NULL DEFAULT "present",
                 notes VARCHAR(255) NULL,
                 recorded_by BIGINT UNSIGNED NULL,
                 created_at TIMESTAMP NULL,
                 updated_at TIMESTAMP NULL,
-                UNIQUE KEY uq_education_attendance_course_user_date (course_id, user_id, attendance_date),
+                UNIQUE KEY uq_education_attendance_course_user_date_lesson (course_id, user_id, attendance_date, lesson_id),
                 INDEX idx_education_attendance_course_date (course_id, attendance_date),
+                INDEX idx_education_attendance_lesson (lesson_id),
                 CONSTRAINT fk_education_attendance_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_attendance_recorder FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
             ) ENGINE=InnoDB'
         );
+        $attendanceColumns = $db->query('SHOW COLUMNS FROM education_attendance')->fetchAll(\PDO::FETCH_COLUMN);
+        if (!in_array('lesson_id', $attendanceColumns, true)) {
+            $db->exec('ALTER TABLE education_attendance ADD COLUMN lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER user_id');
+        }
+        try {
+            $db->exec('ALTER TABLE education_attendance DROP INDEX uq_education_attendance_course_user_date');
+        } catch (\Throwable) {
+        }
+        try {
+            $db->exec('ALTER TABLE education_attendance ADD UNIQUE KEY uq_education_attendance_course_user_date_lesson (course_id, user_id, attendance_date, lesson_id)');
+        } catch (\Throwable) {
+        }
+        try {
+            $db->exec('ALTER TABLE education_attendance ADD INDEX idx_education_attendance_lesson (lesson_id)');
+        } catch (\Throwable) {
+        }
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_forum_topics (
@@ -603,8 +629,10 @@ class Education
 
         foreach ($lessons as $index => $lesson) {
             $lockedBySequence = !$canManage && !$previousCompleted;
+            $lockedBySchedule = !$canManage && !self::lessonIsAvailable($lesson);
             $lessons[$index]['sequence_locked'] = $lockedBySequence ? 1 : 0;
-            $lessons[$index]['can_watch'] = !$lockedBySequence;
+            $lessons[$index]['schedule_locked'] = $lockedBySchedule ? 1 : 0;
+            $lessons[$index]['can_watch'] = !$lockedBySequence && !$lockedBySchedule && empty($lesson['locked']);
             $previousCompleted = !empty($lesson['completed_at']);
         }
 
@@ -619,6 +647,9 @@ class Education
 
         $lesson = self::findLesson($lessonId);
         if (!$lesson) {
+            return false;
+        }
+        if (!self::lessonIsAvailable($lesson)) {
             return false;
         }
 
@@ -810,9 +841,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lessons
-                (course_id, module_id, title, description, video_url, image_url, locked, sort_order, active, created_at, updated_at)
+                (course_id, module_id, title, description, video_url, image_url, locked, available_at, attendance_mode, sort_order, active, created_at, updated_at)
              VALUES
-                (:course_id, :module_id, :title, :description, :video_url, :image_url, :locked, :sort_order, 1, NOW(), NOW())'
+                (:course_id, :module_id, :title, :description, :video_url, :image_url, :locked, :available_at, :attendance_mode, :sort_order, 1, NOW(), NOW())'
         );
         $stmt->execute(self::lessonPayload($data));
 
@@ -834,6 +865,8 @@ class Education
                  video_url = :video_url,
                  image_url = :image_url,
                  locked = :locked,
+                 available_at = :available_at,
+                 attendance_mode = :attendance_mode,
                  sort_order = :sort_order,
                  updated_at = NOW()
              WHERE id = :id'
@@ -898,7 +931,7 @@ class Education
         return $stmt->fetchAll();
     }
 
-    public static function attendanceForCourseDate(int $courseId, string $date): array
+    public static function attendanceForCourseDate(int $courseId, string $date, int $lessonId = 0): array
     {
         self::ensureSchema();
 
@@ -906,11 +939,13 @@ class Education
             'SELECT *
              FROM education_attendance
              WHERE course_id = :course_id
-               AND attendance_date = :attendance_date'
+               AND attendance_date = :attendance_date
+               AND lesson_id = :lesson_id'
         );
         $stmt->execute([
             'course_id' => $courseId,
             'attendance_date' => $date,
+            'lesson_id' => $lessonId,
         ]);
 
         $records = [];
@@ -921,15 +956,15 @@ class Education
         return $records;
     }
 
-    public static function saveAttendance(int $courseId, string $date, array $rows, ?int $recordedBy): void
+    public static function saveAttendance(int $courseId, string $date, array $rows, ?int $recordedBy, int $lessonId = 0): void
     {
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_attendance
-                (course_id, user_id, attendance_date, status, notes, recorded_by, created_at, updated_at)
+                (course_id, user_id, lesson_id, attendance_date, status, notes, recorded_by, created_at, updated_at)
              VALUES
-                (:course_id, :user_id, :attendance_date, :status, :notes, :recorded_by, NOW(), NOW())
+                (:course_id, :user_id, :lesson_id, :attendance_date, :status, :notes, :recorded_by, NOW(), NOW())
              ON DUPLICATE KEY UPDATE
                 status = VALUES(status),
                 notes = VALUES(notes),
@@ -943,11 +978,16 @@ class Education
             $stmt->execute([
                 'course_id' => $courseId,
                 'user_id' => (int) $userId,
+                'lesson_id' => $lessonId,
                 'attendance_date' => $date,
                 'status' => in_array($status, $allowedStatuses, true) ? $status : 'present',
                 'notes' => self::nullable($row['notes'] ?? null),
                 'recorded_by' => $recordedBy,
             ]);
+
+            if ($lessonId > 0) {
+                self::markLesson($lessonId, (int) $userId, $status === 'present');
+            }
         }
     }
 
@@ -1908,11 +1948,15 @@ class Education
     private static function attendanceSummaryForCourseUser(int $courseId, int $userId): array
     {
         $stmt = Database::connection()->prepare(
-            'SELECT COUNT(*) AS records,
-                    SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) AS present_count
-             FROM education_attendance
-             WHERE course_id = :course_id
-               AND user_id = :user_id'
+            'SELECT COUNT(DISTINCT education_lessons.id) AS records,
+                    COUNT(DISTINCT CASE WHEN progress.completed_at IS NOT NULL THEN education_lessons.id END) AS present_count
+             FROM education_lessons
+             LEFT JOIN education_lesson_progress progress
+                ON progress.lesson_id = education_lessons.id
+               AND progress.user_id = :user_id
+             WHERE education_lessons.course_id = :course_id
+               AND education_lessons.active = 1
+               AND education_lessons.attendance_mode <> "none"'
         );
         $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
         $row = $stmt->fetch() ?: [];
@@ -1950,8 +1994,33 @@ class Education
             'video_url' => self::nullable($data['video_url'] ?? null),
             'image_url' => self::nullable($data['image_url'] ?? null),
             'locked' => !empty($data['locked']) ? 1 : 0,
+            'available_at' => self::datetimeOrNull($data['available_at'] ?? null),
+            'attendance_mode' => self::attendanceMode($data['attendance_mode'] ?? 'video'),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
+    }
+
+    private static function lessonIsAvailable(array $lesson): bool
+    {
+        $availableAt = trim((string) ($lesson['available_at'] ?? ''));
+        return $availableAt === '' || strtotime($availableAt) <= time();
+    }
+
+    private static function attendanceMode(mixed $mode): string
+    {
+        $mode = strtolower(trim((string) $mode));
+        return in_array($mode, ['video', 'manual', 'none'], true) ? $mode : 'video';
+    }
+
+    private static function datetimeOrNull(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        $timestamp = strtotime(str_replace('T', ' ', $value));
+        return $timestamp ? date('Y-m-d H:i:s', $timestamp) : null;
     }
 
     private static function blockPayload(array $data): array

@@ -649,6 +649,16 @@
     background: #f8fafc;
 }
 
+.education-playlist-row.is-scheduled {
+    border-color: #e5e7eb;
+    background: #f8fafc;
+    opacity: 0.72;
+}
+
+.education-playlist-row.is-scheduled .education-playlist-main {
+    cursor: not-allowed;
+}
+
 .education-playlist-main {
     display: grid;
     grid-template-columns: 28px minmax(0, 1fr);
@@ -901,7 +911,7 @@
 
 .education-attendance-date {
     display: grid;
-    grid-template-columns: minmax(180px, 240px) auto;
+    grid-template-columns: minmax(220px, 1fr) minmax(180px, 240px) auto;
     gap: 12px;
     align-items: end;
 }
@@ -909,6 +919,18 @@
 .education-attendance-form {
     display: grid;
     gap: 14px;
+}
+
+.education-attendance-live-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #166534;
+    font-weight: 800;
 }
 
 .education-attendance-list {

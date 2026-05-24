@@ -108,6 +108,18 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
                                 <input class="form-control" name="video_url" placeholder="Cole o link do YouTube ou vídeo">
                             </div>
                             <div>
+                                <label class="form-label">Liberar em</label>
+                                <input class="form-control" name="available_at" type="datetime-local">
+                            </div>
+                            <div>
+                                <label class="form-label">Frequência da aula</label>
+                                <select class="form-select" name="attendance_mode">
+                                    <option value="video">Aluno conclui assistindo o vídeo</option>
+                                    <option value="manual">Ao vivo: professor valida presença</option>
+                                    <option value="none">Não contar para frequência</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="form-label">Imagem principal opcional</label>
                                 <input class="form-control" name="lesson_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
                             </div>
@@ -667,6 +679,18 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
                 <div class="lesson-order-field">
                     <label class="form-label">Ordem</label>
                     <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingLesson['sort_order'] ?? 0)) ?>">
+                </div>
+                <div>
+                    <label class="form-label">Liberar em</label>
+                    <input class="form-control" name="available_at" type="datetime-local" value="<?= !empty($editingLesson['available_at']) ? e(date('Y-m-d\TH:i', strtotime((string) $editingLesson['available_at']))) : '' ?>">
+                </div>
+                <div>
+                    <label class="form-label">Frequência da aula</label>
+                    <select class="form-select" name="attendance_mode">
+                        <option value="video" <?= selected((string) ($editingLesson['attendance_mode'] ?? 'video'), 'video') ?>>Aluno conclui assistindo o vídeo</option>
+                        <option value="manual" <?= selected((string) ($editingLesson['attendance_mode'] ?? 'video'), 'manual') ?>>Ao vivo: professor valida presença</option>
+                        <option value="none" <?= selected((string) ($editingLesson['attendance_mode'] ?? 'video'), 'none') ?>>Não contar para frequência</option>
+                    </select>
                 </div>
                 <details class="education-sequence-extra grid-span-2" open>
                     <summary><i class="bi bi-play-circle" aria-hidden="true"></i>Vídeo e imagem</summary>

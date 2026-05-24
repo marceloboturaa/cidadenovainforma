@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS education_lessons (
     video_url VARCHAR(255) NULL,
     image_url VARCHAR(255) NULL,
     locked TINYINT(1) NOT NULL DEFAULT 0,
+    available_at DATETIME NULL,
+    attendance_mode VARCHAR(20) NOT NULL DEFAULT 'video',
     sort_order INT NOT NULL DEFAULT 0,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
@@ -50,6 +52,8 @@ CREATE TABLE IF NOT EXISTS education_lessons (
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS module_id BIGINT UNSIGNED NULL AFTER course_id;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER video_url;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS available_at DATETIME NULL AFTER locked;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS attendance_mode VARCHAR(20) NOT NULL DEFAULT 'video' AFTER available_at;
 
 CREATE TABLE IF NOT EXISTS education_lesson_blocks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

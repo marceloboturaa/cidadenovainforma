@@ -343,6 +343,9 @@ $pdo->exec(
         description TEXT NULL,
         video_url VARCHAR(255) NULL,
         image_url VARCHAR(255) NULL,
+        locked TINYINT(1) NOT NULL DEFAULT 0,
+        available_at DATETIME NULL,
+        attendance_mode VARCHAR(20) NOT NULL DEFAULT "video",
         sort_order INT NOT NULL DEFAULT 0,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NULL,
@@ -358,6 +361,15 @@ if (!in_array('module_id', $lessonColumns, true)) {
 }
 if (!in_array('image_url', $lessonColumns, true)) {
     $pdo->exec('ALTER TABLE education_lessons ADD COLUMN image_url VARCHAR(255) NULL AFTER video_url');
+}
+if (!in_array('locked', $lessonColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lessons ADD COLUMN locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
+}
+if (!in_array('available_at', $lessonColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lessons ADD COLUMN available_at DATETIME NULL AFTER locked');
+}
+if (!in_array('attendance_mode', $lessonColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lessons ADD COLUMN attendance_mode VARCHAR(20) NOT NULL DEFAULT "video" AFTER available_at');
 }
 
 $pdo->exec(

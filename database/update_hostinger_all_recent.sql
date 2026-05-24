@@ -263,6 +263,8 @@ CREATE TABLE IF NOT EXISTS education_lessons (
     video_url VARCHAR(255) NULL,
     image_url VARCHAR(255) NULL,
     locked TINYINT(1) NOT NULL DEFAULT 0,
+    available_at DATETIME NULL,
+    attendance_mode VARCHAR(20) NOT NULL DEFAULT 'video',
     sort_order INT NOT NULL DEFAULT 0,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
@@ -313,6 +315,25 @@ CREATE TABLE IF NOT EXISTS education_lesson_watches (
     PRIMARY KEY (lesson_id, user_id),
     CONSTRAINT fk_education_watches_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_watches_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS education_attendance (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    course_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    attendance_date DATE NOT NULL,
+    status ENUM('present','absent','justified') NOT NULL DEFAULT 'present',
+    notes VARCHAR(255) NULL,
+    recorded_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    UNIQUE KEY uq_education_attendance_course_user_date_lesson (course_id, user_id, attendance_date, lesson_id),
+    INDEX idx_education_attendance_course_date (course_id, attendance_date),
+    INDEX idx_education_attendance_lesson (lesson_id),
+    CONSTRAINT fk_education_attendance_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_attendance_recorder FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS education_forum_topics (
@@ -518,6 +539,10 @@ ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS allow_download TINYINT(1) NO
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS module_id BIGINT UNSIGNED NULL AFTER course_id;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER video_url;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS available_at DATETIME NULL AFTER locked;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS attendance_mode VARCHAR(20) NOT NULL DEFAULT 'video' AFTER available_at;
+
+ALTER TABLE education_attendance ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER user_id;
 
 ALTER TABLE people ADD COLUMN IF NOT EXISTS cep VARCHAR(12) NULL AFTER email;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS address_number VARCHAR(30) NULL AFTER address;

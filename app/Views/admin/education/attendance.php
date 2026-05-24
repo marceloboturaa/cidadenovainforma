@@ -1,6 +1,8 @@
 <?php
 $students = $students ?? [];
 $records = $records ?? [];
+$lesson = $lesson ?? null;
+$lessons = $lessons ?? [];
 $statusLabels = [
     'present' => 'Presente',
     'absent' => 'Falta',
@@ -10,8 +12,8 @@ $statusLabels = [
 
 <div class="page-heading">
     <div>
-        <p>Chamada</p>
-        <h1><?= e($course['title']) ?></h1>
+        <p><?= $lesson ? 'Validação de presença' : 'Chamada' ?></p>
+        <h1><?= e($lesson['title'] ?? $course['title']) ?></h1>
     </div>
     <div class="heading-actions">
         <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance/report?id=' . $course['id'])) ?>"><i class="bi bi-bar-chart" aria-hidden="true"></i>Relatório</a>
@@ -28,6 +30,18 @@ $statusLabels = [
     <form class="education-attendance-date" method="get" action="<?= e(url('/admin/education/attendance')) ?>">
         <input type="hidden" name="id" value="<?= e((string) $course['id']) ?>">
         <div>
+            <label class="form-label">Aula ao vivo</label>
+            <select class="form-select" name="lesson_id">
+                <option value="">Chamada geral do curso</option>
+                <?php foreach ($lessons as $item): ?>
+                    <?php if (($item['attendance_mode'] ?? 'video') !== 'manual') { continue; } ?>
+                    <option value="<?= e((string) $item['id']) ?>" <?= selected((string) ($lesson['id'] ?? ''), (string) $item['id']) ?>>
+                        <?= e($item['title']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
             <label class="form-label">Data da chamada</label>
             <input class="form-control" type="date" name="date" value="<?= e($date) ?>">
         </div>
@@ -38,6 +52,13 @@ $statusLabels = [
         <form method="post" action="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>" class="education-attendance-form">
             <?= csrf_field() ?>
             <input type="hidden" name="attendance_date" value="<?= e($date) ?>">
+            <input type="hidden" name="lesson_id" value="<?= e((string) ($lesson['id'] ?? 0)) ?>">
+            <?php if ($lesson): ?>
+                <div class="education-attendance-live-note">
+                    <i class="bi bi-person-check" aria-hidden="true"></i>
+                    <span>Marcar como presente também conclui esta aula para o aluno. Falta ou justificada remove a conclusão desta aula.</span>
+                </div>
+            <?php endif; ?>
             <div class="education-attendance-list">
                 <?php foreach ($students as $student): ?>
                     <?php $record = $records[(int) $student['id']] ?? []; ?>

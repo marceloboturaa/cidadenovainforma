@@ -314,7 +314,8 @@ class EducationController
         $lesson = $this->lessonFromQuery();
         $course = Education::findCourse((int) $lesson['course_id']);
         $canManage = $this->canManageCourse($course);
-        $isLocked = !empty($lesson['locked']) && !$canManage;
+        $isScheduleLocked = !$canManage && !$this->lessonIsAvailable($lesson);
+        $isLocked = (!empty($lesson['locked']) || $isScheduleLocked) && !$canManage;
 
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
@@ -322,7 +323,7 @@ class EducationController
             return;
         }
         if (!Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)) {
-            Session::flash('error', 'Conclua a aula anterior antes de assistir esta aula.');
+            Session::flash('error', $isScheduleLocked ? 'Esta aula ainda não foi liberada no agendamento.' : 'Conclua a aula anterior antes de assistir esta aula.');
             redirect('/admin/education/course?id=' . $lesson['course_id']);
         }
 
@@ -345,6 +346,7 @@ class EducationController
             'editingBlock' => $this->blockFromQuery(false),
             'canManage' => $canManage,
             'isLocked' => $isLocked,
+            'isScheduleLocked' => $isScheduleLocked,
             'hasVideo' => $hasVideo,
             'videoWatched' => $videoWatched,
             'modules' => Education::modulesForCourse((int) $lesson['course_id']),
@@ -472,9 +474,17 @@ class EducationController
             Session::flash('error', 'Esta aula está bloqueada pelo professor.');
             redirect('/admin/education/lesson?id=' . $lesson['id']);
         }
+        if (!$this->lessonIsAvailable($lesson) && !$canManage) {
+            Session::flash('error', 'Esta aula ainda não foi liberada no agendamento.');
+            redirect('/admin/education/course?id=' . $lesson['course_id']);
+        }
         if (!Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)) {
             Session::flash('error', 'Conclua a aula anterior antes de marcar esta aula.');
             redirect('/admin/education/course?id=' . $lesson['course_id']);
+        }
+        if (($_POST['completed'] ?? '') === '1' && !$canManage && ($lesson['attendance_mode'] ?? 'video') === 'manual') {
+            Session::flash('error', 'Esta aula ao vivo precisa da validação de presença pelo professor.');
+            redirect('/admin/education/lesson?id=' . $lesson['id']);
         }
         if (($_POST['completed'] ?? '') === '1' && !$canManage && trim((string) ($lesson['video_url'] ?? '')) !== '' && !Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id'])) {
             Session::flash('error', 'Assista ao vídeo completo antes de concluir a aula.');
@@ -505,6 +515,7 @@ class EducationController
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)
             || !Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)
             || (!empty($lesson['locked']) && !$canManage)
+            || (!$this->lessonIsAvailable($lesson) && !$canManage)
         ) {
             http_response_code(403);
             echo json_encode(['ok' => false, 'message' => 'Acesso negado.']);
@@ -946,12 +957,21 @@ class EducationController
         $course = $this->courseFromQuery();
         $this->authorizeAttendance($course);
 
+        $lesson = $this->lessonFromQuery(false, false);
+        if ($lesson && (int) $lesson['course_id'] !== (int) $course['id']) {
+            $lesson = null;
+        }
         $date = $this->attendanceDate();
+        if ($lesson && !empty($lesson['available_at'])) {
+            $date = substr((string) $lesson['available_at'], 0, 10);
+        }
         View::render('admin/education/attendance', [
             'course' => $course,
+            'lesson' => $lesson,
             'date' => $date,
             'students' => Education::enrolledStudentsForCourse((int) $course['id']),
-            'records' => Education::attendanceForCourseDate((int) $course['id'], $date),
+            'records' => Education::attendanceForCourseDate((int) $course['id'], $date, $lesson ? (int) $lesson['id'] : 0),
+            'lessons' => Education::lessonsForCourse((int) $course['id']),
         ]);
     }
 
@@ -962,16 +982,23 @@ class EducationController
         $this->authorizeAttendance($course);
         $this->validateCsrf('/admin/education/attendance?id=' . $course['id']);
 
+        $lessonId = filter_input(INPUT_POST, 'lesson_id', FILTER_VALIDATE_INT) ?: 0;
+        $lesson = $lessonId ? Education::findLesson($lessonId) : null;
+        if ($lesson && (int) $lesson['course_id'] !== (int) $course['id']) {
+            $lesson = null;
+            $lessonId = 0;
+        }
         $date = $this->attendanceDate();
         Education::saveAttendance(
             (int) $course['id'],
             $date,
             is_array($_POST['attendance'] ?? null) ? $_POST['attendance'] : [],
-            (int) (current_user()['id'] ?? 0) ?: null
+            (int) (current_user()['id'] ?? 0) ?: null,
+            $lessonId
         );
 
-        Session::flash('success', 'Chamada salva.');
-        redirect('/admin/education/attendance?id=' . $course['id'] . '&date=' . $date);
+        Session::flash('success', $lesson ? 'Presença da aula validada.' : 'Chamada salva.');
+        redirect('/admin/education/attendance?id=' . $course['id'] . '&date=' . $date . ($lessonId ? '&lesson_id=' . $lessonId : ''));
     }
 
     public function attendanceReport(): void
@@ -1415,6 +1442,12 @@ class EducationController
         }
 
         return [$startDate, $endDate];
+    }
+
+    private function lessonIsAvailable(array $lesson): bool
+    {
+        $availableAt = trim((string) ($lesson['available_at'] ?? ''));
+        return $availableAt === '' || strtotime($availableAt) <= time();
     }
 
     private function certificateFieldsFromCourse(array $course): array
