@@ -2,7 +2,7 @@
 
 .document-summary-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin-bottom: 18px;
 }
@@ -70,7 +70,7 @@
 
 .document-upload-form {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(260px, 1fr) minmax(190px, 0.6fr) auto;
+    grid-template-columns: minmax(190px, 0.8fr) minmax(230px, 1fr) minmax(230px, 1fr) minmax(170px, 0.6fr) auto;
     gap: 14px;
     align-items: end;
 }
@@ -217,7 +217,7 @@
 
 .document-edit-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr);
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr) minmax(220px, 0.8fr);
     gap: 12px;
 }
 

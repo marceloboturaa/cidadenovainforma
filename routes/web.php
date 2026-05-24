@@ -26,6 +26,7 @@ $router->get('/evento/{id}', [PublicController::class, 'eventShow']);
 $router->get('/instituicao', [PublicController::class, 'institution']);
 $router->get('/instituicao/{slug}', [PublicController::class, 'institutionArea']);
 $router->get('/documentos', [PublicController::class, 'documents']);
+$router->get('/documentos/visualizar', [PublicController::class, 'viewDocument']);
 $router->get('/documentos/download', [PublicController::class, 'downloadDocument']);
 $router->get('/certificado/validar', [PublicController::class, 'verifyCertificate']);
 $router->get('/certificado/{codigo}', [PublicController::class, 'verifyCertificate']);

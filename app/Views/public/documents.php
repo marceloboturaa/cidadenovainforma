@@ -49,7 +49,7 @@
 
 <?php
 $documentTypes = array_values(array_unique(array_filter(array_map(function (array $document): string {
-    return strtoupper(pathinfo($document['original_name'] ?? '', PATHINFO_EXTENSION) ?: 'ARQ');
+    return \App\Models\Document::typeLabel($document);
 }, $documents))));
 sort($documentTypes);
 ?>
@@ -74,13 +74,45 @@ sort($documentTypes);
 
 <section class="public-document-list">
     <?php foreach ($documents as $document): ?>
-        <?php $documentType = strtoupper(pathinfo($document['original_name'] ?? '', PATHINFO_EXTENSION) ?: 'ARQ'); ?>
+        <?php
+        $documentType = \App\Models\Document::typeLabel($document);
+        $isLink = \App\Models\Document::isExternalLink($document);
+        $viewUrl = \App\Models\Document::publicUrl($document);
+        $extension = strtolower(pathinfo((string) ($document['original_name'] ?? ''), PATHINFO_EXTENSION));
+        $mime = strtolower((string) ($document['mime_type'] ?? ''));
+        $isImage = str_starts_with($mime, 'image/') || in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true);
+        $isPdf = $mime === 'application/pdf' || $extension === 'pdf';
+        $isText = str_starts_with($mime, 'text/') || in_array($extension, ['txt', 'csv'], true);
+        $isOffice = in_array($extension, ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp'], true);
+        $officeViewer = 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($viewUrl);
+        ?>
         <article class="public-document-card" data-document-card data-title="<?= e(mb_strtolower($document['title'] ?? '', 'UTF-8')) ?>" data-type="<?= e($documentType) ?>">
             <div>
                 <span><?= e($documentType) ?></span>
                 <h2><?= e($document['title']) ?></h2>
+                <?php if ($isLink): ?>
+                    <p><?= e(parse_url($viewUrl, PHP_URL_HOST) ?: $viewUrl) ?></p>
+                <?php endif; ?>
             </div>
-            <a href="<?= e(url('/documentos/download?id=' . $document['id'])) ?>">Baixar</a>
+            <a href="<?= e($isLink ? $viewUrl : url('/documentos/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir link' : 'Baixar' ?></a>
+            <?php if ($isImage || $isPdf || $isText || $isOffice || $isLink): ?>
+                <details class="public-document-preview">
+                    <summary>Ver na página</summary>
+                    <?php if ($isLink): ?>
+                        <div class="public-document-link-preview">
+                            <strong><?= e($viewUrl) ?></strong>
+                            <a href="<?= e($viewUrl) ?>" target="_blank" rel="noopener">Abrir em nova aba</a>
+                        </div>
+                    <?php elseif ($isImage): ?>
+                        <img src="<?= e($viewUrl) ?>" alt="<?= e($document['title']) ?>" loading="lazy">
+                    <?php elseif ($isPdf || $isText): ?>
+                        <iframe src="<?= e($viewUrl) ?>" title="<?= e($document['title']) ?>"></iframe>
+                    <?php elseif ($isOffice): ?>
+                        <iframe src="<?= e($officeViewer) ?>" title="<?= e($document['title']) ?>"></iframe>
+                        <p>A visualização de documentos Office depende do arquivo estar acessível publicamente na internet.</p>
+                    <?php endif; ?>
+                </details>
+            <?php endif; ?>
         </article>
     <?php endforeach; ?>
 

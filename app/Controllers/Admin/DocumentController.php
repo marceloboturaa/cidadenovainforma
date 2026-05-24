@@ -113,44 +113,25 @@ class DocumentController
         $this->authorizeUpload();
         $this->validateCsrf();
 
-        if (empty($_FILES['document']['name']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
-            Session::flash('error', 'Envie um documento valido.');
+        $linkUrl = $this->normalizeDocumentLink((string) ($_POST['document_url'] ?? ''));
+        $hasFile = !empty($_FILES['document']['name']) && ($_FILES['document']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+
+        if (!$hasFile && $linkUrl === '') {
+            Session::flash('error', 'Envie um arquivo ou informe um link valido.');
             redirect('/admin/documents');
         }
 
-        if ($_FILES['document']['size'] > self::MAX_FILE_SIZE) {
-            Session::flash('error', 'O documento deve ter no maximo 10MB.');
-            redirect('/admin/documents');
-        }
-
-        $mime = mime_content_type($_FILES['document']['tmp_name']) ?: '';
-        $extension = strtolower(pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION));
-
-        if (!$this->documentExtensionIsAllowed($extension, $mime)) {
-            Session::flash('error', 'Tipo de documento nao permitido. Formatos liberados: ' . implode(', ', $this->allowedExtensions()) . '.');
-            redirect('/admin/documents');
-        }
-
-        $directory = dirname(__DIR__, 3) . '/storage/documents';
-        if (!is_dir($directory)) {
-            mkdir($directory, 0775, true);
-        }
-
-        $filename = bin2hex(random_bytes(16)) . '.' . $extension;
-        $target = $directory . '/' . $filename;
-
-        if (!move_uploaded_file($_FILES['document']['tmp_name'], $target)) {
-            Session::flash('error', 'Nao foi possivel salvar o documento.');
-            redirect('/admin/documents');
-        }
+        $payload = $hasFile
+            ? $this->storeUploadedDocument('document')
+            : $this->documentLinkPayload($linkUrl, (string) ($_POST['title'] ?? ''));
 
         $documentId = Document::create([
             'uploaded_by' => current_user()['id'],
-            'title' => trim($_POST['title'] ?? '') ?: pathinfo($_FILES['document']['name'], PATHINFO_FILENAME),
-            'path' => '/storage/documents/' . $filename,
-            'mime_type' => $mime ?: 'application/octet-stream',
-            'original_name' => $_FILES['document']['name'],
-            'size_bytes' => (int) $_FILES['document']['size'],
+            'title' => trim($_POST['title'] ?? '') ?: pathinfo($payload['original_name'], PATHINFO_FILENAME),
+            'path' => $payload['path'],
+            'mime_type' => $payload['mime_type'],
+            'original_name' => $payload['original_name'],
+            'size_bytes' => $payload['size_bytes'],
             'is_public' => $this->canManageDocuments() && isset($_POST['is_public']),
         ]);
         Document::updateAccess(
@@ -159,7 +140,7 @@ class DocumentController
             $this->canManageDocuments() ? ($_POST['user_ids'] ?? []) : [(int) current_user()['id']]
         );
 
-        Session::flash('success', 'Documento enviado.');
+        Session::flash('success', $hasFile ? 'Documento enviado.' : 'Link cadastrado.');
         redirect('/admin/documents');
     }
 
@@ -185,6 +166,8 @@ class DocumentController
         $data = ['title' => $title];
         if (!empty($_FILES['document']['name']) && ($_FILES['document']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
             $data = array_merge($data, $this->storeUploadedDocument('document'));
+        } elseif (($linkUrl = $this->normalizeDocumentLink((string) ($_POST['document_url'] ?? ''))) !== '') {
+            $data = array_merge($data, $this->documentLinkPayload($linkUrl, $title));
         }
 
         Document::update((int) $document['id'], $data);
@@ -225,6 +208,11 @@ class DocumentController
             http_response_code(404);
             View::render('errors/404');
             return;
+        }
+
+        if (Document::isExternalLink($document)) {
+            header('Location: ' . $document['path']);
+            exit;
         }
 
         $path = Document::absolutePath($document);
@@ -320,6 +308,37 @@ class DocumentController
             'mime_type' => $mime ?: 'application/octet-stream',
             'original_name' => (string) $file['name'],
             'size_bytes' => (int) $file['size'],
+        ];
+    }
+
+    private function normalizeDocumentLink(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '' || !filter_var($value, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        if (strlen($value) > 255) {
+            Session::flash('error', 'O link deve ter no maximo 255 caracteres.');
+            redirect('/admin/documents');
+        }
+
+        return preg_match('#^https?://#i', $value) ? $value : '';
+    }
+
+    private function documentLinkPayload(string $url, string $title): array
+    {
+        $host = parse_url($url, PHP_URL_HOST) ?: 'link';
+        $path = parse_url($url, PHP_URL_PATH) ?: '';
+        $basename = basename($path);
+        $name = $basename !== '' && $basename !== '/' ? $basename : ($title ?: $host);
+
+        return [
+            'path' => $url,
+            'mime_type' => 'text/uri-list',
+            'original_name' => $name,
+            'size_bytes' => 0,
         ];
     }
 

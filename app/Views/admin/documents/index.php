@@ -1,5 +1,6 @@
 <?php
 $totalDocuments = count($documents);
+$linkedDocuments = count(array_filter($documents, fn (array $document): bool => \App\Models\Document::isExternalLink($document)));
 $documentsOnServer = count(array_filter($documents, fn (array $document): bool => \App\Models\Document::fileExistsOnServer($document)));
 $publicDocuments = count(array_filter($documents, fn (array $document): bool => !empty($document['is_public'])));
 $restrictedDocuments = $totalDocuments - $publicDocuments;
@@ -22,6 +23,11 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
         <span>No servidor</span>
         <strong><?= e((string) $documentsOnServer) ?></strong>
         <small>arquivo(s) confirmado(s)</small>
+    </article>
+    <article>
+        <span>Links</span>
+        <strong><?= e((string) $linkedDocuments) ?></strong>
+        <small>atalho(s) externo(s)</small>
     </article>
     <article>
         <span>Restritos</span>
@@ -82,8 +88,13 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             </div>
             <div>
                 <label class="form-label" for="document-file">Arquivo</label>
-                <input class="form-control" id="document-file" name="document" type="file" accept="<?= e($allowedAccept ?? '') ?>" required>
+                <input class="form-control" id="document-file" name="document" type="file" accept="<?= e($allowedAccept ?? '') ?>">
                 <small class="form-text">Formatos permitidos: <?= e($allowedExtensionsText ?? '') ?></small>
+            </div>
+            <div>
+                <label class="form-label" for="document-url">Link do documento</label>
+                <input class="form-control" id="document-url" name="document_url" type="url" maxlength="255" placeholder="https://...">
+                <small class="form-text">Use arquivo ou link. Se os dois forem preenchidos, o arquivo será usado.</small>
             </div>
             <?php if ($canManage): ?>
                 <div class="document-visibility-box">
@@ -142,9 +153,10 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
         <?php foreach ($documents as $document): ?>
             <?php
             $accessUserIds = $canManage ? \App\Models\Document::accessUserIds((int) $document['id']) : [];
+            $isLink = \App\Models\Document::isExternalLink($document);
             $fileExists = \App\Models\Document::fileExistsOnServer($document);
             $canEditDocument = $canManage || ($canUpload && (int) $document['uploaded_by'] === (int) (current_user()['id'] ?? 0));
-            $documentType = strtoupper(pathinfo($document['original_name'], PATHINFO_EXTENSION) ?: 'ARQ');
+            $documentType = \App\Models\Document::typeLabel($document);
             ?>
             <article class="document-row">
                 <div class="document-file-icon"><?= e($documentType) ?></div>
@@ -152,12 +164,12 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                 <div class="document-main">
                     <div class="document-title-line">
                         <h3><?= e($document['title']) ?></h3>
-                        <span class="state-pill <?= $fileExists ? 'is-active' : 'is-pending' ?>"><?= $fileExists ? 'Arquivo no servidor' : 'Arquivo ausente' ?></span>
+                        <span class="state-pill <?= ($fileExists || $isLink) ? 'is-active' : 'is-pending' ?>"><?= $isLink ? 'Link externo' : ($fileExists ? 'Arquivo no servidor' : 'Arquivo ausente') ?></span>
                         <span class="state-pill <?= !empty($document['is_public']) ? 'is-active' : 'is-muted' ?>"><?= !empty($document['is_public']) ? 'P&uacute;blico' : 'Restrito' ?></span>
                     </div>
                     <div class="document-meta-grid">
                         <span><?= e($document['original_name']) ?></span>
-                        <span><?= e(number_format(((int) $document['size_bytes']) / 1024, 1, ',', '.')) ?> KB</span>
+                        <span><?= $isLink ? 'Link' : e(number_format(((int) $document['size_bytes']) / 1024, 1, ',', '.')) . ' KB' ?></span>
                         <span>Enviado por <?= e($document['uploader_name']) ?></span>
                         <?php if ($canManage && !$document['is_public']): ?>
                             <span><?= e((string) count($accessUserIds)) ?> usu&aacute;rio(s) liberado(s)</span>
@@ -166,7 +178,7 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                 </div>
 
                 <div class="document-actions">
-                    <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/documents/download?id=' . $document['id'])) ?>">Baixar</a>
+                    <a class="btn btn-sm btn-primary" href="<?= e(url('/admin/documents/download?id=' . $document['id'])) ?>"<?= $isLink ? ' target="_blank" rel="noopener"' : '' ?>><?= $isLink ? 'Abrir link' : 'Baixar' ?></a>
                     <?php if ($canManage): ?>
                         <form class="inline-form" method="post" action="<?= e(url('/admin/documents/delete?id=' . $document['id'])) ?>">
                             <?= csrf_field() ?>
@@ -188,6 +200,10 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                                 <label class="form-label">
                                     Trocar arquivo
                                     <input class="form-control form-control-sm" name="document" type="file" accept="<?= e($allowedAccept ?? '') ?>">
+                                </label>
+                                <label class="form-label">
+                                    Trocar por link
+                                    <input class="form-control form-control-sm" name="document_url" type="url" maxlength="255" value="<?= $isLink ? e($document['path']) : '' ?>" placeholder="https://...">
                                 </label>
                             </div>
 

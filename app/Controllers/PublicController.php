@@ -209,6 +209,11 @@ class PublicController
             return;
         }
 
+        if (Document::isExternalLink($document)) {
+            header('Location: ' . $document['path']);
+            exit;
+        }
+
         $path = Document::absolutePath($document);
         if (!$path || !is_file($path)) {
             http_response_code(404);
@@ -225,6 +230,41 @@ class PublicController
         header('Content-Length: ' . filesize($path));
         header('Pragma: public');
         header('Cache-Control: must-revalidate');
+
+        readfile($path);
+        exit;
+    }
+
+    public function viewDocument(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $document = $id ? Document::find($id) : null;
+
+        if (!$document || empty($document['is_public'])) {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        if (Document::isExternalLink($document)) {
+            header('Location: ' . $document['path']);
+            exit;
+        }
+
+        $path = Document::absolutePath($document);
+        if (!$path || !is_file($path)) {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        $filename = str_replace(['"', "\r", "\n"], '', basename($document['original_name']));
+
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Type: ' . $this->safeMimeType((string) $document['mime_type']));
+        header('Content-Disposition: inline; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($path));
+        header('Cache-Control: public, max-age=3600');
 
         readfile($path);
         exit;

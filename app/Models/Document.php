@@ -54,6 +54,10 @@ class Document
 
     public static function absolutePath(array $document): ?string
     {
+        if (self::isExternalLink($document)) {
+            return null;
+        }
+
         $root = dirname(__DIR__, 2);
         $path = str_replace('\\', '/', (string) ($document['path'] ?? ''));
 
@@ -74,6 +78,41 @@ class Document
         }
 
         return null;
+    }
+
+    public static function isExternalLink(array $document): bool
+    {
+        return preg_match('#^https?://#i', (string) ($document['path'] ?? '')) === 1;
+    }
+
+    public static function publicUrl(array $document): string
+    {
+        return self::isExternalLink($document)
+            ? (string) $document['path']
+            : url('/documentos/visualizar?id=' . $document['id']);
+    }
+
+    public static function typeLabel(array $document): string
+    {
+        if (self::isExternalLink($document)) {
+            return 'LINK';
+        }
+
+        return strtoupper(pathinfo($document['original_name'] ?? '', PATHINFO_EXTENSION) ?: 'ARQ');
+    }
+
+    public static function canPreviewInline(array $document): bool
+    {
+        if (self::isExternalLink($document)) {
+            return true;
+        }
+
+        $mime = strtolower((string) ($document['mime_type'] ?? ''));
+        $extension = strtolower(pathinfo((string) ($document['original_name'] ?? ''), PATHINFO_EXTENSION));
+
+        return str_starts_with($mime, 'image/')
+            || in_array($mime, ['application/pdf', 'text/plain', 'text/csv'], true)
+            || in_array($extension, ['pdf', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true);
     }
 
     private static function migratePublicDocumentsToStorage(): void
