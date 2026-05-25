@@ -27,7 +27,8 @@ ALTER TABLE education_courses
 CREATE TABLE IF NOT EXISTS education_certificates (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     course_id BIGINT UNSIGNED NOT NULL,
-    user_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NULL,
+    person_id BIGINT UNSIGNED NULL,
     verification_code VARCHAR(48) NOT NULL,
     student_name VARCHAR(180) NULL,
     requested_student_name VARCHAR(180) NULL,
@@ -39,13 +40,17 @@ CREATE TABLE IF NOT EXISTS education_certificates (
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
+    UNIQUE KEY uq_education_certificate_course_person (course_id, person_id),
     UNIQUE KEY uq_education_certificate_code (verification_code),
     CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_certificate_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_certificate_reviewer FOREIGN KEY (name_change_reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 ALTER TABLE education_certificates
+    MODIFY COLUMN user_id BIGINT UNSIGNED NULL,
+    ADD COLUMN IF NOT EXISTS person_id BIGINT UNSIGNED NULL AFTER user_id,
     ADD COLUMN IF NOT EXISTS student_name VARCHAR(180) NULL AFTER verification_code,
     ADD COLUMN IF NOT EXISTS requested_student_name VARCHAR(180) NULL AFTER student_name,
     ADD COLUMN IF NOT EXISTS name_change_status VARCHAR(20) NULL AFTER requested_student_name,

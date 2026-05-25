@@ -577,7 +577,8 @@ $pdo->exec(
     'CREATE TABLE IF NOT EXISTS education_certificates (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         course_id BIGINT UNSIGNED NOT NULL,
-        user_id BIGINT UNSIGNED NOT NULL,
+        user_id BIGINT UNSIGNED NULL,
+        person_id BIGINT UNSIGNED NULL,
         verification_code VARCHAR(48) NOT NULL,
         validation_hash CHAR(64) NULL,
         status VARCHAR(30) NOT NULL DEFAULT "issued",
@@ -602,12 +603,14 @@ $pdo->exec(
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
         UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
+        UNIQUE KEY uq_education_certificate_course_person (course_id, person_id),
         UNIQUE KEY uq_education_certificate_code (verification_code),
         INDEX idx_education_certificate_status (status),
         INDEX idx_education_certificate_hash (validation_hash),
         CONSTRAINT fk_education_certificate_batch FOREIGN KEY (batch_id) REFERENCES certificate_batches(id) ON DELETE SET NULL,
         CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
         CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_education_certificate_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
         CONSTRAINT fk_education_certificate_authorizer FOREIGN KEY (authorized_by) REFERENCES users(id) ON DELETE SET NULL,
         CONSTRAINT fk_education_certificate_issuer FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE SET NULL,
         CONSTRAINT fk_education_certificate_revoker FOREIGN KEY (revoked_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -619,6 +622,7 @@ $certificateNameColumns = [
     'validation_hash' => 'ALTER TABLE education_certificates ADD COLUMN validation_hash CHAR(64) NULL AFTER verification_code',
     'status' => 'ALTER TABLE education_certificates ADD COLUMN status VARCHAR(30) NOT NULL DEFAULT "issued" AFTER validation_hash',
     'batch_id' => 'ALTER TABLE education_certificates ADD COLUMN batch_id BIGINT UNSIGNED NULL AFTER status',
+    'person_id' => 'ALTER TABLE education_certificates ADD COLUMN person_id BIGINT UNSIGNED NULL AFTER user_id',
     'student_name' => 'ALTER TABLE education_certificates ADD COLUMN student_name VARCHAR(180) NULL AFTER verification_code',
     'requested_student_name' => 'ALTER TABLE education_certificates ADD COLUMN requested_student_name VARCHAR(180) NULL AFTER student_name',
     'name_change_status' => 'ALTER TABLE education_certificates ADD COLUMN name_change_status VARCHAR(20) NULL AFTER requested_student_name',
@@ -641,8 +645,9 @@ foreach ($certificateNameColumns as $column => $sql) {
         $pdo->exec($sql);
     }
 }
+$pdo->exec('ALTER TABLE education_certificates MODIFY COLUMN user_id BIGINT UNSIGNED NULL');
 $pdo->exec('UPDATE education_certificates SET status = "issued" WHERE status IS NULL OR status = ""');
-$pdo->exec('UPDATE education_certificates SET validation_hash = SHA2(CONCAT(course_id, "|", user_id, "|", verification_code), 256) WHERE validation_hash IS NULL OR validation_hash = ""');
+$pdo->exec('UPDATE education_certificates SET validation_hash = SHA2(CONCAT(course_id, "|", COALESCE(user_id, person_id, 0), "|", verification_code), 256) WHERE validation_hash IS NULL OR validation_hash = ""');
 
 $pdo->exec(
     'CREATE TABLE IF NOT EXISTS certificate_audit_logs (

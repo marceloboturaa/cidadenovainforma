@@ -66,6 +66,7 @@ class EducationController
         View::render('admin/education/certificate-center', [
             'stats' => Education::certificateCenterStats(),
             'institutions' => Education::certificateInstitutions(),
+            'recognitionPeople' => Education::recognitionCertificatePeople(),
             'canManageCertificates' => Auth::can('certificates.manage'),
             'canIssueCertificates' => Auth::can('certificates.issue'),
             'canAuditCertificates' => Auth::can('certificates.audit') || Auth::can('logs.view'),
@@ -98,6 +99,31 @@ class EducationController
         Logger::info('certificates.institution_created', 'Instituição certificadora criada: ' . $name, current_user()['id'] ?? null);
         Session::flash('success', 'Instituição certificadora criada.');
         redirect('/admin/education/certificate-center');
+    }
+
+    public function storeRecognitionCertificate(): void
+    {
+        Middleware::auth();
+        if (!Auth::can('certificates.issue') && !Auth::hasRole(['master', 'admin'])) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $this->validateCsrf('/admin/education/certificate-center');
+
+        try {
+            $certificate = Education::issueRecognitionCertificate(array_merge($_POST, [
+                'issued_by' => (int) (current_user()['id'] ?? 0),
+            ]));
+        } catch (\InvalidArgumentException $exception) {
+            Session::flash('error', $exception->getMessage());
+            redirect('/admin/education/certificate-center');
+        }
+
+        Logger::info('certificates.recognition_issued', 'Certificado de reconhecimento emitido: ' . ($certificate['verification_code'] ?? ''), current_user()['id'] ?? null);
+        Session::flash('success', 'Certificado de reconhecimento emitido. Código: ' . ($certificate['verification_code'] ?? ''));
+        redirect('/admin/education/certificate?certificate_id=' . (int) ($certificate['id'] ?? 0));
     }
 
     public function manage(): void
@@ -1135,6 +1161,34 @@ class EducationController
     public function certificate(): void
     {
         Middleware::auth();
+        $certificateId = filter_input(INPUT_GET, 'certificate_id', FILTER_VALIDATE_INT);
+        if ($certificateId && (Auth::can('certificates.issue') || Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin']))) {
+            $certificate = Education::certificateById($certificateId);
+            if (!$certificate) {
+                http_response_code(404);
+                View::render('errors/404');
+                return;
+            }
+
+            $course = Education::findCourse((int) $certificate['course_id']);
+            if (!$course) {
+                http_response_code(404);
+                View::render('errors/404');
+                return;
+            }
+
+            View::render('admin/education/certificate', [
+                'course' => $course,
+                'certificate' => $certificate,
+                'certificateStatus' => ['frequency' => 0, 'minimum_frequency' => (int) ($course['certificate_min_frequency'] ?? 0)],
+                'certificateText' => $this->certificateText($course, $certificate, ['frequency' => 0]),
+                'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), []),
+                'certificatePeriod' => ['enrolled_at' => null, 'completed_at' => null, 'last_attendance_at' => null, 'issued_at' => $certificate['issued_at'] ?? null],
+                'isManagedCertificate' => true,
+            ]);
+            return;
+        }
+
         $course = $this->courseFromQuery();
         $userId = (int) (current_user()['id'] ?? 0);
 

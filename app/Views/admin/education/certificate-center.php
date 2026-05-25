@@ -3,6 +3,7 @@ $stats = $stats ?? [];
 $recent = $stats['recent'] ?? [];
 $byStatus = $stats['by_status'] ?? [];
 $institutions = $institutions ?? [];
+$recognitionPeople = $recognitionPeople ?? [];
 $statusLabels = [
     'issued' => 'Emitidos',
     'pending' => 'Pendentes',
@@ -107,6 +108,61 @@ $statusLabels = [
         </aside>
     </div>
 
+    <?php if (!empty($canIssueCertificates)): ?>
+        <section class="panel">
+            <div class="section-heading">
+                <h2>Certificado de reconhecimento</h2>
+                <span>Voluntários e ações comunitárias</span>
+            </div>
+            <?php if ($recognitionPeople): ?>
+                <form method="post" action="<?= e(url('/admin/education/recognition-certificate')) ?>" class="education-certificate-settings">
+                    <?= csrf_field() ?>
+                    <div>
+                        <label class="form-label">Voluntário / participante</label>
+                        <select class="form-select" name="person_id" required>
+                            <option value="">Selecione uma pessoa cadastrada</option>
+                            <?php foreach ($recognitionPeople as $person): ?>
+                                <option value="<?= e((string) $person['id']) ?>">
+                                    <?= e($person['full_name'] ?? '') ?>
+                                    <?php if (!empty($person['email'])): ?> - <?= e($person['email']) ?><?php endif; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Instituição emissora</label>
+                        <select class="form-select" name="institution_id">
+                            <option value="">Cidade Nova Informa / padrão do certificado</option>
+                            <?php foreach ($institutions as $institution): ?>
+                                <option value="<?= e((string) $institution['id']) ?>"><?= e($institution['name'] ?? '') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Atividade reconhecida</label>
+                        <input class="form-control" name="activity_title" maxlength="180" value="Reconhecimento por atuação voluntária" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Título no certificado</label>
+                        <input class="form-control" name="certificate_title" maxlength="180" value="Certificado de reconhecimento">
+                    </div>
+                    <div class="grid-span-2">
+                        <label class="form-label">Texto editável do certificado</label>
+                        <textarea class="form-control" name="certificate_text" rows="4">Certificamos que {student_name} recebeu este certificado de reconhecimento por sua contribuição voluntária em ações institucionais e comunitárias.</textarea>
+                        <small class="form-text">Use {student_name} para inserir automaticamente o nome da pessoa.</small>
+                    </div>
+                    <div class="form-action-cell">
+                        <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Emitir reconhecimento</button>
+                    </div>
+                </form>
+            <?php else: ?>
+                <div class="empty-state">
+                    Cadastre voluntários em <a href="<?= e(url('/admin/people')) ?>">Pessoas</a> para emitir certificados de reconhecimento.
+                </div>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
+
     <?php if (!empty($canManageInstitutions)): ?>
         <section class="panel">
             <div class="section-heading">
@@ -170,6 +226,9 @@ $statusLabels = [
                         </dl>
                     </div>
                     <div class="admin-list-actions">
+                        <?php if (!empty($canIssueCertificates)): ?>
+                            <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/certificate?certificate_id=' . ($certificate['id'] ?? ''))) ?>"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</a>
+                        <?php endif; ?>
                         <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/certificado/' . ($certificate['verification_code'] ?? ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar</a>
                     </div>
                 </article>

@@ -366,7 +366,8 @@ class Education
             'CREATE TABLE IF NOT EXISTS education_certificates (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 course_id BIGINT UNSIGNED NOT NULL,
-                user_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NULL,
+                person_id BIGINT UNSIGNED NULL,
                 verification_code VARCHAR(48) NOT NULL,
                 validation_hash CHAR(64) NULL,
                 status VARCHAR(30) NOT NULL DEFAULT "issued",
@@ -391,12 +392,14 @@ class Education
                 created_at TIMESTAMP NULL,
                 updated_at TIMESTAMP NULL,
                 UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
+                UNIQUE KEY uq_education_certificate_course_person (course_id, person_id),
                 UNIQUE KEY uq_education_certificate_code (verification_code),
                 INDEX idx_education_certificate_status (status),
                 INDEX idx_education_certificate_hash (validation_hash),
                 CONSTRAINT fk_education_certificate_batch FOREIGN KEY (batch_id) REFERENCES certificate_batches(id) ON DELETE SET NULL,
                 CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_certificate_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_certificate_authorizer FOREIGN KEY (authorized_by) REFERENCES users(id) ON DELETE SET NULL,
                 CONSTRAINT fk_education_certificate_issuer FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE SET NULL,
                 CONSTRAINT fk_education_certificate_revoker FOREIGN KEY (revoked_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -406,6 +409,7 @@ class Education
         self::ensureColumn('education_certificates', 'validation_hash', 'CHAR(64) NULL AFTER verification_code');
         self::ensureColumn('education_certificates', 'status', 'VARCHAR(30) NOT NULL DEFAULT "issued" AFTER validation_hash');
         self::ensureColumn('education_certificates', 'batch_id', 'BIGINT UNSIGNED NULL AFTER status');
+        self::ensureColumn('education_certificates', 'person_id', 'BIGINT UNSIGNED NULL AFTER user_id');
         self::ensureColumn('education_certificates', 'student_name', 'VARCHAR(180) NULL AFTER verification_code');
         self::ensureColumn('education_certificates', 'requested_student_name', 'VARCHAR(180) NULL AFTER student_name');
         self::ensureColumn('education_certificates', 'name_change_status', 'VARCHAR(20) NULL AFTER requested_student_name');
@@ -422,6 +426,11 @@ class Education
         self::ensureColumn('education_certificates', 'sent_at', 'DATETIME NULL AFTER pdf_path');
         self::ensureColumn('education_certificates', 'verified_count', 'INT UNSIGNED NOT NULL DEFAULT 0 AFTER sent_at');
         self::ensureColumn('education_certificates', 'last_verified_at', 'DATETIME NULL AFTER verified_count');
+        try {
+            $db->exec('ALTER TABLE education_certificates MODIFY COLUMN user_id BIGINT UNSIGNED NULL');
+        } catch (\Throwable $exception) {
+            // Existing installations may already have the nullable definition.
+        }
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS certificate_audit_logs (
@@ -1350,6 +1359,98 @@ class Education
         return $certificate;
     }
 
+    public static function recognitionCertificatePeople(): array
+    {
+        self::ensureSchema();
+
+        return Database::connection()
+            ->query('SELECT id, full_name, email, city, state FROM people WHERE active = 1 ORDER BY full_name ASC')
+            ->fetchAll();
+    }
+
+    public static function issueRecognitionCertificate(array $data): array
+    {
+        self::ensureSchema();
+
+        $personId = (int) ($data['person_id'] ?? 0);
+        $issuedBy = (int) ($data['issued_by'] ?? 0);
+        $stmt = Database::connection()->prepare(
+            'SELECT id, full_name, email, city, state
+             FROM people
+             WHERE id = :id
+               AND active = 1
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $personId]);
+        $person = $stmt->fetch();
+        if (!$person) {
+            throw new \InvalidArgumentException('Selecione um voluntário ou participante cadastrado.');
+        }
+
+        $activityTitle = trim((string) ($data['activity_title'] ?? ''));
+        if ($activityTitle === '') {
+            $activityTitle = 'Reconhecimento por atuação voluntária';
+        }
+
+        $certificateTitle = trim((string) ($data['certificate_title'] ?? ''));
+        if ($certificateTitle === '') {
+            $certificateTitle = 'Certificado de reconhecimento';
+        }
+
+        $certificateText = trim((string) ($data['certificate_text'] ?? ''));
+        if ($certificateText === '') {
+            $certificateText = 'Certificamos que {student_name} recebeu este certificado de reconhecimento por sua contribuição voluntária em ações institucionais e comunitárias.';
+        }
+
+        $courseId = self::createCourse([
+            'title' => $activityTitle,
+            'summary' => 'Certificado de reconhecimento emitido para voluntário ou participante.',
+            'certificate_institution_id' => $data['institution_id'] ?? null,
+            'certificate_activity_type' => 'reconhecimento',
+            'public_enabled' => 0,
+            'certificate_enabled' => 1,
+            'certificate_title' => $certificateTitle,
+            'certificate_text' => $certificateText,
+            'certificate_min_frequency' => 0,
+            'certificate_course_nature' => 'Certificado de Reconhecimento Institucional',
+            'certificate_approval_criteria' => 'Certificado concedido por reconhecimento institucional de participação voluntária.',
+            'certificate_program_enabled' => 0,
+            'created_by' => $issuedBy ?: null,
+            'updated_by' => $issuedBy ?: null,
+        ]);
+
+        $code = self::certificateCode($courseId, $personId);
+        $hash = self::certificateHash($courseId, $personId, $code);
+        Database::connection()->prepare(
+            'INSERT INTO education_certificates
+                (course_id, user_id, person_id, verification_code, validation_hash, status, student_name, authorized_by, authorized_at, issued_by, issued_at, created_at, updated_at)
+             VALUES
+                (:course_id, NULL, :person_id, :verification_code, :validation_hash, "issued", :student_name, :authorized_by, NOW(), :issued_by, NOW(), NOW(), NOW())'
+        )->execute([
+            'course_id' => $courseId,
+            'person_id' => (int) $person['id'],
+            'verification_code' => $code,
+            'validation_hash' => $hash,
+            'student_name' => $person['full_name'],
+            'authorized_by' => $issuedBy ?: null,
+            'issued_by' => $issuedBy ?: null,
+        ]);
+
+        $certificateId = (int) Database::connection()->lastInsertId();
+        self::auditCertificate($certificateId, !empty($data['institution_id']) ? (int) $data['institution_id'] : null, $issuedBy ?: null, 'recognition_issued', [], [
+            'course_id' => $courseId,
+            'person_id' => (int) $person['id'],
+            'verification_code' => $code,
+        ]);
+
+        return self::certificateById($certificateId) ?? [
+            'id' => $certificateId,
+            'course_id' => $courseId,
+            'verification_code' => $code,
+            'student_name' => $person['full_name'],
+        ];
+    }
+
     public static function certificateForCourseUser(int $courseId, int $userId): ?array
     {
         self::ensureSchema();
@@ -1542,10 +1643,12 @@ class Education
                     education_courses.title AS course_title,
                     education_courses.teacher_user_id,
                     users.name AS user_name,
-                    users.email AS student_email
+                    COALESCE(users.email, people.email) AS student_email,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name, people.full_name) AS student_name
              FROM education_certificates
              INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
-             INNER JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN people ON people.id = education_certificates.person_id
              WHERE education_certificates.id = :id
              LIMIT 1'
         );
@@ -1564,26 +1667,29 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'SELECT education_certificates.*,
-                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name) AS student_name,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name, people.full_name) AS student_name,
                     users.name AS user_name,
+                    people.full_name AS person_name,
                     education_courses.title AS course_title,
                     education_courses.certificate_min_frequency,
                     education_courses.certificate_course_nature,
                     education_courses.certificate_modality,
                     education_courses.certificate_approval_criteria,
                     education_courses.certificate_legal_text,
-                    education_courses.certificate_institution_name,
-                    education_courses.certificate_institution_city,
-                    education_courses.certificate_institution_cnpj,
-                    education_courses.certificate_institution_site,
+                    COALESCE(NULLIF(education_courses.certificate_institution_name, ""), certificate_institutions.name) AS certificate_institution_name,
+                    COALESCE(NULLIF(education_courses.certificate_institution_city, ""), CONCAT_WS(" - ", certificate_institutions.city, certificate_institutions.state)) AS certificate_institution_city,
+                    COALESCE(NULLIF(education_courses.certificate_institution_cnpj, ""), certificate_institutions.cnpj) AS certificate_institution_cnpj,
+                    COALESCE(NULLIF(education_courses.certificate_institution_site, ""), certificate_institutions.site) AS certificate_institution_site,
                     education_courses.certificate_objectives,
                     education_courses.certificate_competencies,
                     education_courses.certificate_responsible_name,
                     education_courses.certificate_responsible_credential,
                     teacher.name AS teacher_name
              FROM education_certificates
-             INNER JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN people ON people.id = education_certificates.person_id
              INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             LEFT JOIN certificate_institutions ON certificate_institutions.id = education_courses.certificate_institution_id
              LEFT JOIN users AS teacher ON teacher.id = education_courses.teacher_user_id
              WHERE education_certificates.verification_code = :code
              LIMIT 1'
@@ -1620,10 +1726,11 @@ class Education
                     education_certificates.status,
                     education_certificates.issued_at,
                     education_courses.title AS course_title,
-                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name) AS student_name
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name, people.full_name) AS student_name
              FROM education_certificates
              INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
-             INNER JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN people ON people.id = education_certificates.person_id
              ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC
              LIMIT 8'
         )->fetchAll();
@@ -2339,7 +2446,7 @@ class Education
     private static function activityType(mixed $type): string
     {
         $type = trim((string) $type);
-        return in_array($type, ['curso_livre', 'oficina', 'palestra', 'capacitacao', 'evento', 'acao_comunitaria', 'voluntariado', 'extensao', 'formacao_continuada'], true)
+        return in_array($type, ['curso_livre', 'oficina', 'palestra', 'capacitacao', 'evento', 'acao_comunitaria', 'voluntariado', 'reconhecimento', 'extensao', 'formacao_continuada'], true)
             ? $type
             : 'curso_livre';
     }
