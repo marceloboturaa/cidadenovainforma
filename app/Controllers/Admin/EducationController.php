@@ -1673,6 +1673,9 @@ class EducationController
         $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : date('d/m/Y');
         $text = trim((string) ($course['certificate_text'] ?? ''));
         if ($text === '') {
+            if (($course['certificate_activity_type'] ?? '') === 'reconhecimento') {
+                return '';
+            }
             $text = 'Certificamos que {student_name} concluiu o curso {course_title}.';
         }
 

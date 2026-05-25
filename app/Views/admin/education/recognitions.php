@@ -60,10 +60,33 @@ $statusLabels = [
                         <label class="form-label">Título no certificado</label>
                         <input class="form-control" name="certificate_title" maxlength="180" value="Certificado de reconhecimento">
                     </div>
+                    <div>
+                        <label class="form-label">Fonte do certificado</label>
+                        <select class="form-select" name="certificate_font_family">
+                            <option value="system">Padrão moderna</option>
+                            <option value="serif">Serif clássica</option>
+                            <option value="georgia">Georgia</option>
+                            <option value="garamond">Garamond</option>
+                            <option value="playfair">Playfair</option>
+                            <option value="montserrat">Montserrat</option>
+                        </select>
+                    </div>
                     <div class="grid-span-2">
                         <label class="form-label">Texto editável do certificado</label>
                         <textarea class="form-control" name="certificate_text" rows="4">Certificamos que {student_name} recebeu este certificado de reconhecimento por sua contribuição voluntária em ações institucionais e comunitárias.</textarea>
                         <small class="form-text">Use {student_name} para inserir automaticamente o nome da pessoa reconhecida.</small>
+                    </div>
+                    <div class="grid-span-2">
+                        <span class="form-label">Exibir no certificado</span>
+                        <div class="education-certificate-toggle-grid">
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1" checked><span class="form-check-label">Natureza</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1"><span class="form-check-label">Modalidade/contexto</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_period" value="1" checked><span class="form-check-label">Período/data</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_approval" value="1" checked><span class="form-check-label">Justificativa</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_institution" value="1" checked><span class="form-check-label">Instituição</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_meta" value="1" checked><span class="form-check-label">Emissão/código</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_legal" value="1"><span class="form-check-label">Texto legal</span></label>
+                        </div>
                     </div>
                     <div>
                         <label class="form-label">Imagem de fundo da frente por link</label>
