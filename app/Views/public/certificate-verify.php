@@ -18,6 +18,8 @@ $competencies = array_values(array_filter(array_map('trim', preg_split('/\R/u', 
 $responsibleName = trim((string) ($certificate['certificate_responsible_name'] ?? '')) ?: trim((string) ($certificate['teacher_name'] ?? ''));
 $responsibleCredential = trim((string) ($certificate['certificate_responsible_credential'] ?? ''));
 $hasCurriculum = $objectives !== '' || $competencies || $responsibleName !== '' || $responsibleCredential !== '' || $courseModality !== '' || $approvalCriteria !== '';
+$certificateStatus = $certificate['status'] ?? 'issued';
+$certificateIsValid = $certificateStatus === 'issued';
 ?>
 
 <section class="certificate-verify-page">
@@ -42,10 +44,10 @@ $hasCurriculum = $objectives !== '' || $competencies || $responsibleName !== '' 
             <p>Confira se o código foi digitado exatamente como aparece no certificado. Caso a dúvida continue, entre em contato com a instituição.</p>
         </article>
     <?php elseif ($certificate): ?>
-        <article class="certificate-verify-result is-valid">
+        <article class="certificate-verify-result <?= $certificateIsValid ? 'is-valid' : 'is-invalid' ?>">
             <div class="certificate-verify-status">
-                <span>Certificado válido</span>
-                <strong>Registro localizado na base oficial</strong>
+                <span><?= $certificateIsValid ? 'Certificado válido' : 'Certificado não vigente' ?></span>
+                <strong><?= $certificateIsValid ? 'Registro localizado na base oficial' : 'Registro localizado com status: ' . e($certificateStatus) ?></strong>
             </div>
             <h2><?= e($certificate['course_title'] ?? 'Certificado') ?></h2>
             <p><?= e($courseNature) ?></p>

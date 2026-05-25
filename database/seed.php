@@ -239,6 +239,98 @@ $pdo->exec(
 );
 
 $pdo->exec(
+    'CREATE TABLE IF NOT EXISTS certificate_institutions (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(180) NOT NULL,
+        slug VARCHAR(190) NOT NULL UNIQUE,
+        cnpj VARCHAR(32) NULL,
+        city VARCHAR(120) NULL,
+        state VARCHAR(2) NULL,
+        site VARCHAR(180) NULL,
+        logo_path VARCHAR(255) NULL,
+        signature_path VARCHAR(255) NULL,
+        active TINYINT(1) NOT NULL DEFAULT 1,
+        created_by BIGINT UNSIGNED NULL,
+        updated_by BIGINT UNSIGNED NULL,
+        created_at TIMESTAMP NULL,
+        updated_at TIMESTAMP NULL,
+        CONSTRAINT fk_certificate_institutions_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_institutions_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS certificate_institution_users (
+        institution_id BIGINT UNSIGNED NOT NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
+        role_slug VARCHAR(40) NOT NULL DEFAULT "admin-local",
+        can_issue TINYINT(1) NOT NULL DEFAULT 0,
+        expires_at DATETIME NULL,
+        approved_by BIGINT UNSIGNED NULL,
+        created_at TIMESTAMP NULL,
+        PRIMARY KEY (institution_id, user_id),
+        CONSTRAINT fk_certificate_institution_users_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE CASCADE,
+        CONSTRAINT fk_certificate_institution_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_certificate_institution_users_approver FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS certificate_categories (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        institution_id BIGINT UNSIGNED NULL,
+        name VARCHAR(120) NOT NULL,
+        slug VARCHAR(140) NOT NULL,
+        description TEXT NULL,
+        active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at TIMESTAMP NULL,
+        updated_at TIMESTAMP NULL,
+        UNIQUE KEY uq_certificate_categories_scope (institution_id, slug),
+        CONSTRAINT fk_certificate_categories_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS certificate_templates (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        institution_id BIGINT UNSIGNED NULL,
+        category_id BIGINT UNSIGNED NULL,
+        name VARCHAR(160) NOT NULL,
+        slug VARCHAR(180) NOT NULL,
+        description TEXT NULL,
+        front_background VARCHAR(255) NULL,
+        back_background VARCHAR(255) NULL,
+        legal_text TEXT NULL,
+        layout_json LONGTEXT NULL,
+        version INT UNSIGNED NOT NULL DEFAULT 1,
+        active TINYINT(1) NOT NULL DEFAULT 1,
+        created_by BIGINT UNSIGNED NULL,
+        updated_by BIGINT UNSIGNED NULL,
+        created_at TIMESTAMP NULL,
+        updated_at TIMESTAMP NULL,
+        UNIQUE KEY uq_certificate_templates_scope (institution_id, slug),
+        CONSTRAINT fk_certificate_templates_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_templates_category FOREIGN KEY (category_id) REFERENCES certificate_categories(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_templates_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_templates_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS certificate_template_versions (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        template_id BIGINT UNSIGNED NOT NULL,
+        version INT UNSIGNED NOT NULL,
+        snapshot_json LONGTEXT NOT NULL,
+        created_by BIGINT UNSIGNED NULL,
+        created_at TIMESTAMP NULL,
+        UNIQUE KEY uq_certificate_template_versions (template_id, version),
+        CONSTRAINT fk_certificate_template_versions_template FOREIGN KEY (template_id) REFERENCES certificate_templates(id) ON DELETE CASCADE,
+        CONSTRAINT fk_certificate_template_versions_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
     'CREATE TABLE IF NOT EXISTS team_documents (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         uploaded_by BIGINT UNSIGNED NOT NULL,
@@ -281,6 +373,13 @@ $pdo->exec(
         title VARCHAR(180) NOT NULL,
         summary TEXT NULL,
         cover_image VARCHAR(255) NULL,
+        certificate_institution_id BIGINT UNSIGNED NULL,
+        certificate_category_id BIGINT UNSIGNED NULL,
+        certificate_template_id BIGINT UNSIGNED NULL,
+        certificate_activity_type VARCHAR(40) NOT NULL DEFAULT "curso_livre",
+        workload_hours DECIMAL(6,2) NULL,
+        starts_at DATE NULL,
+        ends_at DATE NULL,
         public_enabled TINYINT(1) NOT NULL DEFAULT 0,
         certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
         certificate_title VARCHAR(180) NULL,
@@ -310,6 +409,9 @@ $pdo->exec(
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT fk_education_courses_teacher FOREIGN KEY (teacher_user_id) REFERENCES users(id) ON DELETE SET NULL,
+        CONSTRAINT fk_education_courses_certificate_institution FOREIGN KEY (certificate_institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+        CONSTRAINT fk_education_courses_certificate_category FOREIGN KEY (certificate_category_id) REFERENCES certificate_categories(id) ON DELETE SET NULL,
+        CONSTRAINT fk_education_courses_certificate_template FOREIGN KEY (certificate_template_id) REFERENCES certificate_templates(id) ON DELETE SET NULL,
         CONSTRAINT fk_education_courses_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
         CONSTRAINT fk_education_courses_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB'
@@ -317,6 +419,13 @@ $pdo->exec(
 
 $courseColumns = $pdo->query('SHOW COLUMNS FROM education_courses')->fetchAll(PDO::FETCH_COLUMN);
 $courseCertificateColumns = [
+    'certificate_institution_id' => 'ALTER TABLE education_courses ADD COLUMN certificate_institution_id BIGINT UNSIGNED NULL AFTER cover_image',
+    'certificate_category_id' => 'ALTER TABLE education_courses ADD COLUMN certificate_category_id BIGINT UNSIGNED NULL AFTER certificate_institution_id',
+    'certificate_template_id' => 'ALTER TABLE education_courses ADD COLUMN certificate_template_id BIGINT UNSIGNED NULL AFTER certificate_category_id',
+    'certificate_activity_type' => 'ALTER TABLE education_courses ADD COLUMN certificate_activity_type VARCHAR(40) NOT NULL DEFAULT "curso_livre" AFTER certificate_template_id',
+    'workload_hours' => 'ALTER TABLE education_courses ADD COLUMN workload_hours DECIMAL(6,2) NULL AFTER certificate_activity_type',
+    'starts_at' => 'ALTER TABLE education_courses ADD COLUMN starts_at DATE NULL AFTER workload_hours',
+    'ends_at' => 'ALTER TABLE education_courses ADD COLUMN ends_at DATE NULL AFTER starts_at',
     'public_enabled' => 'ALTER TABLE education_courses ADD COLUMN public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image',
     'certificate_enabled' => 'ALTER TABLE education_courses ADD COLUMN certificate_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled',
     'certificate_title' => 'ALTER TABLE education_courses ADD COLUMN certificate_title VARCHAR(180) NULL AFTER certificate_enabled',
@@ -439,41 +548,121 @@ $pdo->exec(
 );
 
 $pdo->exec(
+    'CREATE TABLE IF NOT EXISTS certificate_batches (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        institution_id BIGINT UNSIGNED NULL,
+        course_id BIGINT UNSIGNED NULL,
+        template_id BIGINT UNSIGNED NULL,
+        title VARCHAR(180) NOT NULL,
+        source_filename VARCHAR(190) NULL,
+        total_rows INT UNSIGNED NOT NULL DEFAULT 0,
+        issued_count INT UNSIGNED NOT NULL DEFAULT 0,
+        failed_count INT UNSIGNED NOT NULL DEFAULT 0,
+        status VARCHAR(30) NOT NULL DEFAULT "draft",
+        requested_by BIGINT UNSIGNED NULL,
+        approved_by BIGINT UNSIGNED NULL,
+        approved_at DATETIME NULL,
+        created_at TIMESTAMP NULL,
+        updated_at TIMESTAMP NULL,
+        INDEX idx_certificate_batches_status (status),
+        CONSTRAINT fk_certificate_batches_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_batches_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_batches_template FOREIGN KEY (template_id) REFERENCES certificate_templates(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_batches_requested_by FOREIGN KEY (requested_by) REFERENCES users(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_batches_approved_by FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
     'CREATE TABLE IF NOT EXISTS education_certificates (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         course_id BIGINT UNSIGNED NOT NULL,
         user_id BIGINT UNSIGNED NOT NULL,
         verification_code VARCHAR(48) NOT NULL,
+        validation_hash CHAR(64) NULL,
+        status VARCHAR(30) NOT NULL DEFAULT "issued",
+        batch_id BIGINT UNSIGNED NULL,
         student_name VARCHAR(180) NULL,
         requested_student_name VARCHAR(180) NULL,
         name_change_status VARCHAR(20) NULL,
         name_change_requested_at DATETIME NULL,
         name_change_reviewed_by BIGINT UNSIGNED NULL,
         name_change_reviewed_at DATETIME NULL,
+        authorized_by BIGINT UNSIGNED NULL,
+        authorized_at DATETIME NULL,
+        issued_by BIGINT UNSIGNED NULL,
+        revoked_by BIGINT UNSIGNED NULL,
+        revoked_at DATETIME NULL,
+        revoked_reason TEXT NULL,
+        pdf_path VARCHAR(255) NULL,
+        sent_at DATETIME NULL,
+        verified_count INT UNSIGNED NOT NULL DEFAULT 0,
+        last_verified_at DATETIME NULL,
         issued_at DATETIME NOT NULL,
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
         UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
         UNIQUE KEY uq_education_certificate_code (verification_code),
+        INDEX idx_education_certificate_status (status),
+        INDEX idx_education_certificate_hash (validation_hash),
+        CONSTRAINT fk_education_certificate_batch FOREIGN KEY (batch_id) REFERENCES certificate_batches(id) ON DELETE SET NULL,
         CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
         CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_education_certificate_authorizer FOREIGN KEY (authorized_by) REFERENCES users(id) ON DELETE SET NULL,
+        CONSTRAINT fk_education_certificate_issuer FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE SET NULL,
+        CONSTRAINT fk_education_certificate_revoker FOREIGN KEY (revoked_by) REFERENCES users(id) ON DELETE SET NULL,
         CONSTRAINT fk_education_certificate_reviewer FOREIGN KEY (name_change_reviewed_by) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB'
 );
 $certificateColumns = $pdo->query('SHOW COLUMNS FROM education_certificates')->fetchAll(PDO::FETCH_COLUMN);
 $certificateNameColumns = [
+    'validation_hash' => 'ALTER TABLE education_certificates ADD COLUMN validation_hash CHAR(64) NULL AFTER verification_code',
+    'status' => 'ALTER TABLE education_certificates ADD COLUMN status VARCHAR(30) NOT NULL DEFAULT "issued" AFTER validation_hash',
+    'batch_id' => 'ALTER TABLE education_certificates ADD COLUMN batch_id BIGINT UNSIGNED NULL AFTER status',
     'student_name' => 'ALTER TABLE education_certificates ADD COLUMN student_name VARCHAR(180) NULL AFTER verification_code',
     'requested_student_name' => 'ALTER TABLE education_certificates ADD COLUMN requested_student_name VARCHAR(180) NULL AFTER student_name',
     'name_change_status' => 'ALTER TABLE education_certificates ADD COLUMN name_change_status VARCHAR(20) NULL AFTER requested_student_name',
     'name_change_requested_at' => 'ALTER TABLE education_certificates ADD COLUMN name_change_requested_at DATETIME NULL AFTER name_change_status',
     'name_change_reviewed_by' => 'ALTER TABLE education_certificates ADD COLUMN name_change_reviewed_by BIGINT UNSIGNED NULL AFTER name_change_requested_at',
     'name_change_reviewed_at' => 'ALTER TABLE education_certificates ADD COLUMN name_change_reviewed_at DATETIME NULL AFTER name_change_reviewed_by',
+    'authorized_by' => 'ALTER TABLE education_certificates ADD COLUMN authorized_by BIGINT UNSIGNED NULL AFTER name_change_reviewed_at',
+    'authorized_at' => 'ALTER TABLE education_certificates ADD COLUMN authorized_at DATETIME NULL AFTER authorized_by',
+    'issued_by' => 'ALTER TABLE education_certificates ADD COLUMN issued_by BIGINT UNSIGNED NULL AFTER authorized_at',
+    'revoked_by' => 'ALTER TABLE education_certificates ADD COLUMN revoked_by BIGINT UNSIGNED NULL AFTER issued_by',
+    'revoked_at' => 'ALTER TABLE education_certificates ADD COLUMN revoked_at DATETIME NULL AFTER revoked_by',
+    'revoked_reason' => 'ALTER TABLE education_certificates ADD COLUMN revoked_reason TEXT NULL AFTER revoked_at',
+    'pdf_path' => 'ALTER TABLE education_certificates ADD COLUMN pdf_path VARCHAR(255) NULL AFTER revoked_reason',
+    'sent_at' => 'ALTER TABLE education_certificates ADD COLUMN sent_at DATETIME NULL AFTER pdf_path',
+    'verified_count' => 'ALTER TABLE education_certificates ADD COLUMN verified_count INT UNSIGNED NOT NULL DEFAULT 0 AFTER sent_at',
+    'last_verified_at' => 'ALTER TABLE education_certificates ADD COLUMN last_verified_at DATETIME NULL AFTER verified_count',
 ];
 foreach ($certificateNameColumns as $column => $sql) {
     if (!in_array($column, $certificateColumns, true)) {
         $pdo->exec($sql);
     }
 }
+$pdo->exec('UPDATE education_certificates SET status = "issued" WHERE status IS NULL OR status = ""');
+$pdo->exec('UPDATE education_certificates SET validation_hash = SHA2(CONCAT(course_id, "|", user_id, "|", verification_code), 256) WHERE validation_hash IS NULL OR validation_hash = ""');
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS certificate_audit_logs (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        certificate_id BIGINT UNSIGNED NULL,
+        institution_id BIGINT UNSIGNED NULL,
+        user_id BIGINT UNSIGNED NULL,
+        action VARCHAR(80) NOT NULL,
+        old_values_json LONGTEXT NULL,
+        new_values_json LONGTEXT NULL,
+        ip_address VARCHAR(45) NULL,
+        user_agent VARCHAR(255) NULL,
+        created_at TIMESTAMP NULL,
+        INDEX idx_certificate_audit_certificate (certificate_id),
+        INDEX idx_certificate_audit_action (action),
+        CONSTRAINT fk_certificate_audit_certificate FOREIGN KEY (certificate_id) REFERENCES education_certificates(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_audit_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+        CONSTRAINT fk_certificate_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB'
+);
 
 $pdo->exec(
     'CREATE TABLE IF NOT EXISTS education_forum_topics (
@@ -530,6 +719,7 @@ $roles = [
     ['MASTER', 'master', 100],
     ['ADMIN', 'admin', 80],
     ['ADMIN LOCAL', 'admin-local', 60],
+    ['DELEGADO EMISSOR', 'delegado-emissor', 55],
     ['DIRETOR', 'diretor', 50],
     ['JORNALISTA', 'jornalista', 40],
     ['COLUNISTA', 'colunista', 35],
@@ -560,6 +750,12 @@ $permissions = [
     ['Criar cursos e aulas', 'education.teach'],
     ['Acessar ensino', 'education.view'],
     ['Participar do fórum de ensino', 'education.forum'],
+    ['Gerenciar certificados digitais', 'certificates.manage'],
+    ['Emitir certificados digitais', 'certificates.issue'],
+    ['Ver auditoria de certificados', 'certificates.audit'],
+    ['Gerenciar instituições certificadoras', 'certificates.institutions'],
+    ['Gerenciar modelos de certificados', 'certificates.templates'],
+    ['Aprovar lotes de certificados', 'certificates.batches.approve'],
     ['Ver fóruns', 'forum.view'],
     ['Criar tópicos e respostas nos fóruns', 'forum.create'],
     ['Moderar fóruns', 'forum.moderate'],
@@ -587,8 +783,9 @@ $permissionIds = array_column($permissionRows, 'id', 'slug');
 
 $grants = [
     'master' => array_keys($permissionIds),
-    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
-    'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create'],
+    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.audit', 'certificates.institutions', 'certificates.templates', 'certificates.batches.approve', 'forum.view', 'forum.create', 'forum.moderate'],
+    'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.templates', 'forum.view', 'forum.create'],
+    'delegado-emissor' => ['education.view', 'certificates.issue'],
     'diretor' => ['documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
     'jornalista' => ['news.create'],
     'colunista' => ['news.create'],
@@ -603,6 +800,40 @@ foreach ($grants as $roleSlug => $rolePermissions) {
         $stmt->execute([$roleMap[$roleSlug], $permissionIds[$permissionSlug]]);
     }
 }
+
+$pdo->prepare(
+    'INSERT IGNORE INTO certificate_institutions
+        (name, slug, city, state, site, active, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())'
+)->execute(['Cidade Nova Informa - CNI', 'cidade-nova-informa-cni', 'Foz do Iguaçu', 'PR', 'www.cidadenovainforma.com.br']);
+
+$pdo->prepare(
+    'INSERT IGNORE INTO certificate_categories
+        (institution_id, name, slug, description, active, created_at, updated_at)
+     SELECT id, ?, ?, ?, 1, NOW(), NOW()
+     FROM certificate_institutions
+     WHERE slug = ?'
+)->execute(['Cursos livres e capacitações', 'cursos-livres-capacitacoes', 'Certificados de cursos livres, oficinas, palestras e formações continuadas.', 'cidade-nova-informa-cni']);
+
+$pdo->prepare(
+    'INSERT IGNORE INTO certificate_templates
+        (institution_id, category_id, name, slug, description, legal_text, version, active, created_at, updated_at)
+     SELECT certificate_institutions.id,
+            certificate_categories.id,
+            ?, ?, ?, ?, 1, 1, NOW(), NOW()
+     FROM certificate_institutions
+     LEFT JOIN certificate_categories
+       ON certificate_categories.institution_id = certificate_institutions.id
+      AND certificate_categories.slug = ?
+     WHERE certificate_institutions.slug = ?'
+)->execute([
+    'Modelo padrão CNI',
+    'modelo-padrao-cni',
+    'Modelo institucional usado como base para certificados digitais do Cidade Nova Informa.',
+    'Certificado emitido conforme a Lei nº 9.394/96 (LDB) e Decreto nº 5.154/2004 referente a cursos livres e capacitações.',
+    'cursos-livres-capacitacoes',
+    'cidade-nova-informa-cni',
+]);
 
 $stmt = $pdo->prepare(
     'DELETE role_permissions

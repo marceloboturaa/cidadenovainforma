@@ -188,6 +188,88 @@ CREATE TABLE IF NOT EXISTS institution_page_users (
     CONSTRAINT fk_institution_page_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS certificate_institutions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(180) NOT NULL,
+    slug VARCHAR(190) NOT NULL UNIQUE,
+    cnpj VARCHAR(32) NULL,
+    city VARCHAR(120) NULL,
+    state VARCHAR(2) NULL,
+    site VARCHAR(180) NULL,
+    logo_path VARCHAR(255) NULL,
+    signature_path VARCHAR(255) NULL,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    created_by BIGINT UNSIGNED NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_certificate_institutions_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_institutions_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS certificate_institution_users (
+    institution_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    role_slug VARCHAR(40) NOT NULL DEFAULT 'admin-local',
+    can_issue TINYINT(1) NOT NULL DEFAULT 0,
+    expires_at DATETIME NULL,
+    approved_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    PRIMARY KEY (institution_id, user_id),
+    CONSTRAINT fk_certificate_institution_users_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_certificate_institution_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_certificate_institution_users_approver FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS certificate_categories (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    institution_id BIGINT UNSIGNED NULL,
+    name VARCHAR(120) NOT NULL,
+    slug VARCHAR(140) NOT NULL,
+    description TEXT NULL,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    UNIQUE KEY uq_certificate_categories_scope (institution_id, slug),
+    CONSTRAINT fk_certificate_categories_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS certificate_templates (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    institution_id BIGINT UNSIGNED NULL,
+    category_id BIGINT UNSIGNED NULL,
+    name VARCHAR(160) NOT NULL,
+    slug VARCHAR(180) NOT NULL,
+    description TEXT NULL,
+    front_background VARCHAR(255) NULL,
+    back_background VARCHAR(255) NULL,
+    legal_text TEXT NULL,
+    layout_json LONGTEXT NULL,
+    version INT UNSIGNED NOT NULL DEFAULT 1,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    created_by BIGINT UNSIGNED NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    UNIQUE KEY uq_certificate_templates_scope (institution_id, slug),
+    CONSTRAINT fk_certificate_templates_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_templates_category FOREIGN KEY (category_id) REFERENCES certificate_categories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_templates_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_templates_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS certificate_template_versions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    template_id BIGINT UNSIGNED NOT NULL,
+    version INT UNSIGNED NOT NULL,
+    snapshot_json LONGTEXT NOT NULL,
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    UNIQUE KEY uq_certificate_template_versions (template_id, version),
+    CONSTRAINT fk_certificate_template_versions_template FOREIGN KEY (template_id) REFERENCES certificate_templates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_certificate_template_versions_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS categories (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     parent_id BIGINT UNSIGNED NULL,
@@ -306,6 +388,13 @@ CREATE TABLE IF NOT EXISTS education_courses (
     title VARCHAR(180) NOT NULL,
     summary TEXT NULL,
     cover_image VARCHAR(255) NULL,
+    certificate_institution_id BIGINT UNSIGNED NULL,
+    certificate_category_id BIGINT UNSIGNED NULL,
+    certificate_template_id BIGINT UNSIGNED NULL,
+    certificate_activity_type VARCHAR(40) NOT NULL DEFAULT 'curso_livre',
+    workload_hours DECIMAL(6,2) NULL,
+    starts_at DATE NULL,
+    ends_at DATE NULL,
     public_enabled TINYINT(1) NOT NULL DEFAULT 0,
     certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
     certificate_title VARCHAR(180) NULL,
@@ -335,6 +424,9 @@ CREATE TABLE IF NOT EXISTS education_courses (
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     CONSTRAINT fk_education_courses_teacher FOREIGN KEY (teacher_user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_education_courses_certificate_institution FOREIGN KEY (certificate_institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+    CONSTRAINT fk_education_courses_certificate_category FOREIGN KEY (certificate_category_id) REFERENCES certificate_categories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_education_courses_certificate_template FOREIGN KEY (certificate_template_id) REFERENCES certificate_templates(id) ON DELETE SET NULL,
     CONSTRAINT fk_education_courses_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_education_courses_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
@@ -433,25 +525,86 @@ CREATE TABLE IF NOT EXISTS education_attendance (
     CONSTRAINT fk_education_attendance_recorder FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS certificate_batches (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    institution_id BIGINT UNSIGNED NULL,
+    course_id BIGINT UNSIGNED NULL,
+    template_id BIGINT UNSIGNED NULL,
+    title VARCHAR(180) NOT NULL,
+    source_filename VARCHAR(190) NULL,
+    total_rows INT UNSIGNED NOT NULL DEFAULT 0,
+    issued_count INT UNSIGNED NOT NULL DEFAULT 0,
+    failed_count INT UNSIGNED NOT NULL DEFAULT 0,
+    status VARCHAR(30) NOT NULL DEFAULT 'draft',
+    requested_by BIGINT UNSIGNED NULL,
+    approved_by BIGINT UNSIGNED NULL,
+    approved_at DATETIME NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX idx_certificate_batches_status (status),
+    CONSTRAINT fk_certificate_batches_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_batches_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_batches_template FOREIGN KEY (template_id) REFERENCES certificate_templates(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_batches_requested_by FOREIGN KEY (requested_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_batches_approved_by FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS education_certificates (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     course_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     verification_code VARCHAR(48) NOT NULL,
+    validation_hash CHAR(64) NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'issued',
+    batch_id BIGINT UNSIGNED NULL,
     student_name VARCHAR(180) NULL,
     requested_student_name VARCHAR(180) NULL,
     name_change_status VARCHAR(20) NULL,
     name_change_requested_at DATETIME NULL,
     name_change_reviewed_by BIGINT UNSIGNED NULL,
     name_change_reviewed_at DATETIME NULL,
+    authorized_by BIGINT UNSIGNED NULL,
+    authorized_at DATETIME NULL,
+    issued_by BIGINT UNSIGNED NULL,
+    revoked_by BIGINT UNSIGNED NULL,
+    revoked_at DATETIME NULL,
+    revoked_reason TEXT NULL,
+    pdf_path VARCHAR(255) NULL,
+    sent_at DATETIME NULL,
+    verified_count INT UNSIGNED NOT NULL DEFAULT 0,
+    last_verified_at DATETIME NULL,
     issued_at DATETIME NOT NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     UNIQUE KEY uq_education_certificate_course_user (course_id, user_id),
     UNIQUE KEY uq_education_certificate_code (verification_code),
+    INDEX idx_education_certificate_status (status),
+    INDEX idx_education_certificate_hash (validation_hash),
+    CONSTRAINT fk_education_certificate_batch FOREIGN KEY (batch_id) REFERENCES certificate_batches(id) ON DELETE SET NULL,
     CONSTRAINT fk_education_certificate_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_certificate_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_certificate_authorizer FOREIGN KEY (authorized_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_education_certificate_issuer FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_education_certificate_revoker FOREIGN KEY (revoked_by) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_education_certificate_reviewer FOREIGN KEY (name_change_reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS certificate_audit_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    certificate_id BIGINT UNSIGNED NULL,
+    institution_id BIGINT UNSIGNED NULL,
+    user_id BIGINT UNSIGNED NULL,
+    action VARCHAR(80) NOT NULL,
+    old_values_json LONGTEXT NULL,
+    new_values_json LONGTEXT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL,
+    INDEX idx_certificate_audit_certificate (certificate_id),
+    INDEX idx_certificate_audit_action (action),
+    CONSTRAINT fk_certificate_audit_certificate FOREIGN KEY (certificate_id) REFERENCES education_certificates(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_audit_institution FOREIGN KEY (institution_id) REFERENCES certificate_institutions(id) ON DELETE SET NULL,
+    CONSTRAINT fk_certificate_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS education_forum_topics (

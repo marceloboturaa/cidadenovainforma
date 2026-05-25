@@ -54,6 +54,23 @@ class EducationController
         ]);
     }
 
+    public function certificateCenter(): void
+    {
+        Middleware::auth();
+        if (!Auth::can('certificates.manage') && !Auth::can('certificates.issue') && !Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        View::render('admin/education/certificate-center', [
+            'stats' => Education::certificateCenterStats(),
+            'canManageCertificates' => Auth::can('certificates.manage'),
+            'canIssueCertificates' => Auth::can('certificates.issue'),
+            'canAuditCertificates' => Auth::can('certificates.audit') || Auth::can('logs.view'),
+        ]);
+    }
+
     public function manage(): void
     {
         Middleware::auth();
