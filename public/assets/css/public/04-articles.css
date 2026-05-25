@@ -320,6 +320,7 @@
 }
 
 .certificate-verify-header span,
+.certificate-verify-status span,
 .certificate-verify-result > span {
     display: inline-flex;
     align-items: center;
@@ -394,6 +395,18 @@
     gap: 16px;
 }
 
+.certificate-verify-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+}
+
+.certificate-verify-status strong {
+    color: #166534;
+    font-size: 0.95rem;
+}
+
 .certificate-verify-result h2 {
     margin: 0;
     font-size: 1.55rem;
@@ -437,10 +450,10 @@
 
 .certificate-verify-result.is-valid {
     border-color: #bbf7d0;
-    background: #f0fdf4;
+    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 42%);
 }
 
-.certificate-verify-result.is-valid > span {
+.certificate-verify-result.is-valid .certificate-verify-status span {
     background: #dcfce7;
     color: #166534;
 }
@@ -456,9 +469,54 @@
     overflow-wrap: anywhere;
 }
 
+.certificate-verify-curriculum {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.certificate-verify-curriculum article,
+.certificate-verify-institution {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 14px;
+}
+
+.certificate-verify-curriculum h3,
+.certificate-verify-institution h3 {
+    margin: 0 0 8px;
+    color: var(--brand);
+    font-size: 0.82rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.certificate-verify-curriculum ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.certificate-verify-curriculum li {
+    margin-bottom: 4px;
+}
+
+.certificate-verify-institution p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+}
+
+.certificate-verify-institution small {
+    display: block;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
 @media (max-width: 680px) {
     .certificate-verify-form div,
-    .certificate-verify-result dl {
+    .certificate-verify-result dl,
+    .certificate-verify-curriculum {
         grid-template-columns: 1fr;
     }
 

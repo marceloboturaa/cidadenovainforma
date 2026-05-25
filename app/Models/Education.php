@@ -22,6 +22,18 @@ class Education
                 certificate_text TEXT NULL,
                 certificate_background VARCHAR(255) NULL,
                 certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                certificate_course_nature VARCHAR(180) NULL,
+                certificate_modality VARCHAR(80) NULL,
+                certificate_approval_criteria VARCHAR(255) NULL,
+                certificate_legal_text TEXT NULL,
+                certificate_institution_name VARCHAR(180) NULL,
+                certificate_institution_city VARCHAR(120) NULL,
+                certificate_institution_cnpj VARCHAR(32) NULL,
+                certificate_institution_site VARCHAR(180) NULL,
+                certificate_objectives TEXT NULL,
+                certificate_competencies TEXT NULL,
+                certificate_responsible_name VARCHAR(180) NULL,
+                certificate_responsible_credential VARCHAR(180) NULL,
                 certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_program_extra TEXT NULL,
                 certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2,
@@ -256,7 +268,19 @@ class Education
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
         self::ensureColumn('education_courses', 'certificate_background', 'VARCHAR(255) NULL AFTER certificate_text');
         self::ensureColumn('education_courses', 'certificate_min_frequency', 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_background');
-        self::ensureColumn('education_courses', 'certificate_program_enabled', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_min_frequency');
+        self::ensureColumn('education_courses', 'certificate_course_nature', 'VARCHAR(180) NULL AFTER certificate_min_frequency');
+        self::ensureColumn('education_courses', 'certificate_modality', 'VARCHAR(80) NULL AFTER certificate_course_nature');
+        self::ensureColumn('education_courses', 'certificate_approval_criteria', 'VARCHAR(255) NULL AFTER certificate_modality');
+        self::ensureColumn('education_courses', 'certificate_legal_text', 'TEXT NULL AFTER certificate_approval_criteria');
+        self::ensureColumn('education_courses', 'certificate_institution_name', 'VARCHAR(180) NULL AFTER certificate_legal_text');
+        self::ensureColumn('education_courses', 'certificate_institution_city', 'VARCHAR(120) NULL AFTER certificate_institution_name');
+        self::ensureColumn('education_courses', 'certificate_institution_cnpj', 'VARCHAR(32) NULL AFTER certificate_institution_city');
+        self::ensureColumn('education_courses', 'certificate_institution_site', 'VARCHAR(180) NULL AFTER certificate_institution_cnpj');
+        self::ensureColumn('education_courses', 'certificate_objectives', 'TEXT NULL AFTER certificate_institution_site');
+        self::ensureColumn('education_courses', 'certificate_competencies', 'TEXT NULL AFTER certificate_objectives');
+        self::ensureColumn('education_courses', 'certificate_responsible_name', 'VARCHAR(180) NULL AFTER certificate_competencies');
+        self::ensureColumn('education_courses', 'certificate_responsible_credential', 'VARCHAR(180) NULL AFTER certificate_responsible_name');
+        self::ensureColumn('education_courses', 'certificate_program_enabled', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_responsible_credential');
         self::ensureColumn('education_courses', 'certificate_program_extra', 'TEXT NULL AFTER certificate_program_enabled');
         self::ensureColumn('education_courses', 'certificate_program_columns', 'TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER certificate_program_extra');
 
@@ -790,9 +814,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, public_enabled, certificate_enabled, certificate_title, certificate_text, certificate_background, certificate_min_frequency, certificate_program_enabled, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, public_enabled, certificate_enabled, certificate_title, certificate_text, certificate_background, certificate_min_frequency, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :public_enabled, :certificate_enabled, :certificate_title, :certificate_text, :certificate_background, :certificate_min_frequency, :certificate_program_enabled, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :public_enabled, :certificate_enabled, :certificate_title, :certificate_text, :certificate_background, :certificate_min_frequency, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -817,6 +841,18 @@ class Education
                  certificate_text = :certificate_text,
                  certificate_background = :certificate_background,
                  certificate_min_frequency = :certificate_min_frequency,
+                 certificate_course_nature = :certificate_course_nature,
+                 certificate_modality = :certificate_modality,
+                 certificate_approval_criteria = :certificate_approval_criteria,
+                 certificate_legal_text = :certificate_legal_text,
+                 certificate_institution_name = :certificate_institution_name,
+                 certificate_institution_city = :certificate_institution_city,
+                 certificate_institution_cnpj = :certificate_institution_cnpj,
+                 certificate_institution_site = :certificate_institution_site,
+                 certificate_objectives = :certificate_objectives,
+                 certificate_competencies = :certificate_competencies,
+                 certificate_responsible_name = :certificate_responsible_name,
+                 certificate_responsible_credential = :certificate_responsible_credential,
                  certificate_program_enabled = :certificate_program_enabled,
                  certificate_program_extra = :certificate_program_extra,
                  certificate_program_columns = :certificate_program_columns,
@@ -1280,6 +1316,18 @@ class Education
                     users.name AS user_name,
                     education_courses.title AS course_title,
                     education_courses.certificate_min_frequency,
+                    education_courses.certificate_course_nature,
+                    education_courses.certificate_modality,
+                    education_courses.certificate_approval_criteria,
+                    education_courses.certificate_legal_text,
+                    education_courses.certificate_institution_name,
+                    education_courses.certificate_institution_city,
+                    education_courses.certificate_institution_cnpj,
+                    education_courses.certificate_institution_site,
+                    education_courses.certificate_objectives,
+                    education_courses.certificate_competencies,
+                    education_courses.certificate_responsible_name,
+                    education_courses.certificate_responsible_credential,
                     teacher.name AS teacher_name
              FROM education_certificates
              INNER JOIN users ON users.id = education_certificates.user_id
@@ -1958,6 +2006,18 @@ class Education
             'certificate_text' => self::nullable($data['certificate_text'] ?? null),
             'certificate_background' => self::nullable($data['certificate_background'] ?? null),
             'certificate_min_frequency' => max(0, min(100, (int) ($data['certificate_min_frequency'] ?? 0))),
+            'certificate_course_nature' => self::nullable($data['certificate_course_nature'] ?? null),
+            'certificate_modality' => self::nullable($data['certificate_modality'] ?? null),
+            'certificate_approval_criteria' => self::nullable($data['certificate_approval_criteria'] ?? null),
+            'certificate_legal_text' => self::nullable($data['certificate_legal_text'] ?? null),
+            'certificate_institution_name' => self::nullable($data['certificate_institution_name'] ?? null),
+            'certificate_institution_city' => self::nullable($data['certificate_institution_city'] ?? null),
+            'certificate_institution_cnpj' => self::nullable($data['certificate_institution_cnpj'] ?? null),
+            'certificate_institution_site' => self::nullable($data['certificate_institution_site'] ?? null),
+            'certificate_objectives' => self::nullable($data['certificate_objectives'] ?? null),
+            'certificate_competencies' => self::nullable($data['certificate_competencies'] ?? null),
+            'certificate_responsible_name' => self::nullable($data['certificate_responsible_name'] ?? null),
+            'certificate_responsible_credential' => self::nullable($data['certificate_responsible_credential'] ?? null),
             'certificate_program_enabled' => array_key_exists('certificate_program_enabled', $data) ? (!empty($data['certificate_program_enabled']) ? 1 : 0) : 1,
             'certificate_program_extra' => self::nullable($data['certificate_program_extra'] ?? null),
             'certificate_program_columns' => max(1, min(4, (int) ($data['certificate_program_columns'] ?? 2))),

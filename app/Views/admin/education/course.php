@@ -198,6 +198,14 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
                 <small class="field-hint">Use 0 para não bloquear a emissão pela chamada.</small>
             </div>
             <div>
+                <label class="form-label">Natureza do curso</label>
+                <input class="form-control" name="certificate_course_nature" maxlength="180" value="<?= e($course['certificate_course_nature'] ?? '') ?>" placeholder="Curso Livre de Capacitação Profissional - Formação Continuada">
+            </div>
+            <div>
+                <label class="form-label">Modalidade</label>
+                <input class="form-control" name="certificate_modality" maxlength="80" value="<?= e($course['certificate_modality'] ?? '') ?>" placeholder="Online, presencial ou híbrida">
+            </div>
+            <div>
                 <label class="form-label">Fundo por link</label>
                 <input class="form-control" name="certificate_background" value="<?= e($course['certificate_background'] ?? '') ?>" placeholder="/public/uploads/... ou URL">
             </div>
@@ -209,6 +217,30 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
                 <label class="form-label">Texto do certificado</label>
                 <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title} em {issued_at}."><?= e($course['certificate_text'] ?? '') ?></textarea>
                 <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {issued_at}, {verification_code}.</small>
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Critério de aprovação</label>
+                <input class="form-control" name="certificate_approval_criteria" maxlength="255" value="<?= e($course['certificate_approval_criteria'] ?? '') ?>" placeholder="Certificado concedido mediante frequência mínima de 75% e aproveitamento satisfatório.">
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Base legal</label>
+                <textarea class="form-control" name="certificate_legal_text" rows="2" placeholder="Curso Livre de Capacitação Profissional ofertado nos termos da Lei nº 9.394/96 (LDB) e Decreto nº 5.154/04."><?= e($course['certificate_legal_text'] ?? '') ?></textarea>
+            </div>
+            <div>
+                <label class="form-label">Instituição</label>
+                <input class="form-control" name="certificate_institution_name" maxlength="180" value="<?= e($course['certificate_institution_name'] ?? '') ?>" placeholder="Cidade Nova Informa - CNI">
+            </div>
+            <div>
+                <label class="form-label">Cidade/UF</label>
+                <input class="form-control" name="certificate_institution_city" maxlength="120" value="<?= e($course['certificate_institution_city'] ?? '') ?>" placeholder="Foz do Iguaçu - PR">
+            </div>
+            <div>
+                <label class="form-label">CNPJ</label>
+                <input class="form-control" name="certificate_institution_cnpj" maxlength="32" value="<?= e($course['certificate_institution_cnpj'] ?? '') ?>" placeholder="Informe o CNPJ da instituição">
+            </div>
+            <div>
+                <label class="form-label">Site oficial</label>
+                <input class="form-control" name="certificate_institution_site" maxlength="180" value="<?= e($course['certificate_institution_site'] ?? '') ?>" placeholder="www.cidadenovainforma.com.br">
             </div>
             <label class="forum-check-line">
                 <input type="checkbox" name="certificate_program_enabled" value="1" <?= checked((int) ($course['certificate_program_enabled'] ?? 1) === 1) ?>>
@@ -222,6 +254,22 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
                 <label class="form-label">Informações extras do verso</label>
                 <textarea class="form-control" name="certificate_program_extra" rows="4" placeholder="Ex.: carga horária, critérios de avaliação, observações ou conteúdo complementar."><?= e($course['certificate_program_extra'] ?? '') ?></textarea>
                 <small class="field-hint">A programação lista automaticamente os módulos e aulas cadastrados no curso.</small>
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Objetivos do curso</label>
+                <textarea class="form-control" name="certificate_objectives" rows="3" placeholder="Descreva os objetivos do curso"><?= e($course['certificate_objectives'] ?? '') ?></textarea>
+            </div>
+            <div class="grid-span-2">
+                <label class="form-label">Competências desenvolvidas</label>
+                <textarea class="form-control" name="certificate_competencies" rows="4" placeholder="Uma competência por linha"><?= e($course['certificate_competencies'] ?? '') ?></textarea>
+            </div>
+            <div>
+                <label class="form-label">Responsável pelo curso</label>
+                <input class="form-control" name="certificate_responsible_name" maxlength="180" value="<?= e($course['certificate_responsible_name'] ?? '') ?>" placeholder="Nome do professor responsável">
+            </div>
+            <div>
+                <label class="form-label">Formação do responsável</label>
+                <input class="form-control" name="certificate_responsible_credential" maxlength="180" value="<?= e($course['certificate_responsible_credential'] ?? '') ?>" placeholder="Formação ou credencial do responsável">
             </div>
             <div class="form-action-cell">
                 <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Salvar certificado</button>
