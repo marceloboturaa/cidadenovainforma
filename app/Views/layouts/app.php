@@ -79,6 +79,9 @@
                     <a class="<?= str_starts_with($currentPath, '/admin/menu') ? 'active' : '' ?>" href="<?= e(url('/admin/menu')) ?>" title="Menu"><i class="bi bi-list-ul" aria-hidden="true"></i><span>Menu</span></a>
                     <a class="<?= str_starts_with($currentPath, '/admin/backups') ? 'active' : '' ?>" href="<?= e(url('/admin/backups')) ?>" title="Backups"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i><span>Backups</span></a>
                 <?php endif; ?>
+                <?php if (\App\Core\Auth::can('consent.view')): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/consent') ? 'active' : '' ?>" href="<?= e(url('/admin/consent')) ?>" title="LGPD Cookies"><i class="bi bi-shield-check" aria-hidden="true"></i><span>LGPD Cookies</span></a>
+                <?php endif; ?>
                 <a class="<?= $currentPath === '/admin/password' ? 'active' : '' ?>" href="<?= e(url('/admin/password')) ?>" title="Minha senha"><i class="bi bi-key" aria-hidden="true"></i><span>Minha senha</span></a>
             </nav>
         </aside>

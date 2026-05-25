@@ -2,6 +2,7 @@
 <?php $assets = require dirname(__DIR__, 3) . '/config/assets.php'; ?>
 <?php $publicCssFiles = $assets['css']['public'] ?? ['/public/assets/css/public.css']; ?>
 <?php $publicJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/public-menu.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/public-menu.js') : time(); ?>
+<?php $consentJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/consent.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/consent.js') : time(); ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/favicon-primary.svg'); ?>
 <?php
 $navigationItems = array_filter(($menuItems ?? []), function (array $item): bool {
@@ -100,7 +101,12 @@ $socialImage = $ogImage ?? url('/public/assets/img/institution-hero-community.jp
         <strong>Cidade Nova Informa</strong>
         <span>Jornalismo comunitário com qualidade e compromisso.</span>
     </footer>
+    <button class="cookie-preferences-button" type="button" data-cookie-preferences hidden>Privacidade</button>
     <script src="<?= e(url('/public/assets/js/public-menu.js') . '?v=' . $publicJsVersion) ?>"></script>
+    <script>
+        window.CNI_CONSENT_CONFIG_URL = '<?= e(url('/api/consent/config')) ?>';
+    </script>
+    <script src="<?= e(url('/public/assets/js/consent.js') . '?v=' . $consentJsVersion) ?>" defer></script>
     <?php if (!empty($usesMathJax)): ?>
         <script>
             window.MathJax = {

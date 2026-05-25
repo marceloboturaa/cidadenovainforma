@@ -2,6 +2,7 @@
 
 use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\BackupController;
+use App\Controllers\Admin\ConsentController;
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\DocumentController;
 use App\Controllers\Admin\EducationController;
@@ -28,6 +29,9 @@ $router->get('/instituicao/{slug}', [PublicController::class, 'institutionArea']
 $router->get('/documentos', [PublicController::class, 'documents']);
 $router->get('/documentos/visualizar', [PublicController::class, 'viewDocument']);
 $router->get('/documentos/download', [PublicController::class, 'downloadDocument']);
+$router->get('/politica-de-cookies', [PublicController::class, 'cookiePolicy']);
+$router->get('/api/consent/config', [PublicController::class, 'consentConfig']);
+$router->post('/api/consent', [PublicController::class, 'saveConsent']);
 $router->get('/certificado/validar', [PublicController::class, 'verifyCertificate']);
 $router->get('/certificados', [PublicController::class, 'verifyCertificate']);
 $router->get('/certificado/{codigo}', [PublicController::class, 'verifyCertificate']);
@@ -125,6 +129,14 @@ $router->post('/admin/backups/download', [BackupController::class, 'download']);
 $router->post('/admin/backups/import', [BackupController::class, 'importFull']);
 $router->post('/admin/backups/news/export', [BackupController::class, 'exportNews']);
 $router->post('/admin/backups/news/import', [BackupController::class, 'importNews']);
+
+$router->get('/admin/consent', [ConsentController::class, 'index']);
+$router->post('/admin/consent/settings', [ConsentController::class, 'settings']);
+$router->post('/admin/consent/category', [ConsentController::class, 'category']);
+$router->post('/admin/consent/category/delete', [ConsentController::class, 'deleteCategory']);
+$router->post('/admin/consent/script', [ConsentController::class, 'script']);
+$router->post('/admin/consent/script/delete', [ConsentController::class, 'deleteScript']);
+$router->get('/admin/consent/export', [ConsentController::class, 'export']);
 
 $router->get('/admin/documents', [DocumentController::class, 'index']);
 $router->get('/admin/documents/visualizar', [DocumentController::class, 'view']);

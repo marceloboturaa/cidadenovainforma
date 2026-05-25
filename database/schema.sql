@@ -158,6 +158,88 @@ CREATE TABLE IF NOT EXISTS site_settings (
     updated_at TIMESTAMP NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS consent_settings (
+    id TINYINT UNSIGNED PRIMARY KEY,
+    banner_title VARCHAR(160) NOT NULL,
+    banner_text TEXT NOT NULL,
+    policy_title VARCHAR(160) NOT NULL,
+    policy_text MEDIUMTEXT NOT NULL,
+    policy_version VARCHAR(40) NOT NULL DEFAULT '1.0',
+    accept_label VARCHAR(80) NOT NULL DEFAULT 'Aceitar tudo',
+    reject_label VARCHAR(80) NOT NULL DEFAULT 'Rejeitar tudo',
+    customize_label VARCHAR(80) NOT NULL DEFAULT 'Personalizar',
+    save_label VARCHAR(80) NOT NULL DEFAULT 'Salvar preferências',
+    primary_color VARCHAR(20) NOT NULL DEFAULT '#b91c1c',
+    secondary_color VARCHAR(20) NOT NULL DEFAULT '#111827',
+    background_color VARCHAR(20) NOT NULL DEFAULT '#ffffff',
+    text_color VARCHAR(20) NOT NULL DEFAULT '#111827',
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_consent_settings_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS consent_categories (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    slug VARCHAR(80) NOT NULL UNIQUE,
+    description TEXT NULL,
+    required TINYINT(1) NOT NULL DEFAULT 0,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_by BIGINT UNSIGNED NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_consent_categories_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_consent_categories_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS consent_scripts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    category_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(160) NOT NULL,
+    provider VARCHAR(120) NULL,
+    script_type ENUM('src','inline') NOT NULL DEFAULT 'inline',
+    src VARCHAR(500) NULL,
+    code MEDIUMTEXT NULL,
+    position ENUM('head','footer') NOT NULL DEFAULT 'footer',
+    active TINYINT(1) NOT NULL DEFAULT 0,
+    created_by BIGINT UNSIGNED NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX idx_consent_scripts_category (category_id),
+    CONSTRAINT fk_consent_scripts_category FOREIGN KEY (category_id) REFERENCES consent_categories(id) ON DELETE CASCADE,
+    CONSTRAINT fk_consent_scripts_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_consent_scripts_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS consent_records (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    visitor_id CHAR(36) NOT NULL,
+    user_id BIGINT UNSIGNED NULL,
+    ip_anonymized VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    policy_version VARCHAR(40) NOT NULL,
+    preferences_json TEXT NOT NULL,
+    source VARCHAR(80) NOT NULL DEFAULT 'banner',
+    created_at TIMESTAMP NULL,
+    INDEX idx_consent_records_visitor (visitor_id),
+    INDEX idx_consent_records_created (created_at),
+    CONSTRAINT fk_consent_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS consent_audit_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    action VARCHAR(80) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NULL,
+    INDEX idx_consent_audit_created (created_at),
+    CONSTRAINT fk_consent_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS institution_pages (
     slug VARCHAR(80) PRIMARY KEY,
     name VARCHAR(120) NOT NULL,

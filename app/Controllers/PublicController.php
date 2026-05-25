@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\View;
 use App\Models\Category;
+use App\Models\Consent;
 use App\Models\Document;
 use App\Models\Education;
 use App\Models\InstitutionLanding;
@@ -196,6 +197,40 @@ class PublicController
             'metaDescription' => 'Consulte a autenticidade de certificados emitidos pelo Cidade Nova Informa.',
             'canonicalUrl' => url('/certificado/validar'),
         ], 'public');
+    }
+
+    public function cookiePolicy(): void
+    {
+        $this->logAccess();
+
+        $settings = Consent::settings();
+        View::render('public/cookie-policy', [
+            'settings' => $settings,
+            'categories' => Consent::categories(true),
+            'menuItems' => MenuItem::visible(),
+            'query' => '',
+            'pageTitle' => ($settings['policy_title'] ?? 'Política de Cookies') . ' - Cidade Nova Informa',
+            'metaDescription' => 'Política de cookies e preferências de privacidade conforme LGPD.',
+            'canonicalUrl' => url('/politica-de-cookies'),
+        ], 'public');
+    }
+
+    public function consentConfig(): void
+    {
+        $this->json(Consent::publicConfig());
+    }
+
+    public function saveConsent(): void
+    {
+        $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
+        if (!is_array($payload)) {
+            $payload = [];
+        }
+
+        $this->json([
+            'ok' => true,
+            'consent' => Consent::registerConsent($payload),
+        ]);
     }
 
     public function downloadDocument(): void
@@ -583,5 +618,13 @@ class PublicController
             fn (string $file): string => '/public/uploads/news/' . basename($file),
             $selected
         );
+    }
+
+    private function json(array $payload): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        header('X-Content-Type-Options: nosniff');
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+        exit;
     }
 }

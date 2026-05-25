@@ -747,7 +747,9 @@ $roles = [
     ['JORNALISTA', 'jornalista', 40],
     ['COLUNISTA', 'colunista', 35],
     ['PROFESSOR', 'professor', 30],
+    ['EDITOR LGPD', 'editor-lgpd', 25],
     ['EQUIPE', 'equipe', 20],
+    ['VISUALIZADOR LGPD', 'visualizador-lgpd', 15],
     ['ESTUDANTE', 'estudante', 10],
 ];
 
@@ -782,6 +784,9 @@ $permissions = [
     ['Ver fóruns', 'forum.view'],
     ['Criar tópicos e respostas nos fóruns', 'forum.create'],
     ['Moderar fóruns', 'forum.moderate'],
+    ['Visualizar consentimentos LGPD', 'consent.view'],
+    ['Editar textos e politicas LGPD', 'consent.texts'],
+    ['Gerenciar CMP LGPD', 'consent.manage'],
 ];
 
 $stmt = $pdo->prepare('INSERT IGNORE INTO roles (name, slug, level, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())');
@@ -806,7 +811,7 @@ $permissionIds = array_column($permissionRows, 'id', 'slug');
 
 $grants = [
     'master' => array_keys($permissionIds),
-    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.audit', 'certificates.institutions', 'certificates.templates', 'certificates.batches.approve', 'forum.view', 'forum.create', 'forum.moderate'],
+    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.audit', 'certificates.institutions', 'certificates.templates', 'certificates.batches.approve', 'forum.view', 'forum.create', 'forum.moderate', 'consent.view', 'consent.texts', 'consent.manage'],
     'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.templates', 'forum.view', 'forum.create'],
     'delegado-emissor' => ['education.view', 'certificates.issue'],
     'diretor' => ['documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
@@ -814,6 +819,8 @@ $grants = [
     'colunista' => ['news.create'],
     'professor' => ['education.teach', 'education.view', 'education.forum', 'forum.view', 'forum.create'],
     'equipe' => ['documents.view', 'people.manage', 'events.manage', 'event_participants.manage', 'forum.view', 'forum.create'],
+    'editor-lgpd' => ['consent.view', 'consent.texts'],
+    'visualizador-lgpd' => ['consent.view'],
     'estudante' => ['education.view', 'education.forum', 'forum.view', 'forum.create'],
 ];
 
