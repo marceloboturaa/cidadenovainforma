@@ -9,6 +9,20 @@ $programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
+$certificatePeriod = $certificatePeriod ?? [];
+$formatCertificateDate = static function (?string $value) use ($issuedAt): string {
+    $timestamp = $value ? strtotime($value) : false;
+    return $timestamp ? date('d/m/Y', $timestamp) : $issuedAt;
+};
+$periodStart = $formatCertificateDate($certificatePeriod['start'] ?? null);
+$periodEnd = $formatCertificateDate($certificatePeriod['end'] ?? ($certificate['issued_at'] ?? null));
+$minimumFrequency = max(75, (int) ($certificateStatus['minimum_frequency'] ?? 0));
+$institutionName = getenv('INSTITUTION_CERTIFICATE_NAME') ?: 'Cidade Nova Informa - CNI';
+$institutionCity = getenv('INSTITUTION_CERTIFICATE_CITY') ?: 'Foz do Iguaçu - PR';
+$institutionCnpj = getenv('INSTITUTION_CERTIFICATE_CNPJ') ?: 'XX.XXX.XXX/0001-XX';
+$institutionSite = getenv('INSTITUTION_CERTIFICATE_SITE') ?: 'www.cidadenovainforma.com.br';
+$certificatePublicVerify = $institutionSite . '/certificados';
+$courseResponsible = trim((string) ($course['teacher_name'] ?? 'Marcelo Botura'));
 $verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? ''));
 $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' . rawurlencode($verificationUrl);
 ?>
@@ -30,23 +44,38 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
         <div class="education-certificate-copy">
             <span>Certificado</span>
             <h2><?= e($title) ?></h2>
+            <p class="education-certificate-nature">Curso Livre de Capacitação Profissional - Formação Continuada</p>
             <div><?= nl2br(e($certificateText)) ?></div>
+            <section class="education-certificate-details" aria-label="Detalhes do certificado">
+                <span>Modalidade: Online</span>
+                <span>Realizado de <?= e($periodStart) ?> até <?= e($periodEnd) ?></span>
+                <span>Certificado concedido mediante frequência mínima de <?= e((string) $minimumFrequency) ?>% e aproveitamento satisfatório.</span>
+            </section>
             <footer>
                 <strong><?= e($certificate['student_name'] ?? '') ?></strong>
             </footer>
         </div>
         <footer class="education-certificate-footnote">
             <div class="education-certificate-footnote-text">
-                <span>Emitido em <?= e($issuedAt) ?></span>
-                <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
-                <?php if (!empty($course['teacher_name'])): ?>
-                    <span>Professor: <?= e($course['teacher_name']) ?></span>
-                <?php endif; ?>
-                <span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span>
+                <div class="education-certificate-institution">
+                    <strong><?= e($institutionName) ?></strong>
+                    <span><?= e($institutionCity) ?></span>
+                    <span>CNPJ: <?= e($institutionCnpj) ?></span>
+                    <span><?= e($institutionSite) ?></span>
+                </div>
+                <div class="education-certificate-footnote-meta">
+                    <span>Emitido em <?= e($issuedAt) ?></span>
+                    <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
+                    <?php if (!empty($course['teacher_name'])): ?>
+                        <span>Professor: <?= e($course['teacher_name']) ?></span>
+                    <?php endif; ?>
+                    <span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span>
+                </div>
+                <p>Curso Livre de Capacitação Profissional ofertado nos termos da Lei nº 9.394/96 (LDB) e Decreto nº 5.154/04.</p>
             </div>
             <figure class="education-certificate-qr">
                 <img src="<?= e($verificationQrUrl) ?>" alt="QR Code para verificar o certificado">
-                <figcaption>Verificar autenticidade</figcaption>
+                <figcaption>Verifique a autenticidade em: <?= e($certificatePublicVerify) ?></figcaption>
             </figure>
         </footer>
     </article>
@@ -63,6 +92,27 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
                     <?= nl2br(e($programExtra)) ?>
                 </section>
             <?php endif; ?>
+
+            <section class="education-certificate-program-summary" aria-label="Informações institucionais do curso">
+                <article>
+                    <h3>Objetivos do curso</h3>
+                    <p>Desenvolver competências em raciocínio lógico, interpretação matemática, resolução de problemas e análise de estruturas proposicionais.</p>
+                </article>
+                <article>
+                    <h3>Competências desenvolvidas</h3>
+                    <ul>
+                        <li>Análise lógica</li>
+                        <li>Interpretação matemática</li>
+                        <li>Construção de tabelas-verdade</li>
+                        <li>Resolução de problemas</li>
+                        <li>Argumentação lógica</li>
+                    </ul>
+                </article>
+                <article>
+                    <h3>Responsável pelo curso</h3>
+                    <p>Professor Responsável: <?= e($courseResponsible) ?><br>Licenciatura em Matemática - UNIOESTE</p>
+                </article>
+            </section>
 
             <section class="education-certificate-program-list">
                 <?php foreach ($certificateProgram as $module): ?>

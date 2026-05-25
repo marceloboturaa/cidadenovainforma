@@ -1116,6 +1116,49 @@ class Education
         return $stmt->fetch() ?: null;
     }
 
+    public static function certificatePeriodForCourseUser(int $courseId, int $userId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT
+                MIN(education_enrollments.created_at) AS enrolled_at,
+                MAX(education_lesson_progress.completed_at) AS completed_at,
+                MAX(education_attendance.attendance_date) AS last_attendance_at,
+                MAX(education_certificates.issued_at) AS issued_at
+             FROM education_enrollments
+             LEFT JOIN education_lessons
+                ON education_lessons.course_id = education_enrollments.course_id
+               AND education_lessons.active = 1
+             LEFT JOIN education_lesson_progress
+                ON education_lesson_progress.lesson_id = education_lessons.id
+               AND education_lesson_progress.user_id = education_enrollments.user_id
+               AND education_lesson_progress.completed_at IS NOT NULL
+             LEFT JOIN education_attendance
+                ON education_attendance.course_id = education_enrollments.course_id
+               AND education_attendance.user_id = education_enrollments.user_id
+             LEFT JOIN education_certificates
+                ON education_certificates.course_id = education_enrollments.course_id
+               AND education_certificates.user_id = education_enrollments.user_id
+             WHERE education_enrollments.course_id = :course_id
+               AND education_enrollments.user_id = :user_id'
+        );
+        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
+        $row = $stmt->fetch() ?: [];
+
+        $endDates = array_filter([
+            $row['completed_at'] ?? null,
+            $row['last_attendance_at'] ?? null,
+            $row['issued_at'] ?? null,
+        ]);
+        usort($endDates, static fn (string $left, string $right): int => strtotime($left) <=> strtotime($right));
+
+        return [
+            'start' => $row['enrolled_at'] ?? null,
+            'end' => $endDates ? end($endDates) : null,
+        ];
+    }
+
     public static function certificatesForUser(int $userId): array
     {
         self::ensureSchema();

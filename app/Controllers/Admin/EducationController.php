@@ -1097,6 +1097,7 @@ class EducationController
             'certificateStatus' => $status,
             'certificateText' => $this->certificateText($course, $certificate, $status),
             'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), $lessons),
+            'certificatePeriod' => Education::certificatePeriodForCourseUser((int) $course['id'], $userId),
         ]);
     }
 

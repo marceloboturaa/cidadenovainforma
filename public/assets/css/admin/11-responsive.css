@@ -319,6 +319,11 @@
         font-size: 1.25rem;
     }
 
+    .education-certificate-nature,
+    .education-certificate-details {
+        font-size: 0.7rem;
+    }
+
     .education-certificate-copy > div {
         font-size: 1rem;
         line-height: 1.5;
@@ -332,9 +337,21 @@
         font-size: 0.72rem;
     }
 
+    .education-certificate-footnote-text p {
+        font-size: 0.6rem;
+    }
+
+    .education-certificate-qr {
+        width: 110px;
+    }
+
     .education-certificate-program-sheet {
         padding: 24px;
         gap: 12px;
+    }
+
+    .education-certificate-program-summary {
+        grid-template-columns: 1fr;
     }
 
     .education-certificate-program-list {
@@ -732,9 +749,21 @@
         font-size: 1rem;
     }
 
+    .education-certificate-nature {
+        margin-top: -4px;
+        font-size: 0.56rem;
+        letter-spacing: 0.04em;
+    }
+
     .education-certificate-copy > div {
         font-size: 0.78rem;
         line-height: 1.35;
+    }
+
+    .education-certificate-details {
+        gap: 3px 8px;
+        font-size: 0.5rem;
+        line-height: 1.2;
     }
 
     .education-certificate-copy footer {
@@ -758,10 +787,20 @@
         gap: 3px 8px;
     }
 
+    .education-certificate-institution,
+    .education-certificate-footnote-meta {
+        gap: 2px 6px;
+    }
+
+    .education-certificate-footnote-text p {
+        font-size: 0.43rem;
+        line-height: 1.12;
+    }
+
     .education-certificate-qr {
-        width: 58px;
+        width: 76px;
         margin-top: -48px;
-        font-size: 0.45rem;
+        font-size: 0.34rem;
     }
 
     .education-certificate-qr img {
@@ -778,9 +817,22 @@
     }
 
     .education-certificate-program-extra,
+    .education-certificate-program-summary article,
     .education-certificate-program-list {
         font-size: 0.68rem;
         line-height: 1.22;
+    }
+
+    .education-certificate-program-summary {
+        gap: 6px;
+    }
+
+    .education-certificate-program-summary article {
+        padding: 7px 8px;
+    }
+
+    .education-certificate-program-summary h3 {
+        font-size: 0.62rem;
     }
 
     .auth-actions {

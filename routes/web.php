@@ -29,6 +29,7 @@ $router->get('/documentos', [PublicController::class, 'documents']);
 $router->get('/documentos/visualizar', [PublicController::class, 'viewDocument']);
 $router->get('/documentos/download', [PublicController::class, 'downloadDocument']);
 $router->get('/certificado/validar', [PublicController::class, 'verifyCertificate']);
+$router->get('/certificados', [PublicController::class, 'verifyCertificate']);
 $router->get('/certificado/{codigo}', [PublicController::class, 'verifyCertificate']);
 $router->get('/buscar', [PublicController::class, 'search']);
 $router->get('/reprise', [PublicController::class, 'archive']);
