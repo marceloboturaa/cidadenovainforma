@@ -99,7 +99,7 @@ class EducationController
             return;
         }
 
-        $this->validateCsrf('/admin/education/recognitions');
+        $this->validateCsrf('/admin/education/certificate-center');
 
         $name = trim((string) ($_POST['name'] ?? ''));
         if ($name === '') {
@@ -126,10 +126,12 @@ class EducationController
             return;
         }
 
-        $this->validateCsrf('/admin/education/certificate-center');
+        $this->validateCsrf('/admin/education/recognitions');
 
         try {
             $certificate = Education::issueRecognitionCertificate(array_merge($_POST, [
+                'certificate_background' => $this->certificateBackgroundFromRequest(null, 'certificate_background', 'certificate_background_upload'),
+                'certificate_program_background' => $this->certificateBackgroundFromRequest(null, 'certificate_program_background', 'certificate_program_background_upload'),
                 'issued_by' => (int) (current_user()['id'] ?? 0),
             ]));
         } catch (\InvalidArgumentException $exception) {

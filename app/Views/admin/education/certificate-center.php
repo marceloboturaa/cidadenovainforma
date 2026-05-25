@@ -18,7 +18,7 @@ $statusLabels = [
     </div>
     <div class="heading-actions">
         <?php if (!empty($canIssueCertificates)): ?>
-            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-plus-circle" aria-hidden="true"></i>Novo certificado</a>
+            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-journal-plus" aria-hidden="true"></i>Certificado de curso</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/recognitions')) ?>"><i class="bi bi-award" aria-hidden="true"></i>Reconhecimentos</a>
         <?php endif; ?>
         <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/certificados')) ?>" target="_blank" rel="noopener"><i class="bi bi-qr-code-scan" aria-hidden="true"></i>Verificador público</a>
@@ -165,7 +165,7 @@ $statusLabels = [
                     <div class="admin-list-main">
                         <strong class="admin-list-title"><?= e($certificate['student_name'] ?? '') ?></strong>
                         <dl class="admin-list-meta">
-                            <div><dt>Curso</dt><dd><?= e($certificate['course_title'] ?? '') ?></dd></div>
+                            <div><dt>Curso certificado</dt><dd><?= e($certificate['course_title'] ?? '') ?></dd></div>
                             <div><dt>Código</dt><dd><?= e($certificate['verification_code'] ?? '') ?></dd></div>
                             <div><dt>Status</dt><dd><?= e($statusLabels[$certificate['status'] ?? ''] ?? ($certificate['status'] ?? '')) ?></dd></div>
                         </dl>

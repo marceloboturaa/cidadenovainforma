@@ -7,6 +7,7 @@ if ($title === '') {
 $background = trim((string) ($course['certificate_background'] ?? ''));
 $programBackground = trim((string) ($course['certificate_program_background'] ?? ''));
 $programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
+$isRecognitionCertificate = ($course['certificate_activity_type'] ?? '') === 'reconhecimento';
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
@@ -96,7 +97,7 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
         <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;<?= $programBackground !== '' ? ' background-image: url(\'' . e(media_url($programBackground)) . '\');' : '' ?>">
             <header class="education-certificate-program-header">
                 <span>Verso do certificado</span>
-                <h2>Programação cursada</h2>
+                <h2><?= $isRecognitionCertificate ? 'Informações do reconhecimento' : 'Programação cursada' ?></h2>
                 <p><?= e($course['title'] ?? '') ?></p>
             </header>
 
@@ -128,7 +129,7 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
                         <article>
                             <h3>Responsável pelo curso</h3>
                             <?php if ($courseResponsible !== ''): ?>
-                                <p>Professor Responsável: <?= e($courseResponsible) ?></p>
+                                <p><?= $isRecognitionCertificate ? 'Responsável: ' : 'Professor Responsável: ' ?><?= e($courseResponsible) ?></p>
                             <?php endif; ?>
                             <?php if ($courseResponsibleCredential !== ''): ?>
                                 <p><?= e($courseResponsibleCredential) ?></p>
@@ -157,7 +158,7 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
                     </article>
                 <?php endforeach; ?>
                 <?php if (!$certificateProgram): ?>
-                    <p class="education-certificate-program-empty">Nenhuma aula cadastrada para este curso.</p>
+                    <p class="education-certificate-program-empty"><?= $isRecognitionCertificate ? 'Nenhuma informação complementar cadastrada para este reconhecimento.' : 'Nenhuma aula cadastrada para este curso.' ?></p>
                 <?php endif; ?>
             </section>
         </article>

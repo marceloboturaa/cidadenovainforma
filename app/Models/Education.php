@@ -1365,7 +1365,28 @@ class Education
         self::ensureSchema();
 
         return Database::connection()
-            ->query('SELECT id, full_name, email, city, state FROM people WHERE active = 1 ORDER BY full_name ASC')
+            ->query(
+                'SELECT CONCAT("user:", id) AS recipient_key,
+                        id,
+                        "user" AS recipient_type,
+                        name AS display_name,
+                        email,
+                        NULL AS city,
+                        NULL AS state
+                 FROM users
+                 WHERE active = 1
+                 UNION ALL
+                 SELECT CONCAT("person:", id) AS recipient_key,
+                        id,
+                        "person" AS recipient_type,
+                        full_name AS display_name,
+                        email,
+                        city,
+                        state
+                 FROM people
+                 WHERE active = 1
+                 ORDER BY display_name ASC'
+            )
             ->fetchAll();
     }
 
@@ -1380,6 +1401,7 @@ class Education
                     education_certificates.issued_at,
                     education_courses.title AS recognition_title,
                     COALESCE(NULLIF(education_certificates.student_name, ""), people.full_name, users.name) AS recipient_name,
+                    CASE WHEN education_certificates.user_id IS NOT NULL THEN "Usuário" ELSE "Pessoa cadastrada" END AS recipient_kind,
                     certificate_institutions.name AS institution_name
              FROM education_certificates
              INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
@@ -1396,19 +1418,49 @@ class Education
     {
         self::ensureSchema();
 
-        $personId = (int) ($data['person_id'] ?? 0);
+        $recipientKey = trim((string) ($data['recipient_key'] ?? ''));
+        if ($recipientKey === '' && !empty($data['person_id'])) {
+            $recipientKey = 'person:' . (int) $data['person_id'];
+        }
+
+        [$recipientType, $recipientIdRaw] = array_pad(explode(':', $recipientKey, 2), 2, '');
+        $recipientId = (int) $recipientIdRaw;
         $issuedBy = (int) ($data['issued_by'] ?? 0);
-        $stmt = Database::connection()->prepare(
-            'SELECT id, full_name, email, city, state
-             FROM people
-             WHERE id = :id
-               AND active = 1
-             LIMIT 1'
-        );
-        $stmt->execute(['id' => $personId]);
-        $person = $stmt->fetch();
-        if (!$person) {
-            throw new \InvalidArgumentException('Selecione um voluntário ou participante cadastrado.');
+
+        if ($recipientType === 'user') {
+            $stmt = Database::connection()->prepare(
+                'SELECT id, name, email
+                 FROM users
+                 WHERE id = :id
+                   AND active = 1
+                 LIMIT 1'
+            );
+            $stmt->execute(['id' => $recipientId]);
+            $recipient = $stmt->fetch();
+            if (!$recipient) {
+                throw new \InvalidArgumentException('Selecione um usuário ativo.');
+            }
+            $studentName = (string) ($recipient['name'] ?? '');
+            $userId = $recipientId;
+            $personId = null;
+        } elseif ($recipientType === 'person') {
+            $stmt = Database::connection()->prepare(
+                'SELECT id, full_name, email, city, state
+                 FROM people
+                 WHERE id = :id
+                   AND active = 1
+                 LIMIT 1'
+            );
+            $stmt->execute(['id' => $recipientId]);
+            $recipient = $stmt->fetch();
+            if (!$recipient) {
+                throw new \InvalidArgumentException('Selecione uma pessoa cadastrada.');
+            }
+            $studentName = (string) ($recipient['full_name'] ?? '');
+            $userId = null;
+            $personId = $recipientId;
+        } else {
+            throw new \InvalidArgumentException('Selecione um usuário ou pessoa cadastrada.');
         }
 
         $activityTitle = trim((string) ($data['activity_title'] ?? ''));
@@ -1435,27 +1487,43 @@ class Education
             'certificate_enabled' => 1,
             'certificate_title' => $certificateTitle,
             'certificate_text' => $certificateText,
+            'certificate_background' => $data['certificate_background'] ?? null,
             'certificate_min_frequency' => 0,
-            'certificate_course_nature' => 'Certificado de Reconhecimento Institucional',
-            'certificate_approval_criteria' => 'Certificado concedido por reconhecimento institucional de participação voluntária.',
-            'certificate_program_enabled' => 0,
+            'certificate_course_nature' => self::nullable($data['certificate_course_nature'] ?? null) ?? 'Certificado de Reconhecimento Institucional',
+            'certificate_modality' => self::nullable($data['certificate_modality'] ?? null) ?? 'Institucional',
+            'certificate_approval_criteria' => self::nullable($data['certificate_approval_criteria'] ?? null) ?? 'Certificado concedido por reconhecimento institucional de participação voluntária.',
+            'certificate_legal_text' => self::nullable($data['certificate_legal_text'] ?? null) ?? 'Certificado de reconhecimento institucional sem equivalência a diploma, graduação, pós-graduação ou curso técnico.',
+            'certificate_institution_name' => self::nullable($data['certificate_institution_name'] ?? null),
+            'certificate_institution_city' => self::nullable($data['certificate_institution_city'] ?? null),
+            'certificate_institution_cnpj' => self::nullable($data['certificate_institution_cnpj'] ?? null),
+            'certificate_institution_site' => self::nullable($data['certificate_institution_site'] ?? null),
+            'certificate_objectives' => self::nullable($data['certificate_objectives'] ?? null),
+            'certificate_competencies' => self::nullable($data['certificate_competencies'] ?? null),
+            'certificate_responsible_name' => self::nullable($data['certificate_responsible_name'] ?? null),
+            'certificate_responsible_credential' => self::nullable($data['certificate_responsible_credential'] ?? null),
+            'certificate_program_enabled' => !empty($data['certificate_program_enabled']) ? 1 : 0,
+            'certificate_program_background' => $data['certificate_program_background'] ?? null,
+            'certificate_program_extra' => self::nullable($data['certificate_program_extra'] ?? null),
+            'certificate_program_columns' => $data['certificate_program_columns'] ?? 2,
             'created_by' => $issuedBy ?: null,
             'updated_by' => $issuedBy ?: null,
         ]);
 
-        $code = self::certificateCode($courseId, $personId);
-        $hash = self::certificateHash($courseId, $personId, $code);
+        $hashId = $userId ?? $personId ?? 0;
+        $code = self::certificateCode($courseId, $hashId);
+        $hash = self::certificateHash($courseId, $hashId, $code);
         Database::connection()->prepare(
             'INSERT INTO education_certificates
                 (course_id, user_id, person_id, verification_code, validation_hash, status, student_name, authorized_by, authorized_at, issued_by, issued_at, created_at, updated_at)
              VALUES
-                (:course_id, NULL, :person_id, :verification_code, :validation_hash, "issued", :student_name, :authorized_by, NOW(), :issued_by, NOW(), NOW(), NOW())'
+                (:course_id, :user_id, :person_id, :verification_code, :validation_hash, "issued", :student_name, :authorized_by, NOW(), :issued_by, NOW(), NOW(), NOW())'
         )->execute([
             'course_id' => $courseId,
-            'person_id' => (int) $person['id'],
+            'user_id' => $userId,
+            'person_id' => $personId,
             'verification_code' => $code,
             'validation_hash' => $hash,
-            'student_name' => $person['full_name'],
+            'student_name' => $studentName,
             'authorized_by' => $issuedBy ?: null,
             'issued_by' => $issuedBy ?: null,
         ]);
@@ -1463,7 +1531,8 @@ class Education
         $certificateId = (int) Database::connection()->lastInsertId();
         self::auditCertificate($certificateId, !empty($data['institution_id']) ? (int) $data['institution_id'] : null, $issuedBy ?: null, 'recognition_issued', [], [
             'course_id' => $courseId,
-            'person_id' => (int) $person['id'],
+            'recipient_type' => $recipientType,
+            'recipient_id' => $recipientId,
             'verification_code' => $code,
         ]);
 
@@ -1471,7 +1540,7 @@ class Education
             'id' => $certificateId,
             'course_id' => $courseId,
             'verification_code' => $code,
-            'student_name' => $person['full_name'],
+            'student_name' => $studentName,
         ];
     }
 
@@ -1741,6 +1810,8 @@ class Education
         $statusRows = $db->query(
             'SELECT status, COUNT(*) AS total
              FROM education_certificates
+             INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             WHERE education_courses.certificate_activity_type <> "reconhecimento"
              GROUP BY status'
         )->fetchAll();
 
@@ -1755,16 +1826,17 @@ class Education
              INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
              LEFT JOIN users ON users.id = education_certificates.user_id
              LEFT JOIN people ON people.id = education_certificates.person_id
+             WHERE education_courses.certificate_activity_type <> "reconhecimento"
              ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC
              LIMIT 8'
         )->fetchAll();
 
         return [
-            'total_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates')->fetchColumn(),
-            'issued_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates WHERE status = "issued"')->fetchColumn(),
-            'revoked_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates WHERE status = "revoked"')->fetchColumn(),
-            'verified_total' => (int) $db->query('SELECT COALESCE(SUM(verified_count), 0) FROM education_certificates')->fetchColumn(),
-            'certificate_courses' => (int) $db->query('SELECT COUNT(*) FROM education_courses WHERE certificate_enabled = 1')->fetchColumn(),
+            'total_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
+            'issued_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status = "issued" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
+            'revoked_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status = "revoked" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
+            'verified_total' => (int) $db->query('SELECT COALESCE(SUM(verified_count), 0) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
+            'certificate_courses' => (int) $db->query('SELECT COUNT(*) FROM education_courses WHERE certificate_enabled = 1 AND certificate_activity_type <> "reconhecimento"')->fetchColumn(),
             'institutions' => (int) $db->query('SELECT COUNT(*) FROM certificate_institutions WHERE active = 1')->fetchColumn(),
             'templates' => (int) $db->query('SELECT COUNT(*) FROM certificate_templates WHERE active = 1')->fetchColumn(),
             'pending_batches' => (int) $db->query('SELECT COUNT(*) FROM certificate_batches WHERE status IN ("draft", "pending", "approved", "processing")')->fetchColumn(),
