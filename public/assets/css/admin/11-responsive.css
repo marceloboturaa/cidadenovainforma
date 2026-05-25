@@ -750,15 +750,12 @@
         margin-right: -18px;
         margin-left: -18px;
         padding: 0 18px 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x proximity;
+        overflow-x: hidden;
     }
 
     .education-certificate-sheet {
-        width: 760px;
-        max-width: none;
-        scroll-snap-align: center;
+        width: min(100%, 760px);
+        max-width: 100%;
     }
 
     .education-certificate-copy {
