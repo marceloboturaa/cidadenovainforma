@@ -22,10 +22,12 @@ $courseNature = trim((string) ($course['certificate_course_nature'] ?? '')) ?: '
 $courseModality = trim((string) ($course['certificate_modality'] ?? '')) ?: 'Online';
 $approvalCriteria = trim((string) ($course['certificate_approval_criteria'] ?? '')) ?: 'Certificado concedido mediante frequência mínima de ' . $minimumFrequency . '% e aproveitamento satisfatório.';
 $legalText = trim((string) ($course['certificate_legal_text'] ?? '')) ?: 'Curso Livre de Capacitação Profissional ofertado nos termos da Lei nº 9.394/96 (LDB) e Decreto nº 5.154/04.';
-$institutionName = trim((string) ($course['certificate_institution_name'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_NAME') ?: 'Cidade Nova Informa - CNI');
-$institutionCity = trim((string) ($course['certificate_institution_city'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_CITY') ?: 'Foz do Iguaçu - PR');
-$institutionCnpj = trim((string) ($course['certificate_institution_cnpj'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_CNPJ') ?: '');
-$institutionSite = trim((string) ($course['certificate_institution_site'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_SITE') ?: 'www.cidadenovainforma.com.br');
+$officialCity = trim((string) ($course['certificate_institution_official_city'] ?? ''));
+$officialState = trim((string) ($course['certificate_institution_official_state'] ?? ''));
+$institutionName = trim((string) ($course['certificate_institution_name'] ?? '')) ?: trim((string) ($course['certificate_institution_official_name'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_NAME') ?: 'Cidade Nova Informa - CNI');
+$institutionCity = trim((string) ($course['certificate_institution_city'] ?? '')) ?: trim($officialCity . ($officialState !== '' ? ' - ' . $officialState : '')) ?: (getenv('INSTITUTION_CERTIFICATE_CITY') ?: 'Foz do Iguaçu - PR');
+$institutionCnpj = trim((string) ($course['certificate_institution_cnpj'] ?? '')) ?: trim((string) ($course['certificate_institution_official_cnpj'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_CNPJ') ?: '');
+$institutionSite = trim((string) ($course['certificate_institution_site'] ?? '')) ?: trim((string) ($course['certificate_institution_official_site'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_SITE') ?: 'www.cidadenovainforma.com.br');
 $certificatePublicVerify = $institutionSite . '/certificados';
 $courseObjectives = trim((string) ($course['certificate_objectives'] ?? ''));
 $courseCompetencies = array_values(array_filter(array_map('trim', preg_split('/\R/u', (string) ($course['certificate_competencies'] ?? '')) ?: [])));

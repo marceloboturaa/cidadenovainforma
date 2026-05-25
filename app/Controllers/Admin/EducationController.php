@@ -65,10 +65,39 @@ class EducationController
 
         View::render('admin/education/certificate-center', [
             'stats' => Education::certificateCenterStats(),
+            'institutions' => Education::certificateInstitutions(),
             'canManageCertificates' => Auth::can('certificates.manage'),
             'canIssueCertificates' => Auth::can('certificates.issue'),
             'canAuditCertificates' => Auth::can('certificates.audit') || Auth::can('logs.view'),
+            'canManageInstitutions' => Auth::can('certificates.institutions') || Auth::hasRole('master'),
         ]);
+    }
+
+    public function storeCertificateInstitution(): void
+    {
+        Middleware::auth();
+        if (!Auth::can('certificates.institutions') && !Auth::hasRole('master')) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $this->validateCsrf('/admin/education/certificate-center');
+
+        $name = trim((string) ($_POST['name'] ?? ''));
+        if ($name === '') {
+            Session::flash('error', 'Informe o nome da instituição emissora.');
+            redirect('/admin/education/certificate-center');
+        }
+
+        Education::createCertificateInstitution(array_merge($_POST, [
+            'created_by' => (int) (current_user()['id'] ?? 0) ?: null,
+            'updated_by' => (int) (current_user()['id'] ?? 0) ?: null,
+        ]));
+
+        Logger::info('certificates.institution_created', 'Instituição certificadora criada: ' . $name, current_user()['id'] ?? null);
+        Session::flash('success', 'Instituição certificadora criada.');
+        redirect('/admin/education/certificate-center');
     }
 
     public function manage(): void
@@ -208,6 +237,7 @@ class EducationController
             'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id'), $canManage),
             'courseForms' => $courseForms,
             'certificateStatus' => $certificateStatus,
+            'certificateInstitutions' => Education::certificateInstitutions(),
             'certificateNameRequests' => $canManage ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
         ]);
     }
@@ -1050,6 +1080,7 @@ class EducationController
 
         Education::updateCourse((int) $course['id'], array_merge($course, [
             'certificate_enabled' => !empty($_POST['certificate_enabled']) ? 1 : 0,
+            'certificate_institution_id' => $_POST['certificate_institution_id'] ?? null,
             'certificate_title' => $title,
             'certificate_text' => $text,
             'certificate_background' => $this->certificateBackgroundFromRequest($course['certificate_background'] ?? null, 'certificate_background', 'certificate_background_upload'),

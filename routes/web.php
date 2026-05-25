@@ -139,6 +139,7 @@ $router->post('/admin/documents/delete', [DocumentController::class, 'delete']);
 $router->get('/admin/education', [EducationController::class, 'index']);
 $router->get('/admin/education/certificates', [EducationController::class, 'certificates']);
 $router->get('/admin/education/certificate-center', [EducationController::class, 'certificateCenter']);
+$router->post('/admin/education/certificate-institution', [EducationController::class, 'storeCertificateInstitution']);
 $router->get('/admin/education/manage', [EducationController::class, 'manage']);
 $router->post('/admin/education/course', [EducationController::class, 'storeCourse']);
 $router->post('/admin/education/course/update', [EducationController::class, 'updateCourse']);

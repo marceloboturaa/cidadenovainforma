@@ -2,6 +2,7 @@
 $stats = $stats ?? [];
 $recent = $stats['recent'] ?? [];
 $byStatus = $stats['by_status'] ?? [];
+$institutions = $institutions ?? [];
 $statusLabels = [
     'issued' => 'Emitidos',
     'pending' => 'Pendentes',
@@ -105,6 +106,52 @@ $statusLabels = [
             </div>
         </aside>
     </div>
+
+    <?php if (!empty($canManageInstitutions)): ?>
+        <section class="panel">
+            <div class="section-heading">
+                <h2>Instituições emissoras</h2>
+                <span><?= e((string) count($institutions)) ?> cadastrada(s)</span>
+            </div>
+            <form method="post" action="<?= e(url('/admin/education/certificate-institution')) ?>" class="education-certificate-settings">
+                <?= csrf_field() ?>
+                <div>
+                    <label class="form-label">Nome da instituição</label>
+                    <input class="form-control" name="name" maxlength="180" placeholder="Ex.: Associação, Instituto, Projeto Social" required>
+                </div>
+                <div>
+                    <label class="form-label">CNPJ</label>
+                    <input class="form-control" name="cnpj" maxlength="32" placeholder="Opcional">
+                </div>
+                <div>
+                    <label class="form-label">Cidade</label>
+                    <input class="form-control" name="city" maxlength="120">
+                </div>
+                <div>
+                    <label class="form-label">UF</label>
+                    <input class="form-control" name="state" maxlength="2">
+                </div>
+                <div class="grid-span-2">
+                    <label class="form-label">Site oficial</label>
+                    <input class="form-control" name="site" maxlength="180" placeholder="www.exemplo.org.br">
+                </div>
+                <div class="form-action-cell">
+                    <button class="btn btn-primary icon-btn"><i class="bi bi-building-add" aria-hidden="true"></i>Criar instituição</button>
+                </div>
+            </form>
+            <div class="certificate-status-list mt-3">
+                <?php foreach ($institutions as $institution): ?>
+                    <div>
+                        <span>
+                            <strong><?= e($institution['name'] ?? '') ?></strong>
+                            <?php if (!empty($institution['cnpj'])): ?> · CNPJ <?= e($institution['cnpj']) ?><?php endif; ?>
+                        </span>
+                        <strong><?= e(trim(($institution['city'] ?? '') . '/' . ($institution['state'] ?? ''), '/')) ?></strong>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
 
     <section class="panel">
         <div class="section-heading">

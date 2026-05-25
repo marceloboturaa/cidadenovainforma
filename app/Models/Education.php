@@ -704,9 +704,16 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'SELECT education_courses.*, teacher.name AS teacher_name
+            'SELECT education_courses.*,
+                    teacher.name AS teacher_name,
+                    certificate_institutions.name AS certificate_institution_official_name,
+                    certificate_institutions.cnpj AS certificate_institution_official_cnpj,
+                    certificate_institutions.city AS certificate_institution_official_city,
+                    certificate_institutions.state AS certificate_institution_official_state,
+                    certificate_institutions.site AS certificate_institution_official_site
              FROM education_courses
              LEFT JOIN users teacher ON teacher.id = education_courses.teacher_user_id
+             LEFT JOIN certificate_institutions ON certificate_institutions.id = education_courses.certificate_institution_id
              WHERE education_courses.id = :id AND education_courses.active = 1
              LIMIT 1'
         );
@@ -1361,6 +1368,40 @@ class Education
         $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
 
         return $stmt->fetch() ?: null;
+    }
+
+    public static function certificateInstitutions(): array
+    {
+        self::ensureSchema();
+        return Database::connection()
+            ->query('SELECT * FROM certificate_institutions WHERE active = 1 ORDER BY name ASC')
+            ->fetchAll();
+    }
+
+    public static function createCertificateInstitution(array $data): int
+    {
+        self::ensureSchema();
+
+        $name = trim((string) ($data['name'] ?? ''));
+        $slug = self::uniqueCertificateInstitutionSlug(slugify($name));
+
+        Database::connection()->prepare(
+            'INSERT INTO certificate_institutions
+                (name, slug, cnpj, city, state, site, active, created_by, updated_by, created_at, updated_at)
+             VALUES
+                (:name, :slug, :cnpj, :city, :state, :site, 1, :created_by, :updated_by, NOW(), NOW())'
+        )->execute([
+            'name' => $name,
+            'slug' => $slug,
+            'cnpj' => self::nullable($data['cnpj'] ?? null),
+            'city' => self::nullable($data['city'] ?? null),
+            'state' => self::nullable($data['state'] ?? null),
+            'site' => self::nullable($data['site'] ?? null),
+            'created_by' => $data['created_by'] ?? null,
+            'updated_by' => $data['updated_by'] ?? null,
+        ]);
+
+        return (int) Database::connection()->lastInsertId();
     }
 
     public static function certificatePeriodForCourseUser(int $courseId, int $userId): array
@@ -2372,6 +2413,24 @@ class Education
     private static function certificateCode(int $courseId, int $userId): string
     {
         return strtoupper(substr(hash('sha256', $courseId . ':' . $userId . ':' . microtime(true) . ':' . random_bytes(16)), 0, 20));
+    }
+
+    private static function uniqueCertificateInstitutionSlug(string $base): string
+    {
+        $base = $base !== '' ? $base : 'instituicao';
+        $slug = $base;
+        $suffix = 2;
+
+        $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM certificate_institutions WHERE slug = :slug');
+        while (true) {
+            $stmt->execute(['slug' => $slug]);
+            if ((int) $stmt->fetchColumn() === 0) {
+                return $slug;
+            }
+
+            $slug = $base . '-' . $suffix;
+            $suffix++;
+        }
     }
 
     private static function certificateHash(int $courseId, int $userId, string $code): string

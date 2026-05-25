@@ -188,6 +188,23 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
                 <input type="checkbox" name="certificate_enabled" value="1" <?= checked(!empty($course['certificate_enabled'])) ?>>
                 <span>Liberar certificado quando o aluno concluir o curso</span>
             </label>
+            <?php if (!empty($certificateInstitutions ?? [])): ?>
+                <div class="grid-span-2">
+                    <label class="form-label">Instituição emissora</label>
+                    <select class="form-select" name="certificate_institution_id">
+                        <option value="">Usar dados preenchidos manualmente</option>
+                        <?php foreach ($certificateInstitutions as $institution): ?>
+                            <option value="<?= e((string) $institution['id']) ?>" <?= selected((string) ($institution['id'] ?? ''), (string) ($course['certificate_institution_id'] ?? '')) ?>>
+                                <?= e($institution['name'] ?? '') ?>
+                                <?php if (!empty($institution['city']) || !empty($institution['state'])): ?>
+                                    - <?= e(trim(($institution['city'] ?? '') . '/' . ($institution['state'] ?? ''), '/')) ?>
+                                <?php endif; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small class="field-hint">Quando selecionada, a instituição oficial preenche nome, CNPJ, cidade/UF e site do certificado.</small>
+                </div>
+            <?php endif; ?>
             <div>
                 <label class="form-label">Título do certificado</label>
                 <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusão">
