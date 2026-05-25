@@ -82,10 +82,14 @@ class EducationController
             return;
         }
 
+        $editingId = filter_input(INPUT_GET, 'edit', FILTER_VALIDATE_INT);
+        $editingRecognition = $editingId ? Education::recognitionCertificateById($editingId) : null;
+
         View::render('admin/education/recognitions', [
             'recognitions' => Education::recognitionCertificatesForManagement(),
             'recognitionPeople' => Education::recognitionCertificatePeople(),
             'institutions' => Education::certificateInstitutions(),
+            'editingRecognition' => $editingRecognition,
             'canIssueCertificates' => Auth::can('certificates.issue') || Auth::hasRole(['master', 'admin']),
         ]);
     }
@@ -142,6 +146,65 @@ class EducationController
         Logger::info('certificates.recognition_issued', 'Certificado de reconhecimento emitido: ' . ($certificate['verification_code'] ?? ''), current_user()['id'] ?? null);
         Session::flash('success', 'Certificado de reconhecimento emitido. Código: ' . ($certificate['verification_code'] ?? ''));
         redirect('/admin/education/certificate?certificate_id=' . (int) ($certificate['id'] ?? 0));
+    }
+
+    public function updateRecognitionCertificate(): void
+    {
+        Middleware::auth();
+        if (!Auth::can('certificates.issue') && !Auth::can('certificates.manage') && !Auth::hasRole(['master', 'admin'])) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $this->validateCsrf('/admin/education/recognitions');
+
+        $certificateId = (int) ($_POST['certificate_id'] ?? 0);
+        $recognition = $certificateId > 0 ? Education::recognitionCertificateById($certificateId) : null;
+        if (!$recognition) {
+            Session::flash('error', 'Reconhecimento nao encontrado.');
+            redirect('/admin/education/recognitions');
+        }
+
+        Education::updateRecognitionCertificate($certificateId, array_merge($_POST, [
+            'certificate_background' => $this->certificateBackgroundFromRequest($recognition['certificate_background'] ?? null, 'certificate_background', 'certificate_background_upload'),
+            'certificate_program_background' => $this->certificateBackgroundFromRequest($recognition['certificate_program_background'] ?? null, 'certificate_program_background', 'certificate_program_background_upload'),
+            'updated_by' => (int) (current_user()['id'] ?? 0) ?: null,
+        ]));
+
+        Logger::info('certificates.recognition_updated', 'Reconhecimento atualizado: ' . ($recognition['verification_code'] ?? ''), current_user()['id'] ?? null);
+        Session::flash('success', 'Reconhecimento atualizado.');
+        redirect('/admin/education/recognitions');
+    }
+
+    public function recognitionCertificateStatus(): void
+    {
+        Middleware::auth();
+        if (!Auth::can('certificates.issue') && !Auth::can('certificates.manage') && !Auth::hasRole(['master', 'admin'])) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $this->validateCsrf('/admin/education/recognitions');
+
+        $certificateId = (int) ($_POST['certificate_id'] ?? 0);
+        $action = (string) ($_POST['action'] ?? '');
+        if (!Education::setRecognitionCertificateStatus($certificateId, $action, (int) (current_user()['id'] ?? 0))) {
+            Session::flash('error', 'Nao foi possivel alterar o reconhecimento.');
+            redirect('/admin/education/recognitions');
+        }
+
+        $messages = [
+            'lock' => 'Reconhecimento travado.',
+            'unlock' => 'Reconhecimento destravado.',
+            'revoke' => 'Reconhecimento revogado.',
+            'delete' => 'Reconhecimento removido.',
+        ];
+
+        Logger::info('certificates.recognition_' . $action, 'Status do reconhecimento alterado.', current_user()['id'] ?? null);
+        Session::flash('success', $messages[$action] ?? 'Reconhecimento atualizado.');
+        redirect('/admin/education/recognitions');
     }
 
     public function manage(): void
@@ -1180,11 +1243,19 @@ class EducationController
     {
         Middleware::auth();
         $certificateId = filter_input(INPUT_GET, 'certificate_id', FILTER_VALIDATE_INT);
-        if ($certificateId && (Auth::can('certificates.issue') || Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin']))) {
+        if ($certificateId) {
             $certificate = Education::certificateById($certificateId);
             if (!$certificate) {
                 http_response_code(404);
                 View::render('errors/404');
+                return;
+            }
+
+            $canViewManaged = Auth::can('certificates.issue') || Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin']);
+            $isOwner = (int) ($certificate['user_id'] ?? 0) === (int) (current_user()['id'] ?? 0);
+            if (!$canViewManaged && !$isOwner) {
+                http_response_code(403);
+                View::render('errors/403');
                 return;
             }
 
@@ -1202,7 +1273,7 @@ class EducationController
                 'certificateText' => $this->certificateText($course, $certificate, ['frequency' => 0]),
                 'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), []),
                 'certificatePeriod' => ['enrolled_at' => null, 'completed_at' => null, 'last_attendance_at' => null, 'issued_at' => $certificate['issued_at'] ?? null],
-                'isManagedCertificate' => true,
+                'isManagedCertificate' => $canViewManaged,
             ]);
             return;
         }

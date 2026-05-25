@@ -122,6 +122,7 @@ class Education
                 certificate_font_family VARCHAR(80) NULL,
                 certificate_background VARCHAR(255) NULL,
                 certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                certificate_show_recipient TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_show_nature TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_show_modality TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_show_period TINYINT(1) NOT NULL DEFAULT 1,
@@ -474,7 +475,8 @@ class Education
         self::ensureColumn('education_courses', 'certificate_font_family', 'VARCHAR(80) NULL AFTER certificate_text');
         self::ensureColumn('education_courses', 'certificate_background', 'VARCHAR(255) NULL AFTER certificate_font_family');
         self::ensureColumn('education_courses', 'certificate_min_frequency', 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_background');
-        self::ensureColumn('education_courses', 'certificate_show_nature', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_min_frequency');
+        self::ensureColumn('education_courses', 'certificate_show_recipient', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_min_frequency');
+        self::ensureColumn('education_courses', 'certificate_show_nature', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_show_recipient');
         self::ensureColumn('education_courses', 'certificate_show_modality', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_show_nature');
         self::ensureColumn('education_courses', 'certificate_show_period', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_show_modality');
         self::ensureColumn('education_courses', 'certificate_show_approval', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_show_period');
@@ -1036,9 +1038,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_background, certificate_min_frequency, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_background, certificate_min_frequency, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_background, :certificate_min_frequency, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_background, :certificate_min_frequency, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -1071,6 +1073,7 @@ class Education
                  certificate_font_family = :certificate_font_family,
                  certificate_background = :certificate_background,
                  certificate_min_frequency = :certificate_min_frequency,
+                 certificate_show_recipient = :certificate_show_recipient,
                  certificate_show_nature = :certificate_show_nature,
                  certificate_show_modality = :certificate_show_modality,
                  certificate_show_period = :certificate_show_period,
@@ -1433,9 +1436,39 @@ class Education
              LEFT JOIN users ON users.id = education_certificates.user_id
              LEFT JOIN certificate_institutions ON certificate_institutions.id = education_courses.certificate_institution_id
              WHERE education_courses.certificate_activity_type = "reconhecimento"
+               AND education_courses.active = 1
+               AND education_certificates.status <> "deleted"
              ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC
              LIMIT 80'
         )->fetchAll();
+    }
+
+    public static function recognitionCertificateById(int $certificateId): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_certificates.*,
+                    education_courses.*,
+                    education_certificates.id AS certificate_id,
+                    education_certificates.status AS certificate_status,
+                    education_certificates.created_at AS certificate_created_at,
+                    education_certificates.updated_at AS certificate_updated_at,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), people.full_name, users.name) AS recipient_name,
+                    CASE WHEN education_certificates.user_id IS NOT NULL THEN "Usuário" ELSE "Pessoa cadastrada" END AS recipient_kind
+             FROM education_certificates
+             INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             LEFT JOIN people ON people.id = education_certificates.person_id
+             LEFT JOIN users ON users.id = education_certificates.user_id
+             WHERE education_certificates.id = :id
+               AND education_courses.certificate_activity_type = "reconhecimento"
+               AND education_courses.active = 1
+               AND education_certificates.status <> "deleted"
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $certificateId]);
+
+        return $stmt->fetch() ?: null;
     }
 
     public static function issueRecognitionCertificate(array $data): array
@@ -1511,6 +1544,7 @@ class Education
             'certificate_font_family' => $data['certificate_font_family'] ?? null,
             'certificate_background' => $data['certificate_background'] ?? null,
             'certificate_min_frequency' => 0,
+            'certificate_show_recipient' => array_key_exists('certificate_show_recipient', $data) ? (!empty($data['certificate_show_recipient']) ? 1 : 0) : 1,
             'certificate_show_nature' => !empty($data['certificate_show_nature']) ? 1 : 0,
             'certificate_show_modality' => !empty($data['certificate_show_modality']) ? 1 : 0,
             'certificate_show_period' => !empty($data['certificate_show_period']) ? 1 : 0,
@@ -1571,6 +1605,115 @@ class Education
             'verification_code' => $code,
             'student_name' => $studentName,
         ];
+    }
+
+    public static function updateRecognitionCertificate(int $certificateId, array $data): ?array
+    {
+        self::ensureSchema();
+        $recognition = self::recognitionCertificateById($certificateId);
+        if (!$recognition) {
+            return null;
+        }
+
+        $activityTitle = trim((string) ($data['activity_title'] ?? ''));
+        $certificateTitle = trim((string) ($data['certificate_title'] ?? ''));
+
+        self::updateCourse((int) $recognition['course_id'], array_merge($recognition, [
+            'title' => $activityTitle !== '' ? $activityTitle : ($recognition['title'] ?? 'Reconhecimento'),
+            'summary' => $recognition['summary'] ?? 'Certificado de reconhecimento emitido para voluntário ou participante.',
+            'certificate_institution_id' => $data['institution_id'] ?? null,
+            'certificate_activity_type' => 'reconhecimento',
+            'public_enabled' => 0,
+            'certificate_enabled' => 1,
+            'certificate_title' => $certificateTitle !== '' ? $certificateTitle : ($recognition['certificate_title'] ?? 'Certificado de reconhecimento'),
+            'certificate_text' => self::nullable($data['certificate_text'] ?? null),
+            'certificate_font_family' => $data['certificate_font_family'] ?? null,
+            'certificate_background' => $data['certificate_background'] ?? null,
+            'certificate_min_frequency' => 0,
+            'certificate_show_recipient' => array_key_exists('certificate_show_recipient', $data) ? (!empty($data['certificate_show_recipient']) ? 1 : 0) : 1,
+            'certificate_show_nature' => !empty($data['certificate_show_nature']) ? 1 : 0,
+            'certificate_show_modality' => !empty($data['certificate_show_modality']) ? 1 : 0,
+            'certificate_show_period' => !empty($data['certificate_show_period']) ? 1 : 0,
+            'certificate_show_approval' => !empty($data['certificate_show_approval']) ? 1 : 0,
+            'certificate_show_institution' => !empty($data['certificate_show_institution']) ? 1 : 0,
+            'certificate_show_meta' => !empty($data['certificate_show_meta']) ? 1 : 0,
+            'certificate_show_legal' => !empty($data['certificate_show_legal']) ? 1 : 0,
+            'certificate_course_nature' => self::nullable($data['certificate_course_nature'] ?? null),
+            'certificate_modality' => self::nullable($data['certificate_modality'] ?? null),
+            'certificate_approval_criteria' => self::nullable($data['certificate_approval_criteria'] ?? null),
+            'certificate_legal_text' => self::nullable($data['certificate_legal_text'] ?? null),
+            'certificate_institution_name' => self::nullable($data['certificate_institution_name'] ?? null),
+            'certificate_institution_city' => self::nullable($data['certificate_institution_city'] ?? null),
+            'certificate_institution_cnpj' => self::nullable($data['certificate_institution_cnpj'] ?? null),
+            'certificate_institution_site' => self::nullable($data['certificate_institution_site'] ?? null),
+            'certificate_objectives' => self::nullable($data['certificate_objectives'] ?? null),
+            'certificate_competencies' => self::nullable($data['certificate_competencies'] ?? null),
+            'certificate_responsible_name' => self::nullable($data['certificate_responsible_name'] ?? null),
+            'certificate_responsible_credential' => self::nullable($data['certificate_responsible_credential'] ?? null),
+            'certificate_program_enabled' => !empty($data['certificate_program_enabled']) ? 1 : 0,
+            'certificate_program_background' => $data['certificate_program_background'] ?? null,
+            'certificate_program_extra' => self::nullable($data['certificate_program_extra'] ?? null),
+            'certificate_program_columns' => $data['certificate_program_columns'] ?? 2,
+            'updated_by' => $data['updated_by'] ?? null,
+        ]));
+
+        self::auditCertificate($certificateId, !empty($data['institution_id']) ? (int) $data['institution_id'] : null, !empty($data['updated_by']) ? (int) $data['updated_by'] : null, 'recognition_updated', $recognition, [
+            'course_id' => $recognition['course_id'],
+            'title' => $activityTitle,
+        ]);
+
+        return self::certificateById($certificateId);
+    }
+
+    public static function setRecognitionCertificateStatus(int $certificateId, string $action, int $userId): bool
+    {
+        self::ensureSchema();
+        $recognition = self::recognitionCertificateById($certificateId);
+        if (!$recognition) {
+            return false;
+        }
+
+        $status = match ($action) {
+            'lock' => 'locked',
+            'unlock' => 'issued',
+            'revoke' => 'revoked',
+            'delete' => 'deleted',
+            default => null,
+        };
+
+        if ($status === null) {
+            return false;
+        }
+
+        $db = Database::connection();
+        $db->prepare(
+            'UPDATE education_certificates
+             SET status = :status,
+                 revoked_by = CASE WHEN :status = "revoked" THEN :user_id ELSE revoked_by END,
+                 revoked_at = CASE WHEN :status = "revoked" THEN NOW() ELSE revoked_at END,
+                 updated_at = NOW()
+             WHERE id = :id'
+        )->execute([
+            'id' => $certificateId,
+            'status' => $status,
+            'user_id' => $userId ?: null,
+        ]);
+
+        if ($status === 'deleted') {
+            $db->prepare('UPDATE education_courses SET active = 0, updated_by = :updated_by, updated_at = NOW() WHERE id = :id')
+                ->execute([
+                    'id' => (int) $recognition['course_id'],
+                    'updated_by' => $userId ?: null,
+                ]);
+        }
+
+        self::auditCertificate($certificateId, !empty($recognition['certificate_institution_id']) ? (int) $recognition['certificate_institution_id'] : null, $userId ?: null, 'recognition_' . $action, [
+            'status' => $recognition['certificate_status'] ?? $recognition['status'] ?? null,
+        ], [
+            'status' => $status,
+        ]);
+
+        return true;
     }
 
     public static function certificateForCourseUser(int $courseId, int $userId): ?array
@@ -1678,6 +1821,7 @@ class Education
             'SELECT education_certificates.*,
                     education_courses.title AS course_title,
                     education_courses.certificate_title,
+                    education_courses.certificate_activity_type,
                     education_courses.teacher_user_id,
                     teacher.name AS teacher_name,
                     COALESCE(NULLIF(education_certificates.student_name, ""), users.name) AS student_name
@@ -1686,6 +1830,8 @@ class Education
              INNER JOIN users ON users.id = education_certificates.user_id
              LEFT JOIN users AS teacher ON teacher.id = education_courses.teacher_user_id
              WHERE education_certificates.user_id = :user_id
+               AND education_courses.active = 1
+               AND education_certificates.status <> "deleted"
              ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC'
         );
         $stmt->execute(['user_id' => $userId]);
@@ -2547,6 +2693,7 @@ class Education
             'certificate_font_family' => self::certificateFont($data['certificate_font_family'] ?? null),
             'certificate_background' => self::nullable($data['certificate_background'] ?? null),
             'certificate_min_frequency' => max(0, min(100, (int) ($data['certificate_min_frequency'] ?? 0))),
+            'certificate_show_recipient' => array_key_exists('certificate_show_recipient', $data) ? (!empty($data['certificate_show_recipient']) ? 1 : 0) : 1,
             'certificate_show_nature' => array_key_exists('certificate_show_nature', $data) ? (!empty($data['certificate_show_nature']) ? 1 : 0) : 1,
             'certificate_show_modality' => array_key_exists('certificate_show_modality', $data) ? (!empty($data['certificate_show_modality']) ? 1 : 0) : 1,
             'certificate_show_period' => array_key_exists('certificate_show_period', $data) ? (!empty($data['certificate_show_period']) ? 1 : 0) : 1,

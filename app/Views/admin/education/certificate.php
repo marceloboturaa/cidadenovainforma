@@ -32,6 +32,7 @@ $showApproval = (int) ($course['certificate_show_approval'] ?? 1) === 1 && $appr
 $showInstitution = (int) ($course['certificate_show_institution'] ?? 1) === 1;
 $showMeta = (int) ($course['certificate_show_meta'] ?? 1) === 1;
 $showLegal = (int) ($course['certificate_show_legal'] ?? 1) === 1 && $legalText !== '';
+$showRecipient = (int) ($course['certificate_show_recipient'] ?? 1) === 1;
 $officialCity = trim((string) ($course['certificate_institution_official_city'] ?? ''));
 $officialState = trim((string) ($course['certificate_institution_official_state'] ?? ''));
 $institutionName = trim((string) ($course['certificate_institution_name'] ?? '')) ?: trim((string) ($course['certificate_institution_official_name'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_NAME') ?: 'Cidade Nova Informa - CNI');
@@ -46,6 +47,12 @@ $courseResponsibleCredential = trim((string) ($course['certificate_responsible_c
 $hasProgramSummary = $courseObjectives !== '' || $courseCompetencies || $courseResponsible !== '' || $courseResponsibleCredential !== '';
 $verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? ''));
 $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' . rawurlencode($verificationUrl);
+$backUrl = $isRecognitionCertificate
+    ? url(!empty($isManagedCertificate) ? '/admin/education/recognitions' : '/admin/education/certificates')
+    : url('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+$backLabel = $isRecognitionCertificate
+    ? (!empty($isManagedCertificate) ? 'Voltar aos reconhecimentos' : 'Voltar aos meus certificados')
+    : 'Voltar ao curso';
 ?>
 
 <div class="page-heading certificate-toolbar">
@@ -56,7 +63,7 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
     <div class="heading-actions">
         <button class="btn btn-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
         <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-certificate')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar ao curso</a>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e($backUrl) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i><?= e($backLabel) ?></a>
     </div>
 </div>
 
@@ -78,9 +85,11 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
                     <?php if ($showApproval): ?><span><?= e($approvalCriteria) ?></span><?php endif; ?>
                 </section>
             <?php endif; ?>
-            <footer>
-                <strong><?= e($certificate['student_name'] ?? '') ?></strong>
-            </footer>
+            <?php if ($showRecipient): ?>
+                <footer>
+                    <strong><?= e($certificate['student_name'] ?? '') ?></strong>
+                </footer>
+            <?php endif; ?>
         </div>
         <footer class="education-certificate-footnote">
             <div class="education-certificate-footnote-text">
@@ -180,7 +189,7 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
     <?php endif; ?>
 </section>
 
-<?php if (empty($isManagedCertificate)): ?>
+<?php if (empty($isManagedCertificate) && !$isRecognitionCertificate): ?>
     <section class="panel education-certificate-name-panel">
         <div class="section-heading">
             <h2>Nome no certificado</h2>

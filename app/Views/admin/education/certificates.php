@@ -17,10 +17,14 @@
             <?php foreach ($certificates as $certificate): ?>
                 <?php
                     $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : '';
+                    $isRecognitionCertificate = ($certificate['certificate_activity_type'] ?? '') === 'reconhecimento';
                     $certificateTitle = trim((string) ($certificate['certificate_title'] ?? ''));
                     if ($certificateTitle === '') {
-                        $certificateTitle = 'Certificado de conclusao';
+                        $certificateTitle = $isRecognitionCertificate ? 'Certificado de reconhecimento' : 'Certificado de conclusao';
                     }
+                    $viewUrl = $isRecognitionCertificate
+                        ? url('/admin/education/certificate?certificate_id=' . ($certificate['id'] ?? ''))
+                        : url('/admin/education/certificate?id=' . ($certificate['course_id'] ?? ''));
                 ?>
                 <article class="education-certificate-card">
                     <div class="education-certificate-icon">
@@ -38,7 +42,7 @@
                         <small>C&oacute;digo <?= e($certificate['verification_code'] ?? '') ?></small>
                     </div>
                     <div class="education-certificate-card-actions">
-                        <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $certificate['course_id'])) ?>">
+                        <a class="btn btn-sm btn-primary icon-btn" href="<?= e($viewUrl) ?>">
                             <i class="bi bi-eye" aria-hidden="true"></i>Ver
                         </a>
                         <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/certificado/' . $certificate['verification_code'])) ?>" target="_blank" rel="noopener">
