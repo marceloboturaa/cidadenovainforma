@@ -1035,7 +1035,7 @@ class EducationController
             'certificate_enabled' => !empty($_POST['certificate_enabled']) ? 1 : 0,
             'certificate_title' => $title,
             'certificate_text' => $text,
-            'certificate_background' => $this->certificateBackgroundFromRequest($course['certificate_background'] ?? null),
+            'certificate_background' => $this->certificateBackgroundFromRequest($course['certificate_background'] ?? null, 'certificate_background', 'certificate_background_upload'),
             'certificate_min_frequency' => $_POST['certificate_min_frequency'] ?? 0,
             'certificate_course_nature' => $_POST['certificate_course_nature'] ?? null,
             'certificate_modality' => $_POST['certificate_modality'] ?? null,
@@ -1050,6 +1050,7 @@ class EducationController
             'certificate_responsible_name' => $_POST['certificate_responsible_name'] ?? null,
             'certificate_responsible_credential' => $_POST['certificate_responsible_credential'] ?? null,
             'certificate_program_enabled' => !empty($_POST['certificate_program_enabled']) ? 1 : 0,
+            'certificate_program_background' => $this->certificateBackgroundFromRequest($course['certificate_program_background'] ?? null, 'certificate_program_background', 'certificate_program_background_upload'),
             'certificate_program_extra' => $_POST['certificate_program_extra'] ?? null,
             'certificate_program_columns' => $_POST['certificate_program_columns'] ?? 2,
             'updated_by' => (int) (current_user()['id'] ?? 0) ?: null,
@@ -1484,6 +1485,7 @@ class EducationController
             'certificate_responsible_name' => $course['certificate_responsible_name'] ?? null,
             'certificate_responsible_credential' => $course['certificate_responsible_credential'] ?? null,
             'certificate_program_enabled' => $course['certificate_program_enabled'] ?? 1,
+            'certificate_program_background' => $course['certificate_program_background'] ?? null,
             'certificate_program_extra' => $course['certificate_program_extra'] ?? null,
             'certificate_program_columns' => $course['certificate_program_columns'] ?? 2,
         ];
@@ -1757,21 +1759,21 @@ class EducationController
         return '/public/uploads/education/' . $filename;
     }
 
-    private function certificateBackgroundFromRequest(?string $existing): ?string
+    private function certificateBackgroundFromRequest(?string $existing, string $fieldName = 'certificate_background', string $uploadFieldName = 'certificate_background_upload'): ?string
     {
-        $background = trim((string) ($_POST['certificate_background'] ?? ''));
+        $background = trim((string) ($_POST[$fieldName] ?? ''));
 
-        if (empty($_FILES['certificate_background_upload']['name']) || ($_FILES['certificate_background_upload']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        if (empty($_FILES[$uploadFieldName]['name']) || ($_FILES[$uploadFieldName]['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return $background !== '' ? $background : $existing;
         }
 
-        if (($_FILES['certificate_background_upload']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        if (($_FILES[$uploadFieldName]['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
             Session::flash('error', 'Nao foi possivel enviar o fundo do certificado.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
         }
 
-        $tmpName = (string) ($_FILES['certificate_background_upload']['tmp_name'] ?? '');
-        $size = (int) ($_FILES['certificate_background_upload']['size'] ?? 0);
+        $tmpName = (string) ($_FILES[$uploadFieldName]['tmp_name'] ?? '');
+        $size = (int) ($_FILES[$uploadFieldName]['size'] ?? 0);
         $imageInfo = $tmpName !== '' ? @getimagesize($tmpName) : false;
         $allowedTypes = [
             IMAGETYPE_JPEG => 'jpg',

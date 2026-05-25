@@ -20,7 +20,8 @@ ALTER TABLE education_courses
     ADD COLUMN IF NOT EXISTS certificate_responsible_name VARCHAR(180) NULL AFTER certificate_competencies,
     ADD COLUMN IF NOT EXISTS certificate_responsible_credential VARCHAR(180) NULL AFTER certificate_responsible_name,
     ADD COLUMN IF NOT EXISTS certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_responsible_credential,
-    ADD COLUMN IF NOT EXISTS certificate_program_extra TEXT NULL AFTER certificate_program_enabled,
+    ADD COLUMN IF NOT EXISTS certificate_program_background VARCHAR(255) NULL AFTER certificate_program_enabled,
+    ADD COLUMN IF NOT EXISTS certificate_program_extra TEXT NULL AFTER certificate_program_background,
     ADD COLUMN IF NOT EXISTS certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER certificate_program_extra;
 
 CREATE TABLE IF NOT EXISTS education_certificates (

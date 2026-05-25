@@ -309,6 +309,7 @@
         gap: 12px;
         width: min(88%, 820px);
         padding: 24px;
+        transform: translateY(-12px);
     }
 
     .education-certificate-copy > span {
@@ -738,6 +739,7 @@
         gap: 8px;
         width: 90%;
         padding: 16px;
+        transform: translateY(-6px);
     }
 
     .education-certificate-copy > span {

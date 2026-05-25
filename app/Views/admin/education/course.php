@@ -250,6 +250,14 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
                 <label class="form-label">Colunas do verso</label>
                 <input class="form-control" name="certificate_program_columns" type="number" min="1" max="4" value="<?= e((string) ($course['certificate_program_columns'] ?? 2)) ?>">
             </div>
+            <div>
+                <label class="form-label">Fundo do verso por link</label>
+                <input class="form-control" name="certificate_program_background" value="<?= e($course['certificate_program_background'] ?? '') ?>" placeholder="/public/uploads/... ou URL">
+            </div>
+            <div>
+                <label class="form-label">Enviar fundo do verso</label>
+                <input class="form-control" name="certificate_program_background_upload" type="file" accept="image/jpeg,image/png,image/webp">
+            </div>
             <div class="grid-span-2">
                 <label class="form-label">Informações extras do verso</label>
                 <textarea class="form-control" name="certificate_program_extra" rows="4" placeholder="Ex.: carga horária, critérios de avaliação, observações ou conteúdo complementar."><?= e($course['certificate_program_extra'] ?? '') ?></textarea>

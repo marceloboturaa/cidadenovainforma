@@ -300,6 +300,7 @@ $pdo->exec(
         certificate_responsible_name VARCHAR(180) NULL,
         certificate_responsible_credential VARCHAR(180) NULL,
         certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        certificate_program_background VARCHAR(255) NULL,
         certificate_program_extra TEXT NULL,
         certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2,
         teacher_user_id BIGINT UNSIGNED NULL,
@@ -335,7 +336,8 @@ $courseCertificateColumns = [
     'certificate_responsible_name' => 'ALTER TABLE education_courses ADD COLUMN certificate_responsible_name VARCHAR(180) NULL AFTER certificate_competencies',
     'certificate_responsible_credential' => 'ALTER TABLE education_courses ADD COLUMN certificate_responsible_credential VARCHAR(180) NULL AFTER certificate_responsible_name',
     'certificate_program_enabled' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_responsible_credential',
-    'certificate_program_extra' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_extra TEXT NULL AFTER certificate_program_enabled',
+    'certificate_program_background' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_background VARCHAR(255) NULL AFTER certificate_program_enabled',
+    'certificate_program_extra' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_extra TEXT NULL AFTER certificate_program_background',
     'certificate_program_columns' => 'ALTER TABLE education_courses ADD COLUMN certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER certificate_program_extra',
 ];
 foreach ($courseCertificateColumns as $column => $sql) {

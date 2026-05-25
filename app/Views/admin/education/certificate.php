@@ -5,6 +5,7 @@ if ($title === '') {
     $title = 'Certificado de conclusão';
 }
 $background = trim((string) ($course['certificate_background'] ?? ''));
+$programBackground = trim((string) ($course['certificate_program_background'] ?? ''));
 $programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
@@ -90,7 +91,7 @@ $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&m
         </footer>
     </article>
     <?php if ($programEnabled): ?>
-        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
+        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;<?= $programBackground !== '' ? ' background-image: url(\'' . e(media_url($programBackground)) . '\');' : '' ?>">
             <header class="education-certificate-program-header">
                 <span>Verso do certificado</span>
                 <h2>Programação cursada</h2>

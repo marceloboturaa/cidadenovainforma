@@ -325,6 +325,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     certificate_responsible_name VARCHAR(180) NULL,
     certificate_responsible_credential VARCHAR(180) NULL,
     certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1,
+    certificate_program_background VARCHAR(255) NULL,
     certificate_program_extra TEXT NULL,
     certificate_program_columns TINYINT UNSIGNED NOT NULL DEFAULT 2,
     teacher_user_id BIGINT UNSIGNED NULL,
