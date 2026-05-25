@@ -751,113 +751,142 @@
         margin-left: -18px;
         padding: 0 18px 8px;
         overflow-x: hidden;
+        --certificate-mobile-scale: 0.45;
     }
 
     .education-certificate-sheet {
-        width: min(100%, 760px);
-        max-width: 100%;
+        width: 1120px;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+        transform: scale(var(--certificate-mobile-scale));
+        transform-origin: top left;
+        margin-bottom: calc((var(--certificate-mobile-scale) - 1) * 792px);
     }
 
     .education-certificate-copy {
-        gap: 8px;
-        width: 90%;
-        padding: 16px;
-        transform: translateY(-6px);
+        gap: 10px;
+        width: min(84%, 960px);
+        padding: clamp(18px, 3vw, 46px);
+        transform: translateY(-38px);
     }
 
     .education-certificate-copy > span {
-        font-size: 1.2rem;
+        font-size: clamp(1.7rem, 3vw, 2.45rem);
     }
 
     .education-certificate-copy h2,
     .education-certificate-program-header h2 {
-        font-size: 1.25rem;
+        font-size: clamp(1.35rem, 2.35vw, 2rem);
     }
 
     .education-certificate-nature {
-        margin-top: -4px;
-        font-size: 0.7rem;
-        letter-spacing: 0.04em;
+        margin: -8px 0 0;
+        font-size: clamp(0.78rem, 1vw, 0.92rem);
+        letter-spacing: 0.08em;
     }
 
     .education-certificate-copy > div {
-        font-size: 1rem;
-        line-height: 1.45;
+        font-size: 1.42rem;
+        line-height: 1.48;
     }
 
     .education-certificate-details {
-        gap: 3px 8px;
-        font-size: 0.7rem;
-        line-height: 1.25;
+        gap: 5px 12px;
+        font-size: 0.78rem;
+        line-height: 1.35;
     }
 
     .education-certificate-copy footer {
-        padding-top: 10px;
+        padding-top: 12px;
     }
 
     .education-certificate-copy footer strong {
-        font-size: 0.82rem;
+        font-size: 1.2rem;
     }
 
     .education-certificate-footnote {
-        right: 12px;
-        bottom: 10px;
-        left: 12px;
-        gap: 6px;
-        padding-top: 6px;
-        font-size: 0.68rem;
+        right: clamp(20px, 3vw, 42px);
+        bottom: clamp(8px, 1.8vw, 20px);
+        left: clamp(20px, 3vw, 42px);
+        gap: 8px 18px;
+        padding-top: 7px;
+        font-size: 0.76rem;
     }
 
     .education-certificate-footnote-text {
-        gap: 3px 8px;
+        gap: 4px;
     }
 
     .education-certificate-institution,
     .education-certificate-footnote-meta {
-        gap: 2px 6px;
+        gap: 4px 14px;
     }
 
     .education-certificate-footnote-text p {
-        font-size: 0.56rem;
-        line-height: 1.18;
+        font-size: 0.64rem;
+        line-height: 1.25;
     }
 
     .education-certificate-qr {
-        width: 96px;
+        width: 108px;
         margin-top: -48px;
-        font-size: 0.44rem;
+        font-size: 0.5rem;
     }
 
     .education-certificate-qr img {
-        width: 72px;
-        height: 72px;
+        width: 78px;
+        height: 78px;
     }
 
     .education-certificate-program-sheet {
-        padding: 16px;
+        gap: 18px;
+        padding: 46px;
     }
 
     .education-certificate-program-header {
-        padding-bottom: 8px;
+        padding-bottom: 14px;
     }
 
-    .education-certificate-program-extra,
-    .education-certificate-program-summary article,
-    .education-certificate-program-list {
-        font-size: 0.68rem;
-        line-height: 1.22;
+    .education-certificate-program-extra {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        line-height: 1.45;
     }
 
     .education-certificate-program-summary {
-        gap: 6px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
     }
 
     .education-certificate-program-summary article {
-        padding: 7px 8px;
+        padding: 10px 12px;
+        font-size: 0.78rem;
+        line-height: 1.32;
     }
 
     .education-certificate-program-summary h3 {
-        font-size: 0.62rem;
+        font-size: 0.78rem;
+    }
+
+    .education-certificate-program-list {
+        column-count: var(--certificate-program-columns, 2);
+        column-gap: 24px;
+        font-size: 0.84rem;
+        line-height: 1.35;
+    }
+
+    .education-certificate-program-columns-3 .education-certificate-program-list,
+    .education-certificate-program-columns-4 .education-certificate-program-list {
+        column-gap: 18px;
+        font-size: 0.78rem;
+        line-height: 1.28;
+    }
+
+    .education-certificate-program-columns-4 .education-certificate-program-list {
+        column-gap: 14px;
+        font-size: 0.72rem;
+        line-height: 1.22;
     }
 
     .auth-actions {
@@ -1181,5 +1210,35 @@
     .education-forum-replies,
     .education-forum-reply-form {
         padding-left: 0;
+    }
+}
+
+@media (max-width: 520px) {
+    .education-certificate-sheet-panel {
+        --certificate-mobile-scale: 0.414;
+    }
+}
+
+@media (max-width: 480px) {
+    .education-certificate-sheet-panel {
+        --certificate-mobile-scale: 0.385;
+    }
+}
+
+@media (max-width: 430px) {
+    .education-certificate-sheet-panel {
+        --certificate-mobile-scale: 0.335;
+    }
+}
+
+@media (max-width: 390px) {
+    .education-certificate-sheet-panel {
+        --certificate-mobile-scale: 0.3;
+    }
+}
+
+@media (max-width: 360px) {
+    .education-certificate-sheet-panel {
+        --certificate-mobile-scale: 0.288;
     }
 }
