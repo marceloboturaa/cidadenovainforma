@@ -302,6 +302,21 @@
         grid-column: auto;
     }
 
+    .education-certificate-card {
+        grid-template-columns: 52px minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .education-certificate-card-actions {
+        grid-column: 1 / -1;
+        justify-content: stretch;
+    }
+
+    .education-certificate-card-actions .btn {
+        flex: 1 1 140px;
+        justify-content: center;
+    }
+
     .education-certificate-sheet {
         width: min(100%, 760px);
         min-height: 0;
@@ -735,6 +750,15 @@
         margin-right: -18px;
         margin-left: -18px;
         padding: 0 18px 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+    }
+
+    .education-certificate-sheet {
+        width: 760px;
+        max-width: none;
+        scroll-snap-align: center;
     }
 
     .education-certificate-copy {
@@ -745,29 +769,29 @@
     }
 
     .education-certificate-copy > span {
-        font-size: 0.9rem;
+        font-size: 1.2rem;
     }
 
     .education-certificate-copy h2,
     .education-certificate-program-header h2 {
-        font-size: 1rem;
+        font-size: 1.25rem;
     }
 
     .education-certificate-nature {
         margin-top: -4px;
-        font-size: 0.56rem;
+        font-size: 0.7rem;
         letter-spacing: 0.04em;
     }
 
     .education-certificate-copy > div {
-        font-size: 0.78rem;
-        line-height: 1.35;
+        font-size: 1rem;
+        line-height: 1.45;
     }
 
     .education-certificate-details {
         gap: 3px 8px;
-        font-size: 0.5rem;
-        line-height: 1.2;
+        font-size: 0.7rem;
+        line-height: 1.25;
     }
 
     .education-certificate-copy footer {
@@ -784,7 +808,7 @@
         left: 12px;
         gap: 6px;
         padding-top: 6px;
-        font-size: 0.52rem;
+        font-size: 0.68rem;
     }
 
     .education-certificate-footnote-text {
@@ -797,19 +821,19 @@
     }
 
     .education-certificate-footnote-text p {
-        font-size: 0.43rem;
-        line-height: 1.12;
+        font-size: 0.56rem;
+        line-height: 1.18;
     }
 
     .education-certificate-qr {
-        width: 76px;
+        width: 96px;
         margin-top: -48px;
-        font-size: 0.34rem;
+        font-size: 0.44rem;
     }
 
     .education-certificate-qr img {
-        width: 58px;
-        height: 58px;
+        width: 72px;
+        height: 72px;
     }
 
     .education-certificate-program-sheet {

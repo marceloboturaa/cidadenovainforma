@@ -20,6 +20,14 @@ $responsibleCredential = trim((string) ($certificate['certificate_responsible_cr
 $hasCurriculum = $objectives !== '' || $competencies || $responsibleName !== '' || $responsibleCredential !== '' || $courseModality !== '' || $approvalCriteria !== '';
 $certificateStatus = $certificate['status'] ?? 'issued';
 $certificateIsValid = $certificateStatus === 'issued';
+$isRecognitionCertificate = ($certificate['certificate_activity_type'] ?? '') === 'reconhecimento';
+$certificateTitle = trim((string) ($certificate['certificate_title'] ?? ''));
+if ($certificateTitle === '') {
+    $certificateTitle = $isRecognitionCertificate ? 'Certificado de reconhecimento' : 'Certificado';
+}
+$activityLabel = $isRecognitionCertificate ? 'Reconhecimento' : 'Curso';
+$recipientLabel = $isRecognitionCertificate ? 'Pessoa reconhecida' : 'Estudante';
+$institutionHeading = $isRecognitionCertificate ? 'Instituição certificadora' : 'Instituição emissora';
 ?>
 
 <section class="certificate-verify-page">
@@ -49,15 +57,15 @@ $certificateIsValid = $certificateStatus === 'issued';
                 <span><?= $certificateIsValid ? 'Certificado válido' : 'Certificado não vigente' ?></span>
                 <strong><?= $certificateIsValid ? 'Registro localizado na base oficial' : 'Registro localizado com status: ' . e($certificateStatus) ?></strong>
             </div>
-            <h2><?= e($certificate['course_title'] ?? 'Certificado') ?></h2>
-            <p><?= e($courseNature) ?></p>
+            <h2><?= e($certificateTitle) ?></h2>
+            <p><?= e($certificate['course_title'] ?? 'Certificado') ?></p>
             <dl>
                 <div>
-                    <dt>Aluno</dt>
+                    <dt><?= e($recipientLabel) ?></dt>
                     <dd><?= e($certificate['student_name'] ?? '') ?></dd>
                 </div>
                 <div>
-                    <dt>Curso</dt>
+                    <dt><?= e($activityLabel) ?></dt>
                     <dd><?= e($certificate['course_title'] ?? '') ?></dd>
                 </div>
                 <?php if ($issuedAt): ?>
@@ -117,7 +125,7 @@ $certificateIsValid = $certificateStatus === 'issued';
                 </section>
             <?php endif; ?>
             <section class="certificate-verify-institution">
-                <h3>Instituição emissora</h3>
+                <h3><?= e($institutionHeading) ?></h3>
                 <p>
                     <strong><?= e($institutionName) ?></strong>
                     <?php if ($institutionCity !== ''): ?><span><?= e($institutionCity) ?></span><?php endif; ?>

@@ -1939,6 +1939,8 @@ class Education
                     users.name AS user_name,
                     people.full_name AS person_name,
                     education_courses.title AS course_title,
+                    education_courses.certificate_activity_type,
+                    education_courses.certificate_title,
                     education_courses.certificate_min_frequency,
                     education_courses.certificate_course_nature,
                     education_courses.certificate_modality,

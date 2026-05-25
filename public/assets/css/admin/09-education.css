@@ -1065,6 +1065,10 @@
     background: #ffffff;
 }
 
+.education-certificate-card > div:nth-child(2) {
+    min-width: 0;
+}
+
 .education-certificate-icon {
     display: grid;
     width: 52px;
@@ -1082,6 +1086,7 @@
     color: var(--muted);
     font-size: 0.82rem;
     font-weight: 900;
+    overflow-wrap: anywhere;
 }
 
 .education-certificate-card h3 {

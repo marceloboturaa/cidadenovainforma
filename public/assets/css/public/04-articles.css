@@ -310,13 +310,13 @@
 
 .certificate-verify-page {
     display: grid;
-    gap: 22px;
-    max-width: 860px;
+    gap: 18px;
+    max-width: 780px;
     margin: 0 auto;
 }
 
 .certificate-verify-header {
-    padding: 34px 0 8px;
+    padding: 24px 0 4px;
 }
 
 .certificate-verify-header span,
@@ -324,28 +324,28 @@
 .certificate-verify-result > span {
     display: inline-flex;
     align-items: center;
-    min-height: 28px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: #fff1f2;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #f8fafc;
     color: var(--brand);
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     font-weight: 800;
     text-transform: uppercase;
 }
 
 .certificate-verify-header h1 {
-    margin: 14px 0 10px;
-    font-size: clamp(2rem, 4vw, 3.2rem);
-    line-height: 1.04;
+    margin: 12px 0 8px;
+    font-size: clamp(1.85rem, 4vw, 2.7rem);
+    line-height: 1.08;
 }
 
 .certificate-verify-header p {
     max-width: 680px;
     margin: 0;
     color: var(--muted);
-    font-size: 1.05rem;
-    line-height: 1.6;
+    font-size: 1rem;
+    line-height: 1.5;
 }
 
 .certificate-verify-form,
@@ -353,7 +353,7 @@
     border: 1px solid var(--line);
     border-radius: 8px;
     background: white;
-    padding: 22px;
+    padding: 18px;
 }
 
 .certificate-verify-form label {
@@ -392,7 +392,7 @@
 
 .certificate-verify-result {
     display: grid;
-    gap: 16px;
+    gap: 14px;
 }
 
 .certificate-verify-status {
@@ -409,7 +409,7 @@
 
 .certificate-verify-result h2 {
     margin: 0;
-    font-size: 1.55rem;
+    font-size: 1.35rem;
 }
 
 .certificate-verify-result p {
@@ -448,11 +448,6 @@
     overflow-wrap: anywhere;
 }
 
-.certificate-verify-result.is-valid {
-    border-color: #bbf7d0;
-    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 42%);
-}
-
 .certificate-verify-result.is-valid .certificate-verify-status span {
     background: #dcfce7;
     color: #166534;
@@ -465,7 +460,7 @@
 
 .certificate-verify-result.is-invalid {
     border-color: #fecaca;
-    background: #fff1f2;
+    background: #ffffff;
 }
 
 .certificate-verify-result a {
@@ -519,6 +514,18 @@
 }
 
 @media (max-width: 680px) {
+    .certificate-verify-page {
+        gap: 14px;
+    }
+
+    .certificate-verify-header {
+        padding-top: 10px;
+    }
+
+    .certificate-verify-header h1 {
+        font-size: 2rem;
+    }
+
     .certificate-verify-form div,
     .certificate-verify-result dl,
     .certificate-verify-curriculum {
