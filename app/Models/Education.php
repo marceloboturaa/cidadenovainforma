@@ -569,7 +569,7 @@ class Education
     {
         self::ensureSchema();
 
-        $where = 'education_courses.active = 1';
+        $where = 'education_courses.active = 1 AND education_courses.certificate_activity_type <> "reconhecimento"';
         $params = [];
         if ($teacherUserId) {
             $where .= ' AND education_courses.teacher_user_id = :teacher_user_id';
@@ -616,6 +616,7 @@ class Education
                AND completed.user_id = :progress_user_id
                AND completed.completed_at IS NOT NULL
              WHERE education_courses.active = 1
+               AND education_courses.certificate_activity_type <> "reconhecimento"
                AND education_enrollments.user_id = :enrolled_user_id
              GROUP BY education_courses.id
              ORDER BY education_courses.created_at DESC, education_courses.id DESC'
@@ -1366,6 +1367,29 @@ class Education
         return Database::connection()
             ->query('SELECT id, full_name, email, city, state FROM people WHERE active = 1 ORDER BY full_name ASC')
             ->fetchAll();
+    }
+
+    public static function recognitionCertificatesForManagement(): array
+    {
+        self::ensureSchema();
+
+        return Database::connection()->query(
+            'SELECT education_certificates.id,
+                    education_certificates.verification_code,
+                    education_certificates.status,
+                    education_certificates.issued_at,
+                    education_courses.title AS recognition_title,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), people.full_name, users.name) AS recipient_name,
+                    certificate_institutions.name AS institution_name
+             FROM education_certificates
+             INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             LEFT JOIN people ON people.id = education_certificates.person_id
+             LEFT JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN certificate_institutions ON certificate_institutions.id = education_courses.certificate_institution_id
+             WHERE education_courses.certificate_activity_type = "reconhecimento"
+             ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC
+             LIMIT 80'
+        )->fetchAll();
     }
 
     public static function issueRecognitionCertificate(array $data): array

@@ -66,11 +66,27 @@ class EducationController
         View::render('admin/education/certificate-center', [
             'stats' => Education::certificateCenterStats(),
             'institutions' => Education::certificateInstitutions(),
-            'recognitionPeople' => Education::recognitionCertificatePeople(),
             'canManageCertificates' => Auth::can('certificates.manage'),
             'canIssueCertificates' => Auth::can('certificates.issue'),
             'canAuditCertificates' => Auth::can('certificates.audit') || Auth::can('logs.view'),
             'canManageInstitutions' => Auth::can('certificates.institutions') || Auth::hasRole('master'),
+        ]);
+    }
+
+    public function recognitions(): void
+    {
+        Middleware::auth();
+        if (!Auth::can('certificates.issue') && !Auth::can('certificates.manage') && !Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        View::render('admin/education/recognitions', [
+            'recognitions' => Education::recognitionCertificatesForManagement(),
+            'recognitionPeople' => Education::recognitionCertificatePeople(),
+            'institutions' => Education::certificateInstitutions(),
+            'canIssueCertificates' => Auth::can('certificates.issue') || Auth::hasRole(['master', 'admin']),
         ]);
     }
 
@@ -83,7 +99,7 @@ class EducationController
             return;
         }
 
-        $this->validateCsrf('/admin/education/certificate-center');
+        $this->validateCsrf('/admin/education/recognitions');
 
         $name = trim((string) ($_POST['name'] ?? ''));
         if ($name === '') {
@@ -118,7 +134,7 @@ class EducationController
             ]));
         } catch (\InvalidArgumentException $exception) {
             Session::flash('error', $exception->getMessage());
-            redirect('/admin/education/certificate-center');
+            redirect('/admin/education/recognitions');
         }
 
         Logger::info('certificates.recognition_issued', 'Certificado de reconhecimento emitido: ' . ($certificate['verification_code'] ?? ''), current_user()['id'] ?? null);

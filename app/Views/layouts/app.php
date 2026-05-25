@@ -67,6 +67,7 @@
                 <?php endif; ?>
                 <?php if (\App\Core\Auth::can('certificates.manage') || \App\Core\Auth::can('certificates.issue') || \App\Core\Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])): ?>
                     <a class="<?= $currentPath === '/admin/education/certificate-center' ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificate-center')) ?>" title="Central de certificados"><i class="bi bi-patch-check" aria-hidden="true"></i><span>Certificados</span></a>
+                    <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-award" aria-hidden="true"></i><span>Reconhecimentos</span></a>
                 <?php endif; ?>
                 <?php if (array_intersect($roleSlugs, ['master', 'admin', 'admin-local', 'diretor', 'professor']) || \App\Core\Auth::can('education.teach')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Cursos"><i class="bi bi-journal-richtext" aria-hidden="true"></i><span>Cursos</span></a>
