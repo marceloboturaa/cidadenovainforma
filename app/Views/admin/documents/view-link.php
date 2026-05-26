@@ -12,9 +12,10 @@
 </div>
 
 <section class="panel document-inline-panel">
-    <div class="document-view-notice">
+    <div class="document-view-notice document-external-notice">
+        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
         <strong>Documento externo</strong>
-        <p>Por seguranca, links externos nao sao carregados dentro do painel.</p>
-        <a class="btn btn-sm btn-outline-primary" href="<?= e($document['path'] ?? '#') ?>" target="_blank" rel="noopener">Abrir documento</a>
+        <p>Links externos abrem em uma nova aba para manter o painel leve e seguro.</p>
+        <a class="btn btn-sm btn-primary icon-btn" href="<?= e($document['path'] ?? '#') ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Abrir documento</a>
     </div>
 </section>
