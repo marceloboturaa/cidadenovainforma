@@ -139,6 +139,12 @@ $status = $newsItem['status'] ?? 'draft';
         </div>
 
         <div class="editor-actions">
+            <?php if ($isEdit && $status === 'published' && !empty($newsItem['slug'])): ?>
+                <a class="btn btn-outline-primary w-100" href="<?= e(url('/noticia/' . $newsItem['slug'])) ?>" target="_blank" rel="noopener">
+                    <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                    Ver no site
+                </a>
+            <?php endif; ?>
             <button class="btn btn-outline-secondary w-100" name="intent" value="draft">Salvar rascunho</button>
             <button class="btn btn-primary w-100" name="intent" value="submit">
                 <?= \App\Core\Auth::can('news.approve') ? 'Publicar' : 'Enviar para aprovacao' ?>

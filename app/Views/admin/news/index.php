@@ -133,6 +133,13 @@
                     </dl>
                 </div>
                 <div class="news-admin-actions">
+                    <?php if (($item['status'] ?? '') === 'published' && !empty($item['slug'])): ?>
+                        <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/noticia/' . $item['slug'])) ?>" target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                            Ver no site
+                        </a>
+                    <?php endif; ?>
+
                     <?php if ($canEditItem): ?>
                         <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/news/edit?id=' . $item['id'])) ?>">
                             <i class="bi bi-pencil-square" aria-hidden="true"></i>
