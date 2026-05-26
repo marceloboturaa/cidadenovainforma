@@ -18,6 +18,8 @@
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
     const eventsAdminList = document.querySelector('[data-events-admin-list]');
+    const documentList = document.querySelector('[data-document-list]');
+    const documentSearch = document.querySelector('[data-document-search]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -166,6 +168,12 @@
 
     if (eventsAdminList) {
         bindEventsAdminFilter(eventsAdminList);
+    }
+
+    bindDocumentAccessTools();
+
+    if (documentList && documentSearch) {
+        bindDocumentSearch(documentList, documentSearch);
     }
 
     if (personForm) {
@@ -361,6 +369,79 @@
                 }
             });
         });
+    }
+
+    function bindDocumentAccessTools() {
+        document.querySelectorAll('[data-document-access-tools]').forEach((tools) => {
+            const details = tools.closest('.document-access-details, .document-rule-panel') || document;
+            const list = details.querySelector('[data-document-access-list]');
+            const search = tools.querySelector('[data-document-access-search]');
+            const selectButton = tools.querySelector('[data-document-access-select]');
+            const clearButton = tools.querySelector('[data-document-access-clear]');
+
+            if (!list) {
+                return;
+            }
+
+            const visibleInputs = () => Array.from(list.querySelectorAll('[data-document-access-item]:not(.is-hidden) input[type="checkbox"]'));
+
+            if (search) {
+                search.addEventListener('input', () => {
+                    const term = normalizeSearch(search.value);
+
+                    list.querySelectorAll('[data-document-access-item]').forEach((label) => {
+                        const haystack = normalizeSearch(label.dataset.documentAccessItem || label.textContent || '');
+                        label.classList.toggle('is-hidden', term !== '' && !haystack.includes(term));
+                    });
+                });
+            }
+
+            if (selectButton) {
+                selectButton.addEventListener('click', () => {
+                    visibleInputs().forEach((input) => {
+                        input.checked = true;
+                    });
+                });
+            }
+
+            if (clearButton) {
+                clearButton.addEventListener('click', () => {
+                    visibleInputs().forEach((input) => {
+                        input.checked = false;
+                    });
+                });
+            }
+        });
+    }
+
+    function bindDocumentSearch(list, searchInput) {
+        const rows = Array.from(list.querySelectorAll('[data-document-row]'));
+        const empty = list.querySelector('[data-document-empty]');
+        const count = document.querySelector('[data-document-visible-count]');
+
+        const applyFilter = () => {
+            const term = normalizeSearch(searchInput.value);
+            let visible = 0;
+
+            rows.forEach((row) => {
+                const haystack = normalizeSearch(row.dataset.documentSearchText || row.textContent || '');
+                const matches = term === '' || haystack.includes(term);
+                row.classList.toggle('is-hidden', !matches);
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (count) {
+                count.textContent = String(visible);
+            }
+            if (empty) {
+                empty.hidden = visible > 0 || rows.length === 0;
+            }
+        };
+
+        searchInput.addEventListener('input', applyFilter);
+        applyFilter();
     }
 
     function bindEducationVideoWatch(player) {

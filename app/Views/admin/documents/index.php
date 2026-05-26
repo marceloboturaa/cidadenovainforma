@@ -59,15 +59,26 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
         <form method="post" action="<?= e(url('/admin/documents/uploaders')) ?>" class="document-uploaders-form">
             <?= csrf_field() ?>
             <span class="form-label">Usu&aacute;rios autorizados a enviar documentos</span>
-            <div class="document-access-options compact">
+            <div class="document-access-tools" data-document-access-tools>
+                <label>
+                    <span>Pesquisar usu&aacute;rio</span>
+                    <input class="form-control form-control-sm" type="search" placeholder="Nome ou perfil" data-document-access-search>
+                </label>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-document-access-select>Marcar todos</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-document-access-clear>Limpar todos</button>
+                </div>
+            </div>
+            <div class="document-access-options compact" data-document-access-list>
                 <?php foreach ($users as $user): ?>
                     <?php
                     $roleSlugs = array_filter(explode(',', (string) ($user['role_slugs'] ?? $user['role_slug'] ?? '')));
                     if (in_array('master', $roleSlugs, true)) {
                         continue;
                     }
+                    $userSearchText = mb_strtolower(($user['name'] ?? '') . ' ' . ($user['role_names'] ?? $user['role_name'] ?? ''), 'UTF-8');
                     ?>
-                    <label>
+                    <label data-document-access-item="<?= e($userSearchText) ?>">
                         <input type="checkbox" name="user_ids[]" value="<?= e((string) $user['id']) ?>" <?= checked(in_array((int) $user['id'], $documentUploadUserIds ?? [], true)) ?>>
                         <span><?= e($user['name']) ?> <small><?= e($user['role_names'] ?? $user['role_name']) ?></small></span>
                     </label>
@@ -119,11 +130,22 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             <?php if ($canManage): ?>
                 <details class="document-access-details">
                     <summary>Quem poder&aacute; ver este documento</summary>
-                    <div class="document-access-options">
+                    <div class="document-access-tools" data-document-access-tools>
+                        <label>
+                            <span>Pesquisar usu&aacute;rio</span>
+                            <input class="form-control form-control-sm" type="search" placeholder="Nome ou perfil" data-document-access-search>
+                        </label>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" type="button" data-document-access-select>Marcar todos</button>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-document-access-clear>Limpar todos</button>
+                        </div>
+                    </div>
+                    <div class="document-access-options" data-document-access-list>
                         <?php foreach ($users as $user): ?>
-                            <label>
+                            <?php $userSearchText = mb_strtolower(($user['name'] ?? '') . ' ' . ($user['role_names'] ?? $user['role_name'] ?? ''), 'UTF-8'); ?>
+                            <label data-document-access-item="<?= e($userSearchText) ?>">
                                 <input type="checkbox" name="user_ids[]" value="<?= e((string) $user['id']) ?>">
-                                <span><?= e($user['name']) ?> <small><?= e($user['role_name']) ?></small></span>
+                                <span><?= e($user['name']) ?> <small><?= e($user['role_names'] ?? $user['role_name']) ?></small></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -154,10 +176,17 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
 <section class="panel document-list-panel">
     <div class="section-heading">
         <h2>Arquivos dispon&iacute;veis</h2>
-        <span><?= e((string) $totalDocuments) ?> documento(s)</span>
+        <span><span data-document-visible-count><?= e((string) $totalDocuments) ?></span> de <?= e((string) $totalDocuments) ?> documento(s)</span>
     </div>
 
-    <div class="document-list">
+    <div class="document-list-search">
+        <label>
+            <span>Pesquisar documentos</span>
+            <input class="form-control" type="search" placeholder="Nome, arquivo, tipo ou respons&aacute;vel" data-document-search>
+        </label>
+    </div>
+
+    <div class="document-list" data-document-list>
         <?php foreach ($documents as $document): ?>
             <?php
             $accessUserIds = $canManage ? \App\Models\Document::accessUserIds((int) $document['id']) : [];
@@ -181,8 +210,16 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
             };
             $storageLabel = $isGoogleDocument ? 'Google Drive' : ($isLink ? 'Link externo' : ($fileExists ? 'Servidor' : 'Ausente'));
             $storageIcon = $isGoogleDocument ? 'bi-google' : ($isLink ? 'bi-link-45deg' : ($fileExists ? 'bi-hdd-network' : 'bi-exclamation-triangle'));
+            $documentSearchText = mb_strtolower(implode(' ', [
+                $document['title'] ?? '',
+                $displayOriginalName,
+                $documentType,
+                $storageLabel,
+                $document['uploader_name'] ?? '',
+                !empty($document['is_public']) ? 'publico' : 'restrito',
+            ]), 'UTF-8');
             ?>
-            <article class="document-row">
+            <article class="document-row" data-document-row data-document-search-text="<?= e($documentSearchText) ?>">
                 <div class="document-file-icon <?= $isGoogleDocument ? 'is-google' : '' ?>">
                     <i class="bi <?= e($documentIcon) ?>" aria-hidden="true"></i>
                     <span><?= e($documentType) ?></span>
@@ -255,11 +292,22 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
                                 </label>
                                 <details class="document-access-details compact">
                                     <summary>Usu&aacute;rios que podem ver</summary>
-                                    <div class="document-access-options compact">
+                                    <div class="document-access-tools" data-document-access-tools>
+                                        <label>
+                                            <span>Pesquisar usu&aacute;rio</span>
+                                            <input class="form-control form-control-sm" type="search" placeholder="Nome ou perfil" data-document-access-search>
+                                        </label>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-document-access-select>Marcar todos</button>
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-document-access-clear>Limpar todos</button>
+                                        </div>
+                                    </div>
+                                    <div class="document-access-options compact" data-document-access-list>
                                         <?php foreach ($users as $user): ?>
-                                            <label>
+                                            <?php $userSearchText = mb_strtolower(($user['name'] ?? '') . ' ' . ($user['role_names'] ?? $user['role_name'] ?? ''), 'UTF-8'); ?>
+                                            <label data-document-access-item="<?= e($userSearchText) ?>">
                                                 <input type="checkbox" name="user_ids[]" value="<?= e((string) $user['id']) ?>" <?= checked(in_array((int) $user['id'], $accessUserIds, true)) ?>>
-                                                <span><?= e($user['name']) ?> <small><?= e($user['role_name']) ?></small></span>
+                                                <span><?= e($user['name']) ?> <small><?= e($user['role_names'] ?? $user['role_name']) ?></small></span>
                                             </label>
                                         <?php endforeach; ?>
                                     </div>
@@ -276,5 +324,6 @@ $restrictedDocuments = $totalDocuments - $publicDocuments;
         <?php if (!$documents): ?>
             <div class="empty-state">Nenhum documento dispon&iacute;vel.</div>
         <?php endif; ?>
+        <div class="empty-state" data-document-empty hidden>Nenhum documento encontrado.</div>
     </div>
 </section>
