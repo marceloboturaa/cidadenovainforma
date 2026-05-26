@@ -132,6 +132,53 @@
         });
     }
 
+    function codeFromSelection(editor) {
+        return editor.selection.getContent({ format: 'text' });
+    }
+
+    function openCodeDialog(editor) {
+        editor.windowManager.open({
+            title: 'Bloco de codigo',
+            body: {
+                type: 'panel',
+                items: [
+                    {
+                        type: 'textarea',
+                        name: 'code',
+                        label: 'Cole o codigo aqui'
+                    }
+                ]
+            },
+            buttons: [
+                {
+                    type: 'cancel',
+                    text: 'Cancelar'
+                },
+                {
+                    type: 'submit',
+                    text: 'Inserir',
+                    primary: true
+                }
+            ],
+            initialData: {
+                code: codeFromSelection(editor)
+            },
+            onSubmit: function (api) {
+                const data = api.getData();
+                const code = String(data.code || '').replace(/\r\n?/g, '\n');
+
+                if (!code.trim()) {
+                    api.close();
+                    return;
+                }
+
+                editor.insertContent('<pre><code>' + escapeHtml(code) + '</code></pre><p></p>');
+                editor.save();
+                api.close();
+            }
+        });
+    }
+
     function latexDocumentToHtml(content) {
         let text = String(content || '').replace(/\r\n?/g, '\n').trim();
 
@@ -245,11 +292,11 @@
         toolbar: [
             'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor',
             'alignleft aligncenter alignright alignjustify | bullist numlist | outdent indent | lineheight',
-            'styles | link image media table latex | blockquote hr removeformat | preview code fullscreen'
+            'styles | link image media table latex codeblock | blockquote hr removeformat | preview code fullscreen'
         ].join(' | '),
         block_formats: 'Paragrafo=p; Titulo=h2; Subtitulo=h3; Destaque=h4; Citacao=blockquote',
         font_size_formats: '12px 14px 16px 18px 20px 24px 28px 32px',
-        line_height_formats: '1 1.15 1.3 1.5 1.75 2 2.5 3',
+        line_height_formats: '1.0 1.08 1.15 1.3 1.5 1.65 1.75 2 2.5 3',
         style_formats: [
             { title: 'Texto normal', inline: 'span', remove: 'all' },
             { title: 'Letras abertas', inline: 'span', styles: { letterSpacing: '0.08em' } },
@@ -297,6 +344,8 @@
             'body{font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.65;color:#111827;}',
             'img{max-width:100%;height:auto;}',
             'blockquote{border-left:4px solid #c9181f;margin:1rem 0;padding:.5rem 1rem;background:#f8fafc;}',
+            'pre{margin:1rem 0;padding:1rem;overflow:auto;border-radius:8px;background:#111827;color:#f9fafb;font-family:Consolas,Monaco,"Courier New",monospace;font-size:14px;line-height:1.55;white-space:pre;}',
+            'code{font-family:Consolas,Monaco,"Courier New",monospace;}',
             'table{border-collapse:collapse;width:100%;}',
             'td,th{border:1px solid #d1d5db;padding:.5rem;}'
         ].join(''),
@@ -316,6 +365,14 @@
                 tooltip: 'Inserir ou editar formula LaTeX',
                 onAction: function () {
                     openLatexDialog(editor);
+                }
+            });
+
+            editor.ui.registry.addButton('codeblock', {
+                text: 'Codigo',
+                tooltip: 'Colar codigo preservando espacos e quebras de linha',
+                onAction: function () {
+                    openCodeDialog(editor);
                 }
             });
 

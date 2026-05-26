@@ -370,7 +370,7 @@ function clean_article_html(string $html): string
     $html = preg_replace('/<div([^>]*)>/i', '<p$1>', $html) ?? $html;
     $html = preg_replace('/<\/div>/i', '</p>', $html) ?? $html;
 
-    $allowed = '<p><br><strong><b><em><i><u><h2><h3><h4><blockquote><ul><ol><li><a><img><iframe><video><audio><span><table><thead><tbody><tr><th><td><hr>';
+    $allowed = '<p><br><strong><b><em><i><u><h2><h3><h4><blockquote><ul><ol><li><a><img><iframe><video><audio><span><table><thead><tbody><tr><th><td><hr><pre><code>';
     $html = strip_tags($html, $allowed);
 
     $html = preg_replace('/\son[a-z]+\s*=\s*("|\').*?\1/i', '', $html) ?? $html;
@@ -424,6 +424,8 @@ function clean_article_html(string $html): string
             . ($safeStyle !== '' ? ' style="' . e($safeStyle) . '"' : '')
             . '>';
     }, $html) ?? $html;
+
+    $html = preg_replace('/<(pre|code)\s+[^>]*>/i', '<$1>', $html) ?? $html;
 
     $html = preg_replace_callback('/<img\s+([^>]+)>/i', function (array $matches): string {
         $attrs = $matches[1];

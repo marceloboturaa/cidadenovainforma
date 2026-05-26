@@ -203,6 +203,28 @@
     font-weight: 700;
 }
 
+.article-content pre {
+    margin: 24px 0;
+    padding: 16px;
+    overflow-x: auto;
+    border-radius: 8px;
+    background: #111827;
+    color: #f9fafb;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    white-space: pre;
+}
+
+.article-content code {
+    font-family: Consolas, Monaco, "Courier New", monospace;
+}
+
+.article-content pre code {
+    display: block;
+    min-width: max-content;
+}
+
 .article-content img {
     display: block;
     max-width: 100%;
