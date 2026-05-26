@@ -216,9 +216,9 @@ class News
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO news
-                (author_id, category_id, title, slug, summary, content, cover_image, type, status, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, published_at, created_at, updated_at)
+                (author_id, category_id, title, slug, summary, content, cover_image, cover_caption, type, status, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, published_at, created_at, updated_at)
              VALUES
-                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :type, :status, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :published_at, NOW(), NOW())'
+                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :cover_caption, :type, :status, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :published_at, NOW(), NOW())'
         );
 
         $stmt->execute(self::payload($data));
@@ -241,6 +241,7 @@ class News
                 summary = :summary,
                 content = :content,
                 cover_image = :cover_image,
+                cover_caption = :cover_caption,
                 type = :type,
                 status = :status,
                 featured = :featured,
@@ -336,6 +337,14 @@ class News
         if ($column && stripos((string) ($column['Type'] ?? ''), 'text') === false) {
             Database::connection()->exec('ALTER TABLE news MODIFY summary TEXT NULL');
         }
+
+        $coverCaptionColumn = Database::connection()
+            ->query("SHOW COLUMNS FROM news LIKE 'cover_caption'")
+            ->fetch();
+
+        if (!$coverCaptionColumn) {
+            Database::connection()->exec('ALTER TABLE news ADD COLUMN cover_caption VARCHAR(255) NULL AFTER cover_image');
+        }
     }
 
     private static function payload(array $data): array
@@ -348,6 +357,7 @@ class News
             'summary' => trim($data['summary'] ?? ''),
             'content' => trim($data['content']),
             'cover_image' => $data['cover_image'] ?? null,
+            'cover_caption' => trim($data['cover_caption'] ?? ''),
             'type' => $data['type'] ?? 'noticia',
             'status' => $data['status'] ?? 'draft',
             'featured' => (int) !empty($data['featured']),

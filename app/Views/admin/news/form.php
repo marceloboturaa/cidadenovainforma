@@ -95,7 +95,9 @@ $status = $newsItem['status'] ?? 'draft';
             <input class="form-control" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
             <label class="form-label mt-3">Ou link externo da capa</label>
             <input class="form-control" name="cover_image_url" value="<?= !empty($newsItem['cover_image']) && preg_match('#^https?://#i', $newsItem['cover_image']) ? e($newsItem['cover_image']) : '' ?>" placeholder="https://site.com/imagem.jpg">
-            <p class="field-hint">A capa aparece nas listagens e no compartilhamento. Imagens do corpo ficam dentro do editor.</p>
+            <label class="form-label mt-3">Legenda da capa</label>
+            <input class="form-control" name="cover_caption" value="<?= e($newsItem['cover_caption'] ?? '') ?>" maxlength="255" placeholder="Opcional; aparece abaixo da imagem de capa">
+            <p class="field-hint">A legenda so aparece na noticia quando este campo for preenchido. Imagens do corpo ficam dentro do editor.</p>
             <?php if (!empty($newsItem['cover_image'])): ?>
                 <img class="cover-preview" src="<?= e(media_url($newsItem['cover_image'])) ?>" alt="" onerror="this.remove()">
             <?php endif; ?>

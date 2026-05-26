@@ -49,7 +49,12 @@
     <?php $publicImage = news_public_image($news); ?>
     <?php $hasCoverImage = media_available($news['cover_image'] ?? null); ?>
     <?php if ($hasCoverImage && $publicImage): ?>
-        <img class="article-cover" src="<?= e(media_url($publicImage)) ?>" alt="<?= e($news['title']) ?>" onerror="this.remove()">
+        <figure class="article-cover-figure">
+            <img class="article-cover" src="<?= e(media_url($publicImage)) ?>" alt="<?= e($news['title']) ?>" onerror="this.closest('figure').remove()">
+            <?php if (!empty($news['cover_caption'])): ?>
+                <figcaption><?= e($news['cover_caption']) ?></figcaption>
+            <?php endif; ?>
+        </figure>
     <?php endif; ?>
 
     <div class="article-content">

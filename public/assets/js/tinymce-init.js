@@ -8,6 +8,7 @@
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const uploadUrl = document.querySelector('meta[name="tinymce-upload-url"]')?.content || '';
     const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    let pasteAsPlainText = false;
 
     function uploadImage(file, filename) {
         return new Promise(function (resolve, reject) {
@@ -56,6 +57,35 @@
         const div = document.createElement('div');
         div.textContent = value;
         return div.innerHTML;
+    }
+
+    function htmlToPlainText(html) {
+        const template = document.createElement('template');
+        template.innerHTML = String(html || '')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<\/(?:p|div|h[1-6]|li|tr|blockquote)>/gi, '\n');
+
+        return (template.content.textContent || '')
+            .replace(/\u00a0/g, ' ')
+            .replace(/[ \t]+\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    }
+
+    function plainTextToParagraphs(text) {
+        return String(text || '')
+            .replace(/\r\n?/g, '\n')
+            .split(/\n{2,}/)
+            .map(function (block) {
+                const value = block.trim();
+
+                if (!value) {
+                    return '';
+                }
+
+                return '<p>' + escapeHtml(value).replace(/\n/g, '<br>') + '</p>';
+            })
+            .join('');
     }
 
     function latexFromSelection(editor) {
@@ -318,6 +348,8 @@
     function cleanDisplayFormula(formula) {
         return String(formula || '')
             .replace(/\\textbf\{([^{}]+)}/g, '\\text{$1}')
+            .replace(/<\s*\/?\s*(?:strong|b|em|i)\s*>/gi, '')
+            .replace(/\\hline(?=[A-Za-z0-9(])/g, '\\hline ')
             .trim();
     }
 
@@ -434,7 +466,7 @@
         toolbar: [
             'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor',
             'alignleft aligncenter alignright alignjustify | bullist numlist | outdent indent | lineheight paragraphspace',
-            'styles | link image media table latex codeblock | blockquote hr removeformat | preview code fullscreen'
+            'styles | link image media table latex codeblock cleanpaste | blockquote hr removeformat | preview code fullscreen'
         ].join(' | '),
         block_formats: 'Paragrafo=p; Titulo=h2; Subtitulo=h3; Destaque=h4; Citacao=blockquote',
         font_size_formats: '12px 14px 16px 18px 20px 24px 28px 32px',
@@ -494,6 +526,9 @@
         content_style: [
             'body{font-family:Inter,Arial,sans-serif;font-size:16px;line-height:1.65;color:#111827;}',
             'img{max-width:100%;height:auto;}',
+            'figure{margin:1rem 0;}',
+            'figure img{display:block;margin:0;}',
+            'figcaption{margin-top:.45rem;color:#6b7280;font-size:13px;line-height:1.45;text-align:center;}',
             'blockquote{border-left:4px solid #c9181f;margin:1rem 0;padding:.5rem 1rem;background:#f8fafc;}',
             'pre{margin:1rem 0;padding:1rem;overflow:auto;border-radius:8px;background:#111827;color:#f9fafb;font-family:Consolas,Monaco,"Courier New",monospace;font-size:14px;line-height:1.55;white-space:pre;}',
             'pre.code-theme-light{background:#f8fafc;color:#111827;border:1px solid #d1d5db;}',
@@ -505,6 +540,11 @@
             'td,th{border:1px solid #d1d5db;padding:.5rem;}'
         ].join(''),
         paste_preprocess: function (plugin, args) {
+            if (pasteAsPlainText) {
+                args.content = plainTextToParagraphs(htmlToPlainText(args.content));
+                return;
+            }
+
             const exerciseHtml = exerciseHtmlToArticleHtml(args.content);
 
             if (exerciseHtml) {
@@ -535,6 +575,20 @@
                 tooltip: 'Colar codigo preservando espacos e quebras de linha',
                 onAction: function () {
                     openCodeDialog(editor);
+                }
+            });
+
+            editor.ui.registry.addToggleButton('cleanpaste', {
+                text: 'Colar limpo',
+                tooltip: 'Quando ativo, remove toda formatacao do texto colado',
+                onAction: function (api) {
+                    pasteAsPlainText = !pasteAsPlainText;
+                    api.setActive(pasteAsPlainText);
+                },
+                onSetup: function (api) {
+                    api.setActive(pasteAsPlainText);
+
+                    return function () {};
                 }
             });
 

@@ -270,6 +270,7 @@ class NewsController
             'title' => $title,
             'summary' => $_POST['summary'] ?? '',
             'content' => $content,
+            'cover_caption' => $_POST['cover_caption'] ?? '',
             'category_id' => filter_input(INPUT_POST, 'category_id', FILTER_VALIDATE_INT) ?: null,
             'type' => in_array($_POST['type'] ?? '', ['noticia', 'reportagem', 'artigo', 'coluna'], true) ? $_POST['type'] : 'noticia',
             'featured' => Auth::can('news.manage') && isset($_POST['featured']),

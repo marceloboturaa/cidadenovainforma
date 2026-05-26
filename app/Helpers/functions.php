@@ -365,14 +365,49 @@ function clean_inline_style(string $style): string
     return implode(';', $safe);
 }
 
+function clean_latex_formula_markup(string $formula): string
+{
+    $formula = html_entity_decode($formula, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $formula = preg_replace('/<\s*\/?\s*(?:strong|b|em|i|u)\s*>/i', '', $formula) ?? $formula;
+    $formula = preg_replace('/\\\\hline(?=[A-Za-z0-9(])/', '\\\\hline ', $formula) ?? $formula;
+
+    return $formula;
+}
+
+function clean_escaped_article_markup(string $html): string
+{
+    $protected = [];
+    $html = preg_replace_callback('/<(pre|code)\b[^>]*>[\s\S]*?<\/\1>/i', function (array $matches) use (&$protected): string {
+        $key = '%%CNI_PROTECTED_' . count($protected) . '%%';
+        $protected[$key] = $matches[0];
+
+        return $key;
+    }, $html) ?? $html;
+
+    $html = preg_replace('/&lt;\s*(\/?)\s*(strong|b|em|i|u)\s*&gt;/i', '<$1$2>', $html) ?? $html;
+    $html = preg_replace('/<\s*(\/?)\s*(strong|b|em|i|u)\s*>/i', '<$1$2>', $html) ?? $html;
+    $html = preg_replace_callback('/(\$\$)([\s\S]*?)(\$\$)/', function (array $matches): string {
+        return $matches[1] . clean_latex_formula_markup($matches[2]) . $matches[3];
+    }, $html) ?? $html;
+    $html = preg_replace_callback('/(\\\\\[)([\s\S]*?)(\\\\\])/', function (array $matches): string {
+        return $matches[1] . clean_latex_formula_markup($matches[2]) . $matches[3];
+    }, $html) ?? $html;
+    $html = preg_replace_callback('/(\\\\\()([\s\S]*?)(\\\\\))/', function (array $matches): string {
+        return $matches[1] . clean_latex_formula_markup($matches[2]) . $matches[3];
+    }, $html) ?? $html;
+
+    return strtr($html, $protected);
+}
+
 function clean_article_html(string $html): string
 {
     $html = trim($html);
+    $html = clean_escaped_article_markup($html);
     $html = preg_replace('/<\/div>\s*<div([^>]*)>/i', '</p><p$1>', $html) ?? $html;
     $html = preg_replace('/<div([^>]*)>/i', '<p$1>', $html) ?? $html;
     $html = preg_replace('/<\/div>/i', '</p>', $html) ?? $html;
 
-    $allowed = '<p><br><strong><b><em><i><u><h2><h3><h4><blockquote><ul><ol><li><a><img><iframe><video><audio><span><table><thead><tbody><tr><th><td><hr><pre><code>';
+    $allowed = '<p><br><strong><b><em><i><u><h2><h3><h4><blockquote><ul><ol><li><a><img><iframe><video><audio><span><table><thead><tbody><tr><th><td><hr><pre><code><figure><figcaption>';
     $html = strip_tags($html, $allowed);
 
     $html = preg_replace('/\son[a-z]+\s*=\s*("|\').*?\1/i', '', $html) ?? $html;
@@ -426,6 +461,9 @@ function clean_article_html(string $html): string
             . ($safeStyle !== '' ? ' style="' . e($safeStyle) . '"' : '')
             . '>';
     }, $html) ?? $html;
+
+    $html = preg_replace('/<figure\s+[^>]*>/i', '<figure>', $html) ?? $html;
+    $html = preg_replace('/<figcaption\s+[^>]*>/i', '<figcaption>', $html) ?? $html;
 
     $html = preg_replace_callback('/<pre\s+([^>]*)>/i', function (array $matches): string {
         preg_match('/class\s*=\s*("|\')([^"\']+)\1/i', $matches[1], $class);
@@ -494,6 +532,8 @@ function clean_article_html(string $html): string
     }, $html) ?? $html;
 
     $html = preg_replace('/<(br|strong|b|em|i|u|ul|ol|table|thead|tbody|tr|hr)\s+[^>]*>/i', '<$1>', $html) ?? $html;
+    $html = preg_replace('/<figcaption>\s*(?:&nbsp;|\s|<br>)*<\/figcaption>/i', '', $html) ?? $html;
+    $html = preg_replace('/<figure>\s*<\/figure>/i', '', $html) ?? $html;
     $html = preg_replace('/<p>\s*(?:&nbsp;|\s|<br>)*<\/p>/i', '', $html) ?? $html;
     $html = preg_replace('/(?:<br>\s*){3,}/i', '<br><br>', $html) ?? $html;
 

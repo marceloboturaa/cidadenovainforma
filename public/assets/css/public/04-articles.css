@@ -53,7 +53,20 @@
     max-height: 520px;
     object-fit: cover;
     border-radius: 8px;
+    margin: 0;
+}
+
+.article-cover-figure {
     margin: 24px 0;
+}
+
+.article-cover-figure figcaption,
+.article-content figcaption {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    text-align: center;
 }
 
 .archive-notice {
@@ -252,6 +265,15 @@
     height: auto;
     margin: 22px 0;
     border-radius: 8px;
+}
+
+.article-content figure {
+    margin: 22px 0;
+}
+
+.article-content figure img {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .article-content img.image-size-small {
