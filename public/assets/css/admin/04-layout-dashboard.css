@@ -70,7 +70,27 @@
 
 .sidebar nav {
     display: grid;
-    gap: 6px;
+    gap: 14px;
+}
+
+.sidebar-group {
+    display: grid;
+    gap: 5px;
+}
+
+.sidebar-group + .sidebar-group {
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-group-title {
+    display: block;
+    padding: 0 10px 2px;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .sidebar nav a {
@@ -104,7 +124,8 @@
 }
 
 .admin-sidebar-collapsed .brand span,
-.admin-sidebar-collapsed .sidebar nav a span {
+.admin-sidebar-collapsed .sidebar nav a span,
+.admin-sidebar-collapsed .sidebar-group-title {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -124,6 +145,19 @@
 .admin-sidebar-collapsed .sidebar nav a i {
     width: auto;
     font-size: 1.15rem;
+}
+
+.admin-sidebar-collapsed .sidebar nav {
+    gap: 10px;
+}
+
+.admin-sidebar-collapsed .sidebar-group {
+    justify-items: center;
+    gap: 6px;
+}
+
+.admin-sidebar-collapsed .sidebar-group + .sidebar-group {
+    padding-top: 10px;
 }
 
 .sidebar nav a:hover {

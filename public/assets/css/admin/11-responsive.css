@@ -53,7 +53,8 @@
     }
 
     .admin-sidebar-collapsed .brand span,
-    .admin-sidebar-collapsed .sidebar nav a span {
+    .admin-sidebar-collapsed .sidebar nav a span,
+    .admin-sidebar-collapsed .sidebar-group-title {
         position: static;
         width: auto;
         height: auto;

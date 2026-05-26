@@ -47,6 +47,8 @@
         link.addEventListener('click', closeMenu);
     });
 
+    groupSidebarLinks();
+
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeMenu();
@@ -254,6 +256,55 @@
         if (icon) {
             icon.className = collapsed ? 'bi bi-layout-sidebar-inset-reverse' : 'bi bi-layout-sidebar-inset';
         }
+    }
+
+    function groupSidebarLinks() {
+        const nav = document.querySelector('.sidebar nav');
+        if (!nav || nav.dataset.grouped === '1') {
+            return;
+        }
+
+        const links = Array.from(nav.querySelectorAll(':scope > a'));
+        if (!links.length) {
+            return;
+        }
+
+        const groups = [
+            { title: 'Geral', items: ['Dashboard', 'Usuários', 'Usuarios'] },
+            { title: 'Conteúdo', items: ['Notícias', 'Noticias', 'Categorias', 'Tags'] },
+            { title: 'Institucional', items: ['Instituição', 'Instituicao', 'Pessoas', 'Eventos', 'Documentos'] },
+            { title: 'Educação', items: ['Ensino', 'Meus certificados', 'Certificados', 'Reconhecimentos', 'Cursos'] },
+            { title: 'Comunicação', items: ['Fóruns', 'Foruns'] },
+            { title: 'Sistema', items: ['Menu', 'Backups', 'LGPD Cookies'] },
+            { title: 'Conta', items: ['Minha senha'] }
+        ];
+
+        nav.textContent = '';
+
+        groups.forEach((group) => {
+            const groupItems = group.items.map(normalizeSearch);
+            const matched = links.filter((link) => groupItems.includes(normalizeSearch(link.getAttribute('title') || link.textContent || '')));
+            if (!matched.length) {
+                return;
+            }
+
+            const section = document.createElement('div');
+            section.className = 'sidebar-group';
+
+            const title = document.createElement('span');
+            title.className = 'sidebar-group-title';
+            title.textContent = group.title;
+            section.appendChild(title);
+
+            matched.forEach((link) => section.appendChild(link));
+            nav.appendChild(section);
+        });
+
+        links
+            .filter((link) => !link.parentElement || !link.closest('.sidebar-group'))
+            .forEach((link) => nav.appendChild(link));
+
+        nav.dataset.grouped = '1';
     }
 
     function closeEditorFocus() {
