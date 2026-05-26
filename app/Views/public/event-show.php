@@ -6,6 +6,27 @@ $endTime = !empty($event['ends_at']) ? strtotime($event['ends_at']) : null;
 $isHappening = ($event['status'] ?? '') === 'aberto' && $startTime && $endTime && $startTime <= time() && $endTime >= time();
 $isPast = ($event['status'] ?? '') === 'encerrado' || (($endTime ?: $startTime) && ($endTime ?: $startTime) < time());
 $statusText = $isHappening ? 'Acontecendo' : ($isPast ? 'Evento realizado' : 'Próximo evento');
+$relatedLinks = [];
+foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as $line) {
+    $line = trim($line);
+    if ($line === '') {
+        continue;
+    }
+
+    $parts = array_map('trim', explode('|', $line, 2));
+    $label = count($parts) === 2 ? $parts[0] : 'Ler matéria';
+    $href = count($parts) === 2 ? $parts[1] : $parts[0];
+
+    if ($href === '' || (!preg_match('#^https?://#i', $href) && !str_starts_with($href, '/'))) {
+        continue;
+    }
+
+    $relatedLinks[] = [
+        'label' => $label !== '' ? $label : 'Ler matéria',
+        'href' => preg_match('#^https?://#i', $href) ? $href : url($href),
+        'external' => (bool) preg_match('#^https?://#i', $href),
+    ];
+}
 ?>
 
 <article class="event-show-page">
@@ -59,6 +80,21 @@ $statusText = $isHappening ? 'Acontecendo' : ($isPast ? 'Evento realizado' : 'Pr
                 <?php if (!empty($event['responsible_name'])): ?><div><dt>Responsável</dt><dd><?= e($event['responsible_name']) ?></dd></div><?php endif; ?>
                 <div><dt>Status</dt><dd><?= e($statusText) ?></dd></div>
             </dl>
+
+            <?php if ($relatedLinks): ?>
+                <section class="event-related-news" aria-label="Matérias sobre o evento">
+                    <h3>Matérias sobre o evento</h3>
+                    <ul>
+                        <?php foreach ($relatedLinks as $link): ?>
+                            <li>
+                                <a href="<?= e($link['href']) ?>"<?= $link['external'] ? ' target="_blank" rel="noopener"' : '' ?>>
+                                    <?= e($link['label']) ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </section>
+            <?php endif; ?>
         </aside>
     </section>
 </article>

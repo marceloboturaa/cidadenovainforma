@@ -61,6 +61,7 @@ class LibraryEvent
                 ends_at DATETIME NULL,
                 location VARCHAR(160) NULL,
                 cover_image VARCHAR(255) NULL,
+                related_links TEXT NULL,
                 capacity INT UNSIGNED NULL,
                 responsible_user_id BIGINT UNSIGNED NULL,
                 status ENUM('aberto','encerrado','cancelado') NOT NULL DEFAULT 'aberto',
@@ -80,6 +81,9 @@ class LibraryEvent
         $eventColumns = $db->query('SHOW COLUMNS FROM library_events')->fetchAll(\PDO::FETCH_COLUMN);
         if (!in_array('cover_image', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN cover_image VARCHAR(255) NULL AFTER location');
+        }
+        if (!in_array('related_links', $eventColumns, true)) {
+            $db->exec('ALTER TABLE library_events ADD COLUMN related_links TEXT NULL AFTER cover_image');
         }
 
         $db->exec(
@@ -247,9 +251,9 @@ class LibraryEvent
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO library_events
-                (title, description, starts_at, ends_at, location, cover_image, capacity, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
+                (title, description, starts_at, ends_at, location, cover_image, related_links, capacity, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :description, :starts_at, :ends_at, :location, :cover_image, :capacity, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :description, :starts_at, :ends_at, :location, :cover_image, :related_links, :capacity, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::payload($data));
 
@@ -272,6 +276,7 @@ class LibraryEvent
                  ends_at = :ends_at,
                  location = :location,
                  cover_image = :cover_image,
+                 related_links = :related_links,
                  capacity = :capacity,
                  responsible_user_id = :responsible_user_id,
                  status = :status,
@@ -333,6 +338,7 @@ class LibraryEvent
             'ends_at' => $endsAt,
             'location' => self::nullable($data['location'] ?? null),
             'cover_image' => self::nullable($data['cover_image'] ?? null),
+            'related_links' => self::nullable($data['related_links'] ?? null),
             'capacity' => !empty($data['capacity']) ? (int) $data['capacity'] : null,
             'responsible_user_id' => !empty($data['responsible_user_id']) ? (int) $data['responsible_user_id'] : null,
             'status' => in_array($status, ['aberto', 'encerrado', 'cancelado'], true) ? $status : 'aberto',

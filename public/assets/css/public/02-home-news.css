@@ -318,12 +318,12 @@
     margin-top: 4px;
     padding: 9px 14px;
     border-radius: 8px;
-    background: var(--brand);
+    background: #1d4ed8;
     color: #fff;
     font-weight: 900;
 }
 
 .public-event-more:hover {
-    background: var(--brand-dark);
+    background: #1e40af;
 }
 

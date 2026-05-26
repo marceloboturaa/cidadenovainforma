@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS library_events (
     ends_at DATETIME NULL,
     location VARCHAR(160) NULL,
     cover_image VARCHAR(255) NULL,
+    related_links TEXT NULL,
     capacity INT UNSIGNED NULL,
     responsible_user_id BIGINT UNSIGNED NULL,
     status ENUM('aberto','encerrado','cancelado') NOT NULL DEFAULT 'aberto',

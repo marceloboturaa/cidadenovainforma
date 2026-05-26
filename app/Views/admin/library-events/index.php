@@ -208,7 +208,13 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                     </div>
 
                     <div>
-                        <label class="form-label">Observações internas</label>
+                        <label class="form-label">Mat&eacute;rias sobre o evento</label>
+                        <textarea class="form-control" name="related_links" rows="4" placeholder="Titulo da materia | /noticia/exemplo&#10;https://site.com/materia"><?= e($editing['related_links'] ?? '') ?></textarea>
+                        <small class="form-text">Use um link por linha. Se quiser, escreva: Titulo | URL.</small>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Observa&ccedil;&otilde;es internas</label>
                         <textarea class="form-control" name="notes" rows="4" placeholder="Informações visíveis apenas no painel"><?= e($editing['notes'] ?? '') ?></textarea>
                     </div>
                 </div>

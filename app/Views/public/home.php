@@ -97,7 +97,7 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
 
 <?php if (!empty($libraryEvents)): ?>
     <section class="section-heading public-events-heading" id="eventos">
-        <span>Agenda da comunidade</span>
+        <span>Agenda da comunidade e região</span>
         <h2>Eventos e atividades da biblioteca</h2>
     </section>
 

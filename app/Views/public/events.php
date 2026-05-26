@@ -23,7 +23,7 @@ $eventStatus = function (array $event): string {
 
 <section class="events-hub-hero">
     <div class="events-hub-copy">
-        <span>Agenda da comunidade</span>
+        <span>Agenda da comunidade e região</span>
         <h1><?= $mode === 'past' ? 'Eventos realizados' : ($mode === 'upcoming' ? 'Eventos futuros' : 'Eventos') ?></h1>
         <p>Programação, atividades, oficinas e encontros do Cidade Nova Informa em uma página organizada para acompanhar o que vem pela frente e o que já aconteceu.</p>
         <nav class="events-hub-tabs" aria-label="Seções de eventos">
