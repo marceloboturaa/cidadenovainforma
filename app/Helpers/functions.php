@@ -331,6 +331,7 @@ function clean_inline_style(string $style): string
         'font-size',
         'letter-spacing',
         'line-height',
+        'margin-bottom',
         'text-align',
     ];
 
@@ -351,6 +352,7 @@ function clean_inline_style(string $style): string
             'color', 'background-color' => (bool) preg_match('/^(#[0-9a-f]{3,8}|rgba?\([0-9.,\s%]+\)|[a-z]+)$/i', $value),
             'font-size', 'letter-spacing' => (bool) preg_match('/^-?\d+(\.\d+)?(px|em|rem|%)$/i', $value),
             'line-height' => (bool) preg_match('/^\d+(\.\d+)?(px|em|rem|%)?$/i', $value),
+            'margin-bottom' => (bool) preg_match('/^\d+(\.\d+)?(px|em|rem|%)?$/i', $value),
             'text-align' => in_array(strtolower($value), ['left', 'center', 'right', 'justify'], true),
             default => false,
         };
@@ -425,7 +427,15 @@ function clean_article_html(string $html): string
             . '>';
     }, $html) ?? $html;
 
-    $html = preg_replace('/<(pre|code)\s+[^>]*>/i', '<$1>', $html) ?? $html;
+    $html = preg_replace_callback('/<pre\s+([^>]*)>/i', function (array $matches): string {
+        preg_match('/class\s*=\s*("|\')([^"\']+)\1/i', $matches[1], $class);
+        $classes = preg_split('/\s+/', trim($class[2] ?? '')) ?: [];
+        $allowedClasses = ['code-theme-dark', 'code-theme-light', 'code-theme-blue', 'code-theme-green', 'code-theme-wine'];
+        $safeClasses = array_values(array_intersect($classes, $allowedClasses));
+
+        return '<pre' . ($safeClasses ? ' class="' . e(implode(' ', $safeClasses)) . '"' : '') . '>';
+    }, $html) ?? $html;
+    $html = preg_replace('/<code\s+[^>]*>/i', '<code>', $html) ?? $html;
 
     $html = preg_replace_callback('/<img\s+([^>]+)>/i', function (array $matches): string {
         $attrs = $matches[1];

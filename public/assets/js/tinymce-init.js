@@ -146,6 +146,18 @@
                         type: 'textarea',
                         name: 'code',
                         label: 'Cole o codigo aqui'
+                    },
+                    {
+                        type: 'selectbox',
+                        name: 'theme',
+                        label: 'Cor de fundo',
+                        items: [
+                            { text: 'Escuro', value: 'code-theme-dark' },
+                            { text: 'Claro', value: 'code-theme-light' },
+                            { text: 'Azul', value: 'code-theme-blue' },
+                            { text: 'Verde', value: 'code-theme-green' },
+                            { text: 'Vinho', value: 'code-theme-wine' }
+                        ]
                     }
                 ]
             },
@@ -161,22 +173,127 @@
                 }
             ],
             initialData: {
-                code: codeFromSelection(editor)
+                code: codeFromSelection(editor),
+                theme: 'code-theme-dark'
             },
             onSubmit: function (api) {
                 const data = api.getData();
                 const code = String(data.code || '').replace(/\r\n?/g, '\n');
+                const allowedThemes = ['code-theme-dark', 'code-theme-light', 'code-theme-blue', 'code-theme-green', 'code-theme-wine'];
+                const theme = allowedThemes.includes(data.theme) ? data.theme : 'code-theme-dark';
 
                 if (!code.trim()) {
                     api.close();
                     return;
                 }
 
-                editor.insertContent('<pre><code>' + escapeHtml(code) + '</code></pre><p></p>');
+                editor.insertContent('<pre class="' + theme + '"><code>' + escapeHtml(code) + '</code></pre><p></p>');
                 editor.save();
                 api.close();
             }
         });
+    }
+
+    function openParagraphSpacingDialog(editor) {
+        editor.windowManager.open({
+            title: 'Espaco entre paragrafos',
+            body: {
+                type: 'panel',
+                items: [
+                    {
+                        type: 'selectbox',
+                        name: 'spacing',
+                        label: 'Depois do paragrafo',
+                        items: [
+                            { text: 'Sem espaco', value: '0' },
+                            { text: 'Curto', value: '0.5em' },
+                            { text: 'Normal', value: '1em' },
+                            { text: 'Padrao da noticia', value: '1.25em' },
+                            { text: 'Amplo', value: '1.75em' },
+                            { text: 'Bem amplo', value: '2.25em' }
+                        ]
+                    }
+                ]
+            },
+            buttons: [
+                {
+                    type: 'cancel',
+                    text: 'Cancelar'
+                },
+                {
+                    type: 'submit',
+                    text: 'Aplicar',
+                    primary: true
+                }
+            ],
+            initialData: {
+                spacing: '1.25em'
+            },
+            onSubmit: function (api) {
+                const data = api.getData();
+                const allowedSpacing = ['0', '0.5em', '1em', '1.25em', '1.75em', '2.25em'];
+                const spacing = allowedSpacing.includes(data.spacing) ? data.spacing : '1.25em';
+                const blocks = editor.selection.getSelectedBlocks();
+
+                blocks.forEach(function (block) {
+                    if (/^(P|H2|H3|H4|BLOCKQUOTE|LI)$/i.test(block.nodeName)) {
+                        editor.dom.setStyle(block, 'margin-bottom', spacing);
+                    }
+                });
+
+                editor.save();
+                api.close();
+            }
+        });
+    }
+
+    function exerciseHtmlToArticleHtml(content) {
+        const html = String(content || '');
+
+        if (!/<(?:html|body|main|section|div)\b/i.test(html) || !/(question-block|solution-block|step-formula|exercise-card)/i.test(html)) {
+            return '';
+        }
+
+        const template = document.createElement('template');
+        template.innerHTML = html;
+        const root = template.content;
+        const output = [];
+        const statement = root.querySelector('.question-block .statement, .statement');
+        const steps = root.querySelectorAll('.solution-block .step-row, .step-row');
+        const credit = root.querySelector('.solution-credit');
+        const reference = root.querySelector('.reference-inline p');
+
+        if (statement) {
+            output.push('<h2>Enunciado</h2>');
+            output.push('<p>' + escapeHtml(statement.textContent.trim()) + '</p>');
+        }
+
+        if (steps.length) {
+            output.push('<h2>Resolucao</h2>');
+            steps.forEach(function (step) {
+                const formula = step.querySelector('.step-formula');
+                const text = step.querySelector('.step-text');
+
+                if (formula && formula.textContent.trim()) {
+                    output.push('<p>' + escapeHtml(formula.textContent.trim()) + '</p>');
+                }
+
+                if (text && text.textContent.trim()) {
+                    output.push('<p>' + escapeHtml(text.textContent.trim()) + '</p>');
+                }
+            });
+        }
+
+        if (credit && credit.textContent.trim()) {
+            output.push('<p><em>' + escapeHtml(credit.textContent.trim()) + '</em></p>');
+        }
+
+        if (reference && reference.textContent.trim()) {
+            output.push('<h3>Referencia</h3>');
+            output.push('<p>' + escapeHtml(reference.textContent.trim()) + '</p>');
+        }
+
+        return output.join('');
     }
 
     function latexDocumentToHtml(content) {
@@ -291,7 +408,7 @@
         plugins: 'advlist autoresize charmap code fullscreen image link lists media preview searchreplace table visualblocks wordcount',
         toolbar: [
             'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor',
-            'alignleft aligncenter alignright alignjustify | bullist numlist | outdent indent | lineheight',
+            'alignleft aligncenter alignright alignjustify | bullist numlist | outdent indent | lineheight paragraphspace',
             'styles | link image media table latex codeblock | blockquote hr removeformat | preview code fullscreen'
         ].join(' | '),
         block_formats: 'Paragrafo=p; Titulo=h2; Subtitulo=h3; Destaque=h4; Citacao=blockquote',
@@ -299,6 +416,15 @@
         line_height_formats: '1.0 1.08 1.15 1.3 1.5 1.65 1.75 2 2.5 3',
         style_formats: [
             { title: 'Texto normal', inline: 'span', remove: 'all' },
+            {
+                title: 'Espaco entre paragrafos',
+                items: [
+                    { title: 'Sem espaco depois', block: 'p', styles: { marginBottom: '0' } },
+                    { title: 'Curto depois', block: 'p', styles: { marginBottom: '0.5em' } },
+                    { title: 'Normal depois', block: 'p', styles: { marginBottom: '1em' } },
+                    { title: 'Amplo depois', block: 'p', styles: { marginBottom: '1.75em' } }
+                ]
+            },
             { title: 'Letras abertas', inline: 'span', styles: { letterSpacing: '0.08em' } },
             { title: 'Letras bem abertas', inline: 'span', styles: { letterSpacing: '0.16em' } },
             { title: 'Marcador suave', inline: 'span', styles: { backgroundColor: '#fef3c7' } },
@@ -345,11 +471,22 @@
             'img{max-width:100%;height:auto;}',
             'blockquote{border-left:4px solid #c9181f;margin:1rem 0;padding:.5rem 1rem;background:#f8fafc;}',
             'pre{margin:1rem 0;padding:1rem;overflow:auto;border-radius:8px;background:#111827;color:#f9fafb;font-family:Consolas,Monaco,"Courier New",monospace;font-size:14px;line-height:1.55;white-space:pre;}',
+            'pre.code-theme-light{background:#f8fafc;color:#111827;border:1px solid #d1d5db;}',
+            'pre.code-theme-blue{background:#0f172a;color:#dbeafe;}',
+            'pre.code-theme-green{background:#052e16;color:#dcfce7;}',
+            'pre.code-theme-wine{background:#450a0a;color:#fee2e2;}',
             'code{font-family:Consolas,Monaco,"Courier New",monospace;}',
             'table{border-collapse:collapse;width:100%;}',
             'td,th{border:1px solid #d1d5db;padding:.5rem;}'
         ].join(''),
         paste_preprocess: function (plugin, args) {
+            const exerciseHtml = exerciseHtmlToArticleHtml(args.content);
+
+            if (exerciseHtml) {
+                args.content = exerciseHtml;
+                return;
+            }
+
             const latexHtml = latexDocumentToHtml(args.content);
 
             if (latexHtml) {
@@ -373,6 +510,14 @@
                 tooltip: 'Colar codigo preservando espacos e quebras de linha',
                 onAction: function () {
                     openCodeDialog(editor);
+                }
+            });
+
+            editor.ui.registry.addButton('paragraphspace', {
+                text: 'Espaco P',
+                tooltip: 'Ajustar espaco depois do paragrafo',
+                onAction: function () {
+                    openParagraphSpacingDialog(editor);
                 }
             });
 

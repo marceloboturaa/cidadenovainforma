@@ -216,6 +216,27 @@
     white-space: pre;
 }
 
+.article-content pre.code-theme-light {
+    border: 1px solid #d1d5db;
+    background: #f8fafc;
+    color: #111827;
+}
+
+.article-content pre.code-theme-blue {
+    background: #0f172a;
+    color: #dbeafe;
+}
+
+.article-content pre.code-theme-green {
+    background: #052e16;
+    color: #dcfce7;
+}
+
+.article-content pre.code-theme-wine {
+    background: #450a0a;
+    color: #fee2e2;
+}
+
 .article-content code {
     font-family: Consolas, Monaco, "Courier New", monospace;
 }
