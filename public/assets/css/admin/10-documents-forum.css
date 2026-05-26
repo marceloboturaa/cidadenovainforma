@@ -496,8 +496,8 @@
 }
 
 .document-pdf-canvas-shell {
-    overflow: auto;
-    max-height: 76vh;
+    overflow-x: auto;
+    overflow-y: visible;
     min-height: 72vh;
     padding: 14px;
     border: 1px solid var(--line);

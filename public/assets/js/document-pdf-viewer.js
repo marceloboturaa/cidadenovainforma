@@ -223,7 +223,7 @@
             setMode('scroll');
         });
 
-        shell.addEventListener('scroll', updateCurrentPageFromScroll);
+        window.addEventListener('scroll', updateCurrentPageFromScroll, { passive: true });
 
         window.addEventListener('resize', function () {
             if (pdf) {
