@@ -8,8 +8,8 @@
 <section class="panel backup-panel">
     <h2>Backup completo do conteúdo</h2>
     <p>
-        Baixe um pacote com o banco de dados e as imagens enviadas em `public/uploads`.
-        Use esse arquivo para guardar uma cópia local ou migrar as matérias para a hospedagem.
+        Baixe um pacote com o banco de dados, imagens enviadas em `public/uploads` e documentos de `storage/documents`.
+        Use esse arquivo para guardar uma cópia local ou migrar o conteúdo do site para a hospedagem.
     </p>
 
     <?php if (!$canZip): ?>
@@ -29,7 +29,7 @@
         <?= csrf_field() ?>
         <label class="form-label" for="full_backup">Importar backup completo (.zip)</label>
         <input class="form-control" id="full_backup" name="full_backup" type="file" accept=".zip,application/zip" required>
-        <p class="small text-muted m-0">Atualiza o banco pelo `database.sql` do backup e copia os arquivos de `public/uploads`.</p>
+        <p class="small text-muted m-0">Atualiza o banco pelo `database.sql` do backup e copia os arquivos de `public/uploads` e `storage/documents`.</p>
         <button class="btn btn-outline-danger">Importar backup completo</button>
     </form>
 </section>

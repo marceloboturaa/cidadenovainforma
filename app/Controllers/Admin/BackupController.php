@@ -156,11 +156,19 @@ class BackupController
             'type' => 'full-backup',
             'version' => 2,
             'created_at' => date('c'),
-            'contains' => ['database.sql', 'public/uploads/news', 'public/uploads/events', 'storage/documents'],
+            'contains' => [
+                'database.sql',
+                'public/uploads/news',
+                'public/uploads/events',
+                'public/uploads/editor',
+                'public/uploads/education',
+                'public/uploads/institution',
+                'storage/documents',
+            ],
             'restore_order' => [
                 '1. Envie os arquivos do projeto para a hospedagem.',
                 '2. Importe database.sql no MySQL da hospedagem.',
-                '3. Envie as pastas public/uploads/news, public/uploads/events e storage/documents para o mesmo caminho no servidor.',
+                '3. Envie as pastas public/uploads e storage/documents para o mesmo caminho no servidor.',
                 '4. Ajuste config/database.php com os dados do banco online.',
             ],
         ];
@@ -180,6 +188,9 @@ class BackupController
         $zip->addFile($tempDir . '/manifest.json', 'manifest.json');
         $this->addDirectoryToZip($zip, $root . '/public/uploads/news', 'public/uploads/news', fn (string $entry): bool => $this->isSafeNewsUploadEntry($entry));
         $this->addDirectoryToZip($zip, $root . '/public/uploads/events', 'public/uploads/events', fn (string $entry): bool => $this->isSafeEventUploadEntry($entry));
+        $this->addDirectoryToZip($zip, $root . '/public/uploads/editor', 'public/uploads/editor', fn (string $entry): bool => $this->isSafeEditorUploadEntry($entry));
+        $this->addDirectoryToZip($zip, $root . '/public/uploads/education', 'public/uploads/education', fn (string $entry): bool => $this->isSafeEducationUploadEntry($entry));
+        $this->addDirectoryToZip($zip, $root . '/public/uploads/institution', 'public/uploads/institution', fn (string $entry): bool => $this->isSafeInstitutionUploadEntry($entry));
         $this->addDirectoryToZip($zip, $root . '/storage/documents', 'storage/documents', fn (string $entry): bool => $this->isSafeDocumentStorageEntry($entry));
         $zip->addFromString(self::FULL_BACKUP_SIGNATURE_FILE, json_encode($this->fullBackupSignature($sqlPath), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         $zip->close();
@@ -609,7 +620,7 @@ class BackupController
                 continue;
             }
 
-            if (!$this->isSafeNewsUploadEntry($entry) && !$this->isSafeEventUploadEntry($entry) && !$this->isSafeDocumentStorageEntry($entry)) {
+            if (!$this->isSafeBackupEntry($entry)) {
                 continue;
             }
 
@@ -648,6 +659,9 @@ class BackupController
         foreach ([
             $root . '/public/uploads/news' => 'public/uploads/news',
             $root . '/public/uploads/events' => 'public/uploads/events',
+            $root . '/public/uploads/editor' => 'public/uploads/editor',
+            $root . '/public/uploads/education' => 'public/uploads/education',
+            $root . '/public/uploads/institution' => 'public/uploads/institution',
             $root . '/storage/documents' => 'storage/documents',
         ] as $directory => $zipBase) {
             if (!is_dir($directory)) {
@@ -665,7 +679,7 @@ class BackupController
 
                 $entry = $zipBase . '/' . str_replace('\\', '/', substr($file->getPathname(), strlen($directory) + 1));
 
-                if ($this->isSafeNewsUploadEntry($entry) || $this->isSafeEventUploadEntry($entry) || $this->isSafeDocumentStorageEntry($entry)) {
+                if ($this->isSafeBackupEntry($entry)) {
                     $entries[$entry] = hash_file('sha256', $file->getPathname());
                 }
             }
@@ -710,7 +724,7 @@ class BackupController
                 return false;
             }
 
-            if ($entry !== 'database.sql' && !$this->isSafeNewsUploadEntry($entry) && !$this->isSafeEventUploadEntry($entry) && !$this->isSafeDocumentStorageEntry($entry)) {
+            if ($entry !== 'database.sql' && !$this->isSafeBackupEntry($entry)) {
                 return false;
             }
 
@@ -739,6 +753,34 @@ class BackupController
     {
         return (bool) preg_match('#^public/uploads/events/[A-Za-z0-9._/-]+\.(jpe?g|png|webp|gif)$#i', $entry)
             && !str_contains($entry, '../');
+    }
+
+    private function isSafeEditorUploadEntry(string $entry): bool
+    {
+        return (bool) preg_match('#^public/uploads/editor/[A-Za-z0-9._/-]+\.(jpe?g|png|webp|gif)$#i', $entry)
+            && !str_contains($entry, '../');
+    }
+
+    private function isSafeEducationUploadEntry(string $entry): bool
+    {
+        return (bool) preg_match('#^public/uploads/education/[A-Za-z0-9._/-]+\.(jpe?g|png|webp|gif)$#i', $entry)
+            && !str_contains($entry, '../');
+    }
+
+    private function isSafeInstitutionUploadEntry(string $entry): bool
+    {
+        return (bool) preg_match('#^public/uploads/institution/[A-Za-z0-9._/-]+\.(jpe?g|png|webp|gif)$#i', $entry)
+            && !str_contains($entry, '../');
+    }
+
+    private function isSafeBackupEntry(string $entry): bool
+    {
+        return $this->isSafeNewsUploadEntry($entry)
+            || $this->isSafeEventUploadEntry($entry)
+            || $this->isSafeEditorUploadEntry($entry)
+            || $this->isSafeEducationUploadEntry($entry)
+            || $this->isSafeInstitutionUploadEntry($entry)
+            || $this->isSafeDocumentStorageEntry($entry);
     }
 
     private function isSafeDocumentStorageEntry(string $entry): bool
