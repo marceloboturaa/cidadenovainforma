@@ -296,6 +296,31 @@
         return output.join('');
     }
 
+    function latexTextToHtml(text) {
+        let value = String(text || '').trim();
+
+        value = value
+            .replace(/\{\\(?:Huge|huge|LARGE|Large|large|normalsize|small|footnotesize)\s+\\textbf\{([^{}]+)}}/g, '\\textbf{$1}')
+            .replace(/\{\\(?:Huge|huge|LARGE|Large|large|normalsize|small|footnotesize)\s+\\emph\{([^{}]+)}}/g, '\\emph{$1}')
+            .replace(/\{\\(?:Huge|huge|LARGE|Large|large|normalsize|small|footnotesize)\s+([\s\S]*?)}/g, '$1')
+            .replace(/\\noindent\s*/g, '')
+            .replace(/\\\\/g, '<br>');
+
+        value = escapeHtml(value);
+        value = value
+            .replace(/\\textbf\{([^{}]+)}/g, '<strong>$1</strong>')
+            .replace(/\\emph\{([^{}]+)}/g, '<em>$1</em>')
+            .replace(/\\textit\{([^{}]+)}/g, '<em>$1</em>');
+
+        return value;
+    }
+
+    function cleanDisplayFormula(formula) {
+        return String(formula || '')
+            .replace(/\\textbf\{([^{}]+)}/g, '\\text{$1}')
+            .trim();
+    }
+
     function latexDocumentToHtml(content) {
         let text = String(content || '').replace(/\r\n?/g, '\n').trim();
 
@@ -320,6 +345,8 @@
             .replace(/\\documentclass(?:\[[^\]]*])?\{[^}]+}/g, '')
             .replace(/\\begin\{(?:center|figure|table)\}/g, '\n\n')
             .replace(/\\end\{(?:center|figure|table)\}/g, '\n\n')
+            .replace(/\\vspace\*?\{[^}]+}/g, '\n\n')
+            .replace(/\\hspace\*?\{[^}]+}/g, ' ')
             .replace(/\\author\{[^}]*}/g, '')
             .replace(/\\date\{[^}]*}/g, '')
             .replace(/\\maketitle/g, '')
@@ -330,13 +357,13 @@
             .replace(/\\section\*?\{([\s\S]*?)}/g, '\n\n## $1\n\n')
             .replace(/\\subsection\*?\{([\s\S]*?)}/g, '\n\n### $1\n\n')
             .replace(/\\\[((?:.|\n)*?)\\\]/g, function (match, formula) {
-                return '\n\n$$' + formula.trim() + '$$\n\n';
+                return '\n\n$$' + cleanDisplayFormula(formula) + '$$\n\n';
             })
             .replace(/\\begin\{equation\*?}([\s\S]*?)\\end\{equation\*?}/g, function (match, formula) {
-                return '\n\n$$' + formula.trim() + '$$\n\n';
+                return '\n\n$$' + cleanDisplayFormula(formula) + '$$\n\n';
             })
             .replace(/\\begin\{align\*?}([\s\S]*?)\\end\{align\*?}/g, function (match, formula) {
-                return '\n\n$$\\begin{aligned}' + formula.trim() + '\\end{aligned}$$\n\n';
+                return '\n\n$$\\begin{aligned}' + cleanDisplayFormula(formula) + '\\end{aligned}$$\n\n';
             })
             .replace(/\\begin\{(?:tikzpicture|axis)\}[\s\S]*?\\end\{(?:tikzpicture|axis)\}/g, function (match) {
                 return '\n\n```latex\n' + match.trim() + '\n```\n\n';
@@ -347,9 +374,7 @@
             .replace(/\\caption\{([^}]+)}/g, '\n\nLegenda: $1\n\n')
             .replace(/\\begin\{(?:itemize|enumerate)\}/g, '\n\n')
             .replace(/\\end\{(?:itemize|enumerate)\}/g, '\n\n')
-            .replace(/\\textbf\{([^}]+)}/g, '<strong>$1</strong>')
-            .replace(/\\emph\{([^}]+)}/g, '<em>$1</em>')
-            .replace(/\\item\s+/g, '\n- ');
+            .replace(/^[ \t]*\\item\s+/gm, '- ');
 
         const blocks = text.split(/\n{2,}/).map(function (block) {
             return block.trim();
@@ -361,11 +386,11 @@
             }
 
             if (block.startsWith('## ')) {
-                return '<h2>' + escapeHtml(block.slice(3).trim()) + '</h2>';
+                return '<h2>' + latexTextToHtml(block.slice(3).trim()) + '</h2>';
             }
 
             if (block.startsWith('### ')) {
-                return '<h3>' + escapeHtml(block.slice(4).trim()) + '</h3>';
+                return '<h3>' + latexTextToHtml(block.slice(4).trim()) + '</h3>';
             }
 
             if (/^\$\$[\s\S]*\$\$$/.test(block)) {
@@ -380,13 +405,13 @@
                 const items = block.split(/\n/).filter(function (line) {
                     return line.trim().startsWith('- ');
                 }).map(function (line) {
-                    return '<li>' + escapeHtml(line.trim().slice(2)) + '</li>';
+                    return '<li>' + latexTextToHtml(line.trim().slice(2)) + '</li>';
                 }).join('');
 
                 return '<ul>' + items + '</ul>';
             }
 
-            return '<p>' + escapeHtml(block).replace(/\n/g, '<br>') + '</p>';
+            return '<p>' + latexTextToHtml(block).replace(/\n/g, '<br>') + '</p>';
         }).join('');
     }
 
