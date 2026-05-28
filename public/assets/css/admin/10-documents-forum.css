@@ -431,6 +431,54 @@
     gap: 10px;
 }
 
+.document-pdf-annotation-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: end;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.document-pdf-annotation-bar label {
+    display: grid;
+    gap: 4px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.document-pdf-annotation-bar select,
+.document-pdf-annotation-bar input {
+    min-height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #ffffff;
+    color: var(--ink);
+}
+
+.document-pdf-annotation-bar select {
+    min-width: 120px;
+    padding: 0 8px;
+}
+
+.document-pdf-note-field {
+    flex: 1 1 260px;
+}
+
+.document-pdf-note-field input {
+    width: 100%;
+    padding: 0 10px;
+}
+
+.document-pdf-annotation-bar small {
+    flex: 1 1 220px;
+    color: var(--muted);
+    font-weight: 800;
+}
+
 .document-pdf-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -504,17 +552,106 @@
     text-align: center;
 }
 
-.document-pdf-canvas-shell canvas,
-.document-pdf-pages canvas {
+.document-pdf-page-frame {
+    position: relative;
+    display: inline-block;
     max-width: 100%;
     background: #ffffff;
     box-shadow: 0 14px 36px rgba(15, 23, 42, 0.16);
+    vertical-align: top;
+}
+
+.document-pdf-page-frame canvas {
+    display: block;
+}
+
+.document-pdf-canvas-shell canvas {
+    max-width: 100%;
+    background: #ffffff;
 }
 
 .document-pdf-pages {
     display: grid;
     justify-items: center;
     gap: 14px;
+}
+
+.document-pdf-annotation-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    cursor: crosshair;
+}
+
+.document-pdf-annotation,
+.document-pdf-annotation-preview {
+    position: absolute;
+    border: 2px solid var(--annotation-border);
+    background: var(--annotation-fill);
+}
+
+.document-pdf-annotation {
+    padding: 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.document-pdf-annotation-highlight {
+    mix-blend-mode: multiply;
+}
+
+.document-pdf-annotation-comment {
+    display: grid;
+    place-items: center;
+    min-width: 26px;
+    min-height: 26px;
+    border-radius: 999px;
+    background: var(--annotation-color);
+    color: #111827;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+    mix-blend-mode: normal;
+}
+
+.document-pdf-annotation-popover {
+    position: absolute;
+    z-index: 8;
+    left: 50%;
+    top: calc(100% + 8px);
+    display: grid;
+    width: min(280px, 70vw);
+    gap: 5px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ink);
+    text-align: left;
+    transform: translateX(-50%);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+}
+
+.document-pdf-annotation-popover small {
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.document-pdf-annotation-popover p {
+    margin: 0;
+    color: #374151;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.document-pdf-annotation-popover button {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--brand);
+    font-size: 0.82rem;
+    font-weight: 900;
 }
 
 .document-pdf-viewer [data-pdf-error] {

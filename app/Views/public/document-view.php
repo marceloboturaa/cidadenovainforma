@@ -19,14 +19,27 @@
     <?php elseif (($viewerType ?? '') === 'pdf'): ?>
         <div class="document-pdf-viewer" data-pdf-viewer data-pdf-url="<?= e($documentSrc) ?>" data-pdf-start-page="<?= e((string) ($pdfStartPage ?? 1)) ?>">
             <div class="document-pdf-toolbar">
-                <button type="button" data-pdf-prev>Anterior</button>
+                <div class="document-pdf-toolbar-group">
+                    <button type="button" data-pdf-prev>Anterior</button>
+                    <button type="button" data-pdf-next>Proxima</button>
+                </div>
                 <span data-pdf-status>Carregando PDF...</span>
-                <button type="button" data-pdf-next>Pr&oacute;xima</button>
-                <button type="button" data-pdf-zoom-out>Menos zoom</button>
-                <button type="button" data-pdf-zoom-in>Mais zoom</button>
+                <div class="document-pdf-toolbar-group document-pdf-mode-group">
+                    <button type="button" data-pdf-mode-page>Pagina</button>
+                    <button type="button" data-pdf-mode-scroll>Rolagem</button>
+                </div>
+                <div class="document-pdf-toolbar-group">
+                    <button type="button" data-pdf-zoom-out>Menos zoom</button>
+                    <button type="button" data-pdf-fit>Ajustar</button>
+                    <button type="button" data-pdf-zoom-in>Mais zoom</button>
+                </div>
             </div>
             <div class="document-pdf-canvas-shell">
-                <canvas data-pdf-canvas></canvas>
+                <div class="document-pdf-page-frame" data-pdf-page-frame>
+                    <canvas data-pdf-canvas></canvas>
+                    <div class="document-pdf-annotation-layer" data-pdf-annotation-layer></div>
+                </div>
+                <div class="document-pdf-pages" data-pdf-pages hidden></div>
             </div>
             <p data-pdf-error hidden>N&atilde;o foi poss&iacute;vel carregar o PDF dentro da p&aacute;gina.</p>
         </div>

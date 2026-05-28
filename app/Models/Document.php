@@ -53,6 +53,28 @@ class Document
             ) ENGINE=InnoDB'
         );
 
+        Database::connection()->exec(
+            'CREATE TABLE IF NOT EXISTS team_document_annotations (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                document_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                page_number INT UNSIGNED NOT NULL DEFAULT 1,
+                type VARCHAR(20) NOT NULL DEFAULT \'highlight\',
+                x DECIMAL(8,6) NOT NULL DEFAULT 0,
+                y DECIMAL(8,6) NOT NULL DEFAULT 0,
+                width DECIMAL(8,6) NOT NULL DEFAULT 0,
+                height DECIMAL(8,6) NOT NULL DEFAULT 0,
+                color VARCHAR(20) NOT NULL DEFAULT \'#facc15\',
+                note TEXT NULL,
+                active TINYINT(1) NOT NULL DEFAULT 1,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                INDEX idx_team_document_annotations_document (document_id, page_number, active),
+                CONSTRAINT fk_team_document_annotations_document FOREIGN KEY (document_id) REFERENCES team_documents(id) ON DELETE CASCADE,
+                CONSTRAINT fk_team_document_annotations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
         self::migratePublicDocumentsToStorage();
     }
 
@@ -484,5 +506,81 @@ class Document
         Database::connection()
             ->prepare('UPDATE team_documents SET active = 0, updated_at = NOW() WHERE id = :id')
             ->execute(['id' => $id]);
+    }
+
+    public static function annotations(int $documentId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT team_document_annotations.*, users.name AS user_name
+             FROM team_document_annotations
+             INNER JOIN users ON users.id = team_document_annotations.user_id
+             WHERE team_document_annotations.document_id = :document_id
+               AND team_document_annotations.active = 1
+             ORDER BY team_document_annotations.page_number ASC, team_document_annotations.created_at ASC, team_document_annotations.id ASC'
+        );
+        $stmt->execute(['document_id' => $documentId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function createAnnotation(int $documentId, int $userId, array $data): int
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO team_document_annotations
+                (document_id, user_id, page_number, type, x, y, width, height, color, note, active, created_at, updated_at)
+             VALUES
+                (:document_id, :user_id, :page_number, :type, :x, :y, :width, :height, :color, :note, 1, NOW(), NOW())'
+        );
+        $stmt->execute([
+            'document_id' => $documentId,
+            'user_id' => $userId,
+            'page_number' => max(1, (int) ($data['page_number'] ?? 1)),
+            'type' => in_array(($data['type'] ?? ''), ['highlight', 'comment'], true) ? $data['type'] : 'highlight',
+            'x' => self::clampRatio($data['x'] ?? 0),
+            'y' => self::clampRatio($data['y'] ?? 0),
+            'width' => self::clampRatio($data['width'] ?? 0),
+            'height' => self::clampRatio($data['height'] ?? 0),
+            'color' => self::annotationColor((string) ($data['color'] ?? '#facc15')),
+            'note' => trim(mb_substr((string) ($data['note'] ?? ''), 0, 1200)),
+        ]);
+
+        return (int) Database::connection()->lastInsertId();
+    }
+
+    public static function deactivateAnnotation(int $id, int $documentId, int $userId, bool $canManage): bool
+    {
+        self::ensureSchema();
+
+        $sql = 'UPDATE team_document_annotations
+                SET active = 0, updated_at = NOW()
+                WHERE id = :id AND document_id = :document_id AND active = 1';
+        $params = [
+            'id' => $id,
+            'document_id' => $documentId,
+        ];
+
+        if (!$canManage) {
+            $sql .= ' AND user_id = :user_id';
+            $params['user_id'] = $userId;
+        }
+
+        $stmt = Database::connection()->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    private static function clampRatio(mixed $value): float
+    {
+        return min(1, max(0, (float) $value));
+    }
+
+    private static function annotationColor(string $value): string
+    {
+        return preg_match('/^#[0-9a-f]{6}$/i', $value) ? $value : '#facc15';
     }
 }

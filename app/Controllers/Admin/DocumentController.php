@@ -277,6 +277,7 @@ class DocumentController
                     'documentSrc' => $googlePdfUrl ? url('/admin/documents/visualizar?id=' . $document['id'] . '&inline=1') : $googlePreviewUrl,
                     'documentText' => '',
                     'pdfStartPage' => $googlePdfUrl ? 2 : 1,
+                    'annotationEndpoints' => $googlePdfUrl ? $this->annotationEndpoints((int) $document['id']) : null,
                 ]);
                 return;
             }
@@ -304,6 +305,7 @@ class DocumentController
                 'documentSrc' => $viewer['src'],
                 'documentText' => $viewer['text'],
                 'pdfStartPage' => 1,
+                'annotationEndpoints' => $viewer['type'] === 'pdf' ? $this->annotationEndpoints((int) $document['id']) : null,
             ]);
             return;
         }
@@ -318,6 +320,59 @@ class DocumentController
 
         readfile($path);
         exit;
+    }
+
+    public function annotations(): void
+    {
+        $document = $this->authorizedDocumentForJson();
+        $this->json([
+            'annotations' => array_map([$this, 'serializeAnnotation'], Document::annotations((int) $document['id'])),
+        ]);
+    }
+
+    public function storeAnnotation(): void
+    {
+        $document = $this->authorizedDocumentForJson();
+        $data = $this->jsonBody();
+
+        if (!Csrf::validate((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $data['_token'] ?? ''))) {
+            $this->json(['error' => 'Sessao expirada.'], 419);
+        }
+
+        $type = (string) ($data['type'] ?? 'highlight');
+        $note = trim((string) ($data['note'] ?? ''));
+
+        if ($type === 'comment' && $note === '') {
+            $this->json(['error' => 'Escreva o comentario antes de salvar.'], 422);
+        }
+
+        $id = Document::createAnnotation((int) $document['id'], (int) current_user()['id'], $data);
+        $annotations = array_values(array_filter(
+            Document::annotations((int) $document['id']),
+            fn (array $annotation): bool => (int) $annotation['id'] === $id
+        ));
+
+        $this->json([
+            'annotation' => $this->serializeAnnotation($annotations[0] ?? ['id' => $id] + $data),
+        ]);
+    }
+
+    public function deleteAnnotation(): void
+    {
+        $document = $this->authorizedDocumentForJson();
+        $data = $this->jsonBody();
+
+        if (!Csrf::validate((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $data['_token'] ?? ''))) {
+            $this->json(['error' => 'Sessao expirada.'], 419);
+        }
+
+        $id = (int) ($data['id'] ?? 0);
+        if ($id <= 0) {
+            $this->json(['error' => 'Anotacao invalida.'], 422);
+        }
+
+        Document::deactivateAnnotation($id, (int) $document['id'], (int) current_user()['id'], $this->canManageDocuments());
+        $this->json(['ok' => true]);
     }
 
     private function documentExtensionIsAllowed(string $extension, string $mime): bool
@@ -412,6 +467,62 @@ class DocumentController
 
         echo $pdf;
         exit;
+    }
+
+    private function annotationEndpoints(int $documentId): array
+    {
+        return [
+            'list' => url('/admin/documents/annotations?id=' . $documentId),
+            'store' => url('/admin/documents/annotations?id=' . $documentId),
+            'delete' => url('/admin/documents/annotations/delete?id=' . $documentId),
+        ];
+    }
+
+    private function authorizedDocumentForJson(): array
+    {
+        $this->authorizeView();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $document = $id ? Document::find($id) : null;
+
+        if (!$document || (!$this->canManageDocuments() && !Document::userCanAccess((int) $document['id'], (int) current_user()['id']))) {
+            $this->json(['error' => 'Documento nao encontrado.'], 404);
+        }
+
+        return $document;
+    }
+
+    private function jsonBody(): array
+    {
+        $raw = (string) file_get_contents('php://input');
+        $data = json_decode($raw, true);
+
+        return is_array($data) ? $data : $_POST;
+    }
+
+    private function json(array $payload, int $status = 200): void
+    {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    private function serializeAnnotation(array $annotation): array
+    {
+        return [
+            'id' => (int) ($annotation['id'] ?? 0),
+            'page_number' => (int) ($annotation['page_number'] ?? 1),
+            'type' => (string) ($annotation['type'] ?? 'highlight'),
+            'x' => (float) ($annotation['x'] ?? 0),
+            'y' => (float) ($annotation['y'] ?? 0),
+            'width' => (float) ($annotation['width'] ?? 0),
+            'height' => (float) ($annotation['height'] ?? 0),
+            'color' => (string) ($annotation['color'] ?? '#facc15'),
+            'note' => (string) ($annotation['note'] ?? ''),
+            'user_name' => (string) ($annotation['user_name'] ?? ''),
+            'created_at' => (string) ($annotation['created_at'] ?? ''),
+        ];
     }
 
     private function storeUploadedDocument(string $field): array

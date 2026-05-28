@@ -536,6 +536,26 @@ ALTER TABLE news ADD COLUMN IF NOT EXISTS archive_note TEXT NULL AFTER original_
 ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes;
 ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS allow_download TINYINT(1) NOT NULL DEFAULT 1 AFTER is_public;
 
+CREATE TABLE IF NOT EXISTS team_document_annotations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    document_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    page_number INT UNSIGNED NOT NULL DEFAULT 1,
+    type VARCHAR(20) NOT NULL DEFAULT 'highlight',
+    x DECIMAL(8,6) NOT NULL DEFAULT 0,
+    y DECIMAL(8,6) NOT NULL DEFAULT 0,
+    width DECIMAL(8,6) NOT NULL DEFAULT 0,
+    height DECIMAL(8,6) NOT NULL DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '#facc15',
+    note TEXT NULL,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX idx_team_document_annotations_document (document_id, page_number, active),
+    CONSTRAINT fk_team_document_annotations_document FOREIGN KEY (document_id) REFERENCES team_documents(id) ON DELETE CASCADE,
+    CONSTRAINT fk_team_document_annotations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS module_id BIGINT UNSIGNED NULL AFTER course_id;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER video_url;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url;

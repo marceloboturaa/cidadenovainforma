@@ -656,6 +656,18 @@
     opacity: 0.52;
 }
 
+.document-pdf-toolbar button.is-active,
+.document-pdf-toolbar button:hover {
+    background: var(--brand);
+    color: #ffffff;
+}
+
+.document-pdf-toolbar-group {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+}
+
 .document-pdf-canvas-shell {
     overflow: auto;
     min-height: 72vh;
@@ -666,10 +678,34 @@
     text-align: center;
 }
 
-.document-pdf-canvas-shell canvas {
+.document-pdf-page-frame {
+    position: relative;
+    display: inline-block;
     max-width: 100%;
     background: #ffffff;
     box-shadow: 0 14px 36px rgba(15, 23, 42, 0.16);
+    vertical-align: top;
+}
+
+.document-pdf-page-frame canvas {
+    display: block;
+}
+
+.document-pdf-canvas-shell canvas {
+    max-width: 100%;
+    background: #ffffff;
+}
+
+.document-pdf-pages {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+}
+
+.document-pdf-annotation-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
 }
 
 .document-pdf-viewer [data-pdf-error] {
