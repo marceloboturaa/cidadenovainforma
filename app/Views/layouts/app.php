@@ -40,6 +40,9 @@
                 <?php if (\App\Core\Auth::can('users.manage')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/users') ? 'active' : '' ?>" href="<?= e(url('/admin/users')) ?>" title="Usuários"><i class="bi bi-people" aria-hidden="true"></i><span>Usuários</span></a>
                 <?php endif; ?>
+                <?php if (\App\Core\Auth::hasRole('master')): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/authorizations') ? 'active' : '' ?>" href="<?= e(url('/admin/authorizations')) ?>" title="Autorizações"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Autorizações</span></a>
+                <?php endif; ?>
                 <?php if (\App\Core\Auth::can('news.create') || \App\Core\Auth::can('news.manage') || \App\Core\Auth::can('news.approve')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/news') ? 'active' : '' ?>" href="<?= e(url('/admin/news')) ?>" title="Notícias"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Notícias</span></a>
                 <?php endif; ?>

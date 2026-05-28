@@ -1,6 +1,7 @@
 <?php
 
 use App\Controllers\Admin\CategoryController;
+use App\Controllers\Admin\AuthorizationController;
 use App\Controllers\Admin\BackupController;
 use App\Controllers\Admin\ConsentController;
 use App\Controllers\Admin\DashboardController;
@@ -73,6 +74,8 @@ $router->post('/admin/users/responsibilities', [UserController::class, 'responsi
 $router->post('/admin/users/document-uploads', [UserController::class, 'documentUploads']);
 $router->post('/admin/users/role', [UserController::class, 'updateRole']);
 $router->post('/admin/users/reset-password', [UserController::class, 'resetPassword']);
+$router->get('/admin/authorizations', [AuthorizationController::class, 'index']);
+$router->post('/admin/authorizations', [AuthorizationController::class, 'update']);
 
 $router->get('/admin/people', [PersonController::class, 'index']);
 $router->get('/admin/people/edit', [PersonController::class, 'index']);
