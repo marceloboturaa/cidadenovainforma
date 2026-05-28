@@ -5,11 +5,14 @@
     </div>
 </div>
 
+<?php if ($canViewEditorialDashboard ?? false): ?>
 <div class="metric-grid">
+    <?php if ($canViewSensitiveDashboard ?? false): ?>
     <article class="metric-card">
         <span>Usuários</span>
         <strong><?= e((string) $stats['users']) ?></strong>
     </article>
+    <?php endif; ?>
     <article class="metric-card">
         <span>Notícias</span>
         <strong><?= e((string) $stats['news']) ?></strong>
@@ -18,19 +21,23 @@
         <span>Pendentes</span>
         <strong><?= e((string) $stats['pending_news']) ?></strong>
     </article>
+    <?php if ($canViewSensitiveDashboard ?? false): ?>
     <article class="metric-card">
         <span>Comentários</span>
         <strong><?= e((string) $stats['comments']) ?></strong>
     </article>
-    <?php if ($showsAllLogs ?? false): ?>
+    <?php endif; ?>
+    <?php if ($canViewSensitiveDashboard ?? false): ?>
         <article class="metric-card">
             <span>Online agora</span>
             <strong><?= e((string) ($stats['online_users_count'] ?? 0)) ?></strong>
         </article>
     <?php endif; ?>
 </div>
+<?php endif; ?>
 
-<div class="dashboard-grid">
+<?php if ($canViewEditorialDashboard ?? false): ?>
+<div class="<?= ($canViewSensitiveDashboard ?? false) ? 'dashboard-grid' : '' ?>">
     <section class="panel">
         <h2>Fluxo de publicação</h2>
         <div class="status-board">
@@ -43,6 +50,7 @@
         </div>
     </section>
 
+    <?php if ($canViewSensitiveDashboard ?? false): ?>
     <section class="panel">
         <h2>Acessos dos últimos dias</h2>
         <div class="mini-chart">
@@ -58,9 +66,11 @@
             <?php endif; ?>
         </div>
     </section>
+    <?php endif; ?>
 </div>
+<?php endif; ?>
 
-<?php if (!($isStudent ?? false)): ?>
+<?php if (!($isStudent ?? false) && ($canViewEditorialDashboard ?? false)): ?>
 <section class="panel">
     <div class="section-heading">
         <h2>Notícias recentes</h2>
@@ -143,7 +153,7 @@
     </section>
 <?php endif; ?>
 
-<?php if ($showsAllLogs ?? false): ?>
+<?php if ($canViewSensitiveDashboard ?? false): ?>
     <section class="panel">
         <div class="section-heading">
             <h2>Usuários online</h2>
@@ -179,9 +189,9 @@
     </section>
 <?php endif; ?>
 
-<?php if (!($isStudent ?? false)): ?>
+<?php if (!($isStudent ?? false) && ($canViewSensitiveDashboard ?? false)): ?>
 <section class="panel">
-    <h2><?= ($showsAllLogs ?? false) ? 'Logs recentes' : 'Meus logs recentes' ?></h2>
+    <h2>Logs recentes</h2>
     <div class="admin-card-list compact-list">
         <?php foreach ($stats['logs'] as $log): ?>
             <article class="admin-list-card">
