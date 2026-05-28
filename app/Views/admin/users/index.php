@@ -11,8 +11,8 @@ $onlineCount = count($onlineUserIds ?? []);
     <div class="users-hero">
         <div>
             <span class="eyebrow">Controle de acesso</span>
-            <h1>Equipe e acessos</h1>
-            <p>Gerencie logins, cargos, páginas institucionais e recuperação de senha da equipe.</p>
+            <h1>Usuários e acessos</h1>
+            <p>Gerencie logins, cargos, páginas institucionais e recuperação de senha.</p>
         </div>
         <?php if ($isMaster): ?>
             <a class="btn btn-primary" href="#novo-usuario">
@@ -24,7 +24,7 @@ $onlineCount = count($onlineUserIds ?? []);
 
     <section class="users-metrics" aria-label="Resumo de usuários">
         <article>
-            <span>Equipe</span>
+            <span>Usuários</span>
             <strong><?= e((string) $totalUsers) ?></strong>
             <small><?= e((string) $activeUsers) ?> ativo(s)</small>
         </article>
@@ -198,7 +198,7 @@ $onlineCount = count($onlineUserIds ?? []);
         <div class="users-panel-heading">
             <div>
                 <span class="eyebrow">Diretório</span>
-                <h2>Equipe cadastrada</h2>
+                <h2>Usuários cadastrados</h2>
             </div>
             <span class="users-count-badge" data-users-visible-count><?= e((string) $totalUsers) ?></span>
         </div>
@@ -206,10 +206,10 @@ $onlineCount = count($onlineUserIds ?? []);
         <div class="users-directory-toolbar">
             <label class="users-search-field">
                 <i class="bi bi-search" aria-hidden="true"></i>
-                <span class="visually-hidden">Pesquisar equipe</span>
+                <span class="visually-hidden">Pesquisar usuários</span>
                 <input class="form-control" type="search" placeholder="Pesquisar por nome, e-mail ou cargo" data-users-search autocomplete="off">
             </label>
-            <div class="users-filter-tabs" role="group" aria-label="Filtrar equipe">
+            <div class="users-filter-tabs" role="group" aria-label="Filtrar usuários">
                 <button type="button" class="is-active" data-users-filter="all">Todos</button>
                 <button type="button" data-users-filter="active">Ativos</button>
                 <button type="button" data-users-filter="inactive">Inativos</button>

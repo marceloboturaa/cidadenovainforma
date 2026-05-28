@@ -517,7 +517,7 @@ class Forum
                 'admin-local' => [1, 1, 1],
                 'diretor' => [1, 1, 1],
                 'professor' => [1, 1, 0],
-                'equipe' => [1, 1, 0],
+                'voluntario' => [1, 1, 0],
             ],
         ];
 

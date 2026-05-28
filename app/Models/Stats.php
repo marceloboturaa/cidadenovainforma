@@ -8,7 +8,7 @@ use App\Models\UserPresence;
 
 class Stats
 {
-    private const FULL_DASHBOARD_ROLES = ['master', 'admin', 'admin_local'];
+    private const FULL_DASHBOARD_ROLES = ['master', 'admin', 'admin-local', 'admin_local'];
     private const EDITORIAL_DASHBOARD_ROLES = ['jornalista', 'colunista'];
 
     public static function dashboard(?array $user = null): array

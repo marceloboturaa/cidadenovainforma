@@ -104,26 +104,34 @@ class LibraryEvent
         $done = true;
     }
 
-    public static function all(): array
+    public static function all(?int $createdBy = null): array
     {
         self::ensureSchema();
 
-        return Database::connection()
-            ->query(
-                'SELECT library_events.*,
-                        responsible.name AS responsible_name,
-                        COALESCE(participant_counts.total, 0) AS participant_count
-                 FROM library_events
-                 LEFT JOIN users responsible ON responsible.id = library_events.responsible_user_id
-                 LEFT JOIN (
-                    SELECT event_id, COUNT(*) AS total
-                    FROM library_event_participants
-                    GROUP BY event_id
-                 ) participant_counts ON participant_counts.event_id = library_events.id
-                 WHERE library_events.active = 1
-                 ORDER BY COALESCE(library_events.starts_at, library_events.created_at) DESC'
-            )
-            ->fetchAll();
+        $sql = 'SELECT library_events.*,
+                       responsible.name AS responsible_name,
+                       COALESCE(participant_counts.total, 0) AS participant_count
+                FROM library_events
+                LEFT JOIN users responsible ON responsible.id = library_events.responsible_user_id
+                LEFT JOIN (
+                   SELECT event_id, COUNT(*) AS total
+                   FROM library_event_participants
+                   GROUP BY event_id
+                ) participant_counts ON participant_counts.event_id = library_events.id
+                WHERE library_events.active = 1';
+        $params = [];
+
+        if ($createdBy !== null) {
+            $sql .= ' AND library_events.created_by = :created_by';
+            $params['created_by'] = $createdBy;
+        }
+
+        $sql .= ' ORDER BY COALESCE(library_events.starts_at, library_events.created_at) DESC';
+
+        $stmt = Database::connection()->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
     }
 
     public static function publicUpcoming(int $limit = 6): array

@@ -166,4 +166,4 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
 FROM roles
 INNER JOIN permissions ON permissions.slug IN ('education.manage', 'education.view', 'education.forum')
-WHERE roles.slug IN ('master', 'admin', 'equipe');
+WHERE roles.slug IN ('master', 'admin', 'voluntario');

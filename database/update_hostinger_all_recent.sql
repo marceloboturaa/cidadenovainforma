@@ -378,7 +378,7 @@ VALUES
     ('JORNALISTA', 'jornalista', 40, NOW(), NOW()),
     ('COLUNISTA', 'colunista', 35, NOW(), NOW()),
     ('PROFESSOR', 'professor', 30, NOW(), NOW()),
-    ('EQUIPE', 'equipe', 20, NOW(), NOW()),
+    ('VOLUNTARIO', 'voluntario', 20, NOW(), NOW()),
     ('ESTUDANTE', 'estudante', 10, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
@@ -508,15 +508,13 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
 FROM roles
 INNER JOIN permissions ON permissions.slug IN (
-    'documents.view',
     'people.manage',
     'events.manage',
     'event_participants.manage',
-    'education.manage',
-    'education.view',
-    'education.forum'
+    'forum.view',
+    'forum.create'
 )
-WHERE roles.slug = 'equipe';
+WHERE roles.slug = 'voluntario';
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id

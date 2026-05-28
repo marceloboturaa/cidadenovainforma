@@ -21,7 +21,7 @@ class LibraryEventController
         Middleware::permission('events.manage');
 
         View::render('admin/library-events/index', [
-            'events' => LibraryEvent::all(),
+            'events' => LibraryEvent::all($this->volunteerScopeUserId()),
             'editing' => $this->editing(),
             'users' => User::activeForAccessLists(),
             'canDeactivate' => $this->currentUserIsMaster(),
@@ -95,7 +95,7 @@ class LibraryEventController
         View::render('admin/library-events/participants', [
             'event' => $event,
             'participants' => LibraryEvent::participants((int) $event['id']),
-            'people' => Person::all(trim((string) ($_GET['q'] ?? ''))),
+            'people' => Person::all(trim((string) ($_GET['q'] ?? '')), $this->volunteerScopeUserId()),
             'query' => trim((string) ($_GET['q'] ?? '')),
         ]);
     }
@@ -158,6 +158,13 @@ class LibraryEventController
             exit;
         }
 
+        $scopeUserId = $this->volunteerScopeUserId();
+        if ($scopeUserId !== null && (int) ($event['created_by'] ?? 0) !== $scopeUserId) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+
         return $event;
     }
 
@@ -182,6 +189,17 @@ class LibraryEventController
     {
         $user = Auth::user();
         return $user && ($user['role_slug'] ?? '') === 'master';
+    }
+
+    private function volunteerScopeUserId(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user || !Auth::hasRole(['voluntario', 'equipe']) || Auth::hasRole(['master', 'admin', 'admin-local', 'diretor'])) {
+            return null;
+        }
+
+        return (int) $user['id'];
     }
 
     private function uploadCover(): ?string

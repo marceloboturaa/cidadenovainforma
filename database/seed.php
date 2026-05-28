@@ -748,10 +748,12 @@ $roles = [
     ['COLUNISTA', 'colunista', 35],
     ['PROFESSOR', 'professor', 30],
     ['EDITOR LGPD', 'editor-lgpd', 25],
-    ['EQUIPE', 'equipe', 20],
+    ['VOLUNTARIO', 'voluntario', 20],
     ['VISUALIZADOR LGPD', 'visualizador-lgpd', 15],
     ['ESTUDANTE', 'estudante', 10],
 ];
+
+$pdo->exec("UPDATE roles SET name = 'VOLUNTARIO', slug = 'voluntario', level = 20, updated_at = NOW() WHERE slug = 'equipe' AND NOT EXISTS (SELECT 1 FROM (SELECT id FROM roles WHERE slug = 'voluntario') AS existing_voluntario)");
 
 $permissions = [
     ['Gerenciar usuários', 'users.manage'],
@@ -818,7 +820,7 @@ $grants = [
     'jornalista' => ['news.create'],
     'colunista' => ['news.create'],
     'professor' => ['education.teach', 'education.view', 'education.forum', 'forum.view', 'forum.create'],
-    'equipe' => ['documents.view', 'people.manage', 'events.manage', 'event_participants.manage', 'forum.view', 'forum.create'],
+    'voluntario' => ['people.manage', 'events.manage', 'event_participants.manage', 'forum.view', 'forum.create'],
     'editor-lgpd' => ['consent.view', 'consent.texts'],
     'visualizador-lgpd' => ['consent.view'],
     'estudante' => ['education.view', 'education.forum', 'forum.view', 'forum.create'],
@@ -870,7 +872,7 @@ $stmt = $pdo->prepare(
      FROM role_permissions
      INNER JOIN roles ON roles.id = role_permissions.role_id
      INNER JOIN permissions ON permissions.id = role_permissions.permission_id
-     WHERE roles.slug IN ("jornalista", "colunista", "equipe")
+     WHERE roles.slug IN ("jornalista", "colunista", "voluntario")
        AND permissions.slug IN ("education.manage", "education.teach")'
 );
 $stmt->execute();

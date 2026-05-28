@@ -6,7 +6,7 @@ use App\Core\Database;
 
 class Person
 {
-    public static function all(string $query = ''): array
+    public static function all(string $query = '', ?int $createdBy = null): array
     {
         $sql = 'SELECT people.*, creator.name AS creator_name
                 FROM people
@@ -17,6 +17,11 @@ class Person
         if ($query !== '') {
             $sql .= ' AND (people.full_name LIKE :query OR people.email LIKE :query OR people.whatsapp LIKE :query OR people.phone LIKE :query OR people.cpf LIKE :query)';
             $params['query'] = '%' . $query . '%';
+        }
+
+        if ($createdBy !== null) {
+            $sql .= ' AND people.created_by = :created_by';
+            $params['created_by'] = $createdBy;
         }
 
         $sql .= ' ORDER BY people.full_name ASC';

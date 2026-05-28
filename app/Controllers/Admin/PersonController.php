@@ -18,7 +18,7 @@ class PersonController
         $query = trim((string) ($_GET['q'] ?? ''));
 
         View::render('admin/people/index', [
-            'people' => Person::all($query),
+            'people' => Person::all($query, $this->volunteerScopeUserId()),
             'editing' => $this->editing(),
             'query' => $query,
             'canDeactivate' => $this->currentUserIsMaster(),
@@ -98,6 +98,13 @@ class PersonController
             exit;
         }
 
+        $scopeUserId = $this->volunteerScopeUserId();
+        if ($scopeUserId !== null && (int) ($person['created_by'] ?? 0) !== $scopeUserId) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+
         return $person;
     }
 
@@ -122,5 +129,16 @@ class PersonController
     {
         $user = Auth::user();
         return $user && ($user['role_slug'] ?? '') === 'master';
+    }
+
+    private function volunteerScopeUserId(): ?int
+    {
+        $user = Auth::user();
+
+        if (!$user || !Auth::hasRole(['voluntario', 'equipe']) || Auth::hasRole(['master', 'admin', 'admin-local', 'diretor'])) {
+            return null;
+        }
+
+        return (int) $user['id'];
     }
 }

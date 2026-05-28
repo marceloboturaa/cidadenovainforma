@@ -22,7 +22,7 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
 FROM roles
 INNER JOIN permissions ON permissions.slug IN ('forum.view', 'forum.create')
-WHERE roles.slug IN ('professor', 'estudante', 'equipe');
+WHERE roles.slug IN ('professor', 'estudante', 'voluntario');
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
@@ -34,7 +34,7 @@ DELETE role_permissions
 FROM role_permissions
 INNER JOIN roles ON roles.id = role_permissions.role_id
 INNER JOIN permissions ON permissions.id = role_permissions.permission_id
-WHERE roles.slug IN ('jornalista', 'colunista', 'equipe')
+WHERE roles.slug IN ('jornalista', 'colunista', 'voluntario')
   AND permissions.slug IN ('education.manage', 'education.teach');
 
 DELETE role_permissions
@@ -178,6 +178,6 @@ ON DUPLICATE KEY UPDATE can_view = VALUES(can_view), can_post = VALUES(can_post)
 INSERT INTO forum_area_roles (area_id, role_id, can_view, can_post, can_moderate, created_at)
 SELECT forum_areas.id, roles.id, 1, 1, IF(roles.slug IN ('master', 'admin', 'admin-local', 'diretor'), 1, 0), NOW()
 FROM forum_areas
-INNER JOIN roles ON roles.slug IN ('master', 'admin', 'admin-local', 'diretor', 'professor', 'equipe')
+INNER JOIN roles ON roles.slug IN ('master', 'admin', 'admin-local', 'diretor', 'professor', 'voluntario')
 WHERE forum_areas.slug = 'institucional-interno'
 ON DUPLICATE KEY UPDATE can_view = VALUES(can_view), can_post = VALUES(can_post), can_moderate = VALUES(can_moderate);

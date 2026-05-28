@@ -92,6 +92,6 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
 FROM roles
 INNER JOIN permissions ON permissions.slug IN ('people.manage', 'events.manage', 'event_participants.manage')
-WHERE roles.slug = 'equipe'
+WHERE roles.slug = 'voluntario'
 ON DUPLICATE KEY UPDATE
     role_id = role_id;
