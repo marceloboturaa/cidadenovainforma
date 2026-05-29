@@ -14,8 +14,18 @@ class News
         'archived' => 'Arquivada',
     ];
 
+    public const VISIBILITY_LISTED = 'listed';
+    public const VISIBILITY_LINK_ONLY = 'link_only';
+
+    public const VISIBILITY_LABELS = [
+        self::VISIBILITY_LISTED => 'Aparece no site',
+        self::VISIBILITY_LINK_ONLY => 'Somente por link',
+    ];
+
     public static function all(array $filters = []): array
     {
+        self::ensureSchema();
+
         $sql = 'SELECT news.*, users.name AS author_name, categories.name AS category_name
                 FROM news
                 INNER JOIN users ON users.id = news.author_id
@@ -56,6 +66,8 @@ class News
 
     public static function find(int $id): ?array
     {
+        self::ensureSchema();
+
         $stmt = Database::connection()->prepare(
             'SELECT news.*, users.name AS author_name, categories.name AS category_name
              FROM news
@@ -71,6 +83,8 @@ class News
 
     public static function findPublishedBySlug(string $slug): ?array
     {
+        self::ensureSchema();
+
         $stmt = Database::connection()->prepare(
             'SELECT news.*, users.name AS author_name, categories.name AS category_name, categories.slug AS category_slug
              FROM news
@@ -86,6 +100,7 @@ class News
 
     public static function publicList(array $filters = [], int $limit = 12): array
     {
+        self::ensureSchema();
         Tag::ensureSchema();
 
         $sql = 'SELECT DISTINCT news.*, users.name AS author_name, categories.name AS category_name, categories.slug AS category_slug
@@ -94,7 +109,8 @@ class News
                 LEFT JOIN categories ON categories.id = news.category_id
                 LEFT JOIN news_tags ON news_tags.news_id = news.id
                 LEFT JOIN tags ON tags.id = news_tags.tag_id
-                WHERE news.status = "published"';
+                WHERE news.status = "published"
+                  AND news.public_visibility = "listed"';
         $params = [];
 
         if (!empty($filters['category_id'])) {
@@ -154,6 +170,8 @@ class News
 
     public static function relatedToInstitutionPage(array $area, int $limit = 6): array
     {
+        self::ensureSchema();
+
         $tagSlugs = array_values(array_filter(array_unique(array_map('slugify', $area['related_tags'] ?? []))));
 
         if (!$tagSlugs) {
@@ -177,6 +195,7 @@ class News
                 INNER JOIN news_tags ON news_tags.news_id = news.id
                 INNER JOIN tags ON tags.id = news_tags.tag_id
                 WHERE news.status = "published"
+                  AND news.public_visibility = "listed"
                   AND tags.slug IN (' . implode(', ', $placeholders) . ')
                 GROUP BY news.id
                 ORDER BY relation_score DESC, news.published_at DESC, news.created_at DESC
@@ -190,11 +209,14 @@ class News
 
     public static function popular(int $limit = 5): array
     {
+        self::ensureSchema();
+
         $stmt = Database::connection()->prepare(
             'SELECT news.*, categories.name AS category_name
              FROM news
              LEFT JOIN categories ON categories.id = news.category_id
              WHERE news.status = "published"
+               AND news.public_visibility = "listed"
              ORDER BY news.views DESC, news.published_at DESC
              LIMIT ' . max(1, min(20, $limit))
         );
@@ -216,9 +238,9 @@ class News
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO news
-                (author_id, category_id, title, slug, summary, content, cover_image, cover_caption, type, status, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, published_at, created_at, updated_at)
+                (author_id, category_id, title, slug, summary, content, cover_image, cover_caption, type, status, public_visibility, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, published_at, created_at, updated_at)
              VALUES
-                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :cover_caption, :type, :status, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :published_at, NOW(), NOW())'
+                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :cover_caption, :type, :status, :public_visibility, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :published_at, NOW(), NOW())'
         );
 
         $stmt->execute(self::payload($data));
@@ -244,6 +266,7 @@ class News
                 cover_caption = :cover_caption,
                 type = :type,
                 status = :status,
+                public_visibility = :public_visibility,
                 featured = :featured,
                 urgent = :urgent,
                 is_archive = :is_archive,
@@ -345,6 +368,14 @@ class News
         if (!$coverCaptionColumn) {
             Database::connection()->exec('ALTER TABLE news ADD COLUMN cover_caption VARCHAR(255) NULL AFTER cover_image');
         }
+
+        $visibilityColumn = Database::connection()
+            ->query("SHOW COLUMNS FROM news LIKE 'public_visibility'")
+            ->fetch();
+
+        if (!$visibilityColumn) {
+            Database::connection()->exec("ALTER TABLE news ADD COLUMN public_visibility VARCHAR(20) NOT NULL DEFAULT 'listed' AFTER status");
+        }
     }
 
     private static function payload(array $data): array
@@ -360,6 +391,9 @@ class News
             'cover_caption' => trim($data['cover_caption'] ?? ''),
             'type' => $data['type'] ?? 'noticia',
             'status' => $data['status'] ?? 'draft',
+            'public_visibility' => in_array($data['public_visibility'] ?? '', array_keys(self::VISIBILITY_LABELS), true)
+                ? $data['public_visibility']
+                : self::VISIBILITY_LISTED,
             'featured' => (int) !empty($data['featured']),
             'urgent' => (int) !empty($data['urgent']),
             'is_archive' => (int) !empty($data['is_archive']),

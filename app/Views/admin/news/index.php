@@ -116,6 +116,9 @@
                         <?php if ($item['is_archive']): ?>
                             <span class="archive-admin-badge"><i class="bi bi-archive" aria-hidden="true"></i>Reprise</span>
                         <?php endif; ?>
+                        <?php if (($item['public_visibility'] ?? 'listed') === 'link_only'): ?>
+                            <span class="badge text-bg-secondary"><i class="bi bi-link-45deg" aria-hidden="true"></i>Somente por link</span>
+                        <?php endif; ?>
                     </div>
                     <dl class="news-admin-meta">
                         <div>

@@ -400,6 +400,7 @@ CREATE TABLE IF NOT EXISTS news (
     cover_image VARCHAR(255) NULL,
     type ENUM('noticia','reportagem','artigo','coluna') NOT NULL DEFAULT 'noticia',
     status ENUM('draft','pending','rejected','published','archived') NOT NULL DEFAULT 'draft',
+    public_visibility VARCHAR(20) NOT NULL DEFAULT 'listed',
     featured TINYINT(1) NOT NULL DEFAULT 0,
     urgent TINYINT(1) NOT NULL DEFAULT 0,
     is_archive TINYINT(1) NOT NULL DEFAULT 0,

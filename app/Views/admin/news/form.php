@@ -89,6 +89,21 @@ $status = $newsItem['status'] ?? 'draft';
             <input class="form-control" type="datetime-local" name="published_at" value="<?= !empty($newsItem['published_at']) ? e(date('Y-m-d\TH:i', strtotime($newsItem['published_at']))) : '' ?>">
         </div>
 
+        <?php if (\App\Core\Auth::can('news.manage') || \App\Core\Auth::can('news.approve')): ?>
+            <div class="config-block">
+                <h3>Modo de visualizacao</h3>
+                <label class="form-label" for="public_visibility">Visibilidade publica</label>
+                <select class="form-select" id="public_visibility" name="public_visibility">
+                    <?php foreach (($visibilityLabels ?? \App\Models\News::VISIBILITY_LABELS) as $key => $label): ?>
+                        <option value="<?= e($key) ?>" <?= selected($newsItem['public_visibility'] ?? \App\Models\News::VISIBILITY_LISTED, $key) ?>>
+                            <?= e($label) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="field-hint">"Somente por link" publica a materia, mas remove da home, busca, categorias, tags, reprise, relacionados e sitemap.</p>
+            </div>
+        <?php endif; ?>
+
         <div class="config-block">
             <h3>Imagem de capa</h3>
             <label class="form-label">Imagem de capa</label>

@@ -38,6 +38,7 @@ class NewsController
         View::render('admin/news/index', [
             'news' => News::all($filters),
             'statuses' => News::STATUS_LABELS,
+            'visibilityLabels' => News::VISIBILITY_LABELS,
             'filters' => $filters,
             'canApprove' => Auth::can('news.approve'),
         ]);
@@ -54,6 +55,7 @@ class NewsController
             'tags' => '',
             'action' => url('/admin/news'),
             'title' => 'Nova notícia',
+            'visibilityLabels' => News::VISIBILITY_LABELS,
         ]);
     }
 
@@ -92,6 +94,7 @@ class NewsController
             'tags' => Tag::namesForNews((int) $newsItem['id']),
             'action' => url('/admin/news/update?id=' . $newsItem['id']),
             'title' => 'Editar notícia',
+            'visibilityLabels' => News::VISIBILITY_LABELS,
         ]);
     }
 
@@ -104,6 +107,9 @@ class NewsController
 
         $contentMedia = $this->uploadContentMedia();
         $data = $this->validatedData($contentMedia);
+        if (!Auth::can('news.manage') && !Auth::can('news.approve')) {
+            $data['public_visibility'] = $newsItem['public_visibility'] ?? News::VISIBILITY_LISTED;
+        }
         $data['author_id'] = $this->authorIdFromRequest((int) $newsItem['author_id']);
         $data['slug'] = News::uniqueSlug($data['title'], (int) $newsItem['id']);
         $data['status'] = $this->nextStatusAfterEdit($newsItem);
@@ -276,6 +282,7 @@ class NewsController
             'featured' => Auth::can('news.manage') && isset($_POST['featured']),
             'urgent' => Auth::can('news.manage') && isset($_POST['urgent']),
             'is_archive' => isset($_POST['is_archive']),
+            'public_visibility' => $this->publicVisibilityFromRequest(),
             'original_published_at' => $_POST['original_published_at'] ?? null,
             'original_author' => $_POST['original_author'] ?? '',
             'original_source' => $_POST['original_source'] ?? '',
@@ -308,6 +315,17 @@ class NewsController
         }
 
         return 'draft';
+    }
+
+    private function publicVisibilityFromRequest(): string
+    {
+        if (!Auth::can('news.manage') && !Auth::can('news.approve')) {
+            return News::VISIBILITY_LISTED;
+        }
+
+        $visibility = $_POST['public_visibility'] ?? News::VISIBILITY_LISTED;
+
+        return array_key_exists($visibility, News::VISIBILITY_LABELS) ? $visibility : News::VISIBILITY_LISTED;
     }
 
     private function nextStatusAfterEdit(array $newsItem): string

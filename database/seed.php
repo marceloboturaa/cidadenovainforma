@@ -723,6 +723,7 @@ if (!is_dir($storageDocumentsDir)) {
 }
 
 $columns = [
+    'public_visibility' => "ALTER TABLE news ADD COLUMN public_visibility VARCHAR(20) NOT NULL DEFAULT 'listed' AFTER status",
     'is_archive' => "ALTER TABLE news ADD COLUMN is_archive TINYINT(1) NOT NULL DEFAULT 0 AFTER urgent",
     'original_published_at' => "ALTER TABLE news ADD COLUMN original_published_at DATE NULL AFTER is_archive",
     'original_author' => "ALTER TABLE news ADD COLUMN original_author VARCHAR(160) NULL AFTER original_published_at",

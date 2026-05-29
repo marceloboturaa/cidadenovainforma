@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Core\Database;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\News;
 use App\Models\Tag;
 
 class BackupController
@@ -244,6 +245,7 @@ class BackupController
 
     private function newsExportPayload(?array $newsIds = null): array
     {
+        News::ensureSchema();
         Tag::ensureSchema();
 
         $db = Database::connection();
@@ -375,11 +377,12 @@ class BackupController
     private function createImportedNews(array $news, ?int $categoryId): int
     {
         $db = Database::connection();
+        News::ensureSchema();
         $stmt = $db->prepare(
             'INSERT INTO news
-                (author_id, category_id, title, slug, summary, content, cover_image, type, status, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, views, published_at, created_at, updated_at)
+                (author_id, category_id, title, slug, summary, content, cover_image, type, status, public_visibility, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, views, published_at, created_at, updated_at)
              VALUES
-                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :type, :status, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :views, :published_at, :created_at, :updated_at)'
+                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :type, :status, :public_visibility, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :views, :published_at, :created_at, :updated_at)'
         );
         $stmt->execute($this->importNewsPayload($news, $categoryId));
 
@@ -402,6 +405,7 @@ class BackupController
                 cover_image = :cover_image,
                 type = :type,
                 status = :status,
+                public_visibility = :public_visibility,
                 featured = :featured,
                 urgent = :urgent,
                 is_archive = :is_archive,
@@ -431,6 +435,9 @@ class BackupController
             'cover_image' => $this->cleanImportedCover($news['cover_image'] ?? null),
             'type' => in_array($news['type'] ?? '', ['noticia', 'reportagem', 'artigo', 'coluna'], true) ? $news['type'] : 'noticia',
             'status' => in_array($news['status'] ?? '', ['draft', 'pending', 'rejected', 'published', 'archived'], true) ? $news['status'] : 'draft',
+            'public_visibility' => in_array($news['public_visibility'] ?? '', array_keys(News::VISIBILITY_LABELS), true)
+                ? $news['public_visibility']
+                : News::VISIBILITY_LISTED,
             'featured' => (int) !empty($news['featured']),
             'urgent' => (int) !empty($news['urgent']),
             'is_archive' => (int) !empty($news['is_archive']),
