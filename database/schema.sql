@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS library_events (
 CREATE TABLE IF NOT EXISTS library_event_participants (
     event_id BIGINT UNSIGNED NOT NULL,
     person_id BIGINT UNSIGNED NOT NULL,
-    status ENUM('inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'inscrito',
+    status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente',
     notes TEXT NULL,
     created_by BIGINT UNSIGNED NULL,
     created_at TIMESTAMP NULL,

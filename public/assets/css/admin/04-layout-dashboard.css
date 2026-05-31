@@ -680,6 +680,7 @@
 }
 
 .participant-metrics {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     margin-top: 4px;
     box-shadow: none;
 }

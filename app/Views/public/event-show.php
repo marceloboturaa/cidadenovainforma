@@ -6,6 +6,7 @@ $endTime = !empty($event['ends_at']) ? strtotime($event['ends_at']) : null;
 $isHappening = ($event['status'] ?? '') === 'aberto' && $startTime && $endTime && $startTime <= time() && $endTime >= time();
 $isPast = ($event['status'] ?? '') === 'encerrado' || (($endTime ?: $startTime) && ($endTime ?: $startTime) < time());
 $statusText = $isHappening ? 'Acontecendo' : ($isPast ? 'Evento realizado' : 'Próximo evento');
+$canRegister = ($event['status'] ?? '') === 'aberto' && !$isPast;
 $relatedLinks = [];
 foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as $line) {
     $line = trim($line);
@@ -43,6 +44,9 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 <p><?= e(text_excerpt($event['description'], 240)) ?></p>
             <?php endif; ?>
             <div class="event-show-actions">
+                <?php if ($canRegister): ?>
+                    <a class="public-event-more" href="#inscricao">Fazer inscrição</a>
+                <?php endif; ?>
                 <a class="public-event-more" href="<?= e($isPast ? url('/eventos/realizados') : url('/eventos/futuros')) ?>">
                     <?= $isPast ? 'Ver eventos realizados' : 'Ver eventos futuros' ?>
                 </a>
@@ -67,6 +71,100 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 </div>
             <?php else: ?>
                 <p class="event-detail-text">Mais informações serão divulgadas em breve.</p>
+            <?php endif; ?>
+
+            <?php if ($canRegister): ?>
+                <section class="event-registration-panel" id="inscricao">
+                    <div class="event-registration-heading">
+                        <span>Inscrição online</span>
+                        <h2>Preencha seus dados</h2>
+                        <p>A inscrição será enviada para conferência. A equipe confirma pelo painel antes de validar a participação.</p>
+                    </div>
+
+                    <?php if (!empty($registrationSuccess)): ?>
+                        <div class="public-form-alert is-success"><?= e($registrationSuccess) ?></div>
+                    <?php endif; ?>
+                    <?php if (!empty($registrationError)): ?>
+                        <div class="public-form-alert is-error"><?= e($registrationError) ?></div>
+                    <?php endif; ?>
+
+                    <form class="event-registration-form" method="post" action="<?= e(url('/evento/' . $event['id'] . '/inscricao')) ?>">
+                        <?= csrf_field() ?>
+                        <div class="field-wide">
+                            <label>Nome completo</label>
+                            <input name="full_name" required>
+                        </div>
+                        <div>
+                            <label>CPF</label>
+                            <input name="cpf">
+                        </div>
+                        <div>
+                            <label>Nascimento</label>
+                            <input name="birth_date" type="date">
+                        </div>
+                        <div>
+                            <label>WhatsApp</label>
+                            <input name="whatsapp" required>
+                        </div>
+                        <div>
+                            <label>Telefone</label>
+                            <input name="phone">
+                        </div>
+                        <div class="field-wide">
+                            <label>E-mail</label>
+                            <input name="email" type="email">
+                        </div>
+                        <div>
+                            <label>CEP</label>
+                            <input name="cep">
+                        </div>
+                        <div class="field-wide">
+                            <label>Endereço</label>
+                            <input name="address">
+                        </div>
+                        <div>
+                            <label>Número</label>
+                            <input name="address_number">
+                        </div>
+                        <div>
+                            <label>Bairro</label>
+                            <input name="district">
+                        </div>
+                        <div>
+                            <label>Cidade</label>
+                            <input name="city">
+                        </div>
+                        <div>
+                            <label>UF</label>
+                            <input name="state" maxlength="2">
+                        </div>
+                        <label class="event-registration-check field-wide">
+                            <input type="checkbox" name="is_minor" value="1">
+                            <span>Sou menor de idade ou estou inscrevendo menor de idade</span>
+                        </label>
+                        <div class="field-wide">
+                            <label>Nome do responsável</label>
+                            <input name="guardian_name">
+                        </div>
+                        <div>
+                            <label>Parentesco</label>
+                            <input name="guardian_relation">
+                        </div>
+                        <div>
+                            <label>Telefone do responsável</label>
+                            <input name="guardian_phone">
+                        </div>
+                        <label class="event-registration-check field-wide">
+                            <input type="checkbox" name="contact_authorized" value="1" required>
+                            <span>Autorizo o uso dos contatos informados para comunicação sobre esta inscrição.</span>
+                        </label>
+                        <div class="field-wide">
+                            <label>Observações</label>
+                            <textarea name="notes" rows="3"></textarea>
+                        </div>
+                        <button type="submit">Enviar inscrição para confirmação</button>
+                    </form>
+                </section>
             <?php endif; ?>
         </div>
 

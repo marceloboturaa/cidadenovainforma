@@ -263,6 +263,16 @@
         position: static;
     }
 
+    .event-registration-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .event-registration-form > div,
+    .event-registration-form > .field-wide,
+    .event-registration-form > .event-registration-check {
+        grid-column: span 1;
+    }
+
     .events-modern-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -560,6 +570,16 @@
     .public-event-more,
     .events-card-link {
         width: 100%;
+    }
+
+    .event-registration-form {
+        grid-template-columns: 1fr;
+    }
+
+    .event-registration-form > div,
+    .event-registration-form > .field-wide,
+    .event-registration-form > .event-registration-check {
+        grid-column: 1 / -1;
     }
 
     main {

@@ -16,10 +16,11 @@
         <span><?= e((string) count($participants)) ?> registro(s)</span>
     </div>
     <div class="events-admin-metrics participant-metrics">
+        <article><span>Pendentes</span><strong><?= e((string) ($participantStats['pendente'] ?? 0)) ?></strong><small>aguardando confirmação</small></article>
         <article><span>Inscritos</span><strong><?= e((string) ($participantStats['inscrito'] ?? 0)) ?></strong><small>aguardando presença</small></article>
         <article><span>Presentes</span><strong><?= e((string) ($participantStats['presente'] ?? 0)) ?></strong><small>confirmados no evento</small></article>
         <article><span>Ausentes</span><strong><?= e((string) ($participantStats['ausente'] ?? 0)) ?></strong><small>não compareceram</small></article>
-        <article><span>Cancelados</span><strong><?= e((string) ($participantStats['cancelado'] ?? 0)) ?></strong><small>inscrições canceladas</small></article>
+        <article><span>Cancelados</span><strong><?= e((string) ($participantStats['cancelado'] ?? 0)) ?></strong><small>não validados</small></article>
     </div>
 </section>
 
@@ -144,6 +145,7 @@
                 <h3>Status da inscrição</h3>
                 <label class="form-label">Situação</label>
                 <select class="form-select" name="status">
+                    <option value="pendente">Pendente</option>
                     <option value="inscrito">Inscrito</option>
                     <option value="presente">Presente</option>
                     <option value="ausente">Ausente</option>
@@ -191,6 +193,7 @@
                     <?= csrf_field() ?>
                     <input type="hidden" name="person_id" value="<?= e((string) $person['id']) ?>">
                     <select class="form-select form-select-sm" name="status">
+                        <option value="pendente">Pendente</option>
                         <option value="inscrito">Inscrito</option>
                         <option value="presente">Presente</option>
                         <option value="ausente">Ausente</option>
@@ -217,7 +220,7 @@
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($participant['full_name']) ?></strong>
-                        <span class="state-pill <?= $participant['status'] === 'presente' ? 'is-active' : 'is-muted' ?>"><?= e(ucfirst($participant['status'])) ?></span>
+                        <span class="state-pill <?= in_array($participant['status'], ['inscrito', 'presente'], true) ? 'is-active' : 'is-muted' ?>"><?= e(ucfirst($participant['status'])) ?></span>
                     </div>
                     <dl class="admin-list-meta">
                         <div><dt>WhatsApp</dt><dd><?= e($participant['whatsapp'] ?? '-') ?></dd></div>
@@ -230,7 +233,7 @@
                         <?= csrf_field() ?>
                         <input type="hidden" name="person_id" value="<?= e((string) $participant['person_id']) ?>">
                         <select class="form-select form-select-sm" name="status">
-                            <?php foreach (['inscrito' => 'Inscrito', 'presente' => 'Presente', 'ausente' => 'Ausente', 'cancelado' => 'Cancelado'] as $value => $label): ?>
+                            <?php foreach (['pendente' => 'Pendente', 'inscrito' => 'Inscrito', 'presente' => 'Presente', 'ausente' => 'Ausente', 'cancelado' => 'Cancelado'] as $value => $label): ?>
                                 <option value="<?= e($value) ?>" <?= selected($value, (string) $participant['status']) ?>><?= e($label) ?></option>
                             <?php endforeach; ?>
                         </select>

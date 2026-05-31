@@ -70,7 +70,7 @@ ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NUL
 CREATE TABLE IF NOT EXISTS library_event_participants (
     event_id BIGINT UNSIGNED NOT NULL,
     person_id BIGINT UNSIGNED NOT NULL,
-    status ENUM('inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'inscrito',
+    status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente',
     notes TEXT NULL,
     created_by BIGINT UNSIGNED NULL,
     created_at TIMESTAMP NULL,
@@ -79,6 +79,9 @@ CREATE TABLE IF NOT EXISTS library_event_participants (
     CONSTRAINT fk_event_participants_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
     CONSTRAINT fk_event_participants_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+
+ALTER TABLE library_event_participants
+    MODIFY status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente';
 
 INSERT INTO permissions (name, slug, created_at)
 VALUES

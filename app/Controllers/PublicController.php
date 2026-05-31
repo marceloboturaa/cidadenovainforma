@@ -2,7 +2,9 @@
 
 namespace App\Controllers;
 
+use App\Core\Csrf;
 use App\Core\Database;
+use App\Core\Session;
 use App\Core\View;
 use App\Models\Category;
 use App\Models\Consent;
@@ -13,6 +15,7 @@ use App\Models\InstitutionPage;
 use App\Models\LibraryEvent;
 use App\Models\MenuItem;
 use App\Models\News;
+use App\Models\Person;
 use App\Models\Tag;
 
 class PublicController
@@ -138,7 +141,63 @@ class PublicController
             'canonicalUrl' => url('/evento/' . $event['id']),
             'ogType' => 'article',
             'ogImage' => !empty($event['cover_image']) ? media_url($event['cover_image']) : null,
+            'registrationSuccess' => Session::flash('registration_success'),
+            'registrationError' => Session::flash('registration_error'),
         ], 'public');
+    }
+
+    public function submitEventRegistration(): void
+    {
+        $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
+        $event = $id ? LibraryEvent::findPublic((int) $id) : null;
+
+        if (!$event || ($event['status'] ?? '') !== 'aberto') {
+            http_response_code(404);
+            View::render('errors/404', [], 'public');
+            return;
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('registration_error', 'Sessão expirada. Atualize a página e tente novamente.');
+            redirect('/evento/' . $event['id'] . '#inscricao');
+        }
+
+        $name = trim((string) ($_POST['full_name'] ?? ''));
+        $contact = trim((string) ($_POST['whatsapp'] ?? '') . (string) ($_POST['phone'] ?? '') . (string) ($_POST['email'] ?? ''));
+
+        if ($name === '' || $contact === '') {
+            Session::flash('registration_error', 'Informe seu nome e pelo menos um contato.');
+            redirect('/evento/' . $event['id'] . '#inscricao');
+        }
+
+        if (empty($_POST['contact_authorized'])) {
+            Session::flash('registration_error', 'Autorize o contato para que a equipe possa confirmar sua inscrição.');
+            redirect('/evento/' . $event['id'] . '#inscricao');
+        }
+
+        $person = Person::findByIdentity($_POST['cpf'] ?? null, $_POST['email'] ?? null, $_POST['whatsapp'] ?? null);
+        $personId = $person ? (int) $person['id'] : Person::create(array_merge($_POST, [
+            'contact_authorized' => 1,
+            'created_by' => null,
+            'updated_by' => null,
+        ]));
+
+        $existing = LibraryEvent::participant((int) $event['id'], $personId);
+        if ($existing) {
+            Session::flash('registration_success', 'Sua inscrição já está registrada com status: ' . ucfirst((string) $existing['status']) . '.');
+            redirect('/evento/' . $event['id'] . '#inscricao');
+        }
+
+        LibraryEvent::attachParticipant(
+            (int) $event['id'],
+            $personId,
+            'pendente',
+            'Inscrição enviada pela página pública. Aguardando confirmação do master/admin.',
+            null
+        );
+
+        Session::flash('registration_success', 'Inscrição enviada. Ela ficará pendente até a confirmação da equipe.');
+        redirect('/evento/' . $event['id'] . '#inscricao');
     }
 
     public function institutionArea(): void

@@ -90,7 +90,7 @@ class LibraryEvent
             "CREATE TABLE IF NOT EXISTS library_event_participants (
                 event_id BIGINT UNSIGNED NOT NULL,
                 person_id BIGINT UNSIGNED NOT NULL,
-                status ENUM('inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'inscrito',
+                status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente',
                 notes TEXT NULL,
                 created_by BIGINT UNSIGNED NULL,
                 created_at TIMESTAMP NULL,
@@ -100,6 +100,11 @@ class LibraryEvent
                 CONSTRAINT fk_event_participants_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
             ) ENGINE=InnoDB"
         );
+
+        $participantStatus = $db->query("SHOW COLUMNS FROM library_event_participants LIKE 'status'")->fetch();
+        if ($participantStatus && !str_contains((string) ($participantStatus['Type'] ?? ''), "'pendente'")) {
+            $db->exec("ALTER TABLE library_event_participants MODIFY status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente'");
+        }
 
         $done = true;
     }
@@ -280,12 +285,24 @@ class LibraryEvent
         );
         $stmt->execute(['event_id' => $eventId]);
 
-        $stats = ['inscrito' => 0, 'presente' => 0, 'ausente' => 0, 'cancelado' => 0];
+        $stats = ['pendente' => 0, 'inscrito' => 0, 'presente' => 0, 'ausente' => 0, 'cancelado' => 0];
         foreach ($stmt->fetchAll() as $row) {
             $stats[(string) $row['status']] = (int) $row['total'];
         }
 
         return $stats;
+    }
+
+    public static function participant(int $eventId, int $personId): ?array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM library_event_participants WHERE event_id = :event_id AND person_id = :person_id LIMIT 1'
+        );
+        $stmt->execute(['event_id' => $eventId, 'person_id' => $personId]);
+
+        return $stmt->fetch() ?: null;
     }
 
     public static function create(array $data): int
@@ -352,7 +369,7 @@ class LibraryEvent
         $stmt->execute([
             'event_id' => $eventId,
             'person_id' => $personId,
-            'status' => in_array($status, ['inscrito', 'presente', 'ausente', 'cancelado'], true) ? $status : 'inscrito',
+            'status' => in_array($status, ['pendente', 'inscrito', 'presente', 'ausente', 'cancelado'], true) ? $status : 'pendente',
             'notes' => self::nullable($notes),
             'created_by' => $createdBy,
         ]);

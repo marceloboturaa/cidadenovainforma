@@ -48,6 +48,42 @@ class Person
         return $stmt->fetch() ?: null;
     }
 
+    public static function findByIdentity(?string $cpf, ?string $email, ?string $whatsapp): ?array
+    {
+        self::ensureSchema();
+
+        $conditions = [];
+        $params = [];
+
+        $cpf = self::nullable($cpf);
+        $email = self::nullable($email);
+        $whatsapp = self::nullable($whatsapp);
+
+        if ($cpf) {
+            $conditions[] = 'cpf = :cpf';
+            $params['cpf'] = $cpf;
+        }
+        if ($email) {
+            $conditions[] = 'email = :email';
+            $params['email'] = $email;
+        }
+        if ($whatsapp) {
+            $conditions[] = 'whatsapp = :whatsapp';
+            $params['whatsapp'] = $whatsapp;
+        }
+
+        if (!$conditions) {
+            return null;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM people WHERE active = 1 AND (' . implode(' OR ', $conditions) . ') ORDER BY updated_at DESC LIMIT 1'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function create(array $data): int
     {
         self::ensureSchema();
