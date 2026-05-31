@@ -120,10 +120,10 @@ $eventSlotsText = function (array $event): string {
                     <h3><?= e($event['title']) ?></h3>
                     <p><?= e(text_excerpt($event['description'] ?? '', 140)) ?></p>
                     <dl>
-                        <?php if (!empty($event['location'])): ?>
+                        <?php if (!empty($event['public_show_location']) && !empty($event['location'])): ?>
                             <div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div>
                         <?php endif; ?>
-                        <?php if (!empty($event['capacity'])): ?>
+                        <?php if (!empty($event['public_show_capacity']) && !empty($event['capacity'])): ?>
                             <div><dt>Vagas</dt><dd><?= e($eventSlotsText($event)) ?></dd></div>
                         <?php endif; ?>
                     </dl>

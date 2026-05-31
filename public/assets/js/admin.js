@@ -455,6 +455,8 @@
         const cards = Array.from(directory.querySelectorAll('[data-registration-card]'));
         const empty = directory.querySelector('[data-registration-directory-empty]');
         const count = document.querySelector('[data-registration-directory-count]');
+        const filterButtons = Array.from(document.querySelectorAll('[data-registration-filter]'));
+        let activeFilter = 'available';
 
         const applyFilter = () => {
             const term = normalizeSearch(searchInput.value);
@@ -462,7 +464,9 @@
 
             cards.forEach((card) => {
                 const haystack = normalizeSearch(card.dataset.registrationSearch || card.textContent || '');
-                const matches = term === '' || haystack.includes(term);
+                const type = card.dataset.registrationType || '';
+                const matchesType = activeFilter === 'all' || activeFilter === 'available' || type === activeFilter;
+                const matches = matchesType && (term === '' || haystack.includes(term));
                 card.classList.toggle('is-hidden', !matches);
                 if (matches) {
                     visible += 1;
@@ -478,6 +482,13 @@
         };
 
         searchInput.addEventListener('input', applyFilter);
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                activeFilter = button.dataset.registrationFilter || 'available';
+                filterButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+                applyFilter();
+            });
+        });
         applyFilter();
     }
 

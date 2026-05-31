@@ -209,8 +209,24 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             </select>
                         </div>
                         <label class="person-toggle-row">
-                            <input class="form-check-input" type="checkbox" name="registration_enabled" value="1" <?= checked((bool) ($editing['registration_enabled'] ?? true)) ?>>
+                            <input class="form-check-input" type="checkbox" name="registration_enabled" value="1" <?= checked((bool) ($editing['registration_enabled'] ?? false)) ?>>
                             <span><strong>Ativar inscrição pública</strong><small>Se desligar, o formulário de inscrição não aparece na página do evento.</small></span>
+                        </label>
+                        <label class="person-toggle-row">
+                            <input class="form-check-input" type="checkbox" name="public_show_location" value="1" <?= checked((bool) ($editing['public_show_location'] ?? true)) ?>>
+                            <span><strong>Mostrar local no público</strong><small>Exibe o espaço onde será realizado.</small></span>
+                        </label>
+                        <label class="person-toggle-row">
+                            <input class="form-check-input" type="checkbox" name="public_show_address" value="1" <?= checked((bool) ($editing['public_show_address'] ?? true)) ?>>
+                            <span><strong>Mostrar endereço no público</strong><small>Exibe CEP e rua/endereço.</small></span>
+                        </label>
+                        <label class="person-toggle-row">
+                            <input class="form-check-input" type="checkbox" name="public_show_capacity" value="1" <?= checked((bool) ($editing['public_show_capacity'] ?? true)) ?>>
+                            <span><strong>Mostrar vagas no público</strong><small>Exibe vagas livres, ocupadas e totais.</small></span>
+                        </label>
+                        <label class="person-toggle-row">
+                            <input class="form-check-input" type="checkbox" name="public_show_responsible" value="1" <?= checked((bool) ($editing['public_show_responsible'] ?? true)) ?>>
+                            <span><strong>Mostrar responsável no público</strong><small>Exibe o nome do responsável pelo evento.</small></span>
                         </label>
                     </div>
 
@@ -307,6 +323,7 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <div><dt>Endereço</dt><dd><?= e($event['event_address'] ?: '-') ?></dd></div>
                             <div><dt>Vagas</dt><dd><?= $capacity ? e((string) $remaining) . ' livres · ' . e((string) $participants) . ' ocupadas · ' . e((string) $capacity) . ' totais' : e((string) $participants) . ' inscrito(s)' ?></dd></div>
                             <div><dt>Inscrição</dt><dd><?= !empty($event['registration_enabled']) ? 'Ativa' : 'Desativada' ?></dd></div>
+                            <div><dt>Público</dt><dd><?= !empty($event['public_show_capacity']) ? 'Vagas visíveis' : 'Vagas ocultas' ?></dd></div>
                             <div><dt>Responsável</dt><dd><?= e($event['responsible_name'] ?? '-') ?></dd></div>
                         </dl>
                     </div>

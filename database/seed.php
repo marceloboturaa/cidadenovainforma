@@ -110,7 +110,11 @@ $pdo->exec(
         event_address VARCHAR(255) NULL,
         cover_image VARCHAR(255) NULL,
         capacity INT UNSIGNED NULL,
-        registration_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        registration_enabled TINYINT(1) NOT NULL DEFAULT 0,
+        public_show_location TINYINT(1) NOT NULL DEFAULT 1,
+        public_show_address TINYINT(1) NOT NULL DEFAULT 1,
+        public_show_capacity TINYINT(1) NOT NULL DEFAULT 1,
+        public_show_responsible TINYINT(1) NOT NULL DEFAULT 1,
         responsible_user_id BIGINT UNSIGNED NULL,
         status ENUM('aberto','encerrado','cancelado') NOT NULL DEFAULT 'aberto',
         notes TEXT NULL,
@@ -150,7 +154,11 @@ foreach ($peopleColumns as $column => $sql) {
 $eventColumns = [
     'event_cep' => "ALTER TABLE library_events ADD COLUMN event_cep VARCHAR(12) NULL AFTER location",
     'event_address' => "ALTER TABLE library_events ADD COLUMN event_address VARCHAR(255) NULL AFTER location",
-    'registration_enabled' => "ALTER TABLE library_events ADD COLUMN registration_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER capacity",
+    'registration_enabled' => "ALTER TABLE library_events ADD COLUMN registration_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER capacity",
+    'public_show_location' => "ALTER TABLE library_events ADD COLUMN public_show_location TINYINT(1) NOT NULL DEFAULT 1 AFTER registration_enabled",
+    'public_show_address' => "ALTER TABLE library_events ADD COLUMN public_show_address TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_location",
+    'public_show_capacity' => "ALTER TABLE library_events ADD COLUMN public_show_capacity TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_address",
+    'public_show_responsible' => "ALTER TABLE library_events ADD COLUMN public_show_responsible TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_capacity",
     'cover_image' => "ALTER TABLE library_events ADD COLUMN cover_image VARCHAR(255) NULL AFTER location",
 ];
 

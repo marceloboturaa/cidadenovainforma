@@ -25,10 +25,18 @@ $capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
 $occupiedSlots = (int) (($participantStats['pendente'] ?? 0) + ($participantStats['inscrito'] ?? 0) + ($participantStats['presente'] ?? 0) + ($participantStats['ausente'] ?? 0));
 $remainingSlots = $capacity ? max(0, $capacity - $occupiedSlots) : null;
 $slotPercent = $capacity ? min(100, (int) round(($occupiedSlots / $capacity) * 100)) : 0;
-$userEmails = array_filter(array_map(fn (array $user): string => strtolower((string) ($user['email'] ?? '')), $users ?? []));
-$directoryPeople = array_values(array_filter($people ?? [], function (array $person) use ($userEmails): bool {
+$users = array_values(array_filter($users ?? [], fn (array $user): bool => ($user['role_slug'] ?? '') !== 'master'));
+$participantIds = array_map(fn (array $participant): int => (int) ($participant['person_id'] ?? 0), $participants ?? []);
+$participantEmails = array_filter(array_map(fn (array $participant): string => strtolower((string) ($participant['email'] ?? '')), $participants ?? []));
+$userEmails = array_filter(array_map(fn (array $user): string => strtolower((string) ($user['email'] ?? '')), $users));
+$directoryPeople = array_values(array_filter($people ?? [], function (array $person) use ($userEmails, $participantIds): bool {
     $email = strtolower((string) ($person['email'] ?? ''));
-    return $email === '' || !in_array($email, $userEmails, true);
+    return !in_array((int) ($person['id'] ?? 0), $participantIds, true)
+        && ($email === '' || !in_array($email, $userEmails, true));
+}));
+$directoryUsers = array_values(array_filter($users, function (array $user) use ($participantEmails): bool {
+    $email = strtolower((string) ($user['email'] ?? ''));
+    return $email === '' || !in_array($email, $participantEmails, true);
 }));
 ?>
 
@@ -186,7 +194,7 @@ $directoryPeople = array_values(array_filter($people ?? [], function (array $per
                 </label>
                 <label class="person-toggle-row">
                     <input class="form-check-input" type="checkbox" name="image_authorized" value="1">
-                    <span><strong>Autoriza uso de imagem</strong><small>Permite fotos e vídeos em divulgação institucional.</small></span>
+                    <span><strong>Autoriza uso de imagem</strong><small>Nos termos da LGPD, permite fotos e vídeos em divulgação institucional.</small></span>
                 </label>
                 <label class="person-toggle-row">
                     <input class="form-check-input" type="checkbox" name="is_minor" value="1" data-minor-toggle>
@@ -209,11 +217,17 @@ $directoryPeople = array_values(array_filter($people ?? [], function (array $per
     </div>
     <div class="registration-directory-tools">
         <input class="form-control" type="search" placeholder="Pesquisar por nome, e-mail, CPF, WhatsApp ou tipo de cadastro" data-registration-directory-search>
-        <span><strong data-registration-directory-count><?= e((string) (count($users ?? []) + count($directoryPeople))) ?></strong> resultado(s)</span>
+        <div class="registration-directory-filters" role="group" aria-label="Filtrar cadastros">
+            <button type="button" class="is-active" data-registration-filter="available">Disponíveis</button>
+            <button type="button" data-registration-filter="user">Usuários</button>
+            <button type="button" data-registration-filter="person">Pessoas</button>
+            <button type="button" data-registration-filter="all">Todos</button>
+        </div>
+        <span><strong data-registration-directory-count><?= e((string) (count($directoryUsers) + count($directoryPeople))) ?></strong> resultado(s)</span>
     </div>
     <div class="admin-card-list compact-list registration-directory-list" data-registration-directory>
-        <?php foreach (($users ?? []) as $user): ?>
-            <article class="admin-list-card internal-list-card registered-user-card" data-registration-card data-registration-search="<?= e(($user['name'] ?? '') . ' ' . ($user['email'] ?? '') . ' usuario estudante login ' . ($user['role_name'] ?? '')) ?>">
+        <?php foreach ($directoryUsers as $user): ?>
+            <article class="admin-list-card internal-list-card registered-user-card" data-registration-card data-registration-type="user" data-registration-search="<?= e(($user['name'] ?? '') . ' ' . ($user['email'] ?? '') . ' usuario estudante login ' . ($user['role_name'] ?? '')) ?>">
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($user['name']) ?></strong>
@@ -239,7 +253,7 @@ $directoryPeople = array_values(array_filter($people ?? [], function (array $per
             </article>
         <?php endforeach; ?>
         <?php foreach ($directoryPeople as $person): ?>
-            <article class="admin-list-card internal-list-card existing-person-card" data-registration-card data-registration-search="<?= e(($person['full_name'] ?? '') . ' ' . ($person['email'] ?? '') . ' ' . ($person['cpf'] ?? '') . ' ' . ($person['whatsapp'] ?? '') . ' pessoa cadastro interno') ?>">
+            <article class="admin-list-card internal-list-card existing-person-card" data-registration-card data-registration-type="person" data-registration-search="<?= e(($person['full_name'] ?? '') . ' ' . ($person['email'] ?? '') . ' ' . ($person['cpf'] ?? '') . ' ' . ($person['whatsapp'] ?? '') . ' pessoa cadastro interno') ?>">
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($person['full_name']) ?></strong>
@@ -264,7 +278,7 @@ $directoryPeople = array_values(array_filter($people ?? [], function (array $per
                 </form>
             </article>
         <?php endforeach; ?>
-        <?php if (empty($users) && empty($directoryPeople)): ?>
+        <?php if (empty($directoryUsers) && empty($directoryPeople)): ?>
             <div class="empty-state">Nenhum cadastro encontrado.</div>
         <?php endif; ?>
         <div class="empty-state" data-registration-directory-empty hidden>Nenhum cadastro encontrado para esta busca.</div>

@@ -177,7 +177,11 @@ CREATE TABLE IF NOT EXISTS library_events (
     event_address VARCHAR(255) NULL,
     cover_image VARCHAR(255) NULL,
     capacity INT UNSIGNED NULL,
-    registration_enabled TINYINT(1) NOT NULL DEFAULT 1,
+    registration_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    public_show_location TINYINT(1) NOT NULL DEFAULT 1,
+    public_show_address TINYINT(1) NOT NULL DEFAULT 1,
+    public_show_capacity TINYINT(1) NOT NULL DEFAULT 1,
+    public_show_responsible TINYINT(1) NOT NULL DEFAULT 1,
     responsible_user_id BIGINT UNSIGNED NULL,
     status ENUM('aberto','encerrado','cancelado') NOT NULL DEFAULT 'aberto',
     notes TEXT NULL,
@@ -580,7 +584,11 @@ ALTER TABLE people ADD COLUMN IF NOT EXISTS image_authorized TINYINT(1) NOT NULL
 
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS event_cep VARCHAR(12) NULL AFTER location;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS event_address VARCHAR(255) NULL AFTER location;
-ALTER TABLE library_events ADD COLUMN IF NOT EXISTS registration_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER capacity;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS registration_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER capacity;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_location TINYINT(1) NOT NULL DEFAULT 1 AFTER registration_enabled;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_address TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_location;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_capacity TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_address;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_responsible TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_capacity;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;
 
 -- Renomeia o menu publico antigo de Acervo para Reprise.

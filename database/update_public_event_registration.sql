@@ -13,7 +13,19 @@ ALTER TABLE library_events
     ADD COLUMN IF NOT EXISTS event_address VARCHAR(255) NULL AFTER location;
 
 ALTER TABLE library_events
-    ADD COLUMN IF NOT EXISTS registration_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER capacity;
+    ADD COLUMN IF NOT EXISTS registration_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER capacity;
+
+ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS public_show_location TINYINT(1) NOT NULL DEFAULT 1 AFTER registration_enabled;
+
+ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS public_show_address TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_location;
+
+ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS public_show_capacity TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_address;
+
+ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS public_show_responsible TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_capacity;
 
 INSERT INTO permissions (name, slug, created_at)
 VALUES

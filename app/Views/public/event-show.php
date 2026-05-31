@@ -10,6 +10,10 @@ $canRegister = ($event['status'] ?? '') === 'aberto' && !$isPast && !empty($even
 $remainingSlots = $remainingSlots ?? null;
 $capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
 $occupiedSlots = $capacity ? max(0, $capacity - (int) ($remainingSlots ?? $capacity)) : null;
+$showLocation = !empty($event['public_show_location']);
+$showAddress = !empty($event['public_show_address']);
+$showCapacity = !empty($event['public_show_capacity']);
+$showResponsible = !empty($event['public_show_responsible']);
 $shareUrl = url('/evento/' . $event['id']);
 $shareText = 'Confira este evento: ' . ($event['title'] ?? 'Evento');
 $shareLinks = [
@@ -184,7 +188,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                         </label>
                         <label class="event-registration-check event-image-consent field-wide">
                             <input type="checkbox" name="image_authorized" value="1">
-                            <span>Autorizo o uso gratuito da minha imagem em fotos e vídeos deste evento para divulgação institucional do Cidade Nova Informa.</span>
+                            <span>Autorizo, nos termos da LGPD, o uso gratuito da minha imagem em fotos e vídeos deste evento para divulgação institucional do Cidade Nova Informa.</span>
                         </label>
                         <label class="event-registration-check event-login-option field-wide">
                             <input type="checkbox" name="create_login" value="1" data-public-login-toggle>
@@ -224,11 +228,11 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
             <dl class="event-info-color-list">
                 <div class="info-date"><dt>Data e horário</dt><dd><?= e($startsAt) ?></dd></div>
                 <?php if ($endsAt): ?><div class="info-date"><dt>Encerramento</dt><dd><?= e($endsAt) ?></dd></div><?php endif; ?>
-                <?php if (!empty($event['location'])): ?><div class="info-place"><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
-                <?php if (!empty($event['event_cep'])): ?><div class="info-address"><dt>CEP</dt><dd><?= e($event['event_cep']) ?></dd></div><?php endif; ?>
-                <?php if (!empty($event['event_address'])): ?><div class="info-address"><dt>Endereço</dt><dd><?= e($event['event_address']) ?></dd></div><?php endif; ?>
-                <?php if ($capacity): ?><div class="info-slots"><dt>Vagas</dt><dd><?= e((string) $occupiedSlots) ?> ocupada(s) / <?= e((string) $capacity) ?> total<?= $remainingSlots !== null ? ' · ' . e((string) $remainingSlots) . ' restante(s)' : '' ?></dd></div><?php endif; ?>
-                <?php if (!empty($event['responsible_name'])): ?><div class="info-person"><dt>Responsável</dt><dd><?= e($event['responsible_name']) ?></dd></div><?php endif; ?>
+                <?php if ($showLocation && !empty($event['location'])): ?><div class="info-place"><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
+                <?php if ($showAddress && !empty($event['event_cep'])): ?><div class="info-address"><dt>CEP</dt><dd><?= e($event['event_cep']) ?></dd></div><?php endif; ?>
+                <?php if ($showAddress && !empty($event['event_address'])): ?><div class="info-address"><dt>Endereço</dt><dd><?= e($event['event_address']) ?></dd></div><?php endif; ?>
+                <?php if ($showCapacity && $capacity): ?><div class="info-slots"><dt>Vagas</dt><dd><strong><?= e((string) $remainingSlots) ?> livre(s)</strong><span><?= e((string) $occupiedSlots) ?> ocupada(s) de <?= e((string) $capacity) ?> total</span></dd></div><?php endif; ?>
+                <?php if ($showResponsible && !empty($event['responsible_name'])): ?><div class="info-person"><dt>Responsável</dt><dd><?= e($event['responsible_name']) ?></dd></div><?php endif; ?>
                 <div class="info-status"><dt>Status</dt><dd><?= e($statusText) ?></dd></div>
             </dl>
 

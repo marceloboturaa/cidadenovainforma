@@ -64,10 +64,10 @@ $eventStatus = function (array $event): string {
             <p><?= e(text_excerpt($featuredEvent['description'] ?? '', 230)) ?></p>
             <dl class="events-info-strip">
                 <div><dt>Quando</dt><dd><?= e($formatDate($featuredEvent['starts_at'] ?? null)) ?></dd></div>
-                <?php if (!empty($featuredEvent['location'])): ?>
+                <?php if (!empty($featuredEvent['public_show_location']) && !empty($featuredEvent['location'])): ?>
                     <div><dt>Local</dt><dd><?= e($featuredEvent['location']) ?></dd></div>
                 <?php endif; ?>
-                <?php if (!empty($featuredEvent['capacity'])): ?>
+                <?php if (!empty($featuredEvent['public_show_capacity']) && !empty($featuredEvent['capacity'])): ?>
                     <div><dt>Vagas</dt><dd><?= e($slotsText($featuredEvent)) ?></dd></div>
                 <?php endif; ?>
             </dl>
@@ -100,8 +100,8 @@ $eventStatus = function (array $event): string {
                             <p><?= e(text_excerpt($event['description'] ?? '', 150)) ?></p>
                             <dl>
                                 <div><dt>Quando</dt><dd><?= e($formatDate($event['starts_at'] ?? null)) ?></dd></div>
-                                <?php if (!empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
-                                <?php if (!empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
+                                <?php if (!empty($event['public_show_location']) && !empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
+                                <?php if (!empty($event['public_show_capacity']) && !empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
                             </dl>
                             <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Detalhes</a>
                         </div>
@@ -142,8 +142,8 @@ $eventStatus = function (array $event): string {
                             <p><?= e(text_excerpt($event['description'] ?? '', 150)) ?></p>
                         </div>
                         <dl>
-                            <?php if (!empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
-                            <?php if (!empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
+                            <?php if (!empty($event['public_show_location']) && !empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
+                            <?php if (!empty($event['public_show_capacity']) && !empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
                         </dl>
                         <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Ver registro</a>
                     </article>

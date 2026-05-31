@@ -70,14 +70,16 @@ class SimplePdf
 
         $add($title, 18, 22);
         $add('Evento: ' . $eventTitle, 12, 18);
-        $add('Gerado em ' . date('d/m/Y H:i') . ' | Total: ' . $count . ' inscricao(oes)', 9, 16);
+        $add('Gerado em ' . date('d/m/Y H:i') . ' | Total: ' . $count . ' inscrição(ões)', 9, 16);
         if (!empty($event['starts_at'])) {
-            $add('Data: ' . date('d/m/Y H:i', strtotime((string) $event['starts_at'])) . ' | Local: ' . (($event['location'] ?? '') ?: '-'), 9, 16);
+            $add('Data: ' . date('d/m/Y H:i', strtotime((string) $event['starts_at'])), 9, 13);
         }
+        $add('Local: ' . (($event['location'] ?? '') ?: '-'), 9, 13);
+        $add('Endereço: ' . (($event['event_address'] ?? '') ?: '-'), 9, 16);
         $rule();
 
         if (!$participants) {
-            $add('Nenhuma inscricao encontrada.', 10, 16);
+            $add('Nenhuma inscrição encontrada.', 10, 16);
         }
 
         foreach ($participants as $index => $participant) {
@@ -91,14 +93,15 @@ class SimplePdf
                 ? trim((string) (($participant['guardian_name'] ?? '-') . ' | ' . ($participant['guardian_phone'] ?? '-')), ' |')
                 : '-';
 
-            $add(($index + 1) . '. ' . $name . '  [' . $status . ']', 11, 16);
-            $add('CPF: ' . (($participant['cpf'] ?? '') ?: '-') . ' | Nascimento: ' . (($participant['birth_date'] ?? '') ?: '-') . ' | Contato: ' . $contact, 8, 12);
-            $add('E-mail: ' . $email . ' | Bairro/Cidade: ' . $city . ' | Imagem autorizada: ' . $image, 8, 12);
+            $add(($index + 1) . '. ' . $name . '  [' . $status . ']', 11, 17);
+            $add('CPF: ' . (($participant['cpf'] ?? '') ?: '-') . '    Nascimento: ' . (($participant['birth_date'] ?? '') ?: '-') . '    Contato: ' . $contact, 8, 12);
+            $add('E-mail: ' . $email, 8, 12);
+            $add('Bairro/Cidade: ' . $city . '    Uso de imagem: ' . $image, 8, 12);
             if (!empty($participant['is_minor'])) {
-                $add('Responsavel: ' . $guardian . ' | Parentesco: ' . (($participant['guardian_relation'] ?? '') ?: '-'), 8, 12);
+                $add('Responsável: ' . $guardian . '    Parentesco: ' . (($participant['guardian_relation'] ?? '') ?: '-'), 8, 12);
             }
             if (!empty($participant['notes'])) {
-                foreach (self::wrap('Obs.: ' . (string) $participant['notes'], 100) as $line) {
+                foreach (self::wrap('Obs.: ' . (string) $participant['notes'], 96) as $line) {
                     $add($line, 8, 11);
                 }
             }
@@ -131,7 +134,7 @@ class SimplePdf
 
         $objects[] = '<< /Type /Catalog /Pages 2 0 R >>';
         $objects[] = '';
-        $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+        $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
 
         foreach ($pages as $page) {
             $content = "";
@@ -178,7 +181,7 @@ class SimplePdf
 
     private static function escape(string $text): string
     {
-        $encoded = iconv('UTF-8', 'ISO-8859-1//TRANSLIT//IGNORE', $text);
+        $encoded = iconv('UTF-8', 'WINDOWS-1252//TRANSLIT//IGNORE', $text);
         $encoded = $encoded !== false ? $encoded : $text;
 
         return str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $encoded);

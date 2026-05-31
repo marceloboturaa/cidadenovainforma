@@ -581,6 +581,22 @@
     background: #ffffff;
 }
 
+.event-info-color-list .info-slots dd {
+    display: grid;
+    gap: 3px;
+}
+
+.event-info-color-list .info-slots strong {
+    color: #991b1b;
+    font-size: 1.06rem;
+}
+
+.event-info-color-list .info-slots span {
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
 .event-share-box {
     display: grid;
     gap: 10px;
