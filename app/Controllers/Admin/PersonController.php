@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Core\Logger;
 use App\Core\Middleware;
 use App\Core\Session;
+use App\Core\SimplePdf;
 use App\Core\View;
 use App\Models\Person;
 
@@ -82,6 +83,67 @@ class PersonController
         redirect('/admin/people');
     }
 
+    public function export(): void
+    {
+        Middleware::permission('people.manage');
+
+        $format = strtolower((string) ($_GET['format'] ?? 'csv'));
+        $people = Person::all(trim((string) ($_GET['q'] ?? '')), $this->volunteerScopeUserId());
+
+        if ($format === 'pdf') {
+            $lines = [];
+            foreach ($people as $index => $person) {
+                $lines[] = sprintf(
+                    '%d. %s | CPF: %s | WhatsApp: %s | E-mail: %s | Cidade: %s/%s | Contato: %s',
+                    $index + 1,
+                    $person['full_name'] ?? '',
+                    $person['cpf'] ?: '-',
+                    $person['whatsapp'] ?: ($person['phone'] ?: '-'),
+                    $person['email'] ?: '-',
+                    $person['city'] ?: '-',
+                    $person['state'] ?: '-',
+                    !empty($person['contact_authorized']) ? 'autorizado' : 'nao autorizado'
+                );
+            }
+
+            $this->downloadPdf('lista-pessoas.pdf', 'Lista de pessoas cadastradas', $lines);
+            return;
+        }
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="lista-pessoas.csv"');
+        echo "\xEF\xBB\xBF";
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Nome', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Observacoes'], ';');
+        foreach ($people as $person) {
+            fputcsv($output, [
+                $person['full_name'] ?? '',
+                $person['cpf'] ?? '',
+                $person['birth_date'] ?? '',
+                $person['phone'] ?? '',
+                $person['whatsapp'] ?? '',
+                $person['email'] ?? '',
+                $person['cep'] ?? '',
+                $person['address'] ?? '',
+                $person['address_number'] ?? '',
+                $person['address_complement'] ?? '',
+                $person['district'] ?? '',
+                $person['city'] ?? '',
+                $person['state'] ?? '',
+                !empty($person['is_minor']) ? 'Sim' : 'Nao',
+                $person['guardian_name'] ?? '',
+                $person['guardian_relation'] ?? '',
+                $person['guardian_cpf'] ?? '',
+                $person['guardian_phone'] ?? '',
+                $person['guardian_email'] ?? '',
+                !empty($person['contact_authorized']) ? 'Sim' : 'Nao',
+                $person['notes'] ?? '',
+            ], ';');
+        }
+        fclose($output);
+        exit;
+    }
+
     private function editing(): ?array
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -129,6 +191,16 @@ class PersonController
     {
         $user = Auth::user();
         return $user && ($user['role_slug'] ?? '') === 'master';
+    }
+
+    private function downloadPdf(string $filename, string $title, array $lines): void
+    {
+        $pdf = SimplePdf::fromLines($title, $lines ?: ['Nenhum registro encontrado.']);
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        echo $pdf;
+        exit;
     }
 
     private function volunteerScopeUserId(): ?int

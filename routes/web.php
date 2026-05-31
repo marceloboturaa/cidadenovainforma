@@ -82,6 +82,7 @@ $router->get('/admin/people/edit', [PersonController::class, 'index']);
 $router->post('/admin/people', [PersonController::class, 'store']);
 $router->post('/admin/people/update', [PersonController::class, 'update']);
 $router->post('/admin/people/delete', [PersonController::class, 'delete']);
+$router->get('/admin/people/export', [PersonController::class, 'export']);
 
 $router->get('/admin/library-events', [LibraryEventController::class, 'index']);
 $router->get('/admin/library-events/edit', [LibraryEventController::class, 'index']);
@@ -90,6 +91,8 @@ $router->post('/admin/library-events/update', [LibraryEventController::class, 'u
 $router->post('/admin/library-events/delete', [LibraryEventController::class, 'delete']);
 $router->get('/admin/library-events/participants', [LibraryEventController::class, 'participants']);
 $router->post('/admin/library-events/participants', [LibraryEventController::class, 'addParticipant']);
+$router->post('/admin/library-events/participants/create', [LibraryEventController::class, 'createParticipant']);
+$router->get('/admin/library-events/participants/export', [LibraryEventController::class, 'exportParticipants']);
 $router->post('/admin/library-events/participants/remove', [LibraryEventController::class, 'removeParticipant']);
 
 $router->get('/admin/institution-pages', [InstitutionPageController::class, 'index']);

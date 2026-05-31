@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Core\Logger;
 use App\Core\Middleware;
 use App\Core\Session;
+use App\Core\SimplePdf;
 use App\Core\View;
 use App\Models\LibraryEvent;
 use App\Models\Person;
@@ -95,6 +96,7 @@ class LibraryEventController
         View::render('admin/library-events/participants', [
             'event' => $event,
             'participants' => LibraryEvent::participants((int) $event['id']),
+            'participantStats' => LibraryEvent::participantStats((int) $event['id']),
             'people' => Person::all(trim((string) ($_GET['q'] ?? '')), $this->volunteerScopeUserId()),
             'query' => trim((string) ($_GET['q'] ?? '')),
         ]);
@@ -124,6 +126,103 @@ class LibraryEventController
         Logger::info('library_events.participant_added', 'Participante vinculado: ' . $person['full_name'], current_user()['id'] ?? null);
         Session::flash('success', 'Participante adicionado ao evento.');
         redirect('/admin/library-events/participants?id=' . $event['id']);
+    }
+
+    public function createParticipant(): void
+    {
+        Middleware::permission('event_participants.manage');
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $name = trim((string) ($_POST['full_name'] ?? ''));
+
+        if ($name === '') {
+            Session::flash('error', 'Informe o nome completo da pessoa inscrita.');
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
+        $userId = (int) (current_user()['id'] ?? 0);
+        $personId = Person::create(array_merge($_POST, [
+            'created_by' => $userId ?: null,
+            'updated_by' => $userId ?: null,
+        ]));
+
+        LibraryEvent::attachParticipant(
+            (int) $event['id'],
+            $personId,
+            (string) ($_POST['status'] ?? 'inscrito'),
+            $_POST['participant_notes'] ?? null,
+            $userId ?: null
+        );
+
+        Logger::info('library_events.registration_created', 'Inscrição cadastrada: ' . $name, $userId ?: null);
+        Session::flash('success', 'Pessoa cadastrada e inscrita no evento.');
+        redirect('/admin/library-events/participants?id=' . $event['id']);
+    }
+
+    public function exportParticipants(): void
+    {
+        Middleware::permission('event_participants.manage');
+        $event = $this->eventFromQuery();
+        $participants = LibraryEvent::participants((int) $event['id']);
+        $format = strtolower((string) ($_GET['format'] ?? 'csv'));
+        $slug = preg_replace('/[^a-z0-9]+/i', '-', strtolower((string) $event['title'])) ?: 'evento';
+        $slug = trim($slug, '-');
+
+        if ($format === 'pdf') {
+            $lines = [];
+            foreach ($participants as $index => $participant) {
+                $lines[] = sprintf(
+                    '%d. %s | Status: %s | CPF: %s | WhatsApp: %s | E-mail: %s | Bairro/Cidade: %s/%s | Responsavel: %s',
+                    $index + 1,
+                    $participant['full_name'] ?? '',
+                    ucfirst((string) ($participant['status'] ?? 'inscrito')),
+                    $participant['cpf'] ?: '-',
+                    $participant['whatsapp'] ?: ($participant['phone'] ?: '-'),
+                    $participant['email'] ?: '-',
+                    $participant['district'] ?: '-',
+                    $participant['city'] ?: '-',
+                    !empty($participant['is_minor']) ? ($participant['guardian_name'] ?: '-') : '-'
+                );
+            }
+
+            $this->downloadPdf($slug . '-participantes.pdf', 'Participantes - ' . $event['title'], $lines);
+            return;
+        }
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $slug . '-participantes.csv"');
+        echo "\xEF\xBB\xBF";
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Evento', 'Nome', 'Status', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Observacoes da inscricao'], ';');
+        foreach ($participants as $participant) {
+            fputcsv($output, [
+                $event['title'] ?? '',
+                $participant['full_name'] ?? '',
+                $participant['status'] ?? '',
+                $participant['cpf'] ?? '',
+                $participant['birth_date'] ?? '',
+                $participant['phone'] ?? '',
+                $participant['whatsapp'] ?? '',
+                $participant['email'] ?? '',
+                $participant['cep'] ?? '',
+                $participant['address'] ?? '',
+                $participant['address_number'] ?? '',
+                $participant['address_complement'] ?? '',
+                $participant['district'] ?? '',
+                $participant['city'] ?? '',
+                $participant['state'] ?? '',
+                !empty($participant['is_minor']) ? 'Sim' : 'Nao',
+                $participant['guardian_name'] ?? '',
+                $participant['guardian_relation'] ?? '',
+                $participant['guardian_cpf'] ?? '',
+                $participant['guardian_phone'] ?? '',
+                $participant['guardian_email'] ?? '',
+                !empty($participant['contact_authorized']) ? 'Sim' : 'Nao',
+                $participant['notes'] ?? '',
+            ], ';');
+        }
+        fclose($output);
+        exit;
     }
 
     public function removeParticipant(): void
@@ -247,5 +346,15 @@ class LibraryEventController
         }
 
         return '/public/uploads/events/' . $filename;
+    }
+
+    private function downloadPdf(string $filename, string $title, array $lines): void
+    {
+        $pdf = SimplePdf::fromLines($title, $lines ?: ['Nenhum participante encontrado.']);
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($pdf));
+        echo $pdf;
+        exit;
     }
 }

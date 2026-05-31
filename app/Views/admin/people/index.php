@@ -5,6 +5,10 @@
         <p>Área interna</p>
         <h1>Pessoas cadastradas</h1>
     </div>
+    <div class="export-actions">
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/people/export?format=csv' . (!empty($query) ? '&q=' . urlencode($query) : ''))) ?>"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</a>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/people/export?format=pdf' . (!empty($query) ? '&q=' . urlencode($query) : ''))) ?>"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</a>
+    </div>
 </div>
 
 <section class="panel person-register-panel">

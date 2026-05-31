@@ -235,6 +235,13 @@
     justify-content: flex-end;
 }
 
+.export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
 .section-heading {
     display: flex;
     align-items: center;
@@ -651,10 +658,30 @@
     margin-bottom: 0;
 }
 
+.participant-management-actions {
+    display: grid;
+    gap: 8px;
+    min-width: 360px;
+}
+
+.participant-management-actions .participant-add-form {
+    min-width: 0;
+}
+
+.participant-management-actions .inline-form {
+    justify-self: end;
+    margin-left: 0;
+}
+
 .input-action-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
+}
+
+.participant-metrics {
+    margin-top: 4px;
+    box-shadow: none;
 }
 
 .guardian-fields {

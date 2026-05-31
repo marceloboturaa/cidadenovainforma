@@ -815,8 +815,8 @@ $permissionIds = array_column($permissionRows, 'id', 'slug');
 
 $grants = [
     'master' => array_keys($permissionIds),
-    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.audit', 'certificates.institutions', 'certificates.templates', 'certificates.batches.approve', 'forum.view', 'forum.create', 'forum.moderate', 'consent.view', 'consent.texts', 'consent.manage'],
-    'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.templates', 'forum.view', 'forum.create'],
+    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.audit', 'certificates.institutions', 'certificates.templates', 'certificates.batches.approve', 'forum.view', 'forum.create', 'forum.moderate', 'consent.view', 'consent.texts', 'consent.manage'],
+    'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.templates', 'forum.view', 'forum.create'],
     'delegado-emissor' => ['education.view', 'certificates.issue'],
     'diretor' => ['documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
     'editor-jornalistico' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate'],

@@ -239,10 +239,25 @@ class LibraryEvent
         $stmt = Database::connection()->prepare(
             'SELECT library_event_participants.*,
                     people.full_name,
+                    people.cpf,
+                    people.birth_date,
                     people.email,
+                    people.cep,
+                    people.address,
+                    people.address_number,
+                    people.address_complement,
+                    people.city,
+                    people.state,
                     people.phone,
                     people.whatsapp,
-                    people.district
+                    people.district,
+                    people.is_minor,
+                    people.guardian_name,
+                    people.guardian_relation,
+                    people.guardian_cpf,
+                    people.guardian_phone,
+                    people.guardian_email,
+                    people.contact_authorized
              FROM library_event_participants
              INNER JOIN people ON people.id = library_event_participants.person_id
              WHERE library_event_participants.event_id = :event_id
@@ -251,6 +266,26 @@ class LibraryEvent
         $stmt->execute(['event_id' => $eventId]);
 
         return $stmt->fetchAll();
+    }
+
+    public static function participantStats(int $eventId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            "SELECT status, COUNT(*) AS total
+             FROM library_event_participants
+             WHERE event_id = :event_id
+             GROUP BY status"
+        );
+        $stmt->execute(['event_id' => $eventId]);
+
+        $stats = ['inscrito' => 0, 'presente' => 0, 'ausente' => 0, 'cancelado' => 0];
+        foreach ($stmt->fetchAll() as $row) {
+            $stats[(string) $row['status']] = (int) $row['total'];
+        }
+
+        return $stats;
     }
 
     public static function create(array $data): int

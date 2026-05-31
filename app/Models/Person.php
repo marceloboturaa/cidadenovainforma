@@ -6,8 +6,15 @@ use App\Core\Database;
 
 class Person
 {
+    public static function ensureSchema(): void
+    {
+        LibraryEvent::ensureSchema();
+    }
+
     public static function all(string $query = '', ?int $createdBy = null): array
     {
+        self::ensureSchema();
+
         $sql = 'SELECT people.*, creator.name AS creator_name
                 FROM people
                 LEFT JOIN users creator ON creator.id = people.created_by
@@ -33,6 +40,8 @@ class Person
 
     public static function find(int $id): ?array
     {
+        self::ensureSchema();
+
         $stmt = Database::connection()->prepare('SELECT * FROM people WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
 
@@ -41,6 +50,8 @@ class Person
 
     public static function create(array $data): int
     {
+        self::ensureSchema();
+
         $stmt = Database::connection()->prepare(
             'INSERT INTO people
                 (full_name, cpf, birth_date, phone, whatsapp, email, cep, address, address_number, address_complement, district, city, state, is_minor, guardian_name, guardian_relation, guardian_cpf, guardian_phone, guardian_email, contact_authorized, notes, active, created_by, updated_by, created_at, updated_at)
@@ -54,6 +65,8 @@ class Person
 
     public static function update(int $id, array $data): void
     {
+        self::ensureSchema();
+
         $payload = self::payload($data);
         $payload['id'] = $id;
 
@@ -90,6 +103,8 @@ class Person
 
     public static function deactivate(int $id): void
     {
+        self::ensureSchema();
+
         Database::connection()
             ->prepare('UPDATE people SET active = 0, updated_at = NOW() WHERE id = :id')
             ->execute(['id' => $id]);
