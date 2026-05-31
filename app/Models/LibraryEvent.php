@@ -61,10 +61,12 @@ class LibraryEvent
                 starts_at DATETIME NULL,
                 ends_at DATETIME NULL,
                 location VARCHAR(160) NULL,
+                event_cep VARCHAR(12) NULL,
                 event_address VARCHAR(255) NULL,
                 cover_image VARCHAR(255) NULL,
                 related_links TEXT NULL,
                 capacity INT UNSIGNED NULL,
+                registration_enabled TINYINT(1) NOT NULL DEFAULT 1,
                 responsible_user_id BIGINT UNSIGNED NULL,
                 status ENUM('aberto','encerrado','cancelado') NOT NULL DEFAULT 'aberto',
                 notes TEXT NULL,
@@ -84,8 +86,14 @@ class LibraryEvent
         if (!in_array('cover_image', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN cover_image VARCHAR(255) NULL AFTER location');
         }
+        if (!in_array('event_cep', $eventColumns, true)) {
+            $db->exec('ALTER TABLE library_events ADD COLUMN event_cep VARCHAR(12) NULL AFTER location');
+        }
         if (!in_array('event_address', $eventColumns, true)) {
-            $db->exec('ALTER TABLE library_events ADD COLUMN event_address VARCHAR(255) NULL AFTER location');
+            $db->exec('ALTER TABLE library_events ADD COLUMN event_address VARCHAR(255) NULL AFTER event_cep');
+        }
+        if (!in_array('registration_enabled', $eventColumns, true)) {
+            $db->exec('ALTER TABLE library_events ADD COLUMN registration_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER capacity');
         }
         if (!in_array('related_links', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN related_links TEXT NULL AFTER cover_image');
@@ -138,7 +146,7 @@ class LibraryEvent
         $params = [];
 
         if ($createdBy !== null) {
-            $sql .= ' AND library_events.created_by = :created_by';
+            $sql .= ' AND (library_events.created_by = :created_by OR library_events.responsible_user_id = :created_by)';
             $params['created_by'] = $createdBy;
         }
 
@@ -155,7 +163,7 @@ class LibraryEvent
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status,
+            "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, capacity, registration_enabled, status,
                     COALESCE(participant_counts.total, 0) AS participant_count
              FROM library_events
              LEFT JOIN (
@@ -182,7 +190,7 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status, created_at, updated_at,
+                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, capacity, registration_enabled, status, created_at, updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN (
@@ -205,7 +213,7 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status, created_at, updated_at,
+                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, capacity, registration_enabled, status, created_at, updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN (
@@ -231,7 +239,7 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status, created_at, updated_at,
+                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, capacity, registration_enabled, status, created_at, updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN (
@@ -373,9 +381,9 @@ class LibraryEvent
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO library_events
-                (title, description, starts_at, ends_at, location, event_address, cover_image, related_links, capacity, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
+                (title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, related_links, capacity, registration_enabled, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :description, :starts_at, :ends_at, :location, :event_address, :cover_image, :related_links, :capacity, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :description, :starts_at, :ends_at, :location, :event_cep, :event_address, :cover_image, :related_links, :capacity, :registration_enabled, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::payload($data));
 
@@ -397,10 +405,12 @@ class LibraryEvent
                  starts_at = :starts_at,
                  ends_at = :ends_at,
                  location = :location,
+                 event_cep = :event_cep,
                  event_address = :event_address,
                  cover_image = :cover_image,
                  related_links = :related_links,
                  capacity = :capacity,
+                 registration_enabled = :registration_enabled,
                  responsible_user_id = :responsible_user_id,
                  status = :status,
                  notes = :notes,
@@ -460,10 +470,12 @@ class LibraryEvent
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
             'location' => self::nullable($data['location'] ?? null),
+            'event_cep' => self::nullable($data['event_cep'] ?? null),
             'event_address' => self::nullable($data['event_address'] ?? null),
             'cover_image' => self::nullable($data['cover_image'] ?? null),
             'related_links' => self::nullable($data['related_links'] ?? null),
             'capacity' => !empty($data['capacity']) ? (int) $data['capacity'] : null,
+            'registration_enabled' => (int) !empty($data['registration_enabled']),
             'responsible_user_id' => !empty($data['responsible_user_id']) ? (int) $data['responsible_user_id'] : null,
             'status' => in_array($status, ['aberto', 'encerrado', 'cancelado'], true) ? $status : 'aberto',
             'notes' => self::nullable($data['notes'] ?? null),

@@ -21,6 +21,15 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
     $message = 'Olá, ' . $name . '. Sua inscrição para "' . $eventTitle . '" foi atualizada. Acompanhe as informações com a equipe do Cidade Nova Informa.';
     return 'https://wa.me/' . $digits . '?text=' . rawurlencode($message);
 };
+$capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
+$occupiedSlots = (int) (($participantStats['pendente'] ?? 0) + ($participantStats['inscrito'] ?? 0) + ($participantStats['presente'] ?? 0) + ($participantStats['ausente'] ?? 0));
+$remainingSlots = $capacity ? max(0, $capacity - $occupiedSlots) : null;
+$slotPercent = $capacity ? min(100, (int) round(($occupiedSlots / $capacity) * 100)) : 0;
+$userEmails = array_filter(array_map(fn (array $user): string => strtolower((string) ($user['email'] ?? '')), $users ?? []));
+$directoryPeople = array_values(array_filter($people ?? [], function (array $person) use ($userEmails): bool {
+    $email = strtolower((string) ($person['email'] ?? ''));
+    return $email === '' || !in_array($email, $userEmails, true);
+}));
 ?>
 
 <section class="panel">
@@ -29,22 +38,29 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
         <span><?= e((string) count($participants)) ?> registro(s)</span>
     </div>
     <div class="events-admin-metrics participant-metrics">
+        <article><span>Vagas livres</span><strong><?= $capacity ? e((string) $remainingSlots) : '-' ?></strong><small><?= $capacity ? e((string) $capacity) . ' vagas totais' : 'sem limite definido' ?></small></article>
         <article><span>Pendentes</span><strong><?= e((string) ($participantStats['pendente'] ?? 0)) ?></strong><small>aguardando confirmação</small></article>
         <article><span>Inscritos</span><strong><?= e((string) ($participantStats['inscrito'] ?? 0)) ?></strong><small>aguardando presença</small></article>
         <article><span>Presentes</span><strong><?= e((string) ($participantStats['presente'] ?? 0)) ?></strong><small>confirmados no evento</small></article>
         <article><span>Ausentes</span><strong><?= e((string) ($participantStats['ausente'] ?? 0)) ?></strong><small>não compareceram</small></article>
         <article><span>Cancelados</span><strong><?= e((string) ($participantStats['cancelado'] ?? 0)) ?></strong><small>não validados</small></article>
     </div>
+    <?php if ($capacity): ?>
+        <div class="event-capacity-bar" aria-label="Ocupação de vagas">
+            <div style="width: <?= e((string) $slotPercent) ?>%"></div>
+        </div>
+        <p class="event-capacity-caption"><?= e((string) $occupiedSlots) ?> vaga(s) ocupada(s) de <?= e((string) $capacity) ?>. <?= e((string) $remainingSlots) ?> livre(s).</p>
+    <?php endif; ?>
 </section>
 
-<section class="panel person-register-panel">
-    <div class="person-register-head">
+<details class="panel person-register-panel">
+    <summary class="person-register-head">
         <div>
             <span>Nova inscrição</span>
             <h2>Cadastrar pessoa no evento</h2>
         </div>
         <strong>Cadastro + vínculo</strong>
-    </div>
+    </summary>
     <form method="post" action="<?= e(url('/admin/library-events/participants/create?id=' . $event['id'])) ?>" class="person-registration-form" data-person-form>
         <?= csrf_field() ?>
         <div class="person-form-main">
@@ -184,16 +200,20 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
             </div>
         </aside>
     </form>
-</section>
+</details>
 
-<section class="panel registered-user-panel">
+<section class="panel registration-directory-panel">
     <div class="section-heading">
-        <h2>Adicionar estudante/usuário cadastrado</h2>
-        <span>Usa login já aprovado no sistema</span>
+        <h2>Adicionar cadastrado ao evento</h2>
+        <span>Pessoas, estudantes e usuários em um só lugar</span>
     </div>
-    <div class="admin-card-list compact-list">
+    <div class="registration-directory-tools">
+        <input class="form-control" type="search" placeholder="Pesquisar por nome, e-mail, CPF, WhatsApp ou tipo de cadastro" data-registration-directory-search>
+        <span><strong data-registration-directory-count><?= e((string) (count($users ?? []) + count($directoryPeople))) ?></strong> resultado(s)</span>
+    </div>
+    <div class="admin-card-list compact-list registration-directory-list" data-registration-directory>
         <?php foreach (($users ?? []) as $user): ?>
-            <article class="admin-list-card internal-list-card registered-user-card">
+            <article class="admin-list-card internal-list-card registered-user-card" data-registration-card data-registration-search="<?= e(($user['name'] ?? '') . ' ' . ($user['email'] ?? '') . ' usuario estudante login ' . ($user['role_name'] ?? '')) ?>">
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($user['name']) ?></strong>
@@ -201,7 +221,7 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
                     </div>
                     <dl class="admin-list-meta">
                         <div><dt>E-mail/login</dt><dd><?= e($user['email'] ?? '-') ?></dd></div>
-                        <div><dt>Tipo</dt><dd>Usuário cadastrado</dd></div>
+                        <div><dt>Origem</dt><dd>Login/usuário do sistema</dd></div>
                     </dl>
                 </div>
                 <form class="participant-add-form" method="post" action="<?= e(url('/admin/library-events/participants/user?id=' . $event['id'])) ?>">
@@ -218,25 +238,8 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
                 </form>
             </article>
         <?php endforeach; ?>
-        <?php if (empty($users)): ?>
-            <div class="empty-state">Nenhum usuário ativo encontrado.</div>
-        <?php endif; ?>
-    </div>
-</section>
-
-<section class="panel existing-person-panel">
-    <div class="section-heading">
-        <h2>Adicionar pessoa já cadastrada</h2>
-        <span>Cadastro interno sem login de curso</span>
-    </div>
-    <form class="internal-search-form" method="get" action="<?= e(url('/admin/library-events/participants')) ?>">
-        <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
-        <input class="form-control" name="q" value="<?= e($query ?? '') ?>" placeholder="Buscar pessoa por nome, CPF, e-mail ou WhatsApp">
-        <button class="btn btn-outline-secondary icon-btn"><i class="bi bi-search" aria-hidden="true"></i>Buscar</button>
-    </form>
-    <div class="admin-card-list compact-list">
-        <?php foreach ($people as $person): ?>
-            <article class="admin-list-card internal-list-card existing-person-card">
+        <?php foreach ($directoryPeople as $person): ?>
+            <article class="admin-list-card internal-list-card existing-person-card" data-registration-card data-registration-search="<?= e(($person['full_name'] ?? '') . ' ' . ($person['email'] ?? '') . ' ' . ($person['cpf'] ?? '') . ' ' . ($person['whatsapp'] ?? '') . ' pessoa cadastro interno') ?>">
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($person['full_name']) ?></strong>
@@ -261,9 +264,10 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
                 </form>
             </article>
         <?php endforeach; ?>
-        <?php if (!$people): ?>
-            <div class="empty-state">Nenhuma pessoa encontrada. Cadastre primeiro em Pessoas.</div>
+        <?php if (empty($users) && empty($directoryPeople)): ?>
+            <div class="empty-state">Nenhum cadastro encontrado.</div>
         <?php endif; ?>
+        <div class="empty-state" data-registration-directory-empty hidden>Nenhum cadastro encontrado para esta busca.</div>
     </div>
 </section>
 

@@ -6,7 +6,7 @@ $endTime = !empty($event['ends_at']) ? strtotime($event['ends_at']) : null;
 $isHappening = ($event['status'] ?? '') === 'aberto' && $startTime && $endTime && $startTime <= time() && $endTime >= time();
 $isPast = ($event['status'] ?? '') === 'encerrado' || (($endTime ?: $startTime) && ($endTime ?: $startTime) < time());
 $statusText = $isHappening ? 'Acontecendo' : ($isPast ? 'Evento realizado' : 'Próximo evento');
-$canRegister = ($event['status'] ?? '') === 'aberto' && !$isPast;
+$canRegister = ($event['status'] ?? '') === 'aberto' && !$isPast && !empty($event['registration_enabled']);
 $remainingSlots = $remainingSlots ?? null;
 $capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
 $occupiedSlots = $capacity ? max(0, $capacity - (int) ($remainingSlots ?? $capacity)) : null;
@@ -225,6 +225,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 <div class="info-date"><dt>Data e horário</dt><dd><?= e($startsAt) ?></dd></div>
                 <?php if ($endsAt): ?><div class="info-date"><dt>Encerramento</dt><dd><?= e($endsAt) ?></dd></div><?php endif; ?>
                 <?php if (!empty($event['location'])): ?><div class="info-place"><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
+                <?php if (!empty($event['event_cep'])): ?><div class="info-address"><dt>CEP</dt><dd><?= e($event['event_cep']) ?></dd></div><?php endif; ?>
                 <?php if (!empty($event['event_address'])): ?><div class="info-address"><dt>Endereço</dt><dd><?= e($event['event_address']) ?></dd></div><?php endif; ?>
                 <?php if ($capacity): ?><div class="info-slots"><dt>Vagas</dt><dd><?= e((string) $occupiedSlots) ?> ocupada(s) / <?= e((string) $capacity) ?> total<?= $remainingSlots !== null ? ' · ' . e((string) $remainingSlots) . ' restante(s)' : '' ?></dd></div><?php endif; ?>
                 <?php if (!empty($event['responsible_name'])): ?><div class="info-person"><dt>Responsável</dt><dd><?= e($event['responsible_name']) ?></dd></div><?php endif; ?>

@@ -106,9 +106,11 @@ $pdo->exec(
         starts_at DATETIME NULL,
         ends_at DATETIME NULL,
         location VARCHAR(160) NULL,
+        event_cep VARCHAR(12) NULL,
         event_address VARCHAR(255) NULL,
         cover_image VARCHAR(255) NULL,
         capacity INT UNSIGNED NULL,
+        registration_enabled TINYINT(1) NOT NULL DEFAULT 1,
         responsible_user_id BIGINT UNSIGNED NULL,
         status ENUM('aberto','encerrado','cancelado') NOT NULL DEFAULT 'aberto',
         notes TEXT NULL,
@@ -146,7 +148,9 @@ foreach ($peopleColumns as $column => $sql) {
 }
 
 $eventColumns = [
+    'event_cep' => "ALTER TABLE library_events ADD COLUMN event_cep VARCHAR(12) NULL AFTER location",
     'event_address' => "ALTER TABLE library_events ADD COLUMN event_address VARCHAR(255) NULL AFTER location",
+    'registration_enabled' => "ALTER TABLE library_events ADD COLUMN registration_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER capacity",
     'cover_image' => "ALTER TABLE library_events ADD COLUMN cover_image VARCHAR(255) NULL AFTER location",
 ];
 

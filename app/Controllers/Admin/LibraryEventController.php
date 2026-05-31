@@ -107,8 +107,8 @@ class LibraryEventController
 
     public function participants(): void
     {
-        Middleware::permission('event_participants.manage');
         $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
 
         View::render('admin/library-events/participants', [
             'event' => $event,
@@ -122,9 +122,9 @@ class LibraryEventController
 
     public function addParticipant(): void
     {
-        Middleware::permission('event_participants.manage');
         $this->validateCsrf('/admin/library-events');
         $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
         $personId = filter_input(INPUT_POST, 'person_id', FILTER_VALIDATE_INT);
         $person = $personId ? Person::find($personId) : null;
 
@@ -150,9 +150,9 @@ class LibraryEventController
 
     public function createParticipant(): void
     {
-        Middleware::permission('event_participants.manage');
         $this->validateCsrf('/admin/library-events');
         $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
         $name = trim((string) ($_POST['full_name'] ?? ''));
 
         if ($name === '') {
@@ -186,9 +186,9 @@ class LibraryEventController
 
     public function addUserParticipant(): void
     {
-        Middleware::permission('event_participants.manage');
         $this->validateCsrf('/admin/library-events');
         $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
         $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
         $user = $userId ? User::find($userId) : null;
 
@@ -227,8 +227,8 @@ class LibraryEventController
 
     public function exportParticipants(): void
     {
-        Middleware::permission('event_participants.manage');
         $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
         $participants = LibraryEvent::participants((int) $event['id']);
         $format = strtolower((string) ($_GET['format'] ?? 'csv'));
         $slug = preg_replace('/[^a-z0-9]+/i', '-', strtolower((string) $event['title'])) ?: 'evento';
@@ -283,9 +283,9 @@ class LibraryEventController
 
     public function removeParticipant(): void
     {
-        Middleware::permission('event_participants.manage');
         $this->validateCsrf('/admin/library-events');
         $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
         $personId = filter_input(INPUT_GET, 'person_id', FILTER_VALIDATE_INT);
 
         if ($personId) {
@@ -314,7 +314,11 @@ class LibraryEventController
         }
 
         $scopeUserId = $this->volunteerScopeUserId();
-        if ($scopeUserId !== null && (int) ($event['created_by'] ?? 0) !== $scopeUserId) {
+        if (
+            $scopeUserId !== null
+            && (int) ($event['created_by'] ?? 0) !== $scopeUserId
+            && (int) ($event['responsible_user_id'] ?? 0) !== $scopeUserId
+        ) {
             http_response_code(403);
             View::render('errors/403');
             exit;
@@ -402,6 +406,22 @@ class LibraryEventController
         }
 
         return '/public/uploads/events/' . $filename;
+    }
+
+    private function authorizeParticipantManagement(array $event): void
+    {
+        Middleware::auth();
+        $user = Auth::user();
+        if (
+            $user
+            && (Auth::can('event_participants.manage') || (int) ($event['responsible_user_id'] ?? 0) === (int) $user['id'])
+        ) {
+            return;
+        }
+
+        http_response_code(403);
+        View::render('errors/403');
+        exit;
     }
 
     private function downloadPdf(string $filename, string $title, array $lines): void

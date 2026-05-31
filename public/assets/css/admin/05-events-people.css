@@ -151,6 +151,11 @@
     gap: 12px;
 }
 
+.events-form-grid > .person-toggle-row {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
 .events-form-actions {
     padding-top: 4px;
 }
@@ -197,6 +202,10 @@
 }
 
 .events-admin-item.is-hidden {
+    display: none;
+}
+
+.registration-directory-list .admin-list-card.is-hidden {
     display: none;
 }
 
@@ -307,6 +316,12 @@
     padding: 22px 24px;
     border-bottom: 1px solid var(--line);
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    cursor: pointer;
+    list-style: none;
+}
+
+.person-register-head::-webkit-details-marker {
+    display: none;
 }
 
 .person-register-head span {
@@ -503,6 +518,46 @@
 .registered-user-panel {
     border-left: 5px solid #2563eb;
     background: #f8fbff;
+}
+
+.registration-directory-panel {
+    border-left: 5px solid #2563eb;
+    background: #f8fbff;
+}
+
+.registration-directory-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.registration-directory-tools span {
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.event-capacity-bar {
+    overflow: hidden;
+    height: 12px;
+    margin-top: 14px;
+    border-radius: 999px;
+    background: #e5e7eb;
+}
+
+.event-capacity-bar > div {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #16a34a, #2563eb);
+}
+
+.event-capacity-caption {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-weight: 800;
 }
 
 .existing-person-panel {

@@ -175,8 +175,15 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <input class="form-control" name="location" value="<?= e($editing['location'] ?? '') ?>" placeholder="Ex.: Biblioteca, auditório, praça">
                         </div>
                         <div>
+                            <label class="form-label">CEP do evento</label>
+                            <div class="input-action-row">
+                                <input class="form-control" name="event_cep" value="<?= e($editing['event_cep'] ?? '') ?>" placeholder="00000-000" data-event-cep-input>
+                                <button class="btn btn-outline-secondary icon-btn" type="button" data-event-cep-search><i class="bi bi-search" aria-hidden="true"></i>CEP</button>
+                            </div>
+                        </div>
+                        <div>
                             <label class="form-label">Endereço</label>
-                            <input class="form-control" name="event_address" value="<?= e($editing['event_address'] ?? '') ?>" placeholder="Rua, número, bairro">
+                            <input class="form-control" name="event_address" value="<?= e($editing['event_address'] ?? '') ?>" placeholder="Rua, número, bairro" data-event-address-input>
                         </div>
                         <div>
                             <label class="form-label">Vagas</label>
@@ -201,6 +208,10 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <label class="person-toggle-row">
+                            <input class="form-check-input" type="checkbox" name="registration_enabled" value="1" <?= checked((bool) ($editing['registration_enabled'] ?? true)) ?>>
+                            <span><strong>Ativar inscrição pública</strong><small>Se desligar, o formulário de inscrição não aparece na página do evento.</small></span>
+                        </label>
                     </div>
 
                     <div>
@@ -246,6 +257,7 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                 <li>Use <strong>Aberto</strong> para eventos futuros ou ainda disponíveis.</li>
                 <li>Use <strong>Encerrado</strong> quando a atividade terminar.</li>
                 <li>Use <strong>Cancelado</strong> para tirar da página pública.</li>
+                <li>O <strong>responsável</strong> escolhido pode administrar as inscrições deste evento específico.</li>
                 <li>Preencha início e fim para o painel calcular a duração em horas.</li>
             </ul>
         </aside>
@@ -291,8 +303,10 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <div><dt>Quando</dt><dd><?= e($formatDate($event['starts_at'] ?? null)) ?></dd></div>
                             <div><dt>Duração</dt><dd><?= e($formatDuration($duration)) ?></dd></div>
                             <div><dt>Local</dt><dd><?= e($event['location'] ?: '-') ?></dd></div>
+                            <div><dt>CEP</dt><dd><?= e($event['event_cep'] ?: '-') ?></dd></div>
                             <div><dt>Endereço</dt><dd><?= e($event['event_address'] ?: '-') ?></dd></div>
-                            <div><dt>Vagas</dt><dd><?= e((string) $participants) ?><?= $capacity ? ' / ' . e((string) $capacity) . ' · ' . e((string) $remaining) . ' livre(s)' : '' ?></dd></div>
+                            <div><dt>Vagas</dt><dd><?= $capacity ? e((string) $remaining) . ' livres · ' . e((string) $participants) . ' ocupadas · ' . e((string) $capacity) . ' totais' : e((string) $participants) . ' inscrito(s)' ?></dd></div>
+                            <div><dt>Inscrição</dt><dd><?= !empty($event['registration_enabled']) ? 'Ativa' : 'Desativada' ?></dd></div>
                             <div><dt>Responsável</dt><dd><?= e($event['responsible_name'] ?? '-') ?></dd></div>
                         </dl>
                     </div>

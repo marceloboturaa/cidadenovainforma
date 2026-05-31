@@ -156,7 +156,7 @@ class PublicController
         $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
         $event = $id ? LibraryEvent::findPublic((int) $id) : null;
 
-        if (!$event || ($event['status'] ?? '') !== 'aberto') {
+        if (!$event || ($event['status'] ?? '') !== 'aberto' || empty($event['registration_enabled'])) {
             http_response_code(404);
             View::render('errors/404', [], 'public');
             return;

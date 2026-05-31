@@ -18,6 +18,10 @@
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
     const eventsAdminList = document.querySelector('[data-events-admin-list]');
+    const eventCepInput = document.querySelector('[data-event-cep-input]');
+    const eventCepSearch = document.querySelector('[data-event-cep-search]');
+    const registrationDirectory = document.querySelector('[data-registration-directory]');
+    const registrationDirectorySearch = document.querySelector('[data-registration-directory-search]');
     const documentList = document.querySelector('[data-document-list]');
     const documentSearch = document.querySelector('[data-document-search]');
 
@@ -172,6 +176,16 @@
         bindEventsAdminFilter(eventsAdminList);
     }
 
+    if (eventCepInput && eventCepSearch) {
+        bindCepLookup(eventCepInput, eventCepSearch, document, {
+            address: '[data-event-address-input]'
+        });
+    }
+
+    if (registrationDirectory && registrationDirectorySearch) {
+        bindRegistrationDirectorySearch(registrationDirectory, registrationDirectorySearch);
+    }
+
     bindDocumentAccessTools();
 
     if (documentList && documentSearch) {
@@ -202,35 +216,11 @@
         }
 
         if (cepInput && cepSearch) {
-            cepInput.addEventListener('input', () => {
-                cepInput.value = cepInput.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2').slice(0, 9);
-            });
-            cepSearch.addEventListener('click', async () => {
-                const cep = cepInput.value.replace(/\D/g, '');
-                if (cep.length !== 8) {
-                    cepInput.setCustomValidity('Informe um CEP com 8 dígitos.');
-                    cepInput.reportValidity();
-                    return;
-                }
-
-                cepInput.setCustomValidity('');
-                cepSearch.disabled = true;
-                try {
-                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                    const data = await response.json();
-                    if (data.erro) {
-                        throw new Error('CEP não encontrado.');
-                    }
-                    setValue('[data-address-input]', data.logradouro);
-                    setValue('[data-district-input]', data.bairro);
-                    setValue('[data-city-input]', data.localidade);
-                    setValue('[data-state-input]', data.uf);
-                } catch (error) {
-                    cepInput.setCustomValidity('CEP não encontrado.');
-                    cepInput.reportValidity();
-                } finally {
-                    cepSearch.disabled = false;
-                }
+            bindCepLookup(cepInput, cepSearch, personForm, {
+                address: '[data-address-input]',
+                district: '[data-district-input]',
+                city: '[data-city-input]',
+                state: '[data-state-input]'
             });
         }
     }
@@ -336,11 +326,50 @@
         });
     }
 
-    function setValue(selector, value) {
-        const input = personForm.querySelector(selector);
+    function setValue(scope, selector, value) {
+        const input = scope.querySelector(selector);
         if (input && value) {
             input.value = value;
         }
+    }
+
+    function bindCepLookup(cepInput, cepSearch, scope, targets) {
+        cepInput.addEventListener('input', () => {
+            cepInput.value = cepInput.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2').slice(0, 9);
+        });
+        cepSearch.addEventListener('click', async () => {
+            const cep = cepInput.value.replace(/\D/g, '');
+            if (cep.length !== 8) {
+                cepInput.setCustomValidity('Informe um CEP com 8 dígitos.');
+                cepInput.reportValidity();
+                return;
+            }
+
+            cepInput.setCustomValidity('');
+            cepSearch.disabled = true;
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+                if (data.erro) {
+                    throw new Error('CEP não encontrado.');
+                }
+                setValue(scope, targets.address, data.logradouro);
+                if (targets.district) {
+                    setValue(scope, targets.district, data.bairro);
+                }
+                if (targets.city) {
+                    setValue(scope, targets.city, data.localidade);
+                }
+                if (targets.state) {
+                    setValue(scope, targets.state, data.uf);
+                }
+            } catch (error) {
+                cepInput.setCustomValidity('CEP não encontrado.');
+                cepInput.reportValidity();
+            } finally {
+                cepSearch.disabled = false;
+            }
+        });
     }
 
     function bindUsersSearch(directory, searchInput) {
@@ -420,6 +449,36 @@
                 }
             });
         });
+    }
+
+    function bindRegistrationDirectorySearch(directory, searchInput) {
+        const cards = Array.from(directory.querySelectorAll('[data-registration-card]'));
+        const empty = directory.querySelector('[data-registration-directory-empty]');
+        const count = document.querySelector('[data-registration-directory-count]');
+
+        const applyFilter = () => {
+            const term = normalizeSearch(searchInput.value);
+            let visible = 0;
+
+            cards.forEach((card) => {
+                const haystack = normalizeSearch(card.dataset.registrationSearch || card.textContent || '');
+                const matches = term === '' || haystack.includes(term);
+                card.classList.toggle('is-hidden', !matches);
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (count) {
+                count.textContent = String(visible);
+            }
+            if (empty) {
+                empty.hidden = visible > 0;
+            }
+        };
+
+        searchInput.addEventListener('input', applyFilter);
+        applyFilter();
     }
 
     function bindDocumentAccessTools() {
