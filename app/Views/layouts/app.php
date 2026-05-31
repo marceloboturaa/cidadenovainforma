@@ -61,6 +61,9 @@
                 <?php if (\App\Core\Auth::can('events.manage')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/library-events') ? 'active' : '' ?>" href="<?= e(url('/admin/library-events')) ?>" title="Eventos"><i class="bi bi-calendar-event" aria-hidden="true"></i><span>Eventos</span></a>
                 <?php endif; ?>
+                <?php if (\App\Core\Auth::can('event_participants.manage')): ?>
+                    <a class="<?= str_starts_with($currentPath, '/admin/registrations') ? 'active' : '' ?>" href="<?= e(url('/admin/registrations')) ?>" title="Inscrições"><i class="bi bi-clipboard-check" aria-hidden="true"></i><span>Inscrições</span></a>
+                <?php endif; ?>
                 <?php if (\App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && (\App\Models\Document::userCanUpload((int) $user['id']) || \App\Models\Document::userHasAnyAccess((int) $user['id'])))): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>" title="Documentos"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><span>Documentos</span></a>
                 <?php endif; ?>

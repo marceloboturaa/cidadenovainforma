@@ -9,6 +9,19 @@
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/edit?id=' . $event['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
+<?php
+$whatsappLink = function (?string $phone, string $name, string $eventTitle): ?string {
+    $digits = preg_replace('/\D+/', '', (string) $phone);
+    if (!$digits) {
+        return null;
+    }
+    if (strlen($digits) <= 11) {
+        $digits = '55' . $digits;
+    }
+    $message = 'Olá, ' . $name . '. Sua inscrição para "' . $eventTitle . '" foi atualizada. Acompanhe as informações com a equipe do Cidade Nova Informa.';
+    return 'https://wa.me/' . $digits . '?text=' . rawurlencode($message);
+};
+?>
 
 <section class="panel">
     <div class="section-heading">
@@ -240,6 +253,9 @@
                         <input class="form-control form-control-sm" name="notes" value="<?= e($participant['notes'] ?? '') ?>" placeholder="Observação">
                         <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-check2" aria-hidden="true"></i>Salvar</button>
                     </form>
+                    <?php if ($link = $whatsappLink($participant['whatsapp'] ?? $participant['phone'] ?? null, (string) $participant['full_name'], (string) $event['title'])): ?>
+                        <a class="btn btn-sm btn-outline-success icon-btn" href="<?= e($link) ?>" target="_blank" rel="noopener"><i class="bi bi-whatsapp" aria-hidden="true"></i>WhatsApp</a>
+                    <?php endif; ?>
                     <form class="inline-form" method="post" action="<?= e(url('/admin/library-events/participants/remove?id=' . $event['id'] . '&person_id=' . $participant['person_id'])) ?>" onsubmit="return confirm('Remover participante deste evento?');">
                         <?= csrf_field() ?>
                         <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-x-circle" aria-hidden="true"></i>Remover</button>

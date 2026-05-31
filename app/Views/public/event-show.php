@@ -158,6 +158,18 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                             <input type="checkbox" name="contact_authorized" value="1" required>
                             <span>Autorizo o uso dos contatos informados para comunicação sobre esta inscrição.</span>
                         </label>
+                        <label class="event-registration-check field-wide">
+                            <input type="checkbox" name="create_login" value="1">
+                            <span>Também quero criar login com este e-mail. O acesso só será liberado após aprovação do administrador.</span>
+                        </label>
+                        <div>
+                            <label>Senha do login</label>
+                            <input name="login_password" type="password" minlength="8" autocomplete="new-password">
+                        </div>
+                        <div>
+                            <label>Confirmar senha</label>
+                            <input name="login_password_confirmation" type="password" minlength="8" autocomplete="new-password">
+                        </div>
                         <div class="field-wide">
                             <label>Observações</label>
                             <textarea name="notes" rows="3"></textarea>

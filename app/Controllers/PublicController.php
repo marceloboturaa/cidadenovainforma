@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Core\RegistrationNotifier;
 use App\Core\Session;
 use App\Core\View;
 use App\Models\Category;
@@ -16,7 +17,9 @@ use App\Models\LibraryEvent;
 use App\Models\MenuItem;
 use App\Models\News;
 use App\Models\Person;
+use App\Models\Role;
 use App\Models\Tag;
+use App\Models\User;
 
 class PublicController
 {
@@ -181,6 +184,7 @@ class PublicController
             'created_by' => null,
             'updated_by' => null,
         ]));
+        $person = Person::find($personId) ?: $person;
 
         $existing = LibraryEvent::participant((int) $event['id'], $personId);
         if ($existing) {
@@ -195,6 +199,11 @@ class PublicController
             'Inscrição enviada pela página pública. Aguardando confirmação do master/admin.',
             null
         );
+
+        $loginRequested = $this->createPendingLoginIfRequested($person ?: ['full_name' => $name, 'email' => $_POST['email'] ?? '']);
+        if ($person) {
+            RegistrationNotifier::eventStatus($event, $person, 'pendente', $loginRequested);
+        }
 
         Session::flash('registration_success', 'Inscrição enviada. Ela ficará pendente até a confirmação da equipe.');
         redirect('/evento/' . $event['id'] . '#inscricao');
@@ -685,5 +694,35 @@ class PublicController
         header('X-Content-Type-Options: nosniff');
         echo json_encode($payload, JSON_UNESCAPED_UNICODE);
         exit;
+    }
+
+    private function createPendingLoginIfRequested(array $person): bool
+    {
+        if (empty($_POST['create_login'])) {
+            return false;
+        }
+
+        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+        $password = (string) ($_POST['login_password'] ?? '');
+        $confirmation = (string) ($_POST['login_password_confirmation'] ?? '');
+
+        if (!$email || strlen($password) < 8 || $password !== $confirmation || User::findByEmail($email)) {
+            return false;
+        }
+
+        $role = Role::findBySlug('estudante') ?: Role::findBySlug('jornalista');
+        if (!$role) {
+            return false;
+        }
+
+        User::create([
+            'name' => $person['full_name'] ?? ($_POST['full_name'] ?? ''),
+            'email' => $email,
+            'password' => $password,
+            'role_id' => $role['id'],
+            'active' => 0,
+        ]);
+
+        return true;
     }
 }

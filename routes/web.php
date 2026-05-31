@@ -86,6 +86,7 @@ $router->post('/admin/people/delete', [PersonController::class, 'delete']);
 $router->get('/admin/people/export', [PersonController::class, 'export']);
 
 $router->get('/admin/library-events', [LibraryEventController::class, 'index']);
+$router->get('/admin/registrations', [LibraryEventController::class, 'registrations']);
 $router->get('/admin/library-events/edit', [LibraryEventController::class, 'index']);
 $router->post('/admin/library-events', [LibraryEventController::class, 'store']);
 $router->post('/admin/library-events/update', [LibraryEventController::class, 'update']);

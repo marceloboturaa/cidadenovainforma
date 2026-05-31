@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Core\Csrf;
 use App\Core\Logger;
 use App\Core\Middleware;
+use App\Core\RegistrationNotifier;
 use App\Core\Session;
 use App\Core\View;
 use App\Models\Document;
@@ -146,6 +147,7 @@ class UserController
         }
 
         User::activate((int) $user['id']);
+        RegistrationNotifier::userApproved($user);
         Logger::info('users.approved', 'Cadastro aprovado: ' . $user['email'], current_user()['id'] ?? null);
         Session::flash('success', 'Cadastro aprovado para ' . $user['name'] . '.');
         redirect('/admin/users');

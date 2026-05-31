@@ -6,6 +6,7 @@ use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Logger;
 use App\Core\Middleware;
+use App\Core\RegistrationNotifier;
 use App\Core\Session;
 use App\Core\SimplePdf;
 use App\Core\View;
@@ -26,6 +27,22 @@ class LibraryEventController
             'editing' => $this->editing(),
             'users' => User::activeForAccessLists(),
             'canDeactivate' => $this->currentUserIsMaster(),
+        ]);
+    }
+
+    public function registrations(): void
+    {
+        Middleware::permission('event_participants.manage');
+        $events = LibraryEvent::all($this->volunteerScopeUserId());
+        $eventSummaries = [];
+
+        foreach ($events as $event) {
+            $eventSummaries[(int) $event['id']] = LibraryEvent::participantStats((int) $event['id']);
+        }
+
+        View::render('admin/library-events/registrations', [
+            'events' => $events,
+            'eventSummaries' => $eventSummaries,
         ]);
     }
 
@@ -123,6 +140,8 @@ class LibraryEventController
             current_user()['id'] ?? null
         );
 
+        RegistrationNotifier::eventStatus($event, $person, (string) ($_POST['status'] ?? 'inscrito'));
+
         Logger::info('library_events.participant_added', 'Participante vinculado: ' . $person['full_name'], current_user()['id'] ?? null);
         Session::flash('success', 'Participante adicionado ao evento.');
         redirect('/admin/library-events/participants?id=' . $event['id']);
@@ -153,6 +172,11 @@ class LibraryEventController
             $_POST['participant_notes'] ?? null,
             $userId ?: null
         );
+
+        $person = Person::find($personId);
+        if ($person) {
+            RegistrationNotifier::eventStatus($event, $person, (string) ($_POST['status'] ?? 'inscrito'));
+        }
 
         Logger::info('library_events.registration_created', 'Inscrição cadastrada: ' . $name, $userId ?: null);
         Session::flash('success', 'Pessoa cadastrada e inscrita no evento.');
