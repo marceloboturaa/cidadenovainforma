@@ -178,6 +178,22 @@ class PublicController
             redirect('/evento/' . $event['id'] . '#inscricao');
         }
 
+        if (!empty($_POST['is_minor'])) {
+            $guardianName = trim((string) ($_POST['guardian_name'] ?? ''));
+            $guardianRelation = trim((string) ($_POST['guardian_relation'] ?? ''));
+            $guardianPhone = trim((string) ($_POST['guardian_phone'] ?? ''));
+
+            if ($guardianName === '' || $guardianRelation === '' || $guardianPhone === '') {
+                Session::flash('registration_error', 'Para menor de idade, informe nome, parentesco e telefone do responsável.');
+                redirect('/evento/' . $event['id'] . '#inscricao');
+            }
+        }
+
+        if (!$this->loginRequestIsValid()) {
+            Session::flash('registration_error', 'Para criar login, informe e-mail e senha com confirmação igual e pelo menos 8 caracteres.');
+            redirect('/evento/' . $event['id'] . '#inscricao');
+        }
+
         $person = Person::findByIdentity($_POST['cpf'] ?? null, $_POST['email'] ?? null, $_POST['whatsapp'] ?? null);
         $personId = $person ? (int) $person['id'] : Person::create(array_merge($_POST, [
             'contact_authorized' => 1,
@@ -724,5 +740,18 @@ class PublicController
         ]);
 
         return true;
+    }
+
+    private function loginRequestIsValid(): bool
+    {
+        if (empty($_POST['create_login'])) {
+            return true;
+        }
+
+        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+        $password = (string) ($_POST['login_password'] ?? '');
+        $confirmation = (string) ($_POST['login_password_confirmation'] ?? '');
+
+        return (bool) $email && strlen($password) >= 8 && $password === $confirmation;
     }
 }

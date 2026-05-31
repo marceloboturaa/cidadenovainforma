@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS people (
     guardian_phone VARCHAR(30) NULL,
     guardian_email VARCHAR(190) NULL,
     contact_authorized TINYINT(1) NOT NULL DEFAULT 0,
+    image_authorized TINYINT(1) NOT NULL DEFAULT 0,
     notes TEXT NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_by BIGINT UNSIGNED NULL,
@@ -65,6 +66,7 @@ ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_relation VARCHAR(80) NULL A
 ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_cpf VARCHAR(20) NULL AFTER guardian_relation;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_phone VARCHAR(30) NULL AFTER guardian_cpf;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_email VARCHAR(190) NULL AFTER guardian_phone;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS image_authorized TINYINT(1) NOT NULL DEFAULT 0 AFTER contact_authorized;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;
 
 CREATE TABLE IF NOT EXISTS library_event_participants (

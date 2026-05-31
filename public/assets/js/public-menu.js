@@ -26,3 +26,41 @@
         }
     });
 })();
+
+(function () {
+    const loginToggle = document.querySelector('[data-public-login-toggle]');
+    const loginPanel = document.querySelector('[data-public-login-panel]');
+
+    if (!loginToggle || !loginPanel) {
+        return;
+    }
+
+    const syncLogin = () => {
+        loginPanel.hidden = !loginToggle.checked;
+        loginPanel.querySelectorAll('input').forEach((input) => {
+            input.required = loginToggle.checked;
+        });
+    };
+
+    loginToggle.addEventListener('change', syncLogin);
+    syncLogin();
+})();
+
+(function () {
+    const minorToggle = document.querySelector('[data-public-minor-toggle]');
+    const guardianPanel = document.querySelector('[data-public-guardian-panel]');
+
+    if (!minorToggle || !guardianPanel) {
+        return;
+    }
+
+    const syncGuardian = () => {
+        guardianPanel.hidden = !minorToggle.checked;
+        guardianPanel.querySelectorAll('input').forEach((input) => {
+            input.required = minorToggle.checked && ['guardian_name', 'guardian_relation', 'guardian_phone'].includes(input.name);
+        });
+    };
+
+    minorToggle.addEventListener('change', syncGuardian);
+    syncGuardian();
+})();

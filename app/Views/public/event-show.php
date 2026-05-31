@@ -138,38 +138,62 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                             <label>UF</label>
                             <input name="state" maxlength="2">
                         </div>
-                        <label class="event-registration-check field-wide">
-                            <input type="checkbox" name="is_minor" value="1">
+                        <label class="event-registration-check event-minor-toggle field-wide">
+                            <input type="checkbox" name="is_minor" value="1" data-public-minor-toggle>
                             <span>Sou menor de idade ou estou inscrevendo menor de idade</span>
                         </label>
-                        <div class="field-wide">
-                            <label>Nome do responsável</label>
-                            <input name="guardian_name">
-                        </div>
-                        <div>
-                            <label>Parentesco</label>
-                            <input name="guardian_relation">
-                        </div>
-                        <div>
-                            <label>Telefone do responsável</label>
-                            <input name="guardian_phone">
-                        </div>
+                        <section class="event-guardian-panel field-wide" data-public-guardian-panel hidden>
+                            <div class="event-guardian-heading">
+                                <strong>Dados do responsável</strong>
+                                <span>Obrigatório quando a inscrição for de menor de idade.</span>
+                            </div>
+                            <div>
+                                <label>Nome do responsável</label>
+                                <input name="guardian_name">
+                            </div>
+                            <div>
+                                <label>Parentesco</label>
+                                <input name="guardian_relation">
+                            </div>
+                            <div>
+                                <label>CPF do responsável</label>
+                                <input name="guardian_cpf">
+                            </div>
+                            <div>
+                                <label>Telefone do responsável</label>
+                                <input name="guardian_phone">
+                            </div>
+                            <div>
+                                <label>E-mail do responsável</label>
+                                <input name="guardian_email" type="email">
+                            </div>
+                        </section>
                         <label class="event-registration-check field-wide">
                             <input type="checkbox" name="contact_authorized" value="1" required>
                             <span>Autorizo o uso dos contatos informados para comunicação sobre esta inscrição.</span>
                         </label>
-                        <label class="event-registration-check field-wide">
-                            <input type="checkbox" name="create_login" value="1">
+                        <label class="event-registration-check event-image-consent field-wide">
+                            <input type="checkbox" name="image_authorized" value="1">
+                            <span>Autorizo o uso gratuito da minha imagem em fotos e vídeos deste evento para divulgação institucional do Cidade Nova Informa.</span>
+                        </label>
+                        <label class="event-registration-check event-login-option field-wide">
+                            <input type="checkbox" name="create_login" value="1" data-public-login-toggle>
                             <span>Também quero criar login com este e-mail. O acesso só será liberado após aprovação do administrador.</span>
                         </label>
-                        <div>
-                            <label>Senha do login</label>
-                            <input name="login_password" type="password" minlength="8" autocomplete="new-password">
-                        </div>
-                        <div>
-                            <label>Confirmar senha</label>
-                            <input name="login_password_confirmation" type="password" minlength="8" autocomplete="new-password">
-                        </div>
+                        <section class="event-login-panel field-wide" data-public-login-panel hidden>
+                            <div class="event-login-heading">
+                                <strong>Dados de acesso</strong>
+                                <span>O login fica bloqueado até aprovação do administrador.</span>
+                            </div>
+                            <div>
+                                <label>Senha do login</label>
+                                <input name="login_password" type="password" minlength="8" autocomplete="new-password">
+                            </div>
+                            <div>
+                                <label>Confirmar senha</label>
+                                <input name="login_password_confirmation" type="password" minlength="8" autocomplete="new-password">
+                            </div>
+                        </section>
                         <div class="field-wide">
                             <label>Observações</label>
                             <textarea name="notes" rows="3"></textarea>

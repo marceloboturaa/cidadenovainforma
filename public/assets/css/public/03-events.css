@@ -642,7 +642,9 @@
 }
 
 .event-registration-form > .field-wide,
-.event-registration-form > .event-registration-check {
+.event-registration-form > .event-registration-check,
+.event-registration-form > .event-guardian-panel,
+.event-registration-form > .event-login-panel {
     grid-column: span 3;
 }
 
@@ -680,6 +682,81 @@
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #f8fafc;
+}
+
+.event-minor-toggle {
+    border-color: #fed7aa;
+    background: #fff7ed;
+}
+
+.event-guardian-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #fdba74;
+    border-radius: 8px;
+    background: #fff7ed;
+}
+
+.event-login-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #a5b4fc;
+    border-radius: 8px;
+    background: #eef2ff;
+}
+
+.event-login-panel[hidden] {
+    display: none;
+}
+
+.event-login-heading {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 3px;
+}
+
+.event-login-heading strong {
+    color: #3730a3;
+    font-size: 1rem;
+}
+
+.event-login-heading span {
+    color: #4338ca;
+    font-size: 0.84rem;
+}
+
+.event-guardian-panel[hidden] {
+    display: none;
+}
+
+.event-guardian-heading {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 3px;
+}
+
+.event-guardian-heading strong {
+    color: #9a3412;
+    font-size: 1rem;
+}
+
+.event-guardian-heading span {
+    color: #9a3412;
+    font-size: 0.84rem;
+}
+
+.event-image-consent {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.event-login-option {
+    border-color: #c7d2fe;
+    background: #eef2ff;
 }
 
 .event-registration-check input {

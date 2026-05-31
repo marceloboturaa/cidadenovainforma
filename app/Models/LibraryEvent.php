@@ -39,6 +39,7 @@ class LibraryEvent
                 guardian_phone VARCHAR(30) NULL,
                 guardian_email VARCHAR(190) NULL,
                 contact_authorized TINYINT(1) NOT NULL DEFAULT 0,
+                image_authorized TINYINT(1) NOT NULL DEFAULT 0,
                 notes TEXT NULL,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_by BIGINT UNSIGNED NULL,
@@ -84,6 +85,11 @@ class LibraryEvent
         }
         if (!in_array('related_links', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN related_links TEXT NULL AFTER cover_image');
+        }
+
+        $personColumns = $db->query('SHOW COLUMNS FROM people')->fetchAll(\PDO::FETCH_COLUMN);
+        if (!in_array('image_authorized', $personColumns, true)) {
+            $db->exec('ALTER TABLE people ADD COLUMN image_authorized TINYINT(1) NOT NULL DEFAULT 0 AFTER contact_authorized');
         }
 
         $db->exec(
@@ -262,7 +268,8 @@ class LibraryEvent
                     people.guardian_cpf,
                     people.guardian_phone,
                     people.guardian_email,
-                    people.contact_authorized
+                    people.contact_authorized,
+                    people.image_authorized
              FROM library_event_participants
              INNER JOIN people ON people.id = library_event_participants.person_id
              WHERE library_event_participants.event_id = :event_id

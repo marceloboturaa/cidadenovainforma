@@ -44,6 +44,75 @@ class SimplePdf
         return self::build($pages ?: [[]]);
     }
 
+    public static function registrationReport(array $event, array $participants): string
+    {
+        $title = 'Lista de Inscricoes';
+        $eventTitle = (string) ($event['title'] ?? 'Evento');
+        $pages = [];
+        $current = [];
+        $cursor = self::TOP;
+        $count = count($participants);
+
+        $add = function (string $text, int $size = 9, int $gap = 14) use (&$pages, &$current, &$cursor): void {
+            if ($cursor < 70) {
+                $pages[] = $current;
+                $current = [];
+                $cursor = self::TOP;
+            }
+            $current[] = ['text' => $text, 'size' => $size, 'y' => $cursor];
+            $cursor -= $gap;
+        };
+
+        $rule = function () use (&$current, &$cursor): void {
+            $current[] = ['type' => 'rule', 'y' => $cursor + 5];
+            $cursor -= 8;
+        };
+
+        $add($title, 18, 22);
+        $add('Evento: ' . $eventTitle, 12, 18);
+        $add('Gerado em ' . date('d/m/Y H:i') . ' | Total: ' . $count . ' inscricao(oes)', 9, 16);
+        if (!empty($event['starts_at'])) {
+            $add('Data: ' . date('d/m/Y H:i', strtotime((string) $event['starts_at'])) . ' | Local: ' . (($event['location'] ?? '') ?: '-'), 9, 16);
+        }
+        $rule();
+
+        if (!$participants) {
+            $add('Nenhuma inscricao encontrada.', 10, 16);
+        }
+
+        foreach ($participants as $index => $participant) {
+            $status = ucfirst((string) ($participant['status'] ?? 'pendente'));
+            $name = (string) ($participant['full_name'] ?? '');
+            $contact = ($participant['whatsapp'] ?? '') ?: (($participant['phone'] ?? '') ?: '-');
+            $email = ($participant['email'] ?? '') ?: '-';
+            $city = trim((string) (($participant['district'] ?? '') . ' / ' . ($participant['city'] ?? '')), ' /') ?: '-';
+            $image = !empty($participant['image_authorized']) ? 'Sim' : 'Nao';
+            $guardian = !empty($participant['is_minor'])
+                ? trim((string) (($participant['guardian_name'] ?? '-') . ' | ' . ($participant['guardian_phone'] ?? '-')), ' |')
+                : '-';
+
+            $add(($index + 1) . '. ' . $name . '  [' . $status . ']', 11, 16);
+            $add('CPF: ' . (($participant['cpf'] ?? '') ?: '-') . ' | Nascimento: ' . (($participant['birth_date'] ?? '') ?: '-') . ' | Contato: ' . $contact, 8, 12);
+            $add('E-mail: ' . $email . ' | Bairro/Cidade: ' . $city . ' | Imagem autorizada: ' . $image, 8, 12);
+            if (!empty($participant['is_minor'])) {
+                $add('Responsavel: ' . $guardian . ' | Parentesco: ' . (($participant['guardian_relation'] ?? '') ?: '-'), 8, 12);
+            }
+            if (!empty($participant['notes'])) {
+                foreach (self::wrap('Obs.: ' . (string) $participant['notes'], 100) as $line) {
+                    $add($line, 8, 11);
+                }
+            }
+            $add('Assinatura: _______________________________________________', 8, 16);
+            $rule();
+        }
+
+        if ($current) {
+            $pages[] = $current;
+        }
+
+        return self::build($pages ?: [[]]);
+    }
+
     private static function wrap(string $text, int $width): array
     {
         $text = trim(preg_replace('/\s+/', ' ', $text) ?? '');
@@ -65,14 +134,19 @@ class SimplePdf
         $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
 
         foreach ($pages as $page) {
-            $content = "BT\n";
+            $content = "";
             foreach ($page as $line) {
+                if (($line['type'] ?? '') === 'rule') {
+                    $content .= "0.82 w\n42 " . (int) $line['y'] . " m\n553 " . (int) $line['y'] . " l\nS\n";
+                    continue;
+                }
+                $content .= "BT\n";
                 $content .= '/F1 ' . (int) $line['size'] . " Tf\n";
                 $content .= self::LEFT . ' ' . (int) $line['y'] . " Td\n";
                 $content .= '(' . self::escape($line['text']) . ") Tj\n";
                 $content .= '-' . self::LEFT . " 0 Td\n";
+                $content .= "ET\n";
             }
-            $content .= "ET\n";
 
             $streamId = count($objects) + 1;
             $objects[] = '<< /Length ' . strlen($content) . " >>\nstream\n" . $content . "endstream";

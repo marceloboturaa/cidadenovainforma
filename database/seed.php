@@ -84,6 +84,7 @@ $pdo->exec(
         guardian_phone VARCHAR(30) NULL,
         guardian_email VARCHAR(190) NULL,
         contact_authorized TINYINT(1) NOT NULL DEFAULT 0,
+        image_authorized TINYINT(1) NOT NULL DEFAULT 0,
         notes TEXT NULL,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_by BIGINT UNSIGNED NULL,
@@ -133,6 +134,7 @@ $peopleColumns = [
     'guardian_cpf' => "ALTER TABLE people ADD COLUMN guardian_cpf VARCHAR(20) NULL AFTER guardian_relation",
     'guardian_phone' => "ALTER TABLE people ADD COLUMN guardian_phone VARCHAR(30) NULL AFTER guardian_cpf",
     'guardian_email' => "ALTER TABLE people ADD COLUMN guardian_email VARCHAR(190) NULL AFTER guardian_phone",
+    'image_authorized' => "ALTER TABLE people ADD COLUMN image_authorized TINYINT(1) NOT NULL DEFAULT 0 AFTER contact_authorized",
 ];
 
 $existingPeopleColumns = $pdo->query('SHOW COLUMNS FROM people')->fetchAll(PDO::FETCH_COLUMN);

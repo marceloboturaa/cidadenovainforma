@@ -269,8 +269,15 @@
 
     .event-registration-form > div,
     .event-registration-form > .field-wide,
-    .event-registration-form > .event-registration-check {
+    .event-registration-form > .event-registration-check,
+    .event-registration-form > .event-guardian-panel,
+    .event-registration-form > .event-login-panel {
         grid-column: span 1;
+    }
+
+    .event-guardian-panel,
+    .event-login-panel {
+        grid-template-columns: 1fr;
     }
 
     .events-modern-grid {
@@ -578,7 +585,9 @@
 
     .event-registration-form > div,
     .event-registration-form > .field-wide,
-    .event-registration-form > .event-registration-check {
+    .event-registration-form > .event-registration-check,
+    .event-registration-form > .event-guardian-panel,
+    .event-registration-form > .event-login-panel {
         grid-column: 1 / -1;
     }
 

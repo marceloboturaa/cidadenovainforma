@@ -193,23 +193,12 @@ class LibraryEventController
         $slug = trim($slug, '-');
 
         if ($format === 'pdf') {
-            $lines = [];
-            foreach ($participants as $index => $participant) {
-                $lines[] = sprintf(
-                    '%d. %s | Status: %s | CPF: %s | WhatsApp: %s | E-mail: %s | Bairro/Cidade: %s/%s | Responsavel: %s',
-                    $index + 1,
-                    $participant['full_name'] ?? '',
-                    ucfirst((string) ($participant['status'] ?? 'inscrito')),
-                    $participant['cpf'] ?: '-',
-                    $participant['whatsapp'] ?: ($participant['phone'] ?: '-'),
-                    $participant['email'] ?: '-',
-                    $participant['district'] ?: '-',
-                    $participant['city'] ?: '-',
-                    !empty($participant['is_minor']) ? ($participant['guardian_name'] ?: '-') : '-'
-                );
-            }
-
-            $this->downloadPdf($slug . '-participantes.pdf', 'Participantes - ' . $event['title'], $lines);
+            $pdf = SimplePdf::registrationReport($event, $participants);
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . $slug . '-participantes.pdf"');
+            header('Content-Length: ' . strlen($pdf));
+            echo $pdf;
+            exit;
             return;
         }
 
@@ -217,7 +206,7 @@ class LibraryEventController
         header('Content-Disposition: attachment; filename="' . $slug . '-participantes.csv"');
         echo "\xEF\xBB\xBF";
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['Evento', 'Nome', 'Status', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Observacoes da inscricao'], ';');
+        fputcsv($output, ['Evento', 'Nome', 'Status', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Uso de imagem autorizado', 'Observacoes da inscricao'], ';');
         foreach ($participants as $participant) {
             fputcsv($output, [
                 $event['title'] ?? '',
@@ -242,6 +231,7 @@ class LibraryEventController
                 $participant['guardian_phone'] ?? '',
                 $participant['guardian_email'] ?? '',
                 !empty($participant['contact_authorized']) ? 'Sim' : 'Nao',
+                !empty($participant['image_authorized']) ? 'Sim' : 'Nao',
                 $participant['notes'] ?? '',
             ], ';');
         }

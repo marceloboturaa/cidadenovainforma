@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS people (
     guardian_phone VARCHAR(30) NULL,
     guardian_email VARCHAR(190) NULL,
     contact_authorized TINYINT(1) NOT NULL DEFAULT 0,
+    image_authorized TINYINT(1) NOT NULL DEFAULT 0,
     notes TEXT NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_by BIGINT UNSIGNED NULL,

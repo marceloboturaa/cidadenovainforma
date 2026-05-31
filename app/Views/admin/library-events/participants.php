@@ -169,6 +169,10 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
                     <span><strong>Autoriza contato</strong><small>Permite usar telefone, WhatsApp ou e-mail.</small></span>
                 </label>
                 <label class="person-toggle-row">
+                    <input class="form-check-input" type="checkbox" name="image_authorized" value="1">
+                    <span><strong>Autoriza uso de imagem</strong><small>Permite fotos e vídeos em divulgação institucional.</small></span>
+                </label>
+                <label class="person-toggle-row">
                     <input class="form-check-input" type="checkbox" name="is_minor" value="1" data-minor-toggle>
                     <span><strong>Criança/adolescente</strong><small>Mostra campos do responsável.</small></span>
                 </label>
@@ -239,6 +243,7 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
                         <div><dt>WhatsApp</dt><dd><?= e($participant['whatsapp'] ?? '-') ?></dd></div>
                         <div><dt>E-mail</dt><dd><?= e($participant['email'] ?? '-') ?></dd></div>
                         <div><dt>Bairro</dt><dd><?= e($participant['district'] ?? '-') ?></dd></div>
+                        <div><dt>Imagem</dt><dd><?= !empty($participant['image_authorized']) ? 'Autorizada' : 'Não autorizada' ?></dd></div>
                     </dl>
                 </div>
                 <div class="participant-management-actions">

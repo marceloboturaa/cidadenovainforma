@@ -3,6 +3,9 @@
 ALTER TABLE library_event_participants
     MODIFY status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente';
 
+ALTER TABLE people
+    ADD COLUMN IF NOT EXISTS image_authorized TINYINT(1) NOT NULL DEFAULT 0 AFTER contact_authorized;
+
 INSERT INTO permissions (name, slug, created_at)
 VALUES
     ('Gerenciar pessoas internas', 'people.manage', NOW()),

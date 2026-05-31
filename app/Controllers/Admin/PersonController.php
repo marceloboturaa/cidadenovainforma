@@ -94,7 +94,7 @@ class PersonController
             $lines = [];
             foreach ($people as $index => $person) {
                 $lines[] = sprintf(
-                    '%d. %s | CPF: %s | WhatsApp: %s | E-mail: %s | Cidade: %s/%s | Contato: %s',
+                    '%d. %s | CPF: %s | WhatsApp: %s | E-mail: %s | Cidade: %s/%s | Contato: %s | Imagem: %s',
                     $index + 1,
                     $person['full_name'] ?? '',
                     $person['cpf'] ?: '-',
@@ -102,7 +102,8 @@ class PersonController
                     $person['email'] ?: '-',
                     $person['city'] ?: '-',
                     $person['state'] ?: '-',
-                    !empty($person['contact_authorized']) ? 'autorizado' : 'nao autorizado'
+                    !empty($person['contact_authorized']) ? 'autorizado' : 'nao autorizado',
+                    !empty($person['image_authorized']) ? 'autorizada' : 'nao autorizada'
                 );
             }
 
@@ -114,7 +115,7 @@ class PersonController
         header('Content-Disposition: attachment; filename="lista-pessoas.csv"');
         echo "\xEF\xBB\xBF";
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['Nome', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Observacoes'], ';');
+        fputcsv($output, ['Nome', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Uso de imagem autorizado', 'Observacoes'], ';');
         foreach ($people as $person) {
             fputcsv($output, [
                 $person['full_name'] ?? '',
@@ -137,6 +138,7 @@ class PersonController
                 $person['guardian_phone'] ?? '',
                 $person['guardian_email'] ?? '',
                 !empty($person['contact_authorized']) ? 'Sim' : 'Nao',
+                !empty($person['image_authorized']) ? 'Sim' : 'Nao',
                 $person['notes'] ?? '',
             ], ';');
         }

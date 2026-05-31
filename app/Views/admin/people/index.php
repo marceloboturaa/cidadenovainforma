@@ -149,6 +149,13 @@
                     </span>
                 </label>
                 <label class="person-toggle-row">
+                    <input class="form-check-input" type="checkbox" name="image_authorized" value="1" <?= checked((bool) ($editing['image_authorized'] ?? false)) ?>>
+                    <span>
+                        <strong>Autoriza uso de imagem</strong>
+                        <small>Permite fotos e vídeos em divulgação institucional.</small>
+                    </span>
+                </label>
+                <label class="person-toggle-row">
                     <input class="form-check-input" type="checkbox" name="is_minor" value="1" <?= checked((bool) ($editing['is_minor'] ?? false)) ?> data-minor-toggle>
                     <span>
                         <strong>Criança/adolescente</strong>
