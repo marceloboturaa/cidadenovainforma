@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS library_events (
     starts_at DATETIME NULL,
     ends_at DATETIME NULL,
     location VARCHAR(160) NULL,
+    event_address VARCHAR(255) NULL,
     cover_image VARCHAR(255) NULL,
     related_links TEXT NULL,
     capacity INT UNSIGNED NULL,

@@ -171,8 +171,12 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <input class="form-control" name="ends_at" type="datetime-local" value="<?= e($endsAt) ?>">
                         </div>
                         <div>
-                            <label class="form-label">Local</label>
-                            <input class="form-control" name="location" value="<?= e($editing['location'] ?? '') ?>" placeholder="Endereço ou espaço">
+                            <label class="form-label">Local / espaço</label>
+                            <input class="form-control" name="location" value="<?= e($editing['location'] ?? '') ?>" placeholder="Ex.: Biblioteca, auditório, praça">
+                        </div>
+                        <div>
+                            <label class="form-label">Endereço</label>
+                            <input class="form-control" name="event_address" value="<?= e($editing['event_address'] ?? '') ?>" placeholder="Rua, número, bairro">
                         </div>
                         <div>
                             <label class="form-label">Vagas</label>
@@ -268,6 +272,7 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                 $bucket = $eventBucket($event);
                 $capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
                 $participants = (int) ($event['participant_count'] ?? 0);
+                $remaining = $capacity ? max(0, $capacity - $participants) : null;
                 $duration = $eventDurationMinutes($event);
                 ?>
                 <article class="events-admin-item" data-event-card data-event-bucket="<?= e($bucket) ?>">
@@ -286,7 +291,8 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <div><dt>Quando</dt><dd><?= e($formatDate($event['starts_at'] ?? null)) ?></dd></div>
                             <div><dt>Duração</dt><dd><?= e($formatDuration($duration)) ?></dd></div>
                             <div><dt>Local</dt><dd><?= e($event['location'] ?: '-') ?></dd></div>
-                            <div><dt>Participantes</dt><dd><?= e((string) $participants) ?><?= $capacity ? ' / ' . e((string) $capacity) : '' ?></dd></div>
+                            <div><dt>Endereço</dt><dd><?= e($event['event_address'] ?: '-') ?></dd></div>
+                            <div><dt>Vagas</dt><dd><?= e((string) $participants) ?><?= $capacity ? ' / ' . e((string) $capacity) . ' · ' . e((string) $remaining) . ' livre(s)' : '' ?></dd></div>
                             <div><dt>Responsável</dt><dd><?= e($event['responsible_name'] ?? '-') ?></dd></div>
                         </dl>
                     </div>

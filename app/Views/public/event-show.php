@@ -7,6 +7,16 @@ $isHappening = ($event['status'] ?? '') === 'aberto' && $startTime && $endTime &
 $isPast = ($event['status'] ?? '') === 'encerrado' || (($endTime ?: $startTime) && ($endTime ?: $startTime) < time());
 $statusText = $isHappening ? 'Acontecendo' : ($isPast ? 'Evento realizado' : 'Próximo evento');
 $canRegister = ($event['status'] ?? '') === 'aberto' && !$isPast;
+$remainingSlots = $remainingSlots ?? null;
+$capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
+$occupiedSlots = $capacity ? max(0, $capacity - (int) ($remainingSlots ?? $capacity)) : null;
+$shareUrl = url('/evento/' . $event['id']);
+$shareText = 'Confira este evento: ' . ($event['title'] ?? 'Evento');
+$shareLinks = [
+    'whatsapp' => 'https://wa.me/?text=' . rawurlencode($shareText . ' ' . $shareUrl),
+    'facebook' => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($shareUrl),
+    'email' => 'mailto:?subject=' . rawurlencode((string) ($event['title'] ?? 'Evento')) . '&body=' . rawurlencode($shareText . "\n" . $shareUrl),
+];
 $relatedLinks = [];
 foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as $line) {
     $line = trim($line);
@@ -44,7 +54,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 <p><?= e(text_excerpt($event['description'], 240)) ?></p>
             <?php endif; ?>
             <div class="event-show-actions">
-                <?php if ($canRegister): ?>
+                <?php if ($canRegister && $remainingSlots !== 0): ?>
                     <a class="public-event-more" href="#inscricao">Fazer inscrição</a>
                 <?php endif; ?>
                 <a class="public-event-more" href="<?= e($isPast ? url('/eventos/realizados') : url('/eventos/futuros')) ?>">
@@ -73,7 +83,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 <p class="event-detail-text">Mais informações serão divulgadas em breve.</p>
             <?php endif; ?>
 
-            <?php if ($canRegister): ?>
+            <?php if ($canRegister && $remainingSlots !== 0): ?>
                 <section class="event-registration-panel" id="inscricao">
                     <div class="event-registration-heading">
                         <span>Inscrição online</span>
@@ -202,18 +212,34 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                     </form>
                 </section>
             <?php endif; ?>
+            <?php if ($canRegister && $remainingSlots === 0): ?>
+                <section class="event-registration-panel" id="inscricao">
+                    <div class="public-form-alert is-error">As vagas deste evento estão esgotadas no momento.</div>
+                </section>
+            <?php endif; ?>
         </div>
 
         <aside class="event-show-sidebar">
             <h2>Informações</h2>
-            <dl>
-                <div><dt>Data e horário</dt><dd><?= e($startsAt) ?></dd></div>
-                <?php if ($endsAt): ?><div><dt>Encerramento</dt><dd><?= e($endsAt) ?></dd></div><?php endif; ?>
-                <?php if (!empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
-                <?php if (!empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e((string) $event['capacity']) ?></dd></div><?php endif; ?>
-                <?php if (!empty($event['responsible_name'])): ?><div><dt>Responsável</dt><dd><?= e($event['responsible_name']) ?></dd></div><?php endif; ?>
-                <div><dt>Status</dt><dd><?= e($statusText) ?></dd></div>
+            <dl class="event-info-color-list">
+                <div class="info-date"><dt>Data e horário</dt><dd><?= e($startsAt) ?></dd></div>
+                <?php if ($endsAt): ?><div class="info-date"><dt>Encerramento</dt><dd><?= e($endsAt) ?></dd></div><?php endif; ?>
+                <?php if (!empty($event['location'])): ?><div class="info-place"><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
+                <?php if (!empty($event['event_address'])): ?><div class="info-address"><dt>Endereço</dt><dd><?= e($event['event_address']) ?></dd></div><?php endif; ?>
+                <?php if ($capacity): ?><div class="info-slots"><dt>Vagas</dt><dd><?= e((string) $occupiedSlots) ?> ocupada(s) / <?= e((string) $capacity) ?> total<?= $remainingSlots !== null ? ' · ' . e((string) $remainingSlots) . ' restante(s)' : '' ?></dd></div><?php endif; ?>
+                <?php if (!empty($event['responsible_name'])): ?><div class="info-person"><dt>Responsável</dt><dd><?= e($event['responsible_name']) ?></dd></div><?php endif; ?>
+                <div class="info-status"><dt>Status</dt><dd><?= e($statusText) ?></dd></div>
             </dl>
+
+            <section class="event-share-box" aria-label="Compartilhar evento">
+                <h3>Compartilhar</h3>
+                <div class="event-share-actions">
+                    <a href="<?= e($shareLinks['whatsapp']) ?>" target="_blank" rel="noopener">WhatsApp</a>
+                    <a href="<?= e($shareLinks['facebook']) ?>" target="_blank" rel="noopener">Facebook</a>
+                    <a href="<?= e($shareLinks['email']) ?>">E-mail</a>
+                    <button type="button" data-copy-share="<?= e($shareUrl) ?>">Copiar link</button>
+                </div>
+            </section>
 
             <?php if ($relatedLinks): ?>
                 <section class="event-related-news" aria-label="Matérias sobre o evento">

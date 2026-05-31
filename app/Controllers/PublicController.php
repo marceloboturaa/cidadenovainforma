@@ -137,6 +137,8 @@ class PublicController
 
         View::render('public/event-show', [
             'event' => $event,
+            'participantStats' => LibraryEvent::participantStats((int) $event['id']),
+            'remainingSlots' => $this->remainingEventSlots($event),
             'menuItems' => MenuItem::visible(),
             'query' => '',
             'pageTitle' => $event['title'] . ' - Eventos - Cidade Nova Informa',
@@ -162,6 +164,11 @@ class PublicController
 
         if (!Csrf::validate($_POST['_token'] ?? null)) {
             Session::flash('registration_error', 'Sessão expirada. Atualize a página e tente novamente.');
+            redirect('/evento/' . $event['id'] . '#inscricao');
+        }
+
+        if ($this->remainingEventSlots($event) === 0) {
+            Session::flash('registration_error', 'As vagas deste evento estão esgotadas no momento.');
             redirect('/evento/' . $event['id'] . '#inscricao');
         }
 
@@ -740,6 +747,16 @@ class PublicController
         ]);
 
         return true;
+    }
+
+    private function remainingEventSlots(array $event): ?int
+    {
+        $capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
+        if (!$capacity) {
+            return null;
+        }
+
+        return max(0, $capacity - LibraryEvent::activeParticipantCount((int) $event['id']));
     }
 
     private function loginRequestIsValid(): bool

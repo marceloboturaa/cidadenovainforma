@@ -61,6 +61,7 @@ class LibraryEvent
                 starts_at DATETIME NULL,
                 ends_at DATETIME NULL,
                 location VARCHAR(160) NULL,
+                event_address VARCHAR(255) NULL,
                 cover_image VARCHAR(255) NULL,
                 related_links TEXT NULL,
                 capacity INT UNSIGNED NULL,
@@ -82,6 +83,9 @@ class LibraryEvent
         $eventColumns = $db->query('SHOW COLUMNS FROM library_events')->fetchAll(\PDO::FETCH_COLUMN);
         if (!in_array('cover_image', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN cover_image VARCHAR(255) NULL AFTER location');
+        }
+        if (!in_array('event_address', $eventColumns, true)) {
+            $db->exec('ALTER TABLE library_events ADD COLUMN event_address VARCHAR(255) NULL AFTER location');
         }
         if (!in_array('related_links', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN related_links TEXT NULL AFTER cover_image');
@@ -119,7 +123,7 @@ class LibraryEvent
     {
         self::ensureSchema();
 
-        $sql = 'SELECT library_events.*,
+        $sql = "SELECT library_events.*,
                        responsible.name AS responsible_name,
                        COALESCE(participant_counts.total, 0) AS participant_count
                 FROM library_events
@@ -127,9 +131,10 @@ class LibraryEvent
                 LEFT JOIN (
                    SELECT event_id, COUNT(*) AS total
                    FROM library_event_participants
+                   WHERE status <> 'cancelado'
                    GROUP BY event_id
                 ) participant_counts ON participant_counts.event_id = library_events.id
-                WHERE library_events.active = 1';
+                WHERE library_events.active = 1";
         $params = [];
 
         if ($createdBy !== null) {
@@ -150,8 +155,15 @@ class LibraryEvent
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status
+            "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status,
+                    COALESCE(participant_counts.total, 0) AS participant_count
              FROM library_events
+             LEFT JOIN (
+                SELECT event_id, COUNT(*) AS total
+                FROM library_event_participants
+                WHERE status <> 'cancelado'
+                GROUP BY event_id
+             ) participant_counts ON participant_counts.event_id = library_events.id
              WHERE active = 1
                AND status = 'aberto'
                AND (starts_at IS NULL OR COALESCE(ends_at, starts_at) >= NOW())
@@ -170,8 +182,15 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status, created_at, updated_at
+                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status, created_at, updated_at,
+                        COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
+                 LEFT JOIN (
+                    SELECT event_id, COUNT(*) AS total
+                    FROM library_event_participants
+                    WHERE status <> 'cancelado'
+                    GROUP BY event_id
+                 ) participant_counts ON participant_counts.event_id = library_events.id
                  WHERE active = 1
                    AND status = 'aberto'
                    AND (starts_at IS NULL OR COALESCE(ends_at, starts_at) >= NOW())
@@ -186,8 +205,15 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status, created_at, updated_at
+                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status, created_at, updated_at,
+                        COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
+                 LEFT JOIN (
+                    SELECT event_id, COUNT(*) AS total
+                    FROM library_event_participants
+                    WHERE status <> 'cancelado'
+                    GROUP BY event_id
+                 ) participant_counts ON participant_counts.event_id = library_events.id
                  WHERE active = 1
                    AND status <> 'cancelado'
                    AND (
@@ -205,8 +231,15 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT id, title, description, starts_at, ends_at, location, cover_image, capacity, status, created_at, updated_at
+                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_address, cover_image, capacity, status, created_at, updated_at,
+                        COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
+                 LEFT JOIN (
+                    SELECT event_id, COUNT(*) AS total
+                    FROM library_event_participants
+                    WHERE status <> 'cancelado'
+                    GROUP BY event_id
+                 ) participant_counts ON participant_counts.event_id = library_events.id
                  WHERE active = 1
                    AND status <> 'cancelado'
                  ORDER BY COALESCE(starts_at, created_at) DESC"
@@ -220,9 +253,16 @@ class LibraryEvent
 
         $stmt = Database::connection()->prepare(
             "SELECT library_events.*,
-                    responsible.name AS responsible_name
+                    responsible.name AS responsible_name,
+                    COALESCE(participant_counts.total, 0) AS participant_count
              FROM library_events
              LEFT JOIN users responsible ON responsible.id = library_events.responsible_user_id
+             LEFT JOIN (
+                SELECT event_id, COUNT(*) AS total
+                FROM library_event_participants
+                WHERE status <> 'cancelado'
+                GROUP BY event_id
+             ) participant_counts ON participant_counts.event_id = library_events.id
              WHERE library_events.id = :id
                AND library_events.active = 1
                AND library_events.status <> 'cancelado'
@@ -300,6 +340,21 @@ class LibraryEvent
         return $stats;
     }
 
+    public static function activeParticipantCount(int $eventId): int
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            "SELECT COUNT(*) AS total
+             FROM library_event_participants
+             WHERE event_id = :event_id
+               AND status <> 'cancelado'"
+        );
+        $stmt->execute(['event_id' => $eventId]);
+
+        return (int) ($stmt->fetch()['total'] ?? 0);
+    }
+
     public static function participant(int $eventId, int $personId): ?array
     {
         self::ensureSchema();
@@ -318,9 +373,9 @@ class LibraryEvent
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO library_events
-                (title, description, starts_at, ends_at, location, cover_image, related_links, capacity, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
+                (title, description, starts_at, ends_at, location, event_address, cover_image, related_links, capacity, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :description, :starts_at, :ends_at, :location, :cover_image, :related_links, :capacity, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :description, :starts_at, :ends_at, :location, :event_address, :cover_image, :related_links, :capacity, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::payload($data));
 
@@ -342,6 +397,7 @@ class LibraryEvent
                  starts_at = :starts_at,
                  ends_at = :ends_at,
                  location = :location,
+                 event_address = :event_address,
                  cover_image = :cover_image,
                  related_links = :related_links,
                  capacity = :capacity,
@@ -404,6 +460,7 @@ class LibraryEvent
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
             'location' => self::nullable($data['location'] ?? null),
+            'event_address' => self::nullable($data['event_address'] ?? null),
             'cover_image' => self::nullable($data['cover_image'] ?? null),
             'related_links' => self::nullable($data['related_links'] ?? null),
             'capacity' => !empty($data['capacity']) ? (int) $data['capacity'] : null,

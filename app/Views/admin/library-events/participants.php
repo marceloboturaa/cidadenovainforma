@@ -186,10 +186,48 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
     </form>
 </section>
 
-<section class="panel">
+<section class="panel registered-user-panel">
+    <div class="section-heading">
+        <h2>Adicionar estudante/usuário cadastrado</h2>
+        <span>Usa login já aprovado no sistema</span>
+    </div>
+    <div class="admin-card-list compact-list">
+        <?php foreach (($users ?? []) as $user): ?>
+            <article class="admin-list-card internal-list-card registered-user-card">
+                <div class="admin-list-main">
+                    <div class="admin-list-title-row">
+                        <strong class="admin-list-title"><?= e($user['name']) ?></strong>
+                        <span class="state-pill is-active"><?= e($user['role_name'] ?? 'Usuário') ?></span>
+                    </div>
+                    <dl class="admin-list-meta">
+                        <div><dt>E-mail/login</dt><dd><?= e($user['email'] ?? '-') ?></dd></div>
+                        <div><dt>Tipo</dt><dd>Usuário cadastrado</dd></div>
+                    </dl>
+                </div>
+                <form class="participant-add-form" method="post" action="<?= e(url('/admin/library-events/participants/user?id=' . $event['id'])) ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="user_id" value="<?= e((string) $user['id']) ?>">
+                    <select class="form-select form-select-sm" name="status">
+                        <option value="inscrito">Inscrito</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="presente">Presente</option>
+                        <option value="ausente">Ausente</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary icon-btn"><i class="bi bi-person-plus" aria-hidden="true"></i>Adicionar</button>
+                </form>
+            </article>
+        <?php endforeach; ?>
+        <?php if (empty($users)): ?>
+            <div class="empty-state">Nenhum usuário ativo encontrado.</div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<section class="panel existing-person-panel">
     <div class="section-heading">
         <h2>Adicionar pessoa já cadastrada</h2>
-        <span>Busque no cadastro interno</span>
+        <span>Cadastro interno sem login de curso</span>
     </div>
     <form class="internal-search-form" method="get" action="<?= e(url('/admin/library-events/participants')) ?>">
         <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
@@ -198,9 +236,12 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
     </form>
     <div class="admin-card-list compact-list">
         <?php foreach ($people as $person): ?>
-            <article class="admin-list-card internal-list-card">
+            <article class="admin-list-card internal-list-card existing-person-card">
                 <div class="admin-list-main">
-                    <strong class="admin-list-title"><?= e($person['full_name']) ?></strong>
+                    <div class="admin-list-title-row">
+                        <strong class="admin-list-title"><?= e($person['full_name']) ?></strong>
+                        <span class="state-pill is-muted">Pessoa já cadastrada</span>
+                    </div>
                     <dl class="admin-list-meta">
                         <div><dt>WhatsApp</dt><dd><?= e($person['whatsapp'] ?? '-') ?></dd></div>
                         <div><dt>E-mail</dt><dd><?= e($person['email'] ?? '-') ?></dd></div>

@@ -115,6 +115,7 @@ class LibraryEventController
             'participants' => LibraryEvent::participants((int) $event['id']),
             'participantStats' => LibraryEvent::participantStats((int) $event['id']),
             'people' => Person::all(trim((string) ($_GET['q'] ?? '')), $this->volunteerScopeUserId()),
+            'users' => User::activeForAccessLists(),
             'query' => trim((string) ($_GET['q'] ?? '')),
         ]);
     }
@@ -180,6 +181,47 @@ class LibraryEventController
 
         Logger::info('library_events.registration_created', 'Inscrição cadastrada: ' . $name, $userId ?: null);
         Session::flash('success', 'Pessoa cadastrada e inscrita no evento.');
+        redirect('/admin/library-events/participants?id=' . $event['id']);
+    }
+
+    public function addUserParticipant(): void
+    {
+        Middleware::permission('event_participants.manage');
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
+        $user = $userId ? User::find($userId) : null;
+
+        if (!$user || empty($user['active'])) {
+            Session::flash('error', 'Usuário não encontrado ou inativo.');
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
+        $person = Person::findByIdentity(null, (string) ($user['email'] ?? ''), null);
+        $personId = $person ? (int) $person['id'] : Person::create([
+            'full_name' => $user['name'] ?? '',
+            'email' => $user['email'] ?? '',
+            'contact_authorized' => 1,
+            'notes' => 'Criado a partir de usuário já cadastrado no painel.',
+            'created_by' => current_user()['id'] ?? null,
+            'updated_by' => current_user()['id'] ?? null,
+        ]);
+        $person = Person::find($personId);
+
+        LibraryEvent::attachParticipant(
+            (int) $event['id'],
+            $personId,
+            (string) ($_POST['status'] ?? 'inscrito'),
+            'Adicionado a partir de usuário já cadastrado.',
+            current_user()['id'] ?? null
+        );
+
+        if ($person) {
+            RegistrationNotifier::eventStatus($event, $person, (string) ($_POST['status'] ?? 'inscrito'));
+        }
+
+        Logger::info('library_events.user_participant_added', 'Usuário vinculado ao evento: ' . ($user['email'] ?? ''), current_user()['id'] ?? null);
+        Session::flash('success', 'Usuário cadastrado como inscrito neste evento.');
         redirect('/admin/library-events/participants?id=' . $event['id']);
     }
 

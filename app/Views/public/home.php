@@ -1,6 +1,14 @@
 <?php
 $heroPool = $featured ?: $latest;
 $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
+$eventSlotsText = function (array $event): string {
+    $capacity = (int) ($event['capacity'] ?? 0);
+    if ($capacity <= 0) {
+        return '';
+    }
+    $occupied = max(0, (int) ($event['participant_count'] ?? 0));
+    return max(0, $capacity - $occupied) . ' de ' . $capacity . ' vaga(s)';
+};
 ?>
 
 <?php if ($urgent): ?>
@@ -116,7 +124,7 @@ $hero = $heroPool ? $heroPool[array_rand($heroPool)] : null;
                             <div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div>
                         <?php endif; ?>
                         <?php if (!empty($event['capacity'])): ?>
-                            <div><dt>Vagas</dt><dd><?= e((string) $event['capacity']) ?></dd></div>
+                            <div><dt>Vagas</dt><dd><?= e($eventSlotsText($event)) ?></dd></div>
                         <?php endif; ?>
                     </dl>
                     <a class="public-event-more" href="<?= e(url('/evento/' . $event['id'])) ?>">Ver detalhes</a>

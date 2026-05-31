@@ -64,3 +64,22 @@
     minorToggle.addEventListener('change', syncGuardian);
     syncGuardian();
 })();
+
+(function () {
+    document.querySelectorAll('[data-copy-share]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const link = button.getAttribute('data-copy-share') || window.location.href;
+            try {
+                await navigator.clipboard.writeText(link);
+                button.textContent = 'Link copiado';
+                button.classList.add('is-copied');
+                setTimeout(() => {
+                    button.textContent = 'Copiar link';
+                    button.classList.remove('is-copied');
+                }, 1800);
+            } catch (error) {
+                window.prompt('Copie o link do evento:', link);
+            }
+        });
+    });
+})();

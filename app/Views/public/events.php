@@ -5,6 +5,15 @@ $mode = $mode ?? 'all';
 $totalEvents = count($upcomingEvents) + count($pastEvents);
 $featuredEvent = $mode !== 'past' ? ($upcomingEvents[0] ?? null) : null;
 $formatDate = fn (?string $value): string => $value ? date('d/m/Y H:i', strtotime($value)) : 'Data a definir';
+$slotsText = function (array $event): string {
+    $capacity = (int) ($event['capacity'] ?? 0);
+    if ($capacity <= 0) {
+        return '';
+    }
+    $occupied = max(0, (int) ($event['participant_count'] ?? 0));
+    $remaining = max(0, $capacity - $occupied);
+    return $remaining . ' de ' . $capacity . ' vaga(s)';
+};
 $eventStatus = function (array $event): string {
     $start = !empty($event['starts_at']) ? strtotime($event['starts_at']) : null;
     $end = !empty($event['ends_at']) ? strtotime($event['ends_at']) : null;
@@ -59,7 +68,7 @@ $eventStatus = function (array $event): string {
                     <div><dt>Local</dt><dd><?= e($featuredEvent['location']) ?></dd></div>
                 <?php endif; ?>
                 <?php if (!empty($featuredEvent['capacity'])): ?>
-                    <div><dt>Vagas</dt><dd><?= e((string) $featuredEvent['capacity']) ?></dd></div>
+                    <div><dt>Vagas</dt><dd><?= e($slotsText($featuredEvent)) ?></dd></div>
                 <?php endif; ?>
             </dl>
             <a class="public-event-more" href="<?= e(url('/evento/' . $featuredEvent['id'])) ?>">Abrir página do evento</a>
@@ -92,7 +101,7 @@ $eventStatus = function (array $event): string {
                             <dl>
                                 <div><dt>Quando</dt><dd><?= e($formatDate($event['starts_at'] ?? null)) ?></dd></div>
                                 <?php if (!empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
-                                <?php if (!empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e((string) $event['capacity']) ?></dd></div><?php endif; ?>
+                                <?php if (!empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
                             </dl>
                             <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Detalhes</a>
                         </div>
@@ -134,7 +143,7 @@ $eventStatus = function (array $event): string {
                         </div>
                         <dl>
                             <?php if (!empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
-                            <?php if (!empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e((string) $event['capacity']) ?></dd></div><?php endif; ?>
+                            <?php if (!empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
                         </dl>
                         <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Ver registro</a>
                     </article>

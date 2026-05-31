@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS library_events (
     starts_at DATETIME NULL,
     ends_at DATETIME NULL,
     location VARCHAR(160) NULL,
+    event_address VARCHAR(255) NULL,
     cover_image VARCHAR(255) NULL,
     capacity INT UNSIGNED NULL,
     responsible_user_id BIGINT UNSIGNED NULL,
@@ -575,6 +576,7 @@ ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_phone VARCHAR(30) NULL AFTE
 ALTER TABLE people ADD COLUMN IF NOT EXISTS guardian_email VARCHAR(190) NULL AFTER guardian_phone;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS image_authorized TINYINT(1) NOT NULL DEFAULT 0 AFTER contact_authorized;
 
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS event_address VARCHAR(255) NULL AFTER location;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;
 
 -- Renomeia o menu publico antigo de Acervo para Reprise.

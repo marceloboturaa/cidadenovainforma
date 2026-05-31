@@ -106,6 +106,7 @@ $pdo->exec(
         starts_at DATETIME NULL,
         ends_at DATETIME NULL,
         location VARCHAR(160) NULL,
+        event_address VARCHAR(255) NULL,
         cover_image VARCHAR(255) NULL,
         capacity INT UNSIGNED NULL,
         responsible_user_id BIGINT UNSIGNED NULL,
@@ -145,6 +146,7 @@ foreach ($peopleColumns as $column => $sql) {
 }
 
 $eventColumns = [
+    'event_address' => "ALTER TABLE library_events ADD COLUMN event_address VARCHAR(255) NULL AFTER location",
     'cover_image' => "ALTER TABLE library_events ADD COLUMN cover_image VARCHAR(255) NULL AFTER location",
 ];
 

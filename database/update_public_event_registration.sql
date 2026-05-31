@@ -6,6 +6,9 @@ ALTER TABLE library_event_participants
 ALTER TABLE people
     ADD COLUMN IF NOT EXISTS image_authorized TINYINT(1) NOT NULL DEFAULT 0 AFTER contact_authorized;
 
+ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS event_address VARCHAR(255) NULL AFTER location;
+
 INSERT INTO permissions (name, slug, created_at)
 VALUES
     ('Gerenciar pessoas internas', 'people.manage', NOW()),
