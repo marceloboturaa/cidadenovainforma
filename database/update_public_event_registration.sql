@@ -28,6 +28,9 @@ ALTER TABLE library_events
     ADD COLUMN IF NOT EXISTS public_show_responsible TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_capacity;
 
 ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;
+
+ALTER TABLE library_events
     ADD COLUMN IF NOT EXISTS related_links TEXT NULL AFTER cover_image;
 
 ALTER TABLE library_events

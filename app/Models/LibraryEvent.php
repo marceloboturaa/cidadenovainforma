@@ -186,7 +186,7 @@ class LibraryEvent
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, capacity, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, status,
+            "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status,
                     COALESCE(participant_counts.total, 0) AS participant_count
              FROM library_events
              LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -196,10 +196,10 @@ class LibraryEvent
                 WHERE status <> 'cancelado'
                 GROUP BY event_id
              ) participant_counts ON participant_counts.event_id = library_events.id
-             WHERE active = 1
-               AND status = 'aberto'
-               AND (starts_at IS NULL OR COALESCE(ends_at, starts_at) >= NOW())
-             ORDER BY COALESCE(starts_at, created_at) ASC
+             WHERE library_events.active = 1
+               AND library_events.status = 'aberto'
+               AND (library_events.starts_at IS NULL OR COALESCE(library_events.ends_at, library_events.starts_at) >= NOW())
+             ORDER BY COALESCE(library_events.starts_at, library_events.created_at) ASC
              LIMIT :limit"
         );
         $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
@@ -214,7 +214,7 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, capacity, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, status, created_at, updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -224,10 +224,10 @@ class LibraryEvent
                     WHERE status <> 'cancelado'
                     GROUP BY event_id
                  ) participant_counts ON participant_counts.event_id = library_events.id
-                 WHERE active = 1
-                   AND status = 'aberto'
-                   AND (starts_at IS NULL OR COALESCE(ends_at, starts_at) >= NOW())
-                 ORDER BY COALESCE(starts_at, created_at) ASC"
+                 WHERE library_events.active = 1
+                   AND library_events.status = 'aberto'
+                   AND (library_events.starts_at IS NULL OR COALESCE(library_events.ends_at, library_events.starts_at) >= NOW())
+                 ORDER BY COALESCE(library_events.starts_at, library_events.created_at) ASC"
             )
             ->fetchAll();
     }
@@ -238,7 +238,7 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, capacity, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, status, created_at, updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -248,13 +248,13 @@ class LibraryEvent
                     WHERE status <> 'cancelado'
                     GROUP BY event_id
                  ) participant_counts ON participant_counts.event_id = library_events.id
-                 WHERE active = 1
-                   AND status <> 'cancelado'
+                 WHERE library_events.active = 1
+                   AND library_events.status <> 'cancelado'
                    AND (
-                        status = 'encerrado'
-                        OR (starts_at IS NOT NULL AND COALESCE(ends_at, starts_at) < NOW())
+                        library_events.status = 'encerrado'
+                        OR (library_events.starts_at IS NOT NULL AND COALESCE(library_events.ends_at, library_events.starts_at) < NOW())
                    )
-                 ORDER BY COALESCE(starts_at, created_at) DESC"
+                 ORDER BY COALESCE(library_events.starts_at, library_events.created_at) DESC"
             )
             ->fetchAll();
     }
@@ -265,7 +265,7 @@ class LibraryEvent
 
         return Database::connection()
             ->query(
-                "SELECT library_events.id, title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, capacity, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, status, created_at, updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -275,9 +275,9 @@ class LibraryEvent
                     WHERE status <> 'cancelado'
                     GROUP BY event_id
                  ) participant_counts ON participant_counts.event_id = library_events.id
-                 WHERE active = 1
-                   AND status <> 'cancelado'
-                 ORDER BY COALESCE(starts_at, created_at) DESC"
+                 WHERE library_events.active = 1
+                   AND library_events.status <> 'cancelado'
+                 ORDER BY COALESCE(library_events.starts_at, library_events.created_at) DESC"
             )
             ->fetchAll();
     }
