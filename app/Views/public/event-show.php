@@ -14,6 +14,7 @@ $showLocation = !empty($event['public_show_location']);
 $showAddress = !empty($event['public_show_address']);
 $showCapacity = !empty($event['public_show_capacity']);
 $showResponsible = !empty($event['public_show_responsible']);
+$showHeroCapacity = $showCapacity && $capacity;
 $shareUrl = url('/evento/' . $event['id']);
 $shareText = 'Confira este evento: ' . ($event['title'] ?? 'Evento');
 $shareLinks = [
@@ -57,6 +58,13 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
             <?php if (!empty($event['description'])): ?>
                 <p><?= e(text_excerpt($event['description'], 240)) ?></p>
             <?php endif; ?>
+            <?php if ($showHeroCapacity): ?>
+                <div class="event-hero-slots" aria-label="Vagas do evento">
+                    <strong><?= e((string) $remainingSlots) ?></strong>
+                    <span>vaga(s) restante(s) de <?= e((string) $capacity) ?> liberada(s)</span>
+                    <small><?= e((string) $occupiedSlots) ?> inscrição(ões) em análise ou confirmada(s)</small>
+                </div>
+            <?php endif; ?>
             <div class="event-show-actions">
                 <?php if ($canRegister && $remainingSlots !== 0): ?>
                     <a class="public-event-more" href="#inscricao">Fazer inscrição</a>
@@ -85,6 +93,22 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 </div>
             <?php else: ?>
                 <p class="event-detail-text">Mais informações serão divulgadas em breve.</p>
+            <?php endif; ?>
+
+            <?php if (!empty($event['event_course_id']) && !empty($event['course_title'])): ?>
+                <section class="event-linked-course">
+                    <div>
+                        <span>Curso online vinculado</span>
+                        <h2><?= e($event['course_title']) ?></h2>
+                        <?php if (!empty($event['course_summary'])): ?>
+                            <p><?= e(text_excerpt($event['course_summary'], 220)) ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($event['course_cover_image'])): ?>
+                        <img src="<?= e(media_url($event['course_cover_image'])) ?>" alt="" loading="lazy" onerror="this.remove()">
+                    <?php endif; ?>
+                    <a class="events-card-link" href="<?= e(url('/admin/education/course?id=' . $event['event_course_id'])) ?>">Acessar curso online</a>
+                </section>
             <?php endif; ?>
 
             <?php if ($canRegister && $remainingSlots !== 0): ?>

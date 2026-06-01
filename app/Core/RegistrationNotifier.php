@@ -7,10 +7,6 @@ class RegistrationNotifier
     public static function eventStatus(array $event, array $person, string $status, bool $loginRequested = false): void
     {
         $email = filter_var($person['email'] ?? '', FILTER_VALIDATE_EMAIL);
-        if (!$email) {
-            return;
-        }
-
         $name = trim((string) ($person['full_name'] ?? ''));
         $eventTitle = trim((string) ($event['title'] ?? 'evento'));
         $subject = match ($status) {
@@ -57,10 +53,17 @@ class RegistrationNotifier
             . ($loginRequested ? "\nSua solicitação de login também foi registrada e depende de aprovação do administrador.\n" : '')
             . "\nStatus atual: " . ucfirst($status);
 
-        try {
-            Mailer::send((string) $email, $subject, $html, $text);
-        } catch (\Throwable $exception) {
-            Logger::info('event_registration.email_failed', 'Falha ao enviar e-mail de inscrição: ' . $exception->getMessage(), null);
+        if ($email) {
+            try {
+                Mailer::send((string) $email, $subject, $html, $text);
+            } catch (\Throwable $exception) {
+                Logger::info('event_registration.email_failed', 'Falha ao enviar e-mail de inscrição: ' . $exception->getMessage(), null);
+            }
+        }
+
+        $whatsapp = trim((string) ($person['whatsapp'] ?? '')) ?: trim((string) ($person['phone'] ?? ''));
+        if ($whatsapp !== '') {
+            WhatsAppNotifier::sendText($whatsapp, $text);
         }
     }
 

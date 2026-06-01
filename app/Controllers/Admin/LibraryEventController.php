@@ -10,6 +10,7 @@ use App\Core\RegistrationNotifier;
 use App\Core\Session;
 use App\Core\SimplePdf;
 use App\Core\View;
+use App\Models\Education;
 use App\Models\LibraryEvent;
 use App\Models\Person;
 use App\Models\User;
@@ -26,6 +27,7 @@ class LibraryEventController
             'events' => LibraryEvent::all($this->volunteerScopeUserId()),
             'editing' => $this->editing(),
             'users' => User::activeForAccessLists(),
+            'courses' => Education::publicCourses(12),
             'canDeactivate' => $this->currentUserIsMaster(),
         ]);
     }

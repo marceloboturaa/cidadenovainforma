@@ -505,6 +505,36 @@
     gap: 10px;
 }
 
+.event-hero-slots {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px 12px;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+}
+
+.event-hero-slots strong {
+    grid-row: span 2;
+    color: #166534;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.event-hero-slots span {
+    color: #14532d;
+    font-weight: 900;
+}
+
+.event-hero-slots small {
+    color: #166534;
+    font-weight: 800;
+}
+
 .event-show-media {
     display: grid;
     min-height: 360px;
@@ -678,6 +708,58 @@
 .event-related-news a:hover {
     border-color: #1d4ed8;
     background: #eff6ff;
+}
+
+.event-linked-course {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 160px;
+    gap: 14px;
+    align-items: center;
+    margin-top: 22px;
+    padding: 16px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+}
+
+.event-linked-course span {
+    color: #1d4ed8;
+    font-size: 0.76rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.event-linked-course h2 {
+    margin: 4px 0 8px;
+}
+
+.event-linked-course p {
+    margin: 0;
+    color: #1e3a8a;
+    line-height: 1.55;
+}
+
+.event-linked-course img {
+    width: 160px;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.event-linked-course .events-card-link {
+    grid-column: 1 / -1;
+    justify-self: start;
+    background: #ffffff;
+}
+
+@media (max-width: 720px) {
+    .event-linked-course {
+        grid-template-columns: 1fr;
+    }
+
+    .event-linked-course img {
+        width: 100%;
+    }
 }
 
 .event-registration-panel {

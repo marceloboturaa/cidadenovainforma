@@ -27,6 +27,12 @@ ALTER TABLE library_events
 ALTER TABLE library_events
     ADD COLUMN IF NOT EXISTS public_show_responsible TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_capacity;
 
+ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS related_links TEXT NULL AFTER cover_image;
+
+ALTER TABLE library_events
+    ADD COLUMN IF NOT EXISTS event_course_id BIGINT UNSIGNED NULL AFTER related_links;
+
 INSERT INTO permissions (name, slug, created_at)
 VALUES
     ('Gerenciar pessoas internas', 'people.manage', NOW()),

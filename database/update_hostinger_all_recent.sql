@@ -176,6 +176,8 @@ CREATE TABLE IF NOT EXISTS library_events (
     event_cep VARCHAR(12) NULL,
     event_address VARCHAR(255) NULL,
     cover_image VARCHAR(255) NULL,
+    related_links TEXT NULL,
+    event_course_id BIGINT UNSIGNED NULL,
     capacity INT UNSIGNED NULL,
     registration_enabled TINYINT(1) NOT NULL DEFAULT 0,
     public_show_location TINYINT(1) NOT NULL DEFAULT 1,
@@ -590,6 +592,8 @@ ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_address TINYINT(
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_capacity TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_address;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_responsible TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_capacity;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS related_links TEXT NULL AFTER cover_image;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS event_course_id BIGINT UNSIGNED NULL AFTER related_links;
 
 -- Renomeia o menu publico antigo de Acervo para Reprise.
 UPDATE menu_items

@@ -201,6 +201,17 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             </select>
                         </div>
                         <div>
+                            <label class="form-label">Curso online vinculado</label>
+                            <select class="form-select" name="event_course_id">
+                                <option value="">Sem curso online</option>
+                                <?php foreach (($courses ?? []) as $course): ?>
+                                    <option value="<?= e((string) $course['id']) ?>" <?= selected((string) $course['id'], (string) ($editing['event_course_id'] ?? '')) ?>>
+                                        <?= e($course['title']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
                             <label class="form-label">Status</label>
                             <select class="form-select" name="status">
                                 <?php foreach ($statusLabel as $value => $label): ?>
@@ -323,6 +334,7 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <div><dt>Endereço</dt><dd><?= e($event['event_address'] ?: '-') ?></dd></div>
                             <div><dt>Vagas</dt><dd><?= $capacity ? e((string) $remaining) . ' livres · ' . e((string) $participants) . ' ocupadas · ' . e((string) $capacity) . ' totais' : e((string) $participants) . ' inscrito(s)' ?></dd></div>
                             <div><dt>Inscrição</dt><dd><?= !empty($event['registration_enabled']) ? 'Ativa' : 'Desativada' ?></dd></div>
+                            <div><dt>Curso online</dt><dd><?= e($event['course_title'] ?? '-') ?></dd></div>
                             <div><dt>Público</dt><dd><?= !empty($event['public_show_capacity']) ? 'Vagas visíveis' : 'Vagas ocultas' ?></dd></div>
                             <div><dt>Responsável</dt><dd><?= e($event['responsible_name'] ?? '-') ?></dd></div>
                         </dl>

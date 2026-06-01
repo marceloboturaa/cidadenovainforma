@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS library_events (
     event_address VARCHAR(255) NULL,
     cover_image VARCHAR(255) NULL,
     related_links TEXT NULL,
+    event_course_id BIGINT UNSIGNED NULL,
     capacity INT UNSIGNED NULL,
     registration_enabled TINYINT(1) NOT NULL DEFAULT 0,
     public_show_location TINYINT(1) NOT NULL DEFAULT 1,
