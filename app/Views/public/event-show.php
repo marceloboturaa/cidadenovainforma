@@ -156,7 +156,9 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                             <label>CEP</label>
                             <div class="event-registration-input-action">
                                 <input name="cep" data-public-cep-input inputmode="numeric" autocomplete="postal-code">
-                                <button type="button" data-public-cep-search>CEP</button>
+                                <button type="button" data-public-cep-search aria-label="Buscar CEP" title="Buscar CEP">
+                                    <span class="search-icon" aria-hidden="true"></span>
+                                </button>
                             </div>
                             <small class="event-registration-field-hint" data-public-cep-status></small>
                         </div>
@@ -259,7 +261,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 <?php if ($showLocation && !empty($event['location'])): ?><div class="info-place"><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
                 <?php if ($showAddress && !empty($event['event_cep'])): ?><div class="info-address"><dt>CEP</dt><dd><?= e($event['event_cep']) ?></dd></div><?php endif; ?>
                 <?php if ($showAddress && !empty($event['event_address'])): ?><div class="info-address"><dt>Endereço</dt><dd><?= e($event['event_address']) ?></dd></div><?php endif; ?>
-                <?php if ($showCapacity && $capacity): ?><div class="info-slots"><dt>Vagas</dt><dd><strong><?= e((string) $remainingSlots) ?> livre(s)</strong><span><?= e((string) $occupiedSlots) ?> ocupada(s) de <?= e((string) $capacity) ?> total</span></dd></div><?php endif; ?>
+                <?php if ($showCapacity && $capacity): ?><div class="info-slots"><dt>Vagas</dt><dd><strong class="slot-free"><?= e((string) $remainingSlots) ?> livre(s)</strong><span class="slot-occupied"><?= e((string) $occupiedSlots) ?> ocupada(s)</span><span class="slot-total"><?= e((string) $capacity) ?> total</span></dd></div><?php endif; ?>
                 <?php if ($showResponsible && !empty($event['responsible_name'])): ?><div class="info-person"><dt>Responsável</dt><dd><?= e($event['responsible_name']) ?></dd></div><?php endif; ?>
                 <div class="info-status"><dt>Status</dt><dd><?= e($statusText) ?></dd></div>
             </dl>

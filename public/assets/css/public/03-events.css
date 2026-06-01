@@ -613,8 +613,8 @@
 }
 
 .event-info-color-list .info-slots {
-    border-color: #fecaca;
-    background: #fef2f2;
+    border-color: #d1d5db;
+    background: #ffffff;
 }
 
 .event-info-color-list .info-person {
@@ -629,18 +629,39 @@
 
 .event-info-color-list .info-slots dd {
     display: grid;
-    gap: 3px;
+    gap: 7px;
 }
 
-.event-info-color-list .info-slots strong {
+.event-info-color-list .info-slots .slot-free,
+.event-info-color-list .info-slots .slot-occupied,
+.event-info-color-list .info-slots .slot-total {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 28px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.event-info-color-list .info-slots .slot-free {
+    border: 1px solid #bbf7d0;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.event-info-color-list .info-slots .slot-occupied {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
     color: #991b1b;
-    font-size: 1.06rem;
 }
 
-.event-info-color-list .info-slots span {
-    color: var(--muted);
-    font-size: 0.84rem;
-    font-weight: 800;
+.event-info-color-list .info-slots .slot-total {
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
 }
 
 .event-share-box {
@@ -881,14 +902,23 @@
 
 .event-registration-form .event-registration-input-action button {
     grid-column: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
     min-height: 42px;
-    padding: 0 13px;
+    padding: 0;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #ffffff;
     color: var(--ink);
     font: inherit;
     font-weight: 900;
+}
+
+.event-registration-form .event-registration-input-action button .search-icon {
+    width: 15px;
+    height: 15px;
 }
 
 .event-registration-form .event-registration-input-action button:hover,
