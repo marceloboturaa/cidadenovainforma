@@ -25,63 +25,17 @@ $hasOpenRegistrationHighlights = !empty($publicCourses) || !empty($openRegistrat
 <?php endif; ?>
 
 <?php if ($hasOpenRegistrationHighlights): ?>
-    <section class="section-heading registration-highlights-heading" id="inscricoes-abertas">
-        <span>Inscrições abertas</span>
-        <h2>Participe das próximas atividades</h2>
-    </section>
-
-    <?php if (!empty($openRegistrationEvents)): ?>
-        <section class="public-events-grid registration-highlight-grid">
-            <?php foreach ($openRegistrationEvents as $event): ?>
-                <?php $eventImage = event_public_image($event); ?>
-                <article class="public-event-card registration-highlight-card">
-                    <a class="public-event-media<?= $eventImage ? '' : ' is-empty' ?>" href="<?= e(url('/evento/' . $event['id'])) ?>">
-                        <?php if ($eventImage): ?>
-                            <img src="<?= e(media_url($eventImage)) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
-                        <?php endif; ?>
-                        <i class="bi bi-calendar-event" aria-hidden="true"></i>
-                    </a>
-                    <div class="public-event-body">
-                        <span class="registration-open-badge">Inscrições abertas</span>
-                        <span class="public-event-date"><?= e($event['starts_at'] ? date('d/m/Y H:i', strtotime($event['starts_at'])) : 'Atividade aberta') ?></span>
-                        <h3><?= e($event['title']) ?></h3>
-                        <p><?= e(text_excerpt($event['description'] ?? '', 140)) ?></p>
-                        <dl>
-                            <?php if (!empty($event['public_show_location']) && !empty($event['location'])): ?>
-                                <div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div>
-                            <?php endif; ?>
-                            <?php if (!empty($event['public_show_capacity']) && !empty($event['capacity'])): ?>
-                                <div><dt>Vagas</dt><dd><?= e($eventSlotsText($event)) ?></dd></div>
-                            <?php endif; ?>
-                        </dl>
-                        <a class="public-event-more" href="<?= e(url('/evento/' . $event['id'])) ?>">Fazer inscrição</a>
-                    </div>
-                </article>
+    <aside class="registration-open-note" id="inscricoes-abertas" aria-label="Inscrições abertas">
+        <strong>Inscrições abertas</strong>
+        <div>
+            <?php foreach (array_slice($publicCourses, 0, 3) as $course): ?>
+                <a href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">Curso: <?= e($course['title']) ?></a>
             <?php endforeach; ?>
-        </section>
-    <?php endif; ?>
-
-    <?php if (!empty($publicCourses)): ?>
-        <section class="public-courses-grid registration-highlight-grid">
-            <?php foreach ($publicCourses as $course): ?>
-                <article class="public-course-card registration-highlight-card">
-                    <?php if (!empty($course['cover_image'])): ?>
-                        <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" loading="lazy" onerror="this.remove()">
-                    <?php endif; ?>
-                    <div class="public-course-body">
-                        <span class="registration-open-badge">Curso aberto</span>
-                        <span><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
-                        <h3><?= e($course['title']) ?></h3>
-                        <p><?= e(text_excerpt($course['summary'] ?? '', 150)) ?></p>
-                        <?php if (!empty($course['teacher_name'])): ?>
-                            <small>Professor: <?= e($course['teacher_name']) ?></small>
-                        <?php endif; ?>
-                        <a class="public-course-more" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">Acessar curso</a>
-                    </div>
-                </article>
+            <?php foreach (array_slice($openRegistrationEvents, 0, 3) as $event): ?>
+                <a href="<?= e(url('/evento/' . $event['id'])) ?>">Evento: <?= e($event['title']) ?></a>
             <?php endforeach; ?>
-        </section>
-    <?php endif; ?>
+        </div>
+    </aside>
 <?php endif; ?>
 
 <section class="home-grid">
@@ -139,7 +93,7 @@ $hasOpenRegistrationHighlights = !empty($publicCourses) || !empty($openRegistrat
     </div>
 <?php endif; ?>
 
-<?php if (false && !empty($publicCourses)): ?>
+<?php if (!empty($publicCourses)): ?>
     <section class="section-heading public-courses-heading" id="cursos">
         <span>Formação aberta</span>
         <h2>Cursos públicos</h2>
@@ -165,7 +119,7 @@ $hasOpenRegistrationHighlights = !empty($publicCourses) || !empty($openRegistrat
     </section>
 <?php endif; ?>
 
-<?php if (false && !empty($libraryEvents)): ?>
+<?php if (!empty($libraryEvents)): ?>
     <section class="section-heading public-events-heading" id="eventos">
         <span>Agenda da comunidade e região</span>
         <h2>Eventos e atividades da biblioteca</h2>

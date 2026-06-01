@@ -633,11 +633,24 @@
 }
 
 .participant-bulk-actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: center;
-    justify-content: flex-end;
     gap: 8px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.participant-linked-panel > .section-heading {
+    display: grid;
+    gap: 12px;
+}
+
+.participant-linked-panel > .section-heading h2 {
+    margin-bottom: 0;
 }
 
 .participant-bulk-actions form {
@@ -645,10 +658,12 @@
 }
 
 .participant-status-bulk-form {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(130px, auto) auto auto;
     gap: 8px;
     align-items: center;
+    justify-content: start;
+    min-width: 0;
 }
 
 .participant-status-bulk-form .form-select {
@@ -656,24 +671,61 @@
     min-width: 132px;
 }
 
-.participant-list-card {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+.admin-list-card.participant-list-card {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
 }
 
 .participant-select-box {
     display: grid;
     justify-items: center;
-    gap: 4px;
-    color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 900;
-    text-transform: uppercase;
+    padding-top: 2px;
 }
 
 .participant-select-box input {
     width: 20px;
     height: 20px;
     accent-color: var(--brand);
+}
+
+.participant-select-box span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.admin-list-card.participant-list-card .admin-list-main {
+    min-width: 0;
+}
+
+.participant-management-actions {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.participant-management-actions .participant-add-form {
+    display: grid;
+    grid-template-columns: 130px minmax(180px, 1fr) auto;
+    flex: 1 1 520px;
+    gap: 8px;
+    min-width: 0;
+}
+
+.participant-management-actions > a,
+.participant-management-actions > form.inline-form {
+    flex: 0 0 auto;
+}
+
+.participant-management-actions .inline-form {
+    justify-self: auto;
 }
 
 .participant-bulk-actions > .btn.is-active {
@@ -695,9 +747,12 @@
         flex: 1 1 auto;
     }
 
-    .participant-bulk-actions,
+    .participant-bulk-actions {
+        grid-template-columns: 1fr;
+    }
+
     .participant-status-bulk-form {
-        justify-content: stretch;
+        grid-template-columns: 1fr;
         width: 100%;
     }
 
@@ -709,13 +764,24 @@
         width: 100%;
     }
 
-    .participant-list-card {
-        grid-template-columns: 1fr;
+    .admin-list-card.participant-list-card {
+        grid-template-columns: 28px minmax(0, 1fr);
     }
 
-    .participant-select-box {
-        justify-items: start;
-        grid-template-columns: auto minmax(0, 1fr);
+    .participant-management-actions {
+        grid-column: 1 / -1;
+    }
+
+    .participant-management-actions .participant-add-form {
+        grid-template-columns: 1fr;
+        flex-basis: 100%;
+    }
+
+    .participant-management-actions > a,
+    .participant-management-actions > form.inline-form,
+    .participant-management-actions > a.btn,
+    .participant-management-actions > form.inline-form button {
+        width: 100%;
     }
 }
 

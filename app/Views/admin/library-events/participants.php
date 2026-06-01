@@ -319,7 +319,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
     </div>
 </section>
 
-<section class="panel">
+<section class="panel participant-linked-panel">
     <div class="section-heading">
         <h2><i class="bi bi-people" aria-hidden="true"></i> Participantes vinculados</h2>
         <div class="participant-bulk-actions">

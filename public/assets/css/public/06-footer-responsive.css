@@ -540,6 +540,22 @@
         min-width: min(240px, 82vw);
     }
 
+    .registration-open-note {
+        grid-template-columns: 1fr;
+        gap: 9px;
+        margin-top: -4px;
+    }
+
+    .registration-open-note div {
+        display: grid;
+    }
+
+    .registration-open-note a {
+        width: 100%;
+        justify-content: center;
+        line-height: 1.2;
+    }
+
     .events-page-hero,
     .event-detail-hero,
     .events-hub-hero,
