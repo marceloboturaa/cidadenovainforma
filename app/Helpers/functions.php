@@ -148,6 +148,13 @@ function news_public_image(array $news): ?string
     return first_article_image($news['content'] ?? '');
 }
 
+function event_public_image(array $event): ?string
+{
+    $cover = normalize_media_path($event['cover_image'] ?? null);
+
+    return $cover !== null && media_available($cover) ? $cover : null;
+}
+
 function normalize_media_path(?string $path): ?string
 {
     $path = trim(html_entity_decode((string) $path, ENT_QUOTES | ENT_HTML5, 'UTF-8'));

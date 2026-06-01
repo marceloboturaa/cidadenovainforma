@@ -287,16 +287,34 @@
 .events-featured-media img,
 .event-show-media img,
 .events-modern-media img {
+    grid-area: 1 / 1;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
 .events-featured-media i,
-.event-show-media i {
+.event-show-media i,
+.events-modern-media i,
+.events-history-media i {
+    grid-area: 1 / 1;
     place-self: center;
     color: var(--muted);
     font-size: 3rem;
+}
+
+.events-featured-media img + i,
+.event-show-media img + i,
+.events-modern-media img + i,
+.events-history-media img + i {
+    display: none;
+}
+
+.events-featured-media.is-empty i,
+.event-show-media.is-empty i,
+.events-modern-media.is-empty i,
+.events-history-media.is-empty i {
+    display: block;
 }
 
 .events-featured-body {
@@ -395,7 +413,7 @@
 }
 
 .events-modern-media {
-    display: block;
+    display: grid;
     aspect-ratio: 16 / 9;
     background: #f3f4f6;
 }
@@ -450,8 +468,6 @@
 }
 
 .events-history-media i {
-    place-self: center;
-    color: var(--muted);
     font-size: 1.7rem;
 }
 

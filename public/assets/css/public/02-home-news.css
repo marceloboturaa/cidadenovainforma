@@ -249,16 +249,32 @@
     box-shadow: 0 16px 34px rgba(127, 29, 29, 0.12);
 }
 
-.public-event-card img {
-    width: 100%;
-    height: 100%;
+.public-event-media {
+    display: grid;
     min-height: 230px;
-    object-fit: cover;
     background: var(--soft);
 }
 
-.public-event-card:not(:has(img)) {
-    grid-template-columns: 1fr;
+.public-event-media img {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.public-event-media i {
+    grid-area: 1 / 1;
+    place-self: center;
+    color: var(--muted);
+    font-size: 2.4rem;
+}
+
+.public-event-media img + i {
+    display: none;
+}
+
+.public-event-media.is-empty i {
+    display: block;
 }
 
 .public-event-body {

@@ -145,7 +145,7 @@ class PublicController
             'metaDescription' => text_excerpt($event['description'] ?? '', 150),
             'canonicalUrl' => url('/evento/' . $event['id']),
             'ogType' => 'article',
-            'ogImage' => !empty($event['cover_image']) ? media_url($event['cover_image']) : null,
+            'ogImage' => ($eventImage = event_public_image($event)) ? media_url($eventImage) : null,
             'registrationSuccess' => Session::flash('registration_success'),
             'registrationError' => Session::flash('registration_error'),
         ], 'public');

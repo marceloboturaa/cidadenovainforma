@@ -22,6 +22,7 @@ $shareLinks = [
     'facebook' => 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($shareUrl),
     'email' => 'mailto:?subject=' . rawurlencode((string) ($event['title'] ?? 'Evento')) . '&body=' . rawurlencode($shareText . "\n" . $shareUrl),
 ];
+$eventImage = event_public_image($event);
 $relatedLinks = [];
 foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as $line) {
     $line = trim($line);
@@ -75,12 +76,11 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 <a class="events-card-link" href="<?= e(url('/eventos')) ?>">Agenda completa</a>
             </div>
         </div>
-        <div class="event-show-media">
-            <?php if (!empty($event['cover_image'])): ?>
-                <img src="<?= e(media_url($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
-            <?php else: ?>
-                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+        <div class="event-show-media<?= $eventImage ? '' : ' is-empty' ?>">
+            <?php if ($eventImage): ?>
+                <img src="<?= e(media_url($eventImage)) ?>" alt="<?= e($event['title']) ?>" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
             <?php endif; ?>
+            <i class="bi bi-calendar-event" aria-hidden="true"></i>
         </div>
     </header>
 

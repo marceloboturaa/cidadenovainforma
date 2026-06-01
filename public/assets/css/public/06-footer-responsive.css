@@ -293,7 +293,7 @@
         width: 100%;
     }
 
-    .public-event-card img {
+    .public-event-media {
         height: auto;
         min-height: 0;
         aspect-ratio: 16 / 9;

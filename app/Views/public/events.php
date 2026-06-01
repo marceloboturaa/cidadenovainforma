@@ -50,13 +50,13 @@ $eventStatus = function (array $event): string {
 </section>
 
 <?php if ($featuredEvent): ?>
+    <?php $featuredImage = event_public_image($featuredEvent); ?>
     <section class="events-featured">
-        <div class="events-featured-media">
-            <?php if (!empty($featuredEvent['cover_image'])): ?>
-                <img src="<?= e(media_url($featuredEvent['cover_image'])) ?>" alt="<?= e($featuredEvent['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
-            <?php else: ?>
-                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+        <div class="events-featured-media<?= $featuredImage ? '' : ' is-empty' ?>">
+            <?php if ($featuredImage): ?>
+                <img src="<?= e(media_url($featuredImage)) ?>" alt="<?= e($featuredEvent['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
             <?php endif; ?>
+            <i class="bi bi-calendar-event" aria-hidden="true"></i>
         </div>
         <div class="events-featured-body">
             <span class="event-status-badge"><?= e($eventStatus($featuredEvent)) ?></span>
@@ -88,12 +88,14 @@ $eventStatus = function (array $event): string {
         <?php if ($upcomingEvents): ?>
             <div class="events-modern-grid">
                 <?php foreach ($upcomingEvents as $event): ?>
+                    <?php $eventImage = event_public_image($event); ?>
                     <article class="events-modern-card">
-                        <?php if (!empty($event['cover_image'])): ?>
-                            <a class="events-modern-media" href="<?= e(url('/evento/' . $event['id'])) ?>">
-                                <img src="<?= e(media_url($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.remove()">
-                            </a>
-                        <?php endif; ?>
+                        <a class="events-modern-media<?= $eventImage ? '' : ' is-empty' ?>" href="<?= e(url('/evento/' . $event['id'])) ?>">
+                            <?php if ($eventImage): ?>
+                                <img src="<?= e(media_url($eventImage)) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
+                            <?php endif; ?>
+                            <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        </a>
                         <div class="events-modern-body">
                             <span class="event-status-badge">Próximo evento</span>
                             <h3><a href="<?= e(url('/evento/' . $event['id'])) ?>"><?= e($event['title']) ?></a></h3>
@@ -128,13 +130,13 @@ $eventStatus = function (array $event): string {
         <?php if ($pastEvents): ?>
             <div class="events-history-list">
                 <?php foreach ($pastEvents as $event): ?>
+                    <?php $eventImage = event_public_image($event); ?>
                     <article class="events-history-item">
-                        <a class="events-history-media" href="<?= e(url('/evento/' . $event['id'])) ?>">
-                            <?php if (!empty($event['cover_image'])): ?>
-                                <img src="<?= e(media_url($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
-                            <?php else: ?>
-                                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        <a class="events-history-media<?= $eventImage ? '' : ' is-empty' ?>" href="<?= e(url('/evento/' . $event['id'])) ?>">
+                            <?php if ($eventImage): ?>
+                                <img src="<?= e(media_url($eventImage)) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
                             <?php endif; ?>
+                            <i class="bi bi-calendar-event" aria-hidden="true"></i>
                         </a>
                         <div>
                             <span><?= e($formatDate($event['starts_at'] ?? null)) ?></span>

@@ -111,10 +111,14 @@ $eventSlotsText = function (array $event): string {
 
     <section class="public-events-grid">
         <?php foreach ($libraryEvents as $event): ?>
+            <?php $eventImage = event_public_image($event); ?>
             <article class="public-event-card">
-                <?php if (!empty($event['cover_image'])): ?>
-                    <img src="<?= e(media_url($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.remove()">
-                <?php endif; ?>
+                <a class="public-event-media<?= $eventImage ? '' : ' is-empty' ?>" href="<?= e(url('/evento/' . $event['id'])) ?>">
+                    <?php if ($eventImage): ?>
+                        <img src="<?= e(media_url($eventImage)) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
+                    <?php endif; ?>
+                    <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                </a>
                 <div class="public-event-body">
                     <span class="public-event-date"><?= e($event['starts_at'] ? date('d/m/Y H:i', strtotime($event['starts_at'])) : 'Atividade aberta') ?></span>
                     <h3><?= e($event['title']) ?></h3>
