@@ -71,7 +71,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
             <?php endif; ?>
             <div class="event-show-actions">
                 <?php if ($canRegister && $remainingSlots !== 0): ?>
-                    <a class="public-event-more" href="#inscricao">Fazer inscrição</a>
+                    <a class="public-event-more registration-action-link" href="#inscricao">Fazer inscrição</a>
                 <?php endif; ?>
                 <a class="public-event-more" href="<?= e($isPast ? url('/eventos/realizados') : url('/eventos/futuros')) ?>">
                     <?= $isPast ? 'Ver eventos realizados' : 'Ver eventos futuros' ?>

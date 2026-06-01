@@ -240,15 +240,15 @@
     align-items: center;
     margin: -8px 0 24px;
     padding: 12px 14px;
-    border: 1px solid #fecaca;
-    border-left: 5px solid var(--brand);
+    border: 1px solid #bbf7d0;
+    border-left: 5px solid #16a34a;
     border-radius: 8px;
-    background: #fff7f7;
+    background: #f0fdf4;
 }
 
 .registration-open-note strong,
 .registration-open-badge {
-    color: var(--brand);
+    color: #166534;
     font-size: 0.78rem;
     font-weight: 900;
     text-transform: uppercase;
@@ -268,18 +268,18 @@
     width: fit-content;
     min-height: 28px;
     padding: 5px 8px;
-    border: 1px solid #fecaca;
+    border: 1px solid #bbf7d0;
     border-radius: 999px;
     background: #ffffff;
-    color: var(--brand);
+    color: #166534;
     font-size: 0.78rem;
     font-weight: 900;
     line-height: 1;
 }
 
 .registration-open-note a:hover {
-    border-color: var(--brand);
-    background: #fff1f2;
+    border-color: #16a34a;
+    background: #dcfce7;
 }
 
 .public-events-grid {
@@ -395,5 +395,14 @@
 
 .public-event-more:hover {
     background: #1e40af;
+}
+
+.registration-action-link,
+.registration-action-link:hover {
+    background: #16a34a;
+}
+
+.registration-action-link:hover {
+    background: #15803d;
 }
 

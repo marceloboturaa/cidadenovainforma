@@ -30,6 +30,17 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             <label class="form-label">Resumo</label>
             <textarea class="form-control" name="summary" rows="3" placeholder="Descrição curta para os alunos."><?= e($editing['summary'] ?? '') ?></textarea>
         </div>
+        <?php if ($canManageAll): ?>
+            <label class="education-public-toggle">
+                <input type="checkbox" name="public_enabled" value="1" <?= checked(!empty($editing['public_enabled'])) ?>>
+                <span>
+                    <strong>Autorizar aparecer no site</strong>
+                    <small>Quando marcado, o curso aparece na pagina inicial e no aviso de inscricoes abertas.</small>
+                </span>
+            </label>
+        <?php elseif ($isEdit): ?>
+            <input type="hidden" name="public_enabled" value="<?= e((string) ($editing['public_enabled'] ?? 0)) ?>">
+        <?php endif; ?>
         <details class="education-course-advanced">
             <summary><i class="bi bi-sliders" aria-hidden="true"></i>Detalhes opcionais</summary>
             <div class="education-course-advanced-grid">
@@ -62,14 +73,6 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                     <input class="form-control" name="course_cover" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
                     <small class="field-hint">Se enviar arquivo, ele será salvo no banco como caminho da capa.</small>
                 </div>
-                <?php if ($canManageAll): ?>
-                    <label class="forum-check-line">
-                        <input type="checkbox" name="public_enabled" value="1" <?= checked(!empty($editing['public_enabled'])) ?>>
-                        <span>Curso público na página inicial</span>
-                    </label>
-                <?php elseif ($isEdit): ?>
-                    <input type="hidden" name="public_enabled" value="<?= e((string) ($editing['public_enabled'] ?? 0)) ?>">
-                <?php endif; ?>
             </div>
         </details>
         <details class="education-access-details">

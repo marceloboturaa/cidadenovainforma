@@ -1043,13 +1043,13 @@
     min-height: 46px;
     border: 0;
     border-radius: 8px;
-    background: var(--brand);
+    background: #16a34a;
     color: #ffffff;
     font-weight: 900;
 }
 
 .event-registration-form button:hover {
-    background: #991b1b;
+    background: #15803d;
 }
 
 .archive-badge {
