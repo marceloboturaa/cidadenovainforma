@@ -126,7 +126,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                         <div class="public-form-alert is-error"><?= e($registrationError) ?></div>
                     <?php endif; ?>
 
-                    <form class="event-registration-form" method="post" action="<?= e(url('/evento/' . $event['id'] . '/inscricao')) ?>">
+                    <form class="event-registration-form" method="post" action="<?= e(url('/evento/' . $event['id'] . '/inscricao')) ?>" data-public-event-registration-form>
                         <?= csrf_field() ?>
                         <div class="field-wide">
                             <label>Nome completo</label>
@@ -134,7 +134,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                         </div>
                         <div>
                             <label>CPF</label>
-                            <input name="cpf">
+                            <input name="cpf" data-public-cpf-input inputmode="numeric" autocomplete="off">
                         </div>
                         <div>
                             <label>Nascimento</label>
@@ -154,11 +154,15 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                         </div>
                         <div>
                             <label>CEP</label>
-                            <input name="cep">
+                            <div class="event-registration-input-action">
+                                <input name="cep" data-public-cep-input inputmode="numeric" autocomplete="postal-code">
+                                <button type="button" data-public-cep-search>CEP</button>
+                            </div>
+                            <small class="event-registration-field-hint" data-public-cep-status></small>
                         </div>
                         <div class="field-wide">
                             <label>Endereço</label>
-                            <input name="address">
+                            <input name="address" data-public-address-input>
                         </div>
                         <div>
                             <label>Número</label>
@@ -166,15 +170,15 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                         </div>
                         <div>
                             <label>Bairro</label>
-                            <input name="district">
+                            <input name="district" data-public-district-input>
                         </div>
                         <div>
                             <label>Cidade</label>
-                            <input name="city">
+                            <input name="city" data-public-city-input>
                         </div>
                         <div>
                             <label>UF</label>
-                            <input name="state" maxlength="2">
+                            <input name="state" maxlength="2" data-public-state-input>
                         </div>
                         <label class="event-registration-check event-minor-toggle field-wide">
                             <input type="checkbox" name="is_minor" value="1" data-public-minor-toggle>
@@ -195,7 +199,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                             </div>
                             <div>
                                 <label>CPF do responsável</label>
-                                <input name="guardian_cpf">
+                                <input name="guardian_cpf" data-public-cpf-input inputmode="numeric" autocomplete="off">
                             </div>
                             <div>
                                 <label>Telefone do responsável</label>

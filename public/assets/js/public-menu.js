@@ -66,6 +66,156 @@
 })();
 
 (function () {
+    const form = document.querySelector('[data-public-event-registration-form]');
+
+    if (!form) {
+        return;
+    }
+
+    form.querySelectorAll('[data-public-cpf-input]').forEach((input) => {
+        input.addEventListener('input', () => {
+            input.value = cpfMask(input.value);
+            input.setCustomValidity('');
+        });
+
+        input.addEventListener('blur', () => {
+            const value = input.value.replace(/\D/g, '');
+            input.setCustomValidity(value && !isValidCpf(value) ? 'CPF inválido.' : '');
+            if (input.validationMessage) {
+                input.reportValidity();
+            }
+        });
+    });
+
+    const cepInput = form.querySelector('[data-public-cep-input]');
+    const cepSearch = form.querySelector('[data-public-cep-search]');
+    const cepStatus = form.querySelector('[data-public-cep-status]');
+
+    if (cepInput && cepSearch) {
+        let lastLookup = '';
+        let lookupTimer = null;
+
+        cepInput.addEventListener('input', () => {
+            cepInput.value = cepMask(cepInput.value);
+            cepInput.setCustomValidity('');
+            setCepStatus('');
+
+            const cep = cepInput.value.replace(/\D/g, '');
+            window.clearTimeout(lookupTimer);
+            if (cep.length === 8 && cep !== lastLookup) {
+                lookupTimer = window.setTimeout(() => lookupCep(), 450);
+            }
+        });
+
+        cepSearch.addEventListener('click', () => lookupCep(true));
+
+        async function lookupCep(force) {
+            const cep = cepInput.value.replace(/\D/g, '');
+            if (cep.length !== 8) {
+                cepInput.setCustomValidity('Informe um CEP com 8 dígitos.');
+                cepInput.reportValidity();
+                return;
+            }
+
+            if (!force && cep === lastLookup) {
+                return;
+            }
+
+            lastLookup = cep;
+            cepInput.setCustomValidity('');
+            cepSearch.disabled = true;
+            setCepStatus('Buscando CEP...');
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                if (!response.ok) {
+                    throw new Error('Falha ao consultar CEP.');
+                }
+
+                const data = await response.json();
+                if (data.erro) {
+                    throw new Error('CEP não encontrado.');
+                }
+
+                setInputValue('[data-public-address-input]', data.logradouro);
+                setInputValue('[data-public-district-input]', data.bairro);
+                setInputValue('[data-public-city-input]', data.localidade);
+                setInputValue('[data-public-state-input]', data.uf);
+                setCepStatus('Endereço preenchido pelo CEP.');
+            } catch (error) {
+                cepInput.setCustomValidity('CEP não encontrado.');
+                cepInput.reportValidity();
+                setCepStatus('Não foi possível buscar este CEP.');
+            } finally {
+                cepSearch.disabled = false;
+            }
+        }
+    }
+
+    function setInputValue(selector, value) {
+        const input = form.querySelector(selector);
+        if (input && value) {
+            input.value = value;
+        }
+    }
+
+    function setCepStatus(message) {
+        if (cepStatus) {
+            cepStatus.textContent = message;
+        }
+    }
+
+    function cepMask(value) {
+        return value
+            .replace(/\D/g, '')
+            .slice(0, 8)
+            .replace(/^(\d{5})(\d)/, '$1-$2');
+    }
+
+    function cpfMask(value) {
+        return value
+            .replace(/\D/g, '')
+            .slice(0, 11)
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+
+    function isValidCpf(value) {
+        const cpf = value.replace(/\D/g, '');
+        if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
+            return false;
+        }
+
+        let sum = 0;
+        for (let i = 0; i < 9; i++) {
+            sum += Number(cpf[i]) * (10 - i);
+        }
+
+        let digit = 11 - (sum % 11);
+        if (digit >= 10) {
+            digit = 0;
+        }
+
+        if (digit !== Number(cpf[9])) {
+            return false;
+        }
+
+        sum = 0;
+        for (let i = 0; i < 10; i++) {
+            sum += Number(cpf[i]) * (11 - i);
+        }
+
+        digit = 11 - (sum % 11);
+        if (digit >= 10) {
+            digit = 0;
+        }
+
+        return digit === Number(cpf[10]);
+    }
+})();
+
+(function () {
     document.querySelectorAll('[data-copy-share]').forEach((button) => {
         button.addEventListener('click', async () => {
             const link = button.getAttribute('data-copy-share') || window.location.href;
