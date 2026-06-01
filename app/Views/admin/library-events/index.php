@@ -87,6 +87,7 @@ $displayStatus = function (array $event) use ($eventBucket): string {
     };
 };
 $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' => 'Cancelado'];
+$selectedCourseIds = array_map('intval', $editing['event_course_ids'] ?? (!empty($editing['event_course_id']) ? [(int) $editing['event_course_id']] : []));
 ?>
 
 <div class="events-admin-shell">
@@ -201,17 +202,6 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             </select>
                         </div>
                         <div>
-                            <label class="form-label">Curso online vinculado</label>
-                            <select class="form-select" name="event_course_id">
-                                <option value="">Sem curso online</option>
-                                <?php foreach (($courses ?? []) as $course): ?>
-                                    <option value="<?= e((string) $course['id']) ?>" <?= selected((string) $course['id'], (string) ($editing['event_course_id'] ?? '')) ?>>
-                                        <?= e($course['title']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
                             <label class="form-label">Status</label>
                             <select class="form-select" name="status">
                                 <?php foreach ($statusLabel as $value => $label): ?>
@@ -219,6 +209,10 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <label class="person-toggle-row event-public-toggle">
+                            <input class="form-check-input" type="checkbox" name="public_enabled" value="1" <?= checked((bool) ($editing['public_enabled'] ?? true)) ?>>
+                            <span><strong>Autorizar aparecer no site</strong><small>Se desligar, o evento fica salvo no painel, mas nao aparece na agenda publica.</small></span>
+                        </label>
                         <label class="person-toggle-row">
                             <input class="form-check-input" type="checkbox" name="registration_enabled" value="1" <?= checked((bool) ($editing['registration_enabled'] ?? false)) ?>>
                             <span><strong>Ativar inscrição pública</strong><small>Se desligar, o formulário de inscrição não aparece na página do evento.</small></span>
@@ -240,6 +234,24 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <span><strong>Mostrar responsável no público</strong><small>Exibe o nome do responsável pelo evento.</small></span>
                         </label>
                     </div>
+
+                    <section class="event-course-picker">
+                        <div>
+                            <label class="form-label">Cursos vinculados ao evento</label>
+                            <small>Marque um ou mais cursos para aparecerem dentro da pÃ¡gina do evento.</small>
+                        </div>
+                        <div class="event-course-options">
+                            <?php foreach (($courses ?? []) as $course): ?>
+                                <label>
+                                    <input type="checkbox" name="event_course_ids[]" value="<?= e((string) $course['id']) ?>" <?= checked(in_array((int) $course['id'], $selectedCourseIds, true)) ?>>
+                                    <span><?= e($course['title']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            <?php if (empty($courses)): ?>
+                                <div class="empty-state">Nenhum curso publico disponivel. Autorize o curso para aparecer no site antes de vincular.</div>
+                            <?php endif; ?>
+                        </div>
+                    </section>
 
                     <div>
                         <label class="form-label">Imagem de capa</label>
@@ -334,7 +346,8 @@ $statusLabel = ['aberto' => 'Aberto', 'encerrado' => 'Encerrado', 'cancelado' =>
                             <div><dt>Endereço</dt><dd><?= e($event['event_address'] ?: '-') ?></dd></div>
                             <div><dt>Vagas</dt><dd><?= $capacity ? e((string) $remaining) . ' livres · ' . e((string) $participants) . ' ocupadas · ' . e((string) $capacity) . ' totais' : e((string) $participants) . ' inscrito(s)' ?></dd></div>
                             <div><dt>Inscrição</dt><dd><?= !empty($event['registration_enabled']) ? 'Ativa' : 'Desativada' ?></dd></div>
-                            <div><dt>Curso online</dt><dd><?= e($event['course_title'] ?? '-') ?></dd></div>
+                            <div><dt>Cursos online</dt><dd><?= e($event['course_title'] ?? '-') ?></dd></div>
+                            <div><dt>No site</dt><dd><?= !empty($event['public_enabled']) ? 'Autorizado' : 'Oculto' ?></dd></div>
                             <div><dt>Público</dt><dd><?= !empty($event['public_show_capacity']) ? 'Vagas visíveis' : 'Vagas ocultas' ?></dd></div>
                             <div><dt>Responsável</dt><dd><?= e($event['responsible_name'] ?? '-') ?></dd></div>
                         </dl>

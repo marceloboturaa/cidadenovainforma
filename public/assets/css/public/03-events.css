@@ -751,12 +751,33 @@
     background: #eff6ff;
 }
 
+.event-linked-course-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.event-linked-course-list > span {
+    color: #1d4ed8;
+    font-size: 0.76rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.event-linked-course-list > h2 {
+    margin: 0;
+}
+
+.event-linked-course-list > div {
+    display: grid;
+    gap: 12px;
+}
+
 .event-linked-course {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 160px;
     gap: 14px;
     align-items: center;
-    margin-top: 22px;
     padding: 16px;
     border: 1px solid #bfdbfe;
     border-radius: 8px;
@@ -770,7 +791,8 @@
     text-transform: uppercase;
 }
 
-.event-linked-course h2 {
+.event-linked-course h2,
+.event-linked-course h3 {
     margin: 4px 0 8px;
 }
 

@@ -179,6 +179,7 @@ CREATE TABLE IF NOT EXISTS library_events (
     related_links TEXT NULL,
     event_course_id BIGINT UNSIGNED NULL,
     capacity INT UNSIGNED NULL,
+    public_enabled TINYINT(1) NOT NULL DEFAULT 1,
     registration_enabled TINYINT(1) NOT NULL DEFAULT 0,
     public_show_location TINYINT(1) NOT NULL DEFAULT 1,
     public_show_address TINYINT(1) NOT NULL DEFAULT 1,
@@ -250,6 +251,15 @@ CREATE TABLE IF NOT EXISTS education_courses (
     CONSTRAINT fk_education_courses_teacher FOREIGN KEY (teacher_user_id) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_education_courses_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_education_courses_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS library_event_courses (
+    event_id BIGINT UNSIGNED NOT NULL,
+    course_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    PRIMARY KEY (event_id, course_id),
+    CONSTRAINT fk_library_event_courses_event FOREIGN KEY (event_id) REFERENCES library_events(id) ON DELETE CASCADE,
+    CONSTRAINT fk_library_event_courses_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS education_modules (
@@ -586,6 +596,7 @@ ALTER TABLE people ADD COLUMN IF NOT EXISTS image_authorized TINYINT(1) NOT NULL
 
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS event_cep VARCHAR(12) NULL AFTER location;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS event_address VARCHAR(255) NULL AFTER location;
+ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER capacity;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS registration_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER capacity;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_location TINYINT(1) NOT NULL DEFAULT 1 AFTER registration_enabled;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_address TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_location;
@@ -594,6 +605,11 @@ ALTER TABLE library_events ADD COLUMN IF NOT EXISTS public_show_responsible TINY
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER location;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS related_links TEXT NULL AFTER cover_image;
 ALTER TABLE library_events ADD COLUMN IF NOT EXISTS event_course_id BIGINT UNSIGNED NULL AFTER related_links;
+
+INSERT IGNORE INTO library_event_courses (event_id, course_id, created_at)
+SELECT id, event_course_id, NOW()
+FROM library_events
+WHERE event_course_id IS NOT NULL;
 
 -- Renomeia o menu publico antigo de Acervo para Reprise.
 UPDATE menu_items

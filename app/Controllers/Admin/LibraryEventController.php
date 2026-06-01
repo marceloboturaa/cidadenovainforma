@@ -27,7 +27,7 @@ class LibraryEventController
             'events' => LibraryEvent::all($this->volunteerScopeUserId()),
             'editing' => $this->editing(),
             'users' => User::activeForAccessLists(),
-            'courses' => Education::publicCourses(12),
+            'courses' => Education::publicCourses(100),
             'canDeactivate' => $this->currentUserIsMaster(),
         ]);
     }

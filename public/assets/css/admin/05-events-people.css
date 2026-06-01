@@ -156,6 +156,61 @@
     margin: 0;
 }
 
+.event-public-toggle {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.event-public-toggle strong {
+    color: #166534;
+}
+
+.event-public-toggle small {
+    color: #15803d;
+}
+
+.event-course-picker {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+}
+
+.event-course-picker small {
+    display: block;
+    color: #1d4ed8;
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.event-course-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 8px;
+}
+
+.event-course-options label {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 10px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1e3a8a;
+    font-weight: 900;
+}
+
+.event-course-options input {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    accent-color: #2563eb;
+}
+
 .events-form-actions {
     padding-top: 4px;
 }

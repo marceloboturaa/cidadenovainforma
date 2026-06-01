@@ -98,19 +98,26 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                 <p class="event-detail-text">Mais informações serão divulgadas em breve.</p>
             <?php endif; ?>
 
-            <?php if (!empty($event['event_course_id']) && !empty($event['course_title'])): ?>
-                <section class="event-linked-course">
+            <?php if (!empty($event['linked_courses'])): ?>
+                <section class="event-linked-course-list">
+                    <span>Cursos online vinculados</span>
+                    <h2><?= count($event['linked_courses']) > 1 ? 'Cursos deste evento' : 'Curso deste evento' ?></h2>
                     <div>
-                        <span>Curso online vinculado</span>
-                        <h2><?= e($event['course_title']) ?></h2>
-                        <?php if (!empty($event['course_summary'])): ?>
-                            <p><?= e(text_excerpt($event['course_summary'], 220)) ?></p>
-                        <?php endif; ?>
+                        <?php foreach ($event['linked_courses'] as $course): ?>
+                            <article class="event-linked-course">
+                                <div>
+                                    <h3><?= e($course['title']) ?></h3>
+                                    <?php if (!empty($course['summary'])): ?>
+                                        <p><?= e(text_excerpt($course['summary'], 180)) ?></p>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!empty($course['cover_image'])): ?>
+                                    <img src="<?= e(media_url($course['cover_image'])) ?>" alt="" loading="lazy" onerror="this.remove()">
+                                <?php endif; ?>
+                                <a class="events-card-link" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">Acessar curso online</a>
+                            </article>
+                        <?php endforeach; ?>
                     </div>
-                    <?php if (!empty($event['course_cover_image'])): ?>
-                        <img src="<?= e(media_url($event['course_cover_image'])) ?>" alt="" loading="lazy" onerror="this.remove()">
-                    <?php endif; ?>
-                    <a class="events-card-link" href="<?= e(url('/admin/education/course?id=' . $event['event_course_id'])) ?>">Acessar curso online</a>
                 </section>
             <?php endif; ?>
 

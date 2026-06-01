@@ -68,6 +68,7 @@ class LibraryEvent
                 related_links TEXT NULL,
                 event_course_id BIGINT UNSIGNED NULL,
                 capacity INT UNSIGNED NULL,
+                public_enabled TINYINT(1) NOT NULL DEFAULT 1,
                 registration_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 public_show_location TINYINT(1) NOT NULL DEFAULT 1,
                 public_show_address TINYINT(1) NOT NULL DEFAULT 1,
@@ -101,6 +102,9 @@ class LibraryEvent
         if (!in_array('registration_enabled', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN registration_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER capacity');
         }
+        if (!in_array('public_enabled', $eventColumns, true)) {
+            $db->exec('ALTER TABLE library_events ADD COLUMN public_enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER capacity');
+        }
         foreach ([
             'public_show_location' => 'ALTER TABLE library_events ADD COLUMN public_show_location TINYINT(1) NOT NULL DEFAULT 1 AFTER registration_enabled',
             'public_show_address' => 'ALTER TABLE library_events ADD COLUMN public_show_address TINYINT(1) NOT NULL DEFAULT 1 AFTER public_show_location',
@@ -117,6 +121,23 @@ class LibraryEvent
         if (!in_array('event_course_id', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN event_course_id BIGINT UNSIGNED NULL AFTER related_links');
         }
+
+        $db->exec(
+            "CREATE TABLE IF NOT EXISTS library_event_courses (
+                event_id BIGINT UNSIGNED NOT NULL,
+                course_id BIGINT UNSIGNED NOT NULL,
+                created_at TIMESTAMP NULL,
+                PRIMARY KEY (event_id, course_id),
+                CONSTRAINT fk_library_event_courses_event FOREIGN KEY (event_id) REFERENCES library_events(id) ON DELETE CASCADE,
+                CONSTRAINT fk_library_event_courses_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB"
+        );
+        $db->exec(
+            "INSERT IGNORE INTO library_event_courses (event_id, course_id, created_at)
+             SELECT id, event_course_id, NOW()
+             FROM library_events
+             WHERE event_course_id IS NOT NULL"
+        );
 
         $personColumns = $db->query('SHOW COLUMNS FROM people')->fetchAll(\PDO::FETCH_COLUMN);
         if (!in_array('image_authorized', $personColumns, true)) {
@@ -178,7 +199,7 @@ class LibraryEvent
         $stmt = Database::connection()->prepare($sql);
         $stmt->execute($params);
 
-        return $stmt->fetchAll();
+        return self::hydrateEventsWithCourses($stmt->fetchAll());
     }
 
     public static function publicUpcoming(int $limit = 6): array
@@ -197,6 +218,7 @@ class LibraryEvent
                 GROUP BY event_id
              ) participant_counts ON participant_counts.event_id = library_events.id
              WHERE library_events.active = 1
+               AND library_events.public_enabled = 1
                AND library_events.status = 'aberto'
                AND (library_events.starts_at IS NULL OR COALESCE(library_events.ends_at, library_events.starts_at) >= NOW())
              ORDER BY COALESCE(library_events.starts_at, library_events.created_at) ASC
@@ -205,14 +227,14 @@ class LibraryEvent
         $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
         $stmt->execute();
 
-        return $stmt->fetchAll();
+        return self::hydrateEventsWithCourses($stmt->fetchAll());
     }
 
     public static function publicUpcomingAll(): array
     {
         self::ensureSchema();
 
-        return Database::connection()
+        $events = Database::connection()
             ->query(
                 "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
@@ -225,18 +247,20 @@ class LibraryEvent
                     GROUP BY event_id
                  ) participant_counts ON participant_counts.event_id = library_events.id
                  WHERE library_events.active = 1
+                   AND library_events.public_enabled = 1
                    AND library_events.status = 'aberto'
                    AND (library_events.starts_at IS NULL OR COALESCE(library_events.ends_at, library_events.starts_at) >= NOW())
                  ORDER BY COALESCE(library_events.starts_at, library_events.created_at) ASC"
             )
             ->fetchAll();
+        return self::hydrateEventsWithCourses($events);
     }
 
     public static function publicPastAll(): array
     {
         self::ensureSchema();
 
-        return Database::connection()
+        $events = Database::connection()
             ->query(
                 "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
@@ -249,6 +273,7 @@ class LibraryEvent
                     GROUP BY event_id
                  ) participant_counts ON participant_counts.event_id = library_events.id
                  WHERE library_events.active = 1
+                   AND library_events.public_enabled = 1
                    AND library_events.status <> 'cancelado'
                    AND (
                         library_events.status = 'encerrado'
@@ -257,13 +282,14 @@ class LibraryEvent
                  ORDER BY COALESCE(library_events.starts_at, library_events.created_at) DESC"
             )
             ->fetchAll();
+        return self::hydrateEventsWithCourses($events);
     }
 
     public static function publicAll(): array
     {
         self::ensureSchema();
 
-        return Database::connection()
+        $events = Database::connection()
             ->query(
                 "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
@@ -276,10 +302,12 @@ class LibraryEvent
                     GROUP BY event_id
                  ) participant_counts ON participant_counts.event_id = library_events.id
                  WHERE library_events.active = 1
+                   AND library_events.public_enabled = 1
                    AND library_events.status <> 'cancelado'
                  ORDER BY COALESCE(library_events.starts_at, library_events.created_at) DESC"
             )
             ->fetchAll();
+        return self::hydrateEventsWithCourses($events);
     }
 
     public static function findPublic(int $id): ?array
@@ -304,12 +332,14 @@ class LibraryEvent
              ) participant_counts ON participant_counts.event_id = library_events.id
              WHERE library_events.id = :id
                AND library_events.active = 1
+               AND library_events.public_enabled = 1
                AND library_events.status <> 'cancelado'
              LIMIT 1"
         );
         $stmt->execute(['id' => $id]);
 
-        return $stmt->fetch() ?: null;
+        $event = $stmt->fetch() ?: null;
+        return $event ? self::hydrateEventWithCourses($event) : null;
     }
 
     public static function find(int $id): ?array
@@ -319,7 +349,8 @@ class LibraryEvent
         $stmt = Database::connection()->prepare('SELECT * FROM library_events WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
 
-        return $stmt->fetch() ?: null;
+        $event = $stmt->fetch() ?: null;
+        return $event ? self::hydrateEventWithCourses($event) : null;
     }
 
     public static function participants(int $eventId): array
@@ -453,13 +484,16 @@ class LibraryEvent
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO library_events
-                (title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, related_links, event_course_id, capacity, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
+                (title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, related_links, event_course_id, capacity, public_enabled, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :description, :starts_at, :ends_at, :location, :event_cep, :event_address, :cover_image, :related_links, :event_course_id, :capacity, :registration_enabled, :public_show_location, :public_show_address, :public_show_capacity, :public_show_responsible, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :description, :starts_at, :ends_at, :location, :event_cep, :event_address, :cover_image, :related_links, :event_course_id, :capacity, :public_enabled, :registration_enabled, :public_show_location, :public_show_address, :public_show_capacity, :public_show_responsible, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::payload($data));
 
-        return (int) Database::connection()->lastInsertId();
+        $id = (int) Database::connection()->lastInsertId();
+        self::syncCourses($id, self::courseIdsFromData($data));
+
+        return $id;
     }
 
     public static function update(int $id, array $data): void
@@ -483,6 +517,7 @@ class LibraryEvent
                  related_links = :related_links,
                  event_course_id = :event_course_id,
                  capacity = :capacity,
+                 public_enabled = :public_enabled,
                  registration_enabled = :registration_enabled,
                  public_show_location = :public_show_location,
                  public_show_address = :public_show_address,
@@ -496,6 +531,7 @@ class LibraryEvent
              WHERE id = :id'
         );
         $stmt->execute($payload);
+        self::syncCourses($id, self::courseIdsFromData($data));
     }
 
     public static function deactivate(int $id): void
@@ -563,8 +599,9 @@ class LibraryEvent
             'event_address' => self::nullable($data['event_address'] ?? null),
             'cover_image' => self::nullable($data['cover_image'] ?? null),
             'related_links' => self::nullable($data['related_links'] ?? null),
-            'event_course_id' => !empty($data['event_course_id']) ? (int) $data['event_course_id'] : null,
+            'event_course_id' => self::primaryCourseId($data),
             'capacity' => !empty($data['capacity']) ? (int) $data['capacity'] : null,
+            'public_enabled' => array_key_exists('public_enabled', $data) ? (int) !empty($data['public_enabled']) : 1,
             'registration_enabled' => (int) !empty($data['registration_enabled']),
             'public_show_location' => (int) !empty($data['public_show_location']),
             'public_show_address' => (int) !empty($data['public_show_address']),
@@ -576,6 +613,116 @@ class LibraryEvent
             'created_by' => $data['created_by'] ?? null,
             'updated_by' => $data['updated_by'] ?? null,
         ];
+    }
+
+    private static function primaryCourseId(array $data): ?int
+    {
+        $ids = self::courseIdsFromData($data);
+        return $ids[0] ?? null;
+    }
+
+    private static function courseIdsFromData(array $data): array
+    {
+        $raw = $data['event_course_ids'] ?? $data['event_course_id'] ?? [];
+        $values = is_array($raw) ? $raw : [$raw];
+
+        return array_values(array_unique(array_filter(array_map('intval', $values))));
+    }
+
+    private static function syncCourses(int $eventId, array $courseIds): void
+    {
+        $db = Database::connection();
+        $db->prepare('DELETE FROM library_event_courses WHERE event_id = :event_id')->execute(['event_id' => $eventId]);
+
+        if (!$courseIds) {
+            return;
+        }
+
+        $stmt = $db->prepare(
+            'INSERT IGNORE INTO library_event_courses (event_id, course_id, created_at)
+             VALUES (:event_id, :course_id, NOW())'
+        );
+        foreach ($courseIds as $courseId) {
+            $stmt->execute([
+                'event_id' => $eventId,
+                'course_id' => $courseId,
+            ]);
+        }
+    }
+
+    private static function hydrateEventsWithCourses(array $events): array
+    {
+        if (!$events) {
+            return [];
+        }
+
+        $coursesByEvent = self::coursesForEvents(array_column($events, 'id'));
+        foreach ($events as &$event) {
+            $event = self::applyCourseData($event, $coursesByEvent[(int) $event['id']] ?? []);
+        }
+        unset($event);
+
+        return $events;
+    }
+
+    private static function hydrateEventWithCourses(array $event): array
+    {
+        $coursesByEvent = self::coursesForEvents([(int) $event['id']]);
+        return self::applyCourseData($event, $coursesByEvent[(int) $event['id']] ?? []);
+    }
+
+    private static function coursesForEvents(array $eventIds): array
+    {
+        $eventIds = array_values(array_unique(array_filter(array_map('intval', $eventIds))));
+        if (!$eventIds) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($eventIds), '?'));
+        $stmt = Database::connection()->prepare(
+            "SELECT library_event_courses.event_id,
+                    education_courses.id,
+                    education_courses.title,
+                    education_courses.summary,
+                    education_courses.cover_image
+             FROM library_event_courses
+             INNER JOIN education_courses ON education_courses.id = library_event_courses.course_id
+             WHERE library_event_courses.event_id IN ({$placeholders})
+               AND education_courses.active = 1
+             ORDER BY education_courses.title ASC"
+        );
+        $stmt->execute($eventIds);
+
+        $grouped = [];
+        foreach ($stmt->fetchAll() as $course) {
+            $grouped[(int) $course['event_id']][] = $course;
+        }
+
+        return $grouped;
+    }
+
+    private static function applyCourseData(array $event, array $courses): array
+    {
+        if (!$courses && !empty($event['event_course_id']) && !empty($event['course_title'])) {
+            $courses[] = [
+                'id' => (int) $event['event_course_id'],
+                'title' => $event['course_title'],
+                'summary' => $event['course_summary'] ?? null,
+                'cover_image' => $event['course_cover_image'] ?? null,
+            ];
+        }
+
+        $event['linked_courses'] = $courses;
+        $event['event_course_ids'] = array_map(fn (array $course): int => (int) $course['id'], $courses);
+        $event['course_title'] = implode(', ', array_map(fn (array $course): string => (string) $course['title'], $courses));
+
+        if ($courses) {
+            $event['event_course_id'] = (int) $courses[0]['id'];
+            $event['course_summary'] = $courses[0]['summary'] ?? null;
+            $event['course_cover_image'] = $courses[0]['cover_image'] ?? null;
+        }
+
+        return $event;
     }
 
     private static function nullable(mixed $value): ?string
