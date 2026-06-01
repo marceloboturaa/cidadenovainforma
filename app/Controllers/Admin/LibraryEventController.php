@@ -283,6 +283,30 @@ class LibraryEventController
         exit;
     }
 
+    public function bulkParticipantStatus(): void
+    {
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+
+        $action = (string) ($_POST['bulk_action'] ?? 'selected');
+        $status = (string) ($_POST['status'] ?? 'inscrito');
+        $personIds = $_POST['person_ids'] ?? [];
+        $personIds = is_array($personIds) ? $personIds : [];
+
+        if ($action === 'all_pending') {
+            $updated = LibraryEvent::updatePendingParticipantStatuses((int) $event['id'], 'inscrito');
+            $message = $updated . ' inscriÃ§Ã£o(Ãµes) pendente(s) atualizada(s).';
+        } else {
+            $updated = LibraryEvent::updateParticipantStatuses((int) $event['id'], $personIds, $status);
+            $message = $updated . ' participante(s) selecionado(s) atualizado(s).';
+        }
+
+        Logger::info('library_events.participants_bulk_status', 'Status em lote atualizado no evento: ' . $event['title'], current_user()['id'] ?? null);
+        Session::flash($updated > 0 ? 'success' : 'error', $updated > 0 ? $message : 'Nenhuma inscriÃ§Ã£o foi alterada.');
+        redirect('/admin/library-events/participants?id=' . $event['id']);
+    }
+
     public function removeParticipant(): void
     {
         $this->validateCsrf('/admin/library-events');

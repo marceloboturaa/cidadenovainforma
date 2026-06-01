@@ -22,6 +22,7 @@
     const eventCepSearch = document.querySelector('[data-event-cep-search]');
     const registrationDirectory = document.querySelector('[data-registration-directory]');
     const registrationDirectorySearch = document.querySelector('[data-registration-directory-search]');
+    const participantSelectAll = document.querySelector('[data-participant-select-all]');
     const documentList = document.querySelector('[data-document-list]');
     const documentSearch = document.querySelector('[data-document-search]');
 
@@ -184,6 +185,10 @@
 
     if (registrationDirectory && registrationDirectorySearch) {
         bindRegistrationDirectorySearch(registrationDirectory, registrationDirectorySearch);
+    }
+
+    if (participantSelectAll) {
+        bindParticipantSelection(participantSelectAll);
     }
 
     bindDocumentAccessTools();
@@ -517,6 +522,31 @@
             });
         });
         applyFilter();
+    }
+
+    function bindParticipantSelection(toggleButton) {
+        const inputs = Array.from(document.querySelectorAll('[data-participant-select]'));
+        if (!inputs.length) {
+            return;
+        }
+
+        const syncButton = () => {
+            const checked = inputs.filter((input) => input.checked).length;
+            toggleButton.classList.toggle('is-active', checked > 0 && checked === inputs.length);
+            toggleButton.querySelector('i')?.classList.toggle('bi-ui-checks', checked !== inputs.length);
+            toggleButton.querySelector('i')?.classList.toggle('bi-ui-checks-grid', checked === inputs.length);
+        };
+
+        toggleButton.addEventListener('click', () => {
+            const shouldCheck = inputs.some((input) => !input.checked);
+            inputs.forEach((input) => {
+                input.checked = shouldCheck;
+            });
+            syncButton();
+        });
+
+        inputs.forEach((input) => input.addEventListener('change', syncButton));
+        syncButton();
     }
 
     function bindDocumentAccessTools() {

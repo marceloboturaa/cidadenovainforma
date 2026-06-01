@@ -95,6 +95,7 @@ $router->get('/admin/library-events/participants', [LibraryEventController::clas
 $router->post('/admin/library-events/participants', [LibraryEventController::class, 'addParticipant']);
 $router->post('/admin/library-events/participants/create', [LibraryEventController::class, 'createParticipant']);
 $router->post('/admin/library-events/participants/user', [LibraryEventController::class, 'addUserParticipant']);
+$router->post('/admin/library-events/participants/bulk-status', [LibraryEventController::class, 'bulkParticipantStatus']);
 $router->get('/admin/library-events/participants/export', [LibraryEventController::class, 'exportParticipants']);
 $router->post('/admin/library-events/participants/remove', [LibraryEventController::class, 'removeParticipant']);
 $router->post('/admin/library-events/participants/remove-all', [LibraryEventController::class, 'removeAllParticipants']);

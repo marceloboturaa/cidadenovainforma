@@ -325,6 +325,19 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
         <div class="participant-bulk-actions">
             <span><?= e((string) count($participants)) ?> participante(s)</span>
             <?php if ($participants): ?>
+                <form id="bulk-status-form" class="participant-status-bulk-form" method="post" action="<?= e(url('/admin/library-events/participants/bulk-status?id=' . $event['id'])) ?>">
+                    <?= csrf_field() ?>
+                    <select class="form-select form-select-sm" name="status" aria-label="Novo status em lote">
+                        <option value="inscrito">Inscrito</option>
+                        <option value="presente">Presente</option>
+                        <option value="ausente">Ausente</option>
+                        <option value="cancelado">Cancelado</option>
+                        <option value="pendente">Pendente</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary icon-btn" name="bulk_action" value="selected" type="submit"><i class="bi bi-check2-square" aria-hidden="true"></i>Aplicar nos marcados</button>
+                    <button class="btn btn-sm btn-outline-primary icon-btn" name="bulk_action" value="all_pending" type="submit" onclick="return confirm('Confirmar todas as inscrições pendentes deste evento?');"><i class="bi bi-check2-all" aria-hidden="true"></i>Aceitar pendentes</button>
+                </form>
+                <button class="btn btn-sm btn-outline-secondary icon-btn" type="button" data-participant-select-all><i class="bi bi-ui-checks" aria-hidden="true"></i>Selecionar todos</button>
                 <form method="post" action="<?= e(url('/admin/library-events/participants/remove-all?id=' . $event['id'])) ?>" onsubmit="return confirm('Remover TODOS os participantes deste evento? Esta ação não apaga os cadastros de pessoas, só desvincula deste evento.');">
                     <?= csrf_field() ?>
                     <input type="hidden" name="confirm_remove_all" value="REMOVER">
@@ -335,7 +348,11 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
     </div>
     <div class="admin-card-list">
         <?php foreach ($participants as $participant): ?>
-            <article class="admin-list-card internal-list-card">
+            <article class="admin-list-card internal-list-card participant-list-card">
+                <label class="participant-select-box" title="Selecionar participante">
+                    <input type="checkbox" form="bulk-status-form" name="person_ids[]" value="<?= e((string) $participant['person_id']) ?>" data-participant-select>
+                    <span>Selecionar</span>
+                </label>
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($participant['full_name']) ?></strong>

@@ -55,6 +55,9 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
     <header class="event-show-hero">
         <div class="event-show-copy">
             <span class="event-status-badge"><?= e($statusText) ?></span>
+            <?php if ($canRegister && $remainingSlots !== 0): ?>
+                <span class="registration-open-badge">Inscrições abertas</span>
+            <?php endif; ?>
             <h1><?= e($event['title']) ?></h1>
             <?php if (!empty($event['description'])): ?>
                 <p><?= e(text_excerpt($event['description'], 240)) ?></p>

@@ -406,6 +406,47 @@ class LibraryEvent
         return $stmt->fetch() ?: null;
     }
 
+    public static function updateParticipantStatuses(int $eventId, array $personIds, string $status): int
+    {
+        self::ensureSchema();
+
+        $personIds = array_values(array_unique(array_filter(array_map('intval', $personIds))));
+        if (!$personIds) {
+            return 0;
+        }
+
+        $status = in_array($status, ['pendente', 'inscrito', 'presente', 'ausente', 'cancelado'], true) ? $status : 'inscrito';
+        $placeholders = implode(',', array_fill(0, count($personIds), '?'));
+        $stmt = Database::connection()->prepare(
+            "UPDATE library_event_participants
+             SET status = ?
+             WHERE event_id = ?
+               AND person_id IN ({$placeholders})"
+        );
+        $stmt->execute(array_merge([$status, $eventId], $personIds));
+
+        return $stmt->rowCount();
+    }
+
+    public static function updatePendingParticipantStatuses(int $eventId, string $status): int
+    {
+        self::ensureSchema();
+
+        $status = in_array($status, ['inscrito', 'presente', 'ausente', 'cancelado'], true) ? $status : 'inscrito';
+        $stmt = Database::connection()->prepare(
+            "UPDATE library_event_participants
+             SET status = :status
+             WHERE event_id = :event_id
+               AND status = 'pendente'"
+        );
+        $stmt->execute([
+            'event_id' => $eventId,
+            'status' => $status,
+        ]);
+
+        return $stmt->rowCount();
+    }
+
     public static function create(array $data): int
     {
         self::ensureSchema();

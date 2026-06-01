@@ -246,6 +246,10 @@
     line-height: 1.45;
 }
 
+.events-admin-item-main {
+    min-width: 0;
+}
+
 .events-admin-item-main dl {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
@@ -640,6 +644,44 @@
     margin: 0;
 }
 
+.participant-status-bulk-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.participant-status-bulk-form .form-select {
+    width: auto;
+    min-width: 132px;
+}
+
+.participant-list-card {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.participant-select-box {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.participant-select-box input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--brand);
+}
+
+.participant-bulk-actions > .btn.is-active {
+    border-color: #111827;
+    background: #111827;
+    color: #ffffff;
+}
+
 @media (max-width: 900px) {
     .registration-directory-tools {
         grid-template-columns: 1fr;
@@ -651,6 +693,29 @@
 
     .registration-directory-filters button {
         flex: 1 1 auto;
+    }
+
+    .participant-bulk-actions,
+    .participant-status-bulk-form {
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .participant-status-bulk-form .form-select,
+    .participant-status-bulk-form .btn,
+    .participant-bulk-actions > .btn,
+    .participant-bulk-actions form,
+    .participant-bulk-actions form button {
+        width: 100%;
+    }
+
+    .participant-list-card {
+        grid-template-columns: 1fr;
+    }
+
+    .participant-select-box {
+        justify-items: start;
+        grid-template-columns: auto minmax(0, 1fr);
     }
 }
 
