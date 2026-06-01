@@ -97,6 +97,7 @@ $router->post('/admin/library-events/participants/create', [LibraryEventControll
 $router->post('/admin/library-events/participants/user', [LibraryEventController::class, 'addUserParticipant']);
 $router->get('/admin/library-events/participants/export', [LibraryEventController::class, 'exportParticipants']);
 $router->post('/admin/library-events/participants/remove', [LibraryEventController::class, 'removeParticipant']);
+$router->post('/admin/library-events/participants/remove-all', [LibraryEventController::class, 'removeAllParticipants']);
 
 $router->get('/admin/institution-pages', [InstitutionPageController::class, 'index']);
 $router->get('/admin/institution-pages/landing', [InstitutionPageController::class, 'landing']);

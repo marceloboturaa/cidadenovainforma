@@ -38,6 +38,25 @@ $directoryUsers = array_values(array_filter($users, function (array $user) use (
     $email = strtolower((string) ($user['email'] ?? ''));
     return $email === '' || !in_array($email, $participantEmails, true);
 }));
+$registrationRole = function (array $record, string $fallback = 'person'): string {
+    $role = strtolower((string) ($record['role_slug'] ?? $record['role_name'] ?? $fallback));
+    $role = strtr($role, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ç' => 'c']);
+
+    if (str_contains($role, 'estudante') || str_contains($role, 'student')) {
+        return 'estudante';
+    }
+    if (str_contains($role, 'voluntario') || str_contains($role, 'volunt')) {
+        return 'voluntario';
+    }
+    if (str_contains($role, 'jornalista') || str_contains($role, 'colunista')) {
+        return 'comunicacao';
+    }
+    if (str_contains($role, 'admin') || str_contains($role, 'diretor') || str_contains($role, 'equipe')) {
+        return 'equipe';
+    }
+
+    return $fallback;
+};
 ?>
 
 <section class="panel">
@@ -210,24 +229,39 @@ $directoryUsers = array_values(array_filter($users, function (array $user) use (
     </form>
 </details>
 
-<section class="panel registration-directory-panel">
+<section class="panel registration-directory-panel registration-search-panel">
     <div class="section-heading">
-        <h2>Adicionar cadastrado ao evento</h2>
-        <span>Pessoas, estudantes e usuários em um só lugar</span>
+        <div>
+            <span>Busca inteligente</span>
+            <h2>Adicionar cadastrado ao evento</h2>
+        </div>
+        <span>Digite para buscar em pessoas, estudantes e usuários</span>
     </div>
     <div class="registration-directory-tools">
-        <input class="form-control" type="search" placeholder="Pesquisar por nome, e-mail, CPF, WhatsApp ou tipo de cadastro" data-registration-directory-search>
+        <div class="registration-search-field">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input class="form-control" type="search" placeholder="Digite nome, e-mail, CPF, WhatsApp ou perfil" data-registration-directory-search>
+        </div>
         <div class="registration-directory-filters" role="group" aria-label="Filtrar cadastros">
-            <button type="button" class="is-active" data-registration-filter="available">Disponíveis</button>
+            <button type="button" class="is-active" data-registration-filter="all">Todos</button>
+            <button type="button" data-registration-filter="estudante">Estudantes</button>
             <button type="button" data-registration-filter="user">Usuários</button>
             <button type="button" data-registration-filter="person">Pessoas</button>
-            <button type="button" data-registration-filter="all">Todos</button>
+            <button type="button" data-registration-filter="voluntario">Voluntários</button>
+            <button type="button" data-registration-filter="comunicacao">Comunicação</button>
+            <button type="button" data-registration-filter="equipe">Equipe</button>
         </div>
-        <span><strong data-registration-directory-count><?= e((string) (count($directoryUsers) + count($directoryPeople))) ?></strong> resultado(s)</span>
+        <span><strong data-registration-directory-count>0</strong> resultado(s)</span>
+    </div>
+    <div class="registration-search-empty" data-registration-directory-start>
+        <i class="bi bi-person-plus" aria-hidden="true"></i>
+        <strong>Pesquise para adicionar alguém</strong>
+        <span>Os cadastros disponíveis ficam ocultos até você digitar, evitando uma lista grande e confusa.</span>
     </div>
     <div class="admin-card-list compact-list registration-directory-list" data-registration-directory>
         <?php foreach ($directoryUsers as $user): ?>
-            <article class="admin-list-card internal-list-card registered-user-card" data-registration-card data-registration-type="user" data-registration-search="<?= e(($user['name'] ?? '') . ' ' . ($user['email'] ?? '') . ' usuario estudante login ' . ($user['role_name'] ?? '')) ?>">
+            <?php $roleFilter = $registrationRole($user, 'user'); ?>
+            <article class="admin-list-card internal-list-card registered-user-card" data-registration-card data-registration-type="user" data-registration-role="<?= e($roleFilter) ?>" data-registration-search="<?= e(($user['name'] ?? '') . ' ' . ($user['email'] ?? '') . ' usuario login ' . ($user['role_name'] ?? '') . ' ' . $roleFilter) ?>">
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($user['name']) ?></strong>
@@ -253,7 +287,7 @@ $directoryUsers = array_values(array_filter($users, function (array $user) use (
             </article>
         <?php endforeach; ?>
         <?php foreach ($directoryPeople as $person): ?>
-            <article class="admin-list-card internal-list-card existing-person-card" data-registration-card data-registration-type="person" data-registration-search="<?= e(($person['full_name'] ?? '') . ' ' . ($person['email'] ?? '') . ' ' . ($person['cpf'] ?? '') . ' ' . ($person['whatsapp'] ?? '') . ' pessoa cadastro interno') ?>">
+            <article class="admin-list-card internal-list-card existing-person-card" data-registration-card data-registration-type="person" data-registration-role="person" data-registration-search="<?= e(($person['full_name'] ?? '') . ' ' . ($person['email'] ?? '') . ' ' . ($person['cpf'] ?? '') . ' ' . ($person['whatsapp'] ?? '') . ' pessoa cadastro interno') ?>">
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($person['full_name']) ?></strong>
@@ -281,14 +315,23 @@ $directoryUsers = array_values(array_filter($users, function (array $user) use (
         <?php if (empty($directoryUsers) && empty($directoryPeople)): ?>
             <div class="empty-state">Nenhum cadastro encontrado.</div>
         <?php endif; ?>
-        <div class="empty-state" data-registration-directory-empty hidden>Nenhum cadastro encontrado para esta busca.</div>
+        <div class="empty-state" data-registration-directory-empty hidden>Nenhum cadastro encontrado para esta busca e filtro.</div>
     </div>
 </section>
 
 <section class="panel">
     <div class="section-heading">
         <h2><i class="bi bi-people" aria-hidden="true"></i> Participantes vinculados</h2>
-        <span><?= e((string) count($participants)) ?> participante(s)</span>
+        <div class="participant-bulk-actions">
+            <span><?= e((string) count($participants)) ?> participante(s)</span>
+            <?php if ($participants): ?>
+                <form method="post" action="<?= e(url('/admin/library-events/participants/remove-all?id=' . $event['id'])) ?>" onsubmit="return confirm('Remover TODOS os participantes deste evento? Esta ação não apaga os cadastros de pessoas, só desvincula deste evento.');">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="confirm_remove_all" value="REMOVER">
+                    <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Remover todos</button>
+                </form>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="admin-card-list">
         <?php foreach ($participants as $participant): ?>

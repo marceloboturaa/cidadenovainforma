@@ -456,17 +456,20 @@
         const empty = directory.querySelector('[data-registration-directory-empty]');
         const count = document.querySelector('[data-registration-directory-count]');
         const filterButtons = Array.from(document.querySelectorAll('[data-registration-filter]'));
-        let activeFilter = 'available';
+        const start = document.querySelector('[data-registration-directory-start]');
+        let activeFilter = 'all';
 
         const applyFilter = () => {
             const term = normalizeSearch(searchInput.value);
             let visible = 0;
+            const hasSearch = term.length > 0;
 
             cards.forEach((card) => {
                 const haystack = normalizeSearch(card.dataset.registrationSearch || card.textContent || '');
                 const type = card.dataset.registrationType || '';
-                const matchesType = activeFilter === 'all' || activeFilter === 'available' || type === activeFilter;
-                const matches = matchesType && (term === '' || haystack.includes(term));
+                const role = card.dataset.registrationRole || '';
+                const matchesFilter = activeFilter === 'all' || type === activeFilter || role === activeFilter;
+                const matches = hasSearch && matchesFilter && haystack.includes(term);
                 card.classList.toggle('is-hidden', !matches);
                 if (matches) {
                     visible += 1;
@@ -476,8 +479,11 @@
             if (count) {
                 count.textContent = String(visible);
             }
+            if (start) {
+                start.hidden = hasSearch;
+            }
             if (empty) {
-                empty.hidden = visible > 0;
+                empty.hidden = !hasSearch || visible > 0;
             }
         };
 

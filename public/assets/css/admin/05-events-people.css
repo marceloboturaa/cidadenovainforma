@@ -527,10 +527,40 @@
 
 .registration-directory-tools {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(260px, 1fr) minmax(0, auto) auto;
     gap: 12px;
     align-items: center;
     margin-bottom: 14px;
+}
+
+.registration-search-panel .section-heading > div {
+    display: grid;
+    gap: 3px;
+}
+
+.registration-search-panel .section-heading > div > span {
+    color: var(--brand);
+    font-size: 0.74rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.registration-search-field {
+    position: relative;
+}
+
+.registration-search-field i {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    z-index: 1;
+    color: var(--muted);
+    transform: translateY(-50%);
+}
+
+.registration-search-field .form-control {
+    min-height: 44px;
+    padding-left: 38px;
 }
 
 .registration-directory-tools span {
@@ -541,7 +571,8 @@
 }
 
 .registration-directory-filters {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     padding: 4px;
     border: 1px solid var(--line);
@@ -563,6 +594,64 @@
 .registration-directory-filters button.is-active {
     background: #111827;
     color: #ffffff;
+}
+
+.registration-search-empty {
+    display: grid;
+    justify-items: center;
+    gap: 7px;
+    padding: 24px;
+    border: 1px dashed #bfdbfe;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--muted);
+    text-align: center;
+}
+
+.registration-search-empty[hidden] {
+    display: none;
+}
+
+.registration-search-empty i {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 1.2rem;
+}
+
+.registration-search-empty strong {
+    color: var(--ink);
+    font-size: 1rem;
+}
+
+.participant-bulk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.participant-bulk-actions form {
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .registration-directory-tools {
+        grid-template-columns: 1fr;
+    }
+
+    .registration-directory-filters {
+        width: 100%;
+    }
+
+    .registration-directory-filters button {
+        flex: 1 1 auto;
+    }
 }
 
 .event-capacity-bar {

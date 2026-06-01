@@ -299,6 +299,24 @@ class LibraryEventController
         redirect('/admin/library-events/participants?id=' . $event['id']);
     }
 
+    public function removeAllParticipants(): void
+    {
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+        $confirmation = trim((string) ($_POST['confirm_remove_all'] ?? ''));
+
+        if ($confirmation !== 'REMOVER') {
+            Session::flash('error', 'Digite REMOVER para excluir todos os participantes deste evento.');
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
+        $removed = LibraryEvent::detachAllParticipants((int) $event['id']);
+        Logger::info('library_events.participants_removed_all', 'Todos os participantes removidos do evento: ' . $event['title'], current_user()['id'] ?? null);
+        Session::flash('success', $removed . ' participante(s) removido(s) deste evento.');
+        redirect('/admin/library-events/participants?id=' . $event['id']);
+    }
+
     private function editing(): ?array
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);

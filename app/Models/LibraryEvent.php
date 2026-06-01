@@ -494,6 +494,18 @@ class LibraryEvent
         $stmt->execute(['event_id' => $eventId, 'person_id' => $personId]);
     }
 
+    public static function detachAllParticipants(int $eventId): int
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'DELETE FROM library_event_participants WHERE event_id = :event_id'
+        );
+        $stmt->execute(['event_id' => $eventId]);
+
+        return $stmt->rowCount();
+    }
+
     private static function payload(array $data): array
     {
         $startsAt = self::dateTime($data['starts_at'] ?? null);
