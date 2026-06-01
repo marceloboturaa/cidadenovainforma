@@ -462,14 +462,16 @@
         const applyFilter = () => {
             const term = normalizeSearch(searchInput.value);
             let visible = 0;
-            const hasSearch = term.length > 0;
+            const hasQuery = term.length > 0;
+            const shouldShowResults = hasQuery || activeFilter !== 'all';
 
             cards.forEach((card) => {
                 const haystack = normalizeSearch(card.dataset.registrationSearch || card.textContent || '');
                 const type = card.dataset.registrationType || '';
                 const role = card.dataset.registrationRole || '';
                 const matchesFilter = activeFilter === 'all' || type === activeFilter || role === activeFilter;
-                const matches = hasSearch && matchesFilter && haystack.includes(term);
+                const matchesSearch = !hasQuery || haystack.includes(term);
+                const matches = shouldShowResults && matchesFilter && matchesSearch;
                 card.classList.toggle('is-hidden', !matches);
                 if (matches) {
                     visible += 1;
@@ -480,10 +482,10 @@
                 count.textContent = String(visible);
             }
             if (start) {
-                start.hidden = hasSearch;
+                start.hidden = shouldShowResults;
             }
             if (empty) {
-                empty.hidden = !hasSearch || visible > 0;
+                empty.hidden = !shouldShowResults || visible > 0;
             }
         };
 
