@@ -1,4 +1,14 @@
-<?php $isEdit = (bool) $editing; ?>
+<?php
+$isEdit = (bool) $editing;
+$formatDate = function (?string $date): string {
+    if (!$date) {
+        return '';
+    }
+
+    $timestamp = strtotime($date);
+    return $timestamp ? date('d/m/Y', $timestamp) : $date;
+};
+?>
 
 <div class="page-heading">
     <div>
@@ -39,15 +49,15 @@
                     </div>
                     <div>
                         <label class="form-label">Nascimento</label>
-                        <input class="form-control" name="birth_date" type="date" value="<?= e($editing['birth_date'] ?? '') ?>">
+                        <input class="form-control" name="birth_date" type="text" value="<?= e($formatDate($editing['birth_date'] ?? null)) ?>" placeholder="dd/mm/aaaa" inputmode="numeric" autocomplete="bday" data-birth-date-input>
                     </div>
                     <div>
                         <label class="form-label">Telefone</label>
-                        <input class="form-control" name="phone" value="<?= e($editing['phone'] ?? '') ?>">
+                        <input class="form-control" name="phone" value="<?= e($editing['phone'] ?? '') ?>" inputmode="tel" autocomplete="tel" data-phone-input>
                     </div>
                     <div>
                         <label class="form-label">WhatsApp</label>
-                        <input class="form-control" name="whatsapp" value="<?= e($editing['whatsapp'] ?? '') ?>">
+                        <input class="form-control" name="whatsapp" value="<?= e($editing['whatsapp'] ?? '') ?>" inputmode="tel" autocomplete="tel" data-phone-input>
                     </div>
                     <div class="field-wide">
                         <label class="form-label">E-mail</label>
@@ -119,7 +129,7 @@
                     </div>
                     <div>
                         <label class="form-label">Telefone/WhatsApp</label>
-                        <input class="form-control" name="guardian_phone" value="<?= e($editing['guardian_phone'] ?? '') ?>">
+                        <input class="form-control" name="guardian_phone" value="<?= e($editing['guardian_phone'] ?? '') ?>" inputmode="tel" autocomplete="tel" data-phone-input>
                     </div>
                     <div class="field-wide">
                         <label class="form-label">E-mail do responsável</label>

@@ -107,15 +107,15 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                     </div>
                     <div>
                         <label class="form-label">Nascimento</label>
-                        <input class="form-control" name="birth_date" type="date">
+                        <input class="form-control" name="birth_date" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" autocomplete="bday" data-birth-date-input>
                     </div>
                     <div>
                         <label class="form-label">Telefone</label>
-                        <input class="form-control" name="phone">
+                        <input class="form-control" name="phone" inputmode="tel" autocomplete="tel" data-phone-input>
                     </div>
                     <div>
                         <label class="form-label">WhatsApp</label>
-                        <input class="form-control" name="whatsapp">
+                        <input class="form-control" name="whatsapp" inputmode="tel" autocomplete="tel" data-phone-input>
                     </div>
                     <div class="field-wide">
                         <label class="form-label">E-mail</label>
@@ -187,7 +187,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                     </div>
                     <div>
                         <label class="form-label">Telefone/WhatsApp</label>
-                        <input class="form-control" name="guardian_phone">
+                        <input class="form-control" name="guardian_phone" inputmode="tel" autocomplete="tel" data-phone-input>
                     </div>
                     <div class="field-wide">
                         <label class="form-label">E-mail do responsável</label>

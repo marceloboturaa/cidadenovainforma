@@ -209,6 +209,25 @@
             });
         });
 
+        personForm.querySelectorAll('[data-birth-date-input]').forEach((input) => {
+            input.addEventListener('input', () => {
+                input.value = dateMask(input.value);
+                input.setCustomValidity('');
+            });
+            input.addEventListener('blur', () => {
+                input.setCustomValidity(input.value && !isValidDate(input.value) ? 'Data inválida. Use dd/mm/aaaa.' : '');
+                if (input.validationMessage) {
+                    input.reportValidity();
+                }
+            });
+        });
+
+        personForm.querySelectorAll('[data-phone-input]').forEach((input) => {
+            input.addEventListener('input', () => {
+                input.value = phoneMask(input.value);
+            });
+        });
+
         if (minorToggle && guardianFields) {
             const syncGuardian = () => guardianFields.hidden = !minorToggle.checked;
             minorToggle.addEventListener('change', syncGuardian);
@@ -666,6 +685,27 @@
             .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     }
 
+    function dateMask(value) {
+        return value
+            .replace(/\D/g, '')
+            .slice(0, 8)
+            .replace(/(\d{2})(\d)/, '$1/$2')
+            .replace(/(\d{2})(\d)/, '$1/$2');
+    }
+
+    function phoneMask(value) {
+        const digits = value.replace(/\D/g, '').slice(0, 11);
+        if (digits.length <= 10) {
+            return digits
+                .replace(/(\d{2})(\d)/, '($1) $2')
+                .replace(/(\d{4})(\d)/, '$1-$2');
+        }
+
+        return digits
+            .replace(/(\d{2})(\d)/, '($1) $2')
+            .replace(/(\d{5})(\d)/, '$1-$2');
+    }
+
     function isValidCpf(value) {
         const cpf = value.replace(/\D/g, '');
         if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
@@ -691,5 +731,23 @@
             digit = 0;
         }
         return digit === Number(cpf[10]);
+    }
+
+    function isValidDate(value) {
+        const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (!match) {
+            return false;
+        }
+
+        const day = Number(match[1]);
+        const month = Number(match[2]);
+        const year = Number(match[3]);
+        const date = new Date(year, month - 1, day);
+
+        return date.getFullYear() === year
+            && date.getMonth() === month - 1
+            && date.getDate() === day
+            && year >= 1900
+            && year <= new Date().getFullYear();
     }
 })();

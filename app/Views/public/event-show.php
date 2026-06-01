@@ -138,15 +138,15 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                         </div>
                         <div>
                             <label>Nascimento</label>
-                            <input name="birth_date" type="date">
+                            <input name="birth_date" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" autocomplete="bday" data-public-birth-date-input>
                         </div>
                         <div>
                             <label>WhatsApp</label>
-                            <input name="whatsapp" required>
+                            <input name="whatsapp" inputmode="tel" autocomplete="tel" data-public-phone-input required>
                         </div>
                         <div>
                             <label>Telefone</label>
-                            <input name="phone">
+                            <input name="phone" inputmode="tel" autocomplete="tel" data-public-phone-input>
                         </div>
                         <div class="field-wide">
                             <label>E-mail</label>
@@ -205,7 +205,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                             </div>
                             <div>
                                 <label>Telefone do responsável</label>
-                                <input name="guardian_phone">
+                                <input name="guardian_phone" inputmode="tel" autocomplete="tel" data-public-phone-input>
                             </div>
                             <div>
                                 <label>E-mail do responsável</label>

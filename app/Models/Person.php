@@ -149,12 +149,12 @@ class Person
 
     private static function payload(array $data): array
     {
-        $birthDate = trim((string) ($data['birth_date'] ?? ''));
+        $birthDate = self::normalizeDate($data['birth_date'] ?? null);
 
         return [
             'full_name' => trim((string) ($data['full_name'] ?? '')),
             'cpf' => self::nullable($data['cpf'] ?? null),
-            'birth_date' => $birthDate !== '' ? $birthDate : null,
+            'birth_date' => $birthDate,
             'phone' => self::nullable($data['phone'] ?? null),
             'whatsapp' => self::nullable($data['whatsapp'] ?? null),
             'email' => self::nullable($data['email'] ?? null),
@@ -183,5 +183,25 @@ class Person
     {
         $value = trim((string) ($value ?? ''));
         return $value !== '' ? $value : null;
+    }
+
+    private static function normalizeDate(mixed $value): ?string
+    {
+        $value = trim((string) ($value ?? ''));
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $matches)) {
+            return checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1]) ? $value : null;
+        }
+
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $value, $matches)) {
+            return checkdate((int) $matches[2], (int) $matches[1], (int) $matches[3])
+                ? $matches[3] . '-' . $matches[2] . '-' . $matches[1]
+                : null;
+        }
+
+        return null;
     }
 }
