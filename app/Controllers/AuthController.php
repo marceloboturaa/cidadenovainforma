@@ -91,6 +91,7 @@ class AuthController
             'password' => $password,
             'role_id' => $role['id'],
             'active' => 0,
+            'registration_origin' => 'login',
         ]);
 
         Logger::info('users.registration_requested', 'Novo cadastro aguardando aprovação: ' . $email, $userId);

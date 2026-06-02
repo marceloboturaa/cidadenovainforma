@@ -315,19 +315,22 @@ class EducationController
         $canManage = $this->canManageCourse($course);
         $canTakeAttendance = $this->canTakeAttendance($course);
 
-        if (!Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage || $canTakeAttendance)) {
+        $enrollmentStatus = Education::enrollmentStatus((int) $course['id'], (int) $user['id']);
+        $isEnrollmentPending = !$canManage && !$canTakeAttendance && $enrollmentStatus === 'pending';
+
+        if (!Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage || $canTakeAttendance, true)) {
             http_response_code(403);
             View::render('errors/403');
             return;
         }
 
-        $lessons = Education::lessonsWithSequenceAccess(
+        $lessons = $isEnrollmentPending ? [] : Education::lessonsWithSequenceAccess(
             Education::lessonsForCourse((int) $course['id'], (int) $user['id']),
             $canManage
         );
-        $forumTopics = Education::forumTopics((int) $course['id']);
-        $courseForms = Education::formsForCourse((int) $course['id']);
-        $certificateStatus = Education::certificateStatusForCourseUser((int) $course['id'], (int) $user['id']);
+        $forumTopics = $isEnrollmentPending ? [] : Education::forumTopics((int) $course['id']);
+        $courseForms = $isEnrollmentPending ? [] : Education::formsForCourse((int) $course['id']);
+        $certificateStatus = $isEnrollmentPending ? [] : Education::certificateStatusForCourseUser((int) $course['id'], (int) $user['id']);
 
         View::render('admin/education/course', [
             'course' => $course,
@@ -346,6 +349,7 @@ class EducationController
             'certificateStatus' => $certificateStatus,
             'certificateInstitutions' => Education::certificateInstitutions(),
             'certificateNameRequests' => $canManage ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
+            'isEnrollmentPending' => $isEnrollmentPending,
         ]);
     }
 

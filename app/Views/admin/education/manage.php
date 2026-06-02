@@ -76,9 +76,18 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             </div>
         </details>
         <details class="education-access-details">
-            <?php $enrolledUserIds = $isEdit ? \App\Models\Education::enrollmentUserIds((int) $editing['id']) : []; ?>
+            <?php
+            $enrolledUserIds = $isEdit ? \App\Models\Education::enrollmentUserIds((int) $editing['id']) : [];
+            $enrollmentRows = $isEdit ? \App\Models\Education::enrollmentUsers((int) $editing['id']) : [];
+            $pendingEnrollmentRows = array_values(array_filter($enrollmentRows, fn (array $row): bool => ($row['status'] ?? 'approved') === 'pending'));
+            ?>
             <summary><i class="bi bi-people" aria-hidden="true"></i>Estudantes matriculados <span><?= e((string) count($enrolledUserIds)) ?> selecionado(s)</span></summary>
             <?php if ($isEdit): ?>
+                <?php if ($pendingEnrollmentRows): ?>
+                    <div class="empty-state">
+                        <?= e((string) count($pendingEnrollmentRows)) ?> estudante(s) aguardando liberaÃ§Ã£o. Marque o nome na lista abaixo e salve para aprovar o acesso Ã s aulas.
+                    </div>
+                <?php endif; ?>
                 <div class="education-picker-toolbar">
                     <input class="form-control" type="search" placeholder="Buscar estudante" data-education-student-search>
                     <button class="btn btn-sm btn-outline-secondary icon-btn" type="button" data-education-select-visible><i class="bi bi-check2-square" aria-hidden="true"></i>Selecionar visíveis</button>
@@ -86,9 +95,18 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                 </div>
                 <div class="education-user-picker" data-education-student-list>
                     <?php foreach ($studentOptions as $item): ?>
+                        <?php
+                        $pendingEnrollment = false;
+                        foreach ($pendingEnrollmentRows as $pendingRow) {
+                            if ((int) $pendingRow['user_id'] === (int) $item['id']) {
+                                $pendingEnrollment = true;
+                                break;
+                            }
+                        }
+                        ?>
                         <label data-student-label="<?= e(strtolower($item['name'] . ' ' . $item['email'])) ?>">
                             <input type="checkbox" name="user_ids[]" value="<?= e((string) $item['id']) ?>" <?= checked(in_array((int) $item['id'], $enrolledUserIds, true)) ?>>
-                            <span><?= e($item['name']) ?><small><?= e($item['email']) ?></small></span>
+                            <span><?= e($item['name']) ?><small><?= e($item['email']) ?><?= $pendingEnrollment ? ' - aguardando aprovaÃ§Ã£o' : '' ?></small></span>
                         </label>
                     <?php endforeach; ?>
                     <?php if (!$studentOptions): ?>

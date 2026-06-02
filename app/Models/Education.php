@@ -234,12 +234,21 @@ class Education
             'CREATE TABLE IF NOT EXISTS education_enrollments (
                 course_id BIGINT UNSIGNED NOT NULL,
                 user_id BIGINT UNSIGNED NOT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT "approved",
                 created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
                 PRIMARY KEY (course_id, user_id),
                 CONSTRAINT fk_education_enrollments_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_enrollments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+        $enrollmentColumns = $db->query('SHOW COLUMNS FROM education_enrollments')->fetchAll(\PDO::FETCH_COLUMN);
+        if (!in_array('status', $enrollmentColumns, true)) {
+            $db->exec('ALTER TABLE education_enrollments ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT "approved" AFTER user_id');
+        }
+        if (!in_array('updated_at', $enrollmentColumns, true)) {
+            $db->exec('ALTER TABLE education_enrollments ADD COLUMN updated_at TIMESTAMP NULL AFTER created_at');
+        }
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_lesson_progress (
@@ -598,7 +607,8 @@ class Education
             'SELECT education_courses.*,
                     teacher.name AS teacher_name,
                     COUNT(DISTINCT education_lessons.id) AS lesson_count,
-                    COUNT(DISTINCT education_enrollments.user_id) AS student_count
+                    COUNT(DISTINCT CASE WHEN education_enrollments.status = "approved" THEN education_enrollments.user_id END) AS student_count,
+                    COUNT(DISTINCT CASE WHEN education_enrollments.status = "pending" THEN education_enrollments.user_id END) AS pending_student_count
              FROM education_courses
              LEFT JOIN users teacher ON teacher.id = education_courses.teacher_user_id
              LEFT JOIN education_lessons ON education_lessons.course_id = education_courses.id AND education_lessons.active = 1
@@ -623,8 +633,9 @@ class Education
         $stmt = Database::connection()->prepare(
             'SELECT education_courses.*,
                     teacher.name AS teacher_name,
+                    education_enrollments.status AS enrollment_status,
                     COUNT(DISTINCT education_lessons.id) AS lesson_count,
-                    COUNT(DISTINCT completed.lesson_id) AS completed_count
+                    COUNT(DISTINCT CASE WHEN education_enrollments.status = "approved" THEN completed.lesson_id END) AS completed_count
              FROM education_courses
              INNER JOIN education_enrollments ON education_enrollments.course_id = education_courses.id
              LEFT JOIN users teacher ON teacher.id = education_courses.teacher_user_id
@@ -808,7 +819,7 @@ class Education
             ->execute(['id' => $id]);
     }
 
-    public static function userCanAccessCourse(int $courseId, int $userId, bool $canManage = false): bool
+    public static function userCanAccessCourse(int $courseId, int $userId, bool $canManage = false, bool $includePending = false): bool
     {
         if ($canManage) {
             return self::findCourse($courseId) !== null;
@@ -821,12 +832,25 @@ class Education
              INNER JOIN education_courses ON education_courses.id = education_enrollments.course_id
              WHERE education_enrollments.course_id = :course_id
                AND education_enrollments.user_id = :user_id
-               AND education_courses.active = 1
-             LIMIT 1'
+                AND education_courses.active = 1
+                AND (education_enrollments.status = "approved" OR :include_pending = 1)
+              LIMIT 1'
+        );
+        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId, 'include_pending' => $includePending ? 1 : 0]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    public static function enrollmentStatus(int $courseId, int $userId): ?string
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT status FROM education_enrollments WHERE course_id = :course_id AND user_id = :user_id LIMIT 1'
         );
         $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
 
-        return (bool) $stmt->fetchColumn();
+        return ($status = $stmt->fetchColumn()) ? (string) $status : null;
     }
 
     public static function lessonsForCourse(int $courseId, int $userId = 0): array
@@ -1167,8 +1191,13 @@ class Education
         $db->beginTransaction();
 
         try {
-            $db->prepare('DELETE FROM education_enrollments WHERE course_id = :course_id')->execute(['course_id' => $courseId]);
-            $stmt = $db->prepare('INSERT IGNORE INTO education_enrollments (course_id, user_id, created_at) VALUES (:course_id, :user_id, NOW())');
+            $db->prepare('DELETE FROM education_enrollments WHERE course_id = ? AND user_id NOT IN (' . ($userIds ? implode(',', array_fill(0, count($userIds), '?')) : '0') . ')')
+                ->execute($userIds ? array_merge([$courseId], $userIds) : [$courseId]);
+            $stmt = $db->prepare(
+                'INSERT INTO education_enrollments (course_id, user_id, status, created_at, updated_at)
+                 VALUES (:course_id, :user_id, "approved", NOW(), NOW())
+                 ON DUPLICATE KEY UPDATE status = "approved", updated_at = NOW()'
+            );
 
             foreach ($userIds as $userId) {
                 $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
@@ -1185,7 +1214,7 @@ class Education
     {
         self::ensureSchema();
 
-        $stmt = Database::connection()->prepare('SELECT user_id FROM education_enrollments WHERE course_id = :course_id');
+        $stmt = Database::connection()->prepare('SELECT user_id FROM education_enrollments WHERE course_id = :course_id AND status = "approved"');
         $stmt->execute(['course_id' => $courseId]);
 
         return array_map('intval', array_column($stmt->fetchAll(), 'user_id'));
@@ -1200,8 +1229,54 @@ class Education
              FROM education_enrollments
              INNER JOIN users ON users.id = education_enrollments.user_id
              WHERE education_enrollments.course_id = :course_id
+               AND education_enrollments.status = "approved"
                AND users.active = 1
              ORDER BY users.name ASC'
+        );
+        $stmt->execute(['course_id' => $courseId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function enrollUserInCourses(int $userId, array $courseIds, string $status = 'pending'): int
+    {
+        self::ensureSchema();
+
+        $courseIds = array_values(array_unique(array_filter(array_map('intval', $courseIds))));
+        if (!$courseIds) {
+            return 0;
+        }
+
+        $status = in_array($status, ['pending', 'approved'], true) ? $status : 'pending';
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO education_enrollments (course_id, user_id, status, created_at, updated_at)
+             VALUES (:course_id, :user_id, :status, NOW(), NOW())
+             ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = NOW()'
+        );
+
+        $count = 0;
+        foreach ($courseIds as $courseId) {
+            $stmt->execute([
+                'course_id' => $courseId,
+                'user_id' => $userId,
+                'status' => $status,
+            ]);
+            $count += $stmt->rowCount() > 0 ? 1 : 0;
+        }
+
+        return $count;
+    }
+
+    public static function enrollmentUsers(int $courseId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_enrollments.user_id, education_enrollments.status, users.name, users.email
+             FROM education_enrollments
+             INNER JOIN users ON users.id = education_enrollments.user_id
+             WHERE education_enrollments.course_id = :course_id
+             ORDER BY education_enrollments.status ASC, users.name ASC'
         );
         $stmt->execute(['course_id' => $courseId]);
 

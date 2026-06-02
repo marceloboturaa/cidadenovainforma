@@ -36,6 +36,11 @@ SELECT id, role_id, NOW()
 FROM users
 WHERE role_id IS NOT NULL;
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_origin VARCHAR(40) NOT NULL DEFAULT 'manual' AFTER active;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_event_id BIGINT UNSIGNED NULL AFTER registration_origin;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_person_id BIGINT UNSIGNED NULL AFTER registration_event_id;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_course_id BIGINT UNSIGNED NULL AFTER registration_person_id;
+
 CREATE TABLE IF NOT EXISTS password_resets (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL,
@@ -311,11 +316,16 @@ CREATE TABLE IF NOT EXISTS education_lesson_blocks (
 CREATE TABLE IF NOT EXISTS education_enrollments (
     course_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'approved',
     created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
     PRIMARY KEY (course_id, user_id),
     CONSTRAINT fk_education_enrollments_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_enrollments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+ALTER TABLE education_enrollments ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved' AFTER user_id;
+ALTER TABLE education_enrollments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NULL AFTER created_at;
 
 CREATE TABLE IF NOT EXISTS education_lesson_progress (
     lesson_id BIGINT UNSIGNED NOT NULL,

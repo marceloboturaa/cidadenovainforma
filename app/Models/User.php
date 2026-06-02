@@ -25,7 +25,28 @@ class User
             ) ENGINE=InnoDB'
         );
 
+        self::ensureRegistrationColumns();
+
         $done = true;
+    }
+
+    private static function ensureRegistrationColumns(): void
+    {
+        $db = Database::connection();
+        $columns = $db->query('SHOW COLUMNS FROM users')->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (!in_array('registration_origin', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN registration_origin VARCHAR(40) NOT NULL DEFAULT "manual" AFTER active');
+        }
+        if (!in_array('registration_event_id', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN registration_event_id BIGINT UNSIGNED NULL AFTER registration_origin');
+        }
+        if (!in_array('registration_person_id', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN registration_person_id BIGINT UNSIGNED NULL AFTER registration_event_id');
+        }
+        if (!in_array('registration_course_id', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN registration_course_id BIGINT UNSIGNED NULL AFTER registration_person_id');
+        }
     }
 
     public static function findByEmail(string $email): ?array
@@ -193,9 +214,21 @@ class User
         self::ensureRoleSchema();
 
         $stmt = Database::connection()->query(
-            'SELECT users.id, users.name, users.email, users.created_at, roles.name AS role_name
+            'SELECT users.id,
+                    users.name,
+                    users.email,
+                    users.created_at,
+                    users.registration_origin,
+                    users.registration_event_id,
+                    users.registration_person_id,
+                    users.registration_course_id,
+                    roles.name AS role_name,
+                    library_events.title AS registration_event_title,
+                    education_courses.title AS registration_course_title
              FROM users
              INNER JOIN roles ON roles.id = users.role_id
+             LEFT JOIN library_events ON library_events.id = users.registration_event_id
+             LEFT JOIN education_courses ON education_courses.id = users.registration_course_id
              WHERE users.active = 0
              ORDER BY users.created_at ASC'
         );
@@ -208,8 +241,8 @@ class User
         self::ensureRoleSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO users (role_id, region_id, name, email, password_hash, active, created_at, updated_at)
-             VALUES (:role_id, :region_id, :name, :email, :password_hash, :active, NOW(), NOW())'
+            'INSERT INTO users (role_id, region_id, name, email, password_hash, active, registration_origin, registration_event_id, registration_person_id, registration_course_id, created_at, updated_at)
+             VALUES (:role_id, :region_id, :name, :email, :password_hash, :active, :registration_origin, :registration_event_id, :registration_person_id, :registration_course_id, NOW(), NOW())'
         );
 
         $stmt->execute([
@@ -219,6 +252,10 @@ class User
             'email' => strtolower(trim($data['email'])),
             'password_hash' => password_hash($data['password'], PASSWORD_DEFAULT),
             'active' => (int) ($data['active'] ?? 1),
+            'registration_origin' => self::registrationOrigin($data['registration_origin'] ?? (!empty($data['active']) ? 'manual' : 'login')),
+            'registration_event_id' => !empty($data['registration_event_id']) ? (int) $data['registration_event_id'] : null,
+            'registration_person_id' => !empty($data['registration_person_id']) ? (int) $data['registration_person_id'] : null,
+            'registration_course_id' => !empty($data['registration_course_id']) ? (int) $data['registration_course_id'] : null,
         ]);
 
         $userId = (int) Database::connection()->lastInsertId();
@@ -376,6 +413,12 @@ class User
         Database::connection()
             ->prepare('UPDATE users SET active = 1, updated_at = NOW() WHERE id = :id')
             ->execute(['id' => $id]);
+    }
+
+    private static function registrationOrigin(mixed $origin): string
+    {
+        $origin = strtolower(trim((string) $origin));
+        return in_array($origin, ['manual', 'login', 'event'], true) ? $origin : 'manual';
     }
 
     public static function deletePending(int $id): bool

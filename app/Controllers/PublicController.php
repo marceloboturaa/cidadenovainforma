@@ -223,7 +223,7 @@ class PublicController
             null
         );
 
-        $loginRequested = $this->createPendingLoginIfRequested($person ?: ['full_name' => $name, 'email' => $_POST['email'] ?? '']);
+        $loginRequested = $this->createPendingLoginIfRequested($person ?: ['full_name' => $name, 'email' => $_POST['email'] ?? ''], $event, $personId);
         if ($person) {
             RegistrationNotifier::eventStatus($event, $person, 'pendente', $loginRequested);
         }
@@ -719,7 +719,7 @@ class PublicController
         exit;
     }
 
-    private function createPendingLoginIfRequested(array $person): bool
+    private function createPendingLoginIfRequested(array $person, array $event, int $personId): bool
     {
         if (empty($_POST['create_login'])) {
             return false;
@@ -738,13 +738,24 @@ class PublicController
             return false;
         }
 
-        User::create([
+        $courseIds = array_map(fn (array $course): int => (int) $course['id'], $event['linked_courses'] ?? []);
+        if (!$courseIds && !empty($event['event_course_id'])) {
+            $courseIds[] = (int) $event['event_course_id'];
+        }
+
+        $userId = User::create([
             'name' => $person['full_name'] ?? ($_POST['full_name'] ?? ''),
             'email' => $email,
             'password' => $password,
             'role_id' => $role['id'],
             'active' => 0,
+            'registration_origin' => 'event',
+            'registration_event_id' => $event['id'] ?? null,
+            'registration_person_id' => $personId,
+            'registration_course_id' => $courseIds[0] ?? null,
         ]);
+
+        Education::enrollUserInCourses($userId, $courseIds, 'pending');
 
         return true;
     }

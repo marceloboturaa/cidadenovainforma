@@ -21,6 +21,7 @@ $forumTopics = $forumTopics ?? [];
 $forumRepliesByTopic = $forumRepliesByTopic ?? [];
 $courseForms = $courseForms ?? [];
 $certificateStatus = $certificateStatus ?? [];
+$isEnrollmentPending = $isEnrollmentPending ?? false;
 $certificateVerificationUrl = !empty($certificateStatus['certificate']['verification_code'] ?? null)
     ? url('/certificado/' . $certificateStatus['certificate']['verification_code'])
     : null;
@@ -59,6 +60,20 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
     </section>
 <?php endif; ?>
 
+<?php if ($isEnrollmentPending): ?>
+    <section class="panel">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Modo de espera</span>
+                <h2>MatrÃ­cula aguardando liberaÃ§Ã£o</h2>
+            </div>
+            <span class="state-pill is-muted">Pendente</span>
+        </div>
+        <p class="field-hint mb-0">Seu cadastro veio de uma inscriÃ§Ã£o de evento ligado a este curso. Um coordenador precisa aprovar sua matrÃ­cula para liberar aulas, formulÃ¡rios e fÃ³rum.</p>
+    </section>
+<?php endif; ?>
+
+<?php if (!$isEnrollmentPending): ?>
 <section class="panel education-playlist-panel">
     <div class="section-heading">
         <h2>Módulos e aulas</h2>
@@ -173,7 +188,9 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
 
+<?php if (!$isEnrollmentPending): ?>
 <?php if ($canManage || !empty($course['certificate_enabled'])): ?>
 <section class="panel education-certificate-panel" id="course-certificate">
     <div class="section-heading">
@@ -598,6 +615,7 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
 <?php endif; ?>
 
 <?php if ($canManage && $editingCourseIntro): ?>

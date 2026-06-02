@@ -364,7 +364,7 @@
 
 .pending-user-row {
     display: grid;
-    grid-template-columns: auto minmax(220px, 1fr) minmax(180px, auto) auto;
+    grid-template-columns: auto minmax(220px, 1fr) minmax(150px, auto) minmax(180px, 1fr) auto;
     gap: 14px;
     align-items: center;
     padding: 12px 0;

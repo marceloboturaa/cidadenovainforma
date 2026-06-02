@@ -47,6 +47,10 @@ CREATE TABLE IF NOT EXISTS users (
     avatar_path VARCHAR(255) NULL,
     bio TEXT NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
+    registration_origin VARCHAR(40) NOT NULL DEFAULT 'manual',
+    registration_event_id BIGINT UNSIGNED NULL,
+    registration_person_id BIGINT UNSIGNED NULL,
+    registration_course_id BIGINT UNSIGNED NULL,
     last_login_at TIMESTAMP NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
@@ -608,7 +612,9 @@ CREATE TABLE IF NOT EXISTS education_lesson_blocks (
 CREATE TABLE IF NOT EXISTS education_enrollments (
     course_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'approved',
     created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
     PRIMARY KEY (course_id, user_id),
     CONSTRAINT fk_education_enrollments_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_education_enrollments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

@@ -175,7 +175,10 @@ $onlineCount = count($onlineUserIds ?? []);
                     $pendingFilter = str_contains($pendingRole, 'estudante')
                         ? 'estudante'
                         : (str_contains($pendingRole, 'jornalista') ? 'jornalista' : 'outros');
-                    $pendingSearchText = implode(' ', [$item['name'] ?? '', $item['email'] ?? '', $item['role_name'] ?? '', $item['created_at'] ?? '']);
+                    $originLabel = ($item['registration_origin'] ?? '') === 'event'
+                        ? 'Evento: ' . ($item['registration_event_title'] ?? 'evento') . (!empty($item['registration_course_title']) ? ' / Curso: ' . $item['registration_course_title'] : '')
+                        : ((($item['registration_origin'] ?? '') === 'login') ? 'Cadastro pelo login' : 'Cadastro manual');
+                    $pendingSearchText = implode(' ', [$item['name'] ?? '', $item['email'] ?? '', $item['role_name'] ?? '', $item['created_at'] ?? '', $originLabel]);
                     ?>
                     <article class="pending-user-row" data-pending-user-card data-pending-user-role="<?= e($pendingFilter) ?>" data-pending-user-search="<?= e($pendingSearchText) ?>">
                         <label class="participant-select-box" title="Selecionar cadastro">
@@ -187,6 +190,7 @@ $onlineCount = count($onlineUserIds ?? []);
                             <span><?= e($item['email']) ?></span>
                         </div>
                         <small><?= e($item['role_name']) ?> · <?= e($item['created_at']) ?></small>
+                        <small><?= e($originLabel) ?></small>
                         <div class="participant-bulk-actions">
                             <form method="post" action="<?= e(url('/admin/users/approve?id=' . $item['id'])) ?>">
                                 <?= csrf_field() ?>
