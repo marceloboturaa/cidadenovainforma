@@ -79,7 +79,10 @@ $backLabel = $isRecognitionCertificate
 </div>
 
 <section class="panel education-certificate-sheet-panel">
-    <article class="education-certificate-sheet<?= $background !== '' ? ' has-background' : '' ?><?= e($fontClass) ?>"<?= $background !== '' ? ' style="background-image: url(\'' . e(media_url($background)) . '\');"' : '' ?>>
+    <article class="education-certificate-sheet<?= $background !== '' ? ' has-background' : '' ?><?= e($fontClass) ?>">
+        <?php if ($background !== ''): ?>
+            <img class="education-certificate-background" src="<?= e(media_url($background)) ?>" alt="" aria-hidden="true">
+        <?php endif; ?>
         <div class="education-certificate-copy">
             <span>Certificado</span>
             <h2><?= e($title) ?></h2>
@@ -129,7 +132,10 @@ $backLabel = $isRecognitionCertificate
         </footer>
     </article>
     <?php if ($programEnabled): ?>
-        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;<?= $programBackground !== '' ? ' background-image: url(\'' . e(media_url($programBackground)) . '\');' : '' ?>">
+        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
+            <?php if ($programBackground !== ''): ?>
+                <img class="education-certificate-background" src="<?= e(media_url($programBackground)) ?>" alt="" aria-hidden="true">
+            <?php endif; ?>
             <header class="education-certificate-program-header">
                 <span>Verso do certificado</span>
                 <h2><?= $isRecognitionCertificate ? 'Informações do reconhecimento' : 'Programação cursada' ?></h2>
