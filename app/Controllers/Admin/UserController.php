@@ -10,6 +10,7 @@ use App\Core\Session;
 use App\Core\View;
 use App\Models\Document;
 use App\Models\InstitutionPage;
+use App\Models\LibraryEvent;
 use App\Models\Role;
 use App\Models\SiteSetting;
 use App\Models\User;
@@ -150,6 +151,78 @@ class UserController
         RegistrationNotifier::userApproved($user);
         Logger::info('users.approved', 'Cadastro aprovado: ' . $user['email'], current_user()['id'] ?? null);
         Session::flash('success', 'Cadastro aprovado para ' . $user['name'] . '.');
+        redirect('/admin/users');
+    }
+
+    public function deny(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $user = $id ? User::find($id) : null;
+
+        if (!$user || !empty($user['active'])) {
+            Session::flash('error', 'Cadastro pendente nÃ£o encontrado.');
+            redirect('/admin/users');
+        }
+
+        $confirmed = LibraryEvent::confirmPendingParticipantsByEmail((string) ($user['email'] ?? ''));
+        User::deletePending((int) $user['id']);
+
+        Logger::info('users.denied', 'Cadastro negado: ' . $user['email'], current_user()['id'] ?? null);
+        Session::flash('success', 'Login negado para ' . $user['name'] . '. ' . $confirmed . ' inscriÃ§Ã£o(Ãµes) de evento foram mantidas como inscritas.');
+        redirect('/admin/users');
+    }
+
+    public function bulkApproval(): void
+    {
+        Middleware::permission('users.manage');
+        $this->masterOnly();
+        $this->validateCsrf();
+
+        $action = (string) ($_POST['bulk_action'] ?? '');
+        $ids = $_POST['user_ids'] ?? [];
+        $ids = is_array($ids) ? array_values(array_unique(array_filter(array_map('intval', $ids)))) : [];
+
+        if ($action === 'approve_all' || $action === 'deny_all') {
+            $ids = array_map(fn (array $user): int => (int) $user['id'], User::pending());
+        }
+
+        if (!$ids || !in_array($action, ['approve_selected', 'deny_selected', 'approve_all', 'deny_all'], true)) {
+            Session::flash('error', 'Selecione ao menos um cadastro pendente.');
+            redirect('/admin/users');
+        }
+
+        $approved = 0;
+        $denied = 0;
+        $confirmed = 0;
+
+        foreach ($ids as $id) {
+            $user = User::find($id);
+            if (!$user || !empty($user['active'])) {
+                continue;
+            }
+
+            if (str_starts_with($action, 'approve')) {
+                User::activate((int) $user['id']);
+                RegistrationNotifier::userApproved($user);
+                $approved++;
+                continue;
+            }
+
+            $confirmed += LibraryEvent::confirmPendingParticipantsByEmail((string) ($user['email'] ?? ''));
+            if (User::deletePending((int) $user['id'])) {
+                $denied++;
+            }
+        }
+
+        Logger::info('users.bulk_approval', 'Fila de cadastro atualizada em lote.', current_user()['id'] ?? null);
+        $message = $approved > 0
+            ? $approved . ' cadastro(s) aprovado(s).'
+            : $denied . ' login(s) negado(s). ' . $confirmed . ' inscriÃ§Ã£o(Ãµes) de evento mantidas como inscritas.';
+        Session::flash(($approved + $denied) > 0 ? 'success' : 'error', ($approved + $denied) > 0 ? $message : 'Nenhum cadastro foi alterado.');
         redirect('/admin/users');
     }
 

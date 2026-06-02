@@ -378,6 +378,16 @@ class User
             ->execute(['id' => $id]);
     }
 
+    public static function deletePending(int $id): bool
+    {
+        self::ensureRoleSchema();
+
+        $stmt = Database::connection()->prepare('DELETE FROM users WHERE id = :id AND active = 0');
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     public static function setActive(int $id, bool $active): void
     {
         Database::connection()

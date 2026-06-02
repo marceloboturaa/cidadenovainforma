@@ -71,6 +71,8 @@ $router->post('/admin/users/update', [UserController::class, 'update']);
 $router->post('/admin/users/status', [UserController::class, 'status']);
 $router->post('/admin/users/registrations', [UserController::class, 'toggleRegistrations']);
 $router->post('/admin/users/approve', [UserController::class, 'approve']);
+$router->post('/admin/users/deny', [UserController::class, 'deny']);
+$router->post('/admin/users/bulk-approval', [UserController::class, 'bulkApproval']);
 $router->post('/admin/users/responsibilities', [UserController::class, 'responsibilities']);
 $router->post('/admin/users/document-uploads', [UserController::class, 'documentUploads']);
 $router->post('/admin/users/role', [UserController::class, 'updateRole']);

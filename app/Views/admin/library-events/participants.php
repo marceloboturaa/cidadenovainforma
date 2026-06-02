@@ -346,9 +346,35 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
             <?php endif; ?>
         </div>
     </div>
-    <div class="admin-card-list">
+    <div class="registration-directory-tools participant-linked-tools">
+        <div class="registration-search-field">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input class="form-control" type="search" placeholder="Buscar por nome, e-mail, WhatsApp, bairro ou observacao" data-linked-participant-search>
+        </div>
+        <div class="registration-directory-filters" role="group" aria-label="Filtrar participantes vinculados">
+            <button type="button" class="is-active" data-linked-participant-filter="all">Todos</button>
+            <button type="button" data-linked-participant-filter="pendente">Pendentes</button>
+            <button type="button" data-linked-participant-filter="inscrito">Inscritos</button>
+            <button type="button" data-linked-participant-filter="presente">Presentes</button>
+            <button type="button" data-linked-participant-filter="ausente">Ausentes</button>
+            <button type="button" data-linked-participant-filter="cancelado">Cancelados</button>
+        </div>
+        <span><strong data-linked-participant-count><?= e((string) count($participants)) ?></strong> resultado(s)</span>
+    </div>
+    <div class="admin-card-list" data-linked-participants>
         <?php foreach ($participants as $participant): ?>
-            <article class="admin-list-card internal-list-card participant-list-card">
+            <?php
+            $participantSearchText = implode(' ', [
+                $participant['full_name'] ?? '',
+                $participant['email'] ?? '',
+                $participant['phone'] ?? '',
+                $participant['whatsapp'] ?? '',
+                $participant['district'] ?? '',
+                $participant['status'] ?? '',
+                $participant['notes'] ?? '',
+            ]);
+            ?>
+            <article class="admin-list-card internal-list-card participant-list-card" data-linked-participant-card data-linked-participant-status="<?= e((string) $participant['status']) ?>" data-linked-participant-search="<?= e($participantSearchText) ?>">
                 <label class="participant-select-box" title="Selecionar participante">
                     <input type="checkbox" form="bulk-status-form" name="person_ids[]" value="<?= e((string) $participant['person_id']) ?>" data-participant-select>
                     <span>Selecionar</span>
@@ -390,5 +416,6 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
         <?php if (!$participants): ?>
             <div class="empty-state">Nenhum participante vinculado a este evento.</div>
         <?php endif; ?>
+        <div class="empty-state" data-linked-participant-empty hidden>Nenhum participante encontrado com este filtro.</div>
     </div>
 </section>

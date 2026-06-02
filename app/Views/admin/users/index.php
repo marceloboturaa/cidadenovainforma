@@ -141,26 +141,74 @@ $onlineCount = count($onlineUserIds ?? []);
                 </div>
                 <span class="users-count-badge"><?= e((string) $pendingCount) ?></span>
             </div>
-            <div class="pending-user-list">
+            <?php if (!empty($pendingUsers)): ?>
+                <form id="pending-users-bulk-form" class="participant-status-bulk-form" method="post" action="<?= e(url('/admin/users/bulk-approval')) ?>">
+                    <?= csrf_field() ?>
+                    <button class="btn btn-sm btn-success" name="bulk_action" value="approve_selected" type="submit"><i class="bi bi-check2-square" aria-hidden="true"></i>Aprovar marcados</button>
+                    <button class="btn btn-sm btn-outline-danger" name="bulk_action" value="deny_selected" type="submit" onclick="return confirm('Negar os logins marcados? As inscricoes de evento ligadas a estes e-mails ficarao como inscritas.');"><i class="bi bi-x-square" aria-hidden="true"></i>Negar marcados</button>
+                    <button class="btn btn-sm btn-outline-success" name="bulk_action" value="approve_all" type="submit" onclick="return confirm('Aprovar todos os cadastros pendentes?');"><i class="bi bi-check2-all" aria-hidden="true"></i>Aprovar tudo</button>
+                    <button class="btn btn-sm btn-outline-danger" name="bulk_action" value="deny_all" type="submit" onclick="return confirm('Negar todos os logins pendentes? As inscricoes de evento ligadas a estes e-mails ficarao como inscritas.');"><i class="bi bi-x-lg" aria-hidden="true"></i>Negar tudo</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-pending-users-select-all><i class="bi bi-ui-checks" aria-hidden="true"></i>Selecionar todos</button>
+                </form>
+                <div class="users-directory-toolbar pending-users-toolbar">
+                    <label class="users-search-field">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <span class="visually-hidden">Pesquisar cadastros pendentes</span>
+                        <input class="form-control" type="search" placeholder="Buscar por nome, e-mail ou cargo" data-pending-users-search autocomplete="off">
+                    </label>
+                    <div class="users-filter-tabs" role="group" aria-label="Filtrar cadastros pendentes">
+                        <button type="button" class="is-active" data-pending-users-filter="all">Todos</button>
+                        <button type="button" data-pending-users-filter="estudante">Estudante</button>
+                        <button type="button" data-pending-users-filter="jornalista">Jornalista</button>
+                        <button type="button" data-pending-users-filter="outros">Outros</button>
+                    </div>
+                    <div class="users-filter-summary">
+                        <strong data-pending-users-visible-label><?= e((string) $pendingCount) ?></strong>
+                        <span>pendente(s)</span>
+                    </div>
+                </div>
+            <?php endif; ?>
+            <div class="pending-user-list" data-pending-users-list>
                 <?php foreach (($pendingUsers ?? []) as $item): ?>
-                    <article class="pending-user-row">
+                    <?php
+                    $pendingRole = strtolower((string) ($item['role_name'] ?? ''));
+                    $pendingFilter = str_contains($pendingRole, 'estudante')
+                        ? 'estudante'
+                        : (str_contains($pendingRole, 'jornalista') ? 'jornalista' : 'outros');
+                    $pendingSearchText = implode(' ', [$item['name'] ?? '', $item['email'] ?? '', $item['role_name'] ?? '', $item['created_at'] ?? '']);
+                    ?>
+                    <article class="pending-user-row" data-pending-user-card data-pending-user-role="<?= e($pendingFilter) ?>" data-pending-user-search="<?= e($pendingSearchText) ?>">
+                        <label class="participant-select-box" title="Selecionar cadastro">
+                            <input type="checkbox" form="pending-users-bulk-form" name="user_ids[]" value="<?= e((string) $item['id']) ?>" data-pending-user-select>
+                            <span>Selecionar</span>
+                        </label>
                         <div>
                             <strong><?= e($item['name']) ?></strong>
                             <span><?= e($item['email']) ?></span>
                         </div>
                         <small><?= e($item['role_name']) ?> · <?= e($item['created_at']) ?></small>
-                        <form method="post" action="<?= e(url('/admin/users/approve?id=' . $item['id'])) ?>">
-                            <?= csrf_field() ?>
-                            <button class="btn btn-sm btn-success">
-                                <i class="bi bi-check-lg" aria-hidden="true"></i>
-                                Aprovar
-                            </button>
-                        </form>
+                        <div class="participant-bulk-actions">
+                            <form method="post" action="<?= e(url('/admin/users/approve?id=' . $item['id'])) ?>">
+                                <?= csrf_field() ?>
+                                <button class="btn btn-sm btn-success">
+                                    <i class="bi bi-check-lg" aria-hidden="true"></i>
+                                    Aprovar
+                                </button>
+                            </form>
+                            <form method="post" action="<?= e(url('/admin/users/deny?id=' . $item['id'])) ?>" onsubmit="return confirm('Negar este login? Se houver inscricao de evento com este e-mail, ela ficara como inscrita.');">
+                                <?= csrf_field() ?>
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                    Negar
+                                </button>
+                            </form>
+                        </div>
                     </article>
                 <?php endforeach; ?>
                 <?php if (empty($pendingUsers)): ?>
                     <div class="empty-state">Nenhum cadastro aguardando aprovação.</div>
                 <?php endif; ?>
+                <div class="empty-state" data-pending-users-empty hidden>Nenhum cadastro pendente encontrado com este filtro.</div>
             </div>
         </section>
 

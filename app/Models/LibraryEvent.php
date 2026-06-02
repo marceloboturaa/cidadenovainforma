@@ -478,6 +478,35 @@ class LibraryEvent
         return $stmt->rowCount();
     }
 
+    public static function confirmPendingParticipantsByEmail(string $email): int
+    {
+        self::ensureSchema();
+
+        $email = strtolower(trim($email));
+        if ($email === '') {
+            return 0;
+        }
+
+        $stmt = Database::connection()->prepare(
+            "UPDATE library_event_participants
+             INNER JOIN people ON people.id = library_event_participants.person_id
+             SET library_event_participants.status = 'inscrito',
+                 library_event_participants.notes = CONCAT(
+                    COALESCE(NULLIF(library_event_participants.notes, ''), ''),
+                    CASE
+                        WHEN COALESCE(NULLIF(library_event_participants.notes, ''), '') = '' THEN ''
+                        ELSE '\n'
+                    END,
+                    'Login negado no painel; inscricao mantida no evento.'
+                 )
+             WHERE LOWER(people.email) = :email
+               AND library_event_participants.status = 'pendente'"
+        );
+        $stmt->execute(['email' => $email]);
+
+        return $stmt->rowCount();
+    }
+
     public static function create(array $data): int
     {
         self::ensureSchema();

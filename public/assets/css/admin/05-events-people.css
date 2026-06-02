@@ -260,7 +260,8 @@
     display: none;
 }
 
-.registration-directory-list .admin-list-card.is-hidden {
+.registration-directory-list .admin-list-card.is-hidden,
+.participant-list-card.is-hidden {
     display: none;
 }
 

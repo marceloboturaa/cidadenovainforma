@@ -358,9 +358,13 @@
     gap: 10px;
 }
 
+.pending-users-toolbar {
+    margin: 14px 0;
+}
+
 .pending-user-row {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(180px, auto) auto;
+    grid-template-columns: auto minmax(220px, 1fr) minmax(180px, auto) auto;
     gap: 14px;
     align-items: center;
     padding: 12px 0;
@@ -379,6 +383,10 @@
 .pending-user-row span,
 .pending-user-row small {
     color: var(--muted);
+}
+
+.pending-user-row.is-hidden {
+    display: none;
 }
 
 .visually-hidden {

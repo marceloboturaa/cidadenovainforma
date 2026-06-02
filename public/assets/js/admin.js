@@ -17,12 +17,17 @@
     const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
+    const pendingUsersList = document.querySelector('[data-pending-users-list]');
+    const pendingUsersSearch = document.querySelector('[data-pending-users-search]');
+    const pendingUsersSelectAll = document.querySelector('[data-pending-users-select-all]');
     const eventsAdminList = document.querySelector('[data-events-admin-list]');
     const eventCepInput = document.querySelector('[data-event-cep-input]');
     const eventCepSearch = document.querySelector('[data-event-cep-search]');
     const registrationDirectory = document.querySelector('[data-registration-directory]');
     const registrationDirectorySearch = document.querySelector('[data-registration-directory-search]');
     const participantSelectAll = document.querySelector('[data-participant-select-all]');
+    const linkedParticipants = document.querySelector('[data-linked-participants]');
+    const linkedParticipantSearch = document.querySelector('[data-linked-participant-search]');
     const documentList = document.querySelector('[data-document-list]');
     const documentSearch = document.querySelector('[data-document-search]');
 
@@ -173,6 +178,14 @@
         bindUsersSearch(usersDirectory, usersSearch);
     }
 
+    if (pendingUsersList) {
+        bindPendingUsersFilter(pendingUsersList, pendingUsersSearch);
+    }
+
+    if (pendingUsersSelectAll) {
+        bindCheckboxSelection(pendingUsersSelectAll, '[data-pending-user-select]');
+    }
+
     if (eventsAdminList) {
         bindEventsAdminFilter(eventsAdminList);
     }
@@ -188,7 +201,11 @@
     }
 
     if (participantSelectAll) {
-        bindParticipantSelection(participantSelectAll);
+        bindCheckboxSelection(participantSelectAll, '[data-participant-select]');
+    }
+
+    if (linkedParticipants && linkedParticipantSearch) {
+        bindLinkedParticipantsFilter(linkedParticipants, linkedParticipantSearch);
     }
 
     bindDocumentAccessTools();
@@ -524,8 +541,51 @@
         applyFilter();
     }
 
-    function bindParticipantSelection(toggleButton) {
-        const inputs = Array.from(document.querySelectorAll('[data-participant-select]'));
+    function bindPendingUsersFilter(list, searchInput) {
+        const cards = Array.from(list.querySelectorAll('[data-pending-user-card]'));
+        const empty = list.querySelector('[data-pending-users-empty]');
+        const countLabel = document.querySelector('[data-pending-users-visible-label]');
+        const filterButtons = Array.from(document.querySelectorAll('[data-pending-users-filter]'));
+        let activeFilter = 'all';
+
+        const applyFilter = () => {
+            const term = normalizeSearch(searchInput ? searchInput.value : '');
+            let visible = 0;
+
+            cards.forEach((card) => {
+                const haystack = normalizeSearch(card.dataset.pendingUserSearch || card.textContent || '');
+                const matchesText = term === '' || haystack.includes(term);
+                const matchesRole = activeFilter === 'all' || card.dataset.pendingUserRole === activeFilter;
+                const matches = matchesText && matchesRole;
+                card.classList.toggle('is-hidden', !matches);
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (countLabel) {
+                countLabel.textContent = String(visible);
+            }
+            if (empty) {
+                empty.hidden = visible > 0 || cards.length === 0;
+            }
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyFilter);
+        }
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                activeFilter = button.dataset.pendingUsersFilter || 'all';
+                filterButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+                applyFilter();
+            });
+        });
+        applyFilter();
+    }
+
+    function bindCheckboxSelection(toggleButton, inputSelector) {
+        const inputs = Array.from(document.querySelectorAll(inputSelector));
         if (!inputs.length) {
             return;
         }
@@ -547,6 +607,47 @@
 
         inputs.forEach((input) => input.addEventListener('change', syncButton));
         syncButton();
+    }
+
+    function bindLinkedParticipantsFilter(list, searchInput) {
+        const cards = Array.from(list.querySelectorAll('[data-linked-participant-card]'));
+        const empty = list.querySelector('[data-linked-participant-empty]');
+        const count = document.querySelector('[data-linked-participant-count]');
+        const filterButtons = Array.from(document.querySelectorAll('[data-linked-participant-filter]'));
+        let activeFilter = 'all';
+
+        const applyFilter = () => {
+            const term = normalizeSearch(searchInput.value);
+            let visible = 0;
+
+            cards.forEach((card) => {
+                const haystack = normalizeSearch(card.dataset.linkedParticipantSearch || card.textContent || '');
+                const matchesText = term === '' || haystack.includes(term);
+                const matchesStatus = activeFilter === 'all' || card.dataset.linkedParticipantStatus === activeFilter;
+                const matches = matchesText && matchesStatus;
+                card.classList.toggle('is-hidden', !matches);
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (count) {
+                count.textContent = String(visible);
+            }
+            if (empty) {
+                empty.hidden = visible > 0 || cards.length === 0;
+            }
+        };
+
+        searchInput.addEventListener('input', applyFilter);
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                activeFilter = button.dataset.linkedParticipantFilter || 'all';
+                filterButtons.forEach((item) => item.classList.toggle('is-active', item === button));
+                applyFilter();
+            });
+        });
+        applyFilter();
     }
 
     function bindDocumentAccessTools() {
