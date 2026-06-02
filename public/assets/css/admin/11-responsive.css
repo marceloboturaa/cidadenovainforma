@@ -319,15 +319,20 @@
     }
 
     .education-certificate-sheet {
-        width: min(100%, 760px);
+        width: 297mm;
+        height: 210mm;
+        max-width: none;
         min-height: 0;
     }
 
     .education-certificate-copy {
-        gap: 12px;
-        width: min(88%, 820px);
-        padding: 24px;
-        transform: translateY(-12px);
+        gap: 10px;
+        width: calc(100% - 42mm);
+        max-height: 142mm;
+        margin: 0 auto 32mm;
+        padding: 16mm 0 0;
+        transform: none;
+        overflow: hidden;
     }
 
     .education-certificate-copy > span {
@@ -344,8 +349,9 @@
     }
 
     .education-certificate-copy > div {
-        font-size: 1rem;
-        line-height: 1.5;
+        width: min(100%, 238mm);
+        font-size: clamp(1.05rem, 1.8vw, 1.32rem);
+        line-height: 1.48;
     }
 
     .education-certificate-footnote {
@@ -354,6 +360,8 @@
         left: 18px;
         align-items: flex-end;
         font-size: 0.72rem;
+        max-height: 36mm;
+        overflow: hidden;
     }
 
     .education-certificate-footnote-text p {
@@ -756,20 +764,24 @@
     }
 
     .education-certificate-sheet {
-        width: 1120px;
+        width: 297mm;
+        height: 210mm;
         max-width: none;
         margin-left: 0;
         margin-right: 0;
         transform: scale(var(--certificate-mobile-scale));
         transform-origin: top left;
-        margin-bottom: calc((var(--certificate-mobile-scale) - 1) * 792px);
+        margin-bottom: calc((var(--certificate-mobile-scale) - 1) * 210mm);
     }
 
     .education-certificate-copy {
         gap: 10px;
-        width: min(84%, 960px);
-        padding: clamp(18px, 3vw, 46px);
-        transform: translateY(-38px);
+        width: calc(100% - 42mm);
+        max-height: 142mm;
+        margin: 0 auto 32mm;
+        padding: 16mm 0 0;
+        transform: none;
+        overflow: hidden;
     }
 
     .education-certificate-copy > span {
@@ -788,7 +800,8 @@
     }
 
     .education-certificate-copy > div {
-        font-size: 1.42rem;
+        width: min(100%, 238mm);
+        font-size: clamp(1.05rem, 1.8vw, 1.32rem);
         line-height: 1.48;
     }
 
@@ -813,6 +826,8 @@
         gap: 8px 18px;
         padding-top: 7px;
         font-size: 0.76rem;
+        max-height: 36mm;
+        overflow: hidden;
     }
 
     .education-certificate-footnote-text {
