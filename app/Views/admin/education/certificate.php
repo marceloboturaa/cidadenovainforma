@@ -60,19 +60,21 @@ $backLabel = $isRecognitionCertificate
         <p>Certificado emitido</p>
         <h1><?= e($course['title']) ?></h1>
     </div>
-    <div class="heading-actions">
-        <button class="btn btn-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
-        <button class="btn btn-outline-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-download" aria-hidden="true"></i>Baixar PDF</button>
-        <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
-        <?php if (!empty($isManagedCertificate) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
-            <form method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Excluir este certificado? Ele deixara de aparecer nas listas.');">
-                <?= csrf_field() ?>
-                <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
-                <input type="hidden" name="action" value="delete">
-                <button class="btn btn-outline-danger icon-btn" type="submit"><i class="bi bi-trash" aria-hidden="true"></i>Excluir</button>
-            </form>
-        <?php endif; ?>
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e($backUrl) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i><?= e($backLabel) ?></a>
+    <div class="certificate-toolbar-actions">
+        <div class="certificate-toolbar-primary">
+            <button class="btn btn-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
+            <button class="btn btn-outline-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-download" aria-hidden="true"></i>Baixar PDF</button>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
+            <?php if (!empty($isManagedCertificate) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
+                <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Excluir este certificado? Ele deixara de aparecer nas listas.');">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
+                    <input type="hidden" name="action" value="delete">
+                    <button class="btn btn-outline-danger icon-btn" type="submit"><i class="bi bi-trash" aria-hidden="true"></i>Excluir</button>
+                </form>
+            <?php endif; ?>
+        </div>
+        <a class="btn btn-outline-secondary icon-btn certificate-toolbar-back" href="<?= e($backUrl) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i><?= e($backLabel) ?></a>
     </div>
 </div>
 
