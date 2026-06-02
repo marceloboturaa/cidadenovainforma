@@ -1149,6 +1149,7 @@
 .education-certificate-sheet-panel {
     display: grid;
     gap: 22px;
+    justify-items: center;
     overflow: auto;
     padding-bottom: 8px;
 }
@@ -1157,7 +1158,8 @@
     position: relative;
     display: grid;
     width: min(1120px, 100%);
-    aspect-ratio: 1.414 / 1;
+    max-width: 297mm;
+    aspect-ratio: 297 / 210;
     margin: 0 auto;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -1632,7 +1634,10 @@
         margin: 0;
     }
 
+    html,
     body {
+        width: 297mm;
+        min-height: 210mm;
         background: #ffffff;
     }
 
@@ -1663,14 +1668,24 @@
         height: 210mm;
         aspect-ratio: auto;
         min-height: 0;
+        max-width: none;
+        margin: 0;
         border: 0;
         border-radius: 0;
         box-shadow: none;
+        break-after: page;
+        page-break-after: always;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
     }
 
+    .education-certificate-sheet:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
     .education-certificate-program-sheet {
+        break-before: page;
         page-break-before: always;
         padding: 12mm;
     }

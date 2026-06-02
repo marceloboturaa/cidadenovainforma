@@ -85,7 +85,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             <?php if ($isEdit): ?>
                 <?php if ($pendingEnrollmentRows): ?>
                     <div class="empty-state">
-                        <?= e((string) count($pendingEnrollmentRows)) ?> estudante(s) aguardando liberaÃ§Ã£o. Marque o nome na lista abaixo e salve para aprovar o acesso Ã s aulas.
+                        <?= e((string) count($pendingEnrollmentRows)) ?> estudante(s) aguardando liberação. Marque o nome na lista abaixo e salve para aprovar o acesso às aulas.
                     </div>
                 <?php endif; ?>
                 <div class="education-picker-toolbar">
@@ -106,7 +106,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                         ?>
                         <label data-student-label="<?= e(strtolower($item['name'] . ' ' . $item['email'])) ?>">
                             <input type="checkbox" name="user_ids[]" value="<?= e((string) $item['id']) ?>" <?= checked(in_array((int) $item['id'], $enrolledUserIds, true)) ?>>
-                            <span><?= e($item['name']) ?><small><?= e($item['email']) ?><?= $pendingEnrollment ? ' - aguardando aprovaÃ§Ã£o' : '' ?></small></span>
+                            <span><?= e($item['name']) ?><small><?= e($item['email']) ?><?= $pendingEnrollment ? ' - aguardando aprovação' : '' ?></small></span>
                         </label>
                     <?php endforeach; ?>
                     <?php if (!$studentOptions): ?>

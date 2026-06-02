@@ -66,8 +66,8 @@ class EducationController
         View::render('admin/education/certificate-center', [
             'stats' => Education::certificateCenterStats(),
             'institutions' => Education::certificateInstitutions(),
-            'canManageCertificates' => Auth::can('certificates.manage'),
-            'canIssueCertificates' => Auth::can('certificates.issue'),
+            'canManageCertificates' => Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin', 'admin-local']),
+            'canIssueCertificates' => Auth::can('certificates.issue') || Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor']),
             'canAuditCertificates' => Auth::can('certificates.audit') || Auth::can('logs.view'),
             'canManageInstitutions' => Auth::can('certificates.institutions') || Auth::hasRole('master'),
         ]);
@@ -205,6 +205,36 @@ class EducationController
         Logger::info('certificates.recognition_' . $action, 'Status do reconhecimento alterado.', current_user()['id'] ?? null);
         Session::flash('success', $messages[$action] ?? 'Reconhecimento atualizado.');
         redirect('/admin/education/recognitions');
+    }
+
+    public function certificateStatus(): void
+    {
+        Middleware::auth();
+        if (!Auth::can('certificates.issue') && !Auth::can('certificates.manage') && !Auth::hasRole(['master', 'admin'])) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $redirectTo = $_SERVER['HTTP_REFERER'] ?? '/admin/education/certificate-center';
+        $this->validateCsrf($redirectTo);
+
+        $certificateId = (int) ($_POST['certificate_id'] ?? 0);
+        $action = (string) ($_POST['action'] ?? '');
+        if (!Education::setCertificateStatus($certificateId, $action, (int) (current_user()['id'] ?? 0))) {
+            Session::flash('error', 'Nao foi possivel alterar o certificado.');
+            redirect($redirectTo);
+        }
+
+        $messages = [
+            'issue' => 'Certificado reativado.',
+            'revoke' => 'Certificado revogado.',
+            'delete' => 'Certificado excluido.',
+        ];
+
+        Logger::info('certificates.certificate_' . $action, 'Status do certificado alterado.', current_user()['id'] ?? null);
+        Session::flash('success', $messages[$action] ?? 'Certificado atualizado.');
+        redirect($action === 'delete' ? '/admin/education/certificate-center' : $redirectTo);
     }
 
     public function manage(): void
@@ -475,6 +505,10 @@ class EducationController
         $isScheduleLocked = !$canManage && !$this->lessonIsAvailable($lesson);
         $isLocked = (!empty($lesson['locked']) || $isScheduleLocked) && !$canManage;
 
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $lesson['course_id']);
+        }
+
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
             View::render('errors/403');
@@ -590,6 +624,10 @@ class EducationController
         $course = Education::findCourse((int) $block['course_id']);
         $canManage = $this->canManageCourse($course);
 
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $block['course_id']);
+        }
+
         if (!Education::userCanAccessCourse((int) $block['course_id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
             View::render('errors/403');
@@ -622,6 +660,10 @@ class EducationController
         $lesson = $this->lessonFromQuery();
         $course = Education::findCourse((int) $lesson['course_id']);
         $canManage = $this->canManageCourse($course);
+
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $lesson['course_id']);
+        }
 
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
@@ -669,6 +711,12 @@ class EducationController
         $lesson = $this->lessonFromQuery();
         $course = Education::findCourse((int) $lesson['course_id']);
         $canManage = $this->canManageCourse($course);
+
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'message' => 'Sua matrícula ainda aguarda liberação.']);
+            return;
+        }
 
         if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)
             || !Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)
@@ -853,6 +901,9 @@ class EducationController
 
         $course = Education::findCourse((int) $topic['course_id']);
         $canManage = $this->canManageCourse($course);
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $topic['course_id']);
+        }
         if (!$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
             View::render('errors/403');
@@ -950,6 +1001,10 @@ class EducationController
         $course = Education::findCourse((int) $form['course_id']);
         $canManage = $this->canManageCourse($course);
 
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $form['course_id']);
+        }
+
         if (!$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
             View::render('errors/403');
@@ -1012,6 +1067,10 @@ class EducationController
         $block = $this->blockFromQuery();
         $course = Education::findCourse((int) $block['course_id']);
         $canManage = $this->canManageCourse($course);
+
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $block['course_id']);
+        }
 
         if (($block['type'] ?? '') !== 'assignment' || !$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
@@ -1226,6 +1285,10 @@ class EducationController
         $this->validateCsrf('/admin/education/course?id=' . $course['id']);
         $userId = (int) (current_user()['id'] ?? 0);
 
+        if ($this->isEnrollmentPendingForCourse($course, $userId)) {
+            $this->redirectPendingEnrollment((int) $course['id']);
+        }
+
         if (!Education::userCanAccessCourse((int) $course['id'], $userId, false)) {
             http_response_code(403);
             View::render('errors/403');
@@ -1285,6 +1348,10 @@ class EducationController
         $course = $this->courseFromQuery();
         $userId = (int) (current_user()['id'] ?? 0);
 
+        if ($this->isEnrollmentPendingForCourse($course, $userId)) {
+            $this->redirectPendingEnrollment((int) $course['id']);
+        }
+
         if (!Education::userCanAccessCourse((int) $course['id'], $userId, false)) {
             http_response_code(403);
             View::render('errors/403');
@@ -1315,6 +1382,10 @@ class EducationController
         $course = $this->courseFromQuery();
         $this->validateCsrf('/admin/education/certificate?id=' . $course['id']);
         $userId = (int) (current_user()['id'] ?? 0);
+
+        if ($this->isEnrollmentPendingForCourse($course, $userId)) {
+            $this->redirectPendingEnrollment((int) $course['id']);
+        }
 
         if (!Education::userCanAccessCourse((int) $course['id'], $userId, false)) {
             http_response_code(403);
@@ -1557,6 +1628,21 @@ class EducationController
         }
 
         return $this->canTeach() && (int) ($course['teacher_user_id'] ?? 0) === (int) (current_user()['id'] ?? 0);
+    }
+
+    private function isEnrollmentPendingForCourse(?array $course, int $userId): bool
+    {
+        if (!$course || $userId <= 0 || $this->canManageCourse($course) || $this->canTakeAttendance($course)) {
+            return false;
+        }
+
+        return Education::enrollmentStatus((int) $course['id'], $userId) === 'pending';
+    }
+
+    private function redirectPendingEnrollment(int $courseId): never
+    {
+        Session::flash('error', 'Sua matrícula ainda aguarda liberação do professor ou coordenador. Enquanto isso, o curso fica em modo de espera.');
+        redirect('/admin/education/course?id=' . $courseId);
     }
 
     private function teacherOptions(array $users): array

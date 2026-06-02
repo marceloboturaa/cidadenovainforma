@@ -65,11 +65,11 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
         <div class="section-heading">
             <div>
                 <span class="eyebrow">Modo de espera</span>
-                <h2>MatrÃ­cula aguardando liberaÃ§Ã£o</h2>
+                <h2>Matrícula aguardando liberação</h2>
             </div>
             <span class="state-pill is-muted">Pendente</span>
         </div>
-        <p class="field-hint mb-0">Seu cadastro veio de uma inscriÃ§Ã£o de evento ligado a este curso. Um coordenador precisa aprovar sua matrÃ­cula para liberar aulas, formulÃ¡rios e fÃ³rum.</p>
+        <p class="field-hint mb-0">Seu cadastro veio de uma inscrição de evento ligado a este curso. Um professor ou coordenador precisa aprovar sua matrícula para liberar aulas, formulários e fórum.</p>
     </section>
 <?php endif; ?>
 

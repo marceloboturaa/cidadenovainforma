@@ -24,12 +24,12 @@
                     <span class="education-kicker"><?= e($course['teacher_name'] ?? 'Curso') ?></span>
                     <h2><?= e($course['title']) ?></h2>
                     <?php if (($course['enrollment_status'] ?? 'approved') === 'pending'): ?>
-                        <span class="state-pill is-muted">Aguardando aprovaÃ§Ã£o</span>
+                        <span class="state-pill is-muted">Aguardando aprovação</span>
                     <?php endif; ?>
                     <p><?= e(text_excerpt($course['summary'] ?? '', 150)) ?></p>
                 </div>
                 <?php if (($course['enrollment_status'] ?? 'approved') === 'pending'): ?>
-                    <p class="field-hint mb-0">Sua inscriÃ§Ã£o neste curso estÃ¡ em modo de espera. Um coordenador precisa liberar o acesso Ã s aulas.</p>
+                    <p class="field-hint mb-0">Sua inscrição neste curso está em modo de espera. Um professor ou coordenador precisa liberar o acesso às aulas.</p>
                     <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Ver status</a>
                 <?php else: ?>
                     <div class="education-progress">

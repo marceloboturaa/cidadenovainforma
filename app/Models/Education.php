@@ -1791,6 +1791,63 @@ class Education
         return true;
     }
 
+    public static function setCertificateStatus(int $certificateId, string $action, int $userId): bool
+    {
+        self::ensureSchema();
+
+        $certificate = self::certificateById($certificateId);
+        if (!$certificate || ($certificate['certificate_activity_type'] ?? '') === 'reconhecimento') {
+            return false;
+        }
+
+        $status = match ($action) {
+            'issue' => 'issued',
+            'revoke' => 'revoked',
+            'delete' => 'deleted',
+            default => null,
+        };
+
+        if ($status === null) {
+            return false;
+        }
+
+        $sql = 'UPDATE education_certificates SET status = :status, updated_at = NOW() WHERE id = :id';
+        $params = [
+            'id' => $certificateId,
+            'status' => $status,
+        ];
+
+        if ($action === 'issue') {
+            $sql = 'UPDATE education_certificates
+                    SET status = :status,
+                        revoked_by = NULL,
+                        revoked_at = NULL,
+                        revoked_reason = NULL,
+                        updated_at = NOW()
+                    WHERE id = :id';
+        } elseif ($action === 'revoke') {
+            $sql = 'UPDATE education_certificates
+                    SET status = :status,
+                        revoked_by = :user_id,
+                        revoked_at = NOW(),
+                        revoked_reason = :reason,
+                        updated_at = NOW()
+                    WHERE id = :id';
+            $params['user_id'] = $userId ?: null;
+            $params['reason'] = 'Revogado pela central de certificados.';
+        }
+
+        Database::connection()->prepare($sql)->execute($params);
+
+        self::auditCertificate($certificateId, !empty($certificate['certificate_institution_id']) ? (int) $certificate['certificate_institution_id'] : null, $userId ?: null, 'certificate_' . $action, [
+            'status' => $certificate['status'] ?? null,
+        ], [
+            'status' => $status,
+        ]);
+
+        return true;
+    }
+
     public static function certificateForCourseUser(int $courseId, int $userId): ?array
     {
         self::ensureSchema();
@@ -1804,6 +1861,7 @@ class Education
              INNER JOIN users ON users.id = education_certificates.user_id
              WHERE education_certificates.course_id = :course_id
                AND education_certificates.user_id = :user_id
+               AND education_certificates.status <> "deleted"
              LIMIT 1'
         );
         $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
@@ -1984,6 +2042,7 @@ class Education
         $stmt = Database::connection()->prepare(
             'SELECT education_certificates.*,
                     education_courses.title AS course_title,
+                    education_courses.certificate_activity_type,
                     education_courses.teacher_user_id,
                     users.name AS user_name,
                     COALESCE(users.email, people.email) AS student_email,
@@ -2064,6 +2123,7 @@ class Education
              FROM education_certificates
              INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
              WHERE education_courses.certificate_activity_type <> "reconhecimento"
+               AND education_certificates.status <> "deleted"
              GROUP BY status'
         )->fetchAll();
 
@@ -2079,15 +2139,16 @@ class Education
              LEFT JOIN users ON users.id = education_certificates.user_id
              LEFT JOIN people ON people.id = education_certificates.person_id
              WHERE education_courses.certificate_activity_type <> "reconhecimento"
+               AND education_certificates.status <> "deleted"
              ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC
              LIMIT 8'
         )->fetchAll();
 
         return [
-            'total_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
+            'total_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status <> "deleted" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
             'issued_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status = "issued" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
             'revoked_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status = "revoked" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
-            'verified_total' => (int) $db->query('SELECT COALESCE(SUM(verified_count), 0) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
+            'verified_total' => (int) $db->query('SELECT COALESCE(SUM(verified_count), 0) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status <> "deleted" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
             'certificate_courses' => (int) $db->query('SELECT COUNT(*) FROM education_courses WHERE certificate_enabled = 1 AND certificate_activity_type <> "reconhecimento"')->fetchColumn(),
             'institutions' => (int) $db->query('SELECT COUNT(*) FROM certificate_institutions WHERE active = 1')->fetchColumn(),
             'templates' => (int) $db->query('SELECT COUNT(*) FROM certificate_templates WHERE active = 1')->fetchColumn(),

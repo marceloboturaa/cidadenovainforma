@@ -404,6 +404,7 @@ VALUES
     ('MASTER', 'master', 100, NOW(), NOW()),
     ('ADMIN', 'admin', 80, NOW(), NOW()),
     ('ADMIN LOCAL', 'admin-local', 60, NOW(), NOW()),
+    ('DELEGADO EMISSOR', 'delegado-emissor', 55, NOW(), NOW()),
     ('DIRETOR', 'diretor', 50, NOW(), NOW()),
     ('JORNALISTA', 'jornalista', 40, NOW(), NOW()),
     ('COLUNISTA', 'colunista', 35, NOW(), NOW()),
@@ -438,9 +439,18 @@ VALUES
     ('Criar cursos e aulas', 'education.teach', NOW()),
     ('Acessar ensino', 'education.view', NOW()),
     ('Participar do fórum de ensino', 'education.forum', NOW()),
+    ('Gerenciar certificados digitais', 'certificates.manage', NOW()),
+    ('Emitir certificados digitais', 'certificates.issue', NOW()),
+    ('Ver auditoria de certificados', 'certificates.audit', NOW()),
+    ('Gerenciar instituições certificadoras', 'certificates.institutions', NOW()),
+    ('Gerenciar modelos de certificados', 'certificates.templates', NOW()),
+    ('Aprovar lotes de certificados', 'certificates.batches.approve', NOW()),
     ('Ver fóruns', 'forum.view', NOW()),
     ('Criar tópicos no fórum', 'forum.create', NOW()),
-    ('Moderar fóruns', 'forum.moderate', NOW())
+    ('Moderar fóruns', 'forum.moderate', NOW()),
+    ('Visualizar consentimentos LGPD', 'consent.view', NOW()),
+    ('Gerenciar consentimentos LGPD', 'consent.manage', NOW()),
+    ('Editar textos LGPD', 'consent.texts', NOW())
 ON DUPLICATE KEY UPDATE
     name = VALUES(name);
 
@@ -469,9 +479,18 @@ INNER JOIN permissions ON permissions.slug IN (
     'education.teach',
     'education.view',
     'education.forum',
+    'certificates.manage',
+    'certificates.issue',
+    'certificates.audit',
+    'certificates.institutions',
+    'certificates.templates',
+    'certificates.batches.approve',
     'forum.view',
     'forum.create',
-    'forum.moderate'
+    'forum.moderate',
+    'consent.view',
+    'consent.manage',
+    'consent.texts'
 )
 WHERE roles.slug = 'master';
 
@@ -490,16 +509,25 @@ INNER JOIN permissions ON permissions.slug IN (
     'education.manage',
     'education.view',
     'education.forum',
+    'certificates.manage',
+    'certificates.issue',
+    'certificates.audit',
+    'certificates.institutions',
+    'certificates.templates',
+    'certificates.batches.approve',
     'forum.view',
     'forum.create',
-    'forum.moderate'
+    'forum.moderate',
+    'consent.view',
+    'consent.manage',
+    'consent.texts'
 )
 WHERE roles.slug = 'admin';
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT roles.id, permissions.id
 FROM roles
-INNER JOIN permissions ON permissions.slug IN ('news.manage', 'news.approve', 'news.create', 'categories.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create')
+INNER JOIN permissions ON permissions.slug IN ('news.manage', 'news.approve', 'news.create', 'categories.manage', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.templates', 'forum.view', 'forum.create')
 WHERE roles.slug = 'admin-local';
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
@@ -519,6 +547,12 @@ SELECT roles.id, permissions.id
 FROM roles
 INNER JOIN permissions ON permissions.slug IN ('education.teach', 'education.view', 'education.forum', 'forum.view', 'forum.create')
 WHERE roles.slug = 'professor';
+
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT roles.id, permissions.id
+FROM roles
+INNER JOIN permissions ON permissions.slug IN ('education.view', 'certificates.issue')
+WHERE roles.slug = 'delegado-emissor';
 
 DELETE role_permissions
 FROM role_permissions

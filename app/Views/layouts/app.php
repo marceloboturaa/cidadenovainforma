@@ -10,6 +10,10 @@
 <?php $institutionPageAccess = $user ? \App\Models\InstitutionPage::manageableForUser((int) $user['id'], ($user['role_slug'] ?? '') === 'master') : []; ?>
 <?php $canManageInstitutionLanding = $user ? \App\Core\Auth::hasRole(['master', 'admin']) : false; ?>
 <?php $roleSlugs = $user ? \App\Core\Auth::roleSlugs($user) : []; ?>
+<?php $canAccessEducation = $user && (\App\Core\Auth::can('education.view') || \App\Core\Auth::can('education.manage') || \App\Core\Auth::can('education.teach')); ?>
+<?php $canManageEducationCourses = $user && (\App\Core\Auth::can('education.manage') || \App\Core\Auth::can('education.teach') || \App\Core\Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor'])); ?>
+<?php $canAccessOwnCertificates = $user && ($canAccessEducation || \App\Core\Auth::can('certificates.issue') || \App\Core\Auth::can('certificates.manage')); ?>
+<?php $canAccessCertificateCenter = $user && (\App\Core\Auth::can('certificates.manage') || \App\Core\Auth::can('certificates.issue') || \App\Core\Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])); ?>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -67,15 +71,17 @@
                 <?php if (\App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && (\App\Models\Document::userCanUpload((int) $user['id']) || \App\Models\Document::userHasAnyAccess((int) $user['id'])))): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>" title="Documentos"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><span>Documentos</span></a>
                 <?php endif; ?>
-                <?php if ($user): ?>
+                <?php if ($canAccessEducation): ?>
                     <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>" title="Ensino"><i class="bi bi-mortarboard" aria-hidden="true"></i><span>Ensino</span></a>
+                <?php endif; ?>
+                <?php if ($canAccessOwnCertificates): ?>
                     <a class="<?= ($currentPath === '/admin/education/certificates' || $currentPath === '/admin/education/certificate') ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificates')) ?>" title="Meus certificados"><i class="bi bi-award" aria-hidden="true"></i><span>Meus certificados</span></a>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('certificates.manage') || \App\Core\Auth::can('certificates.issue') || \App\Core\Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])): ?>
+                <?php if ($canAccessCertificateCenter): ?>
                     <a class="<?= $currentPath === '/admin/education/certificate-center' ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificate-center')) ?>" title="Central de certificados"><i class="bi bi-patch-check" aria-hidden="true"></i><span>Certificados</span></a>
                     <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-award" aria-hidden="true"></i><span>Reconhecimentos</span></a>
                 <?php endif; ?>
-                <?php if (array_intersect($roleSlugs, ['master', 'admin', 'admin-local', 'diretor', 'professor']) || \App\Core\Auth::can('education.teach')): ?>
+                <?php if ($canManageEducationCourses): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Cursos"><i class="bi bi-journal-richtext" aria-hidden="true"></i><span>Cursos</span></a>
                 <?php endif; ?>
                 <?php if (\App\Core\Auth::can('forum.view') || \App\Core\Auth::can('forum.create') || \App\Core\Auth::can('forum.moderate')): ?>
