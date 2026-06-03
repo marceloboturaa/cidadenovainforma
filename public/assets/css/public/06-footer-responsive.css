@@ -542,12 +542,13 @@
 
     .registration-open-note {
         grid-template-columns: 1fr;
-        gap: 9px;
+        gap: 13px;
         margin-top: -4px;
+        padding: 16px;
     }
 
-    .registration-open-note div {
-        display: grid;
+    .registration-open-copy {
+        gap: 6px;
     }
 
     .registration-open-note a {

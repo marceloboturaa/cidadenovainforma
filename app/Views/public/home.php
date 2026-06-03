@@ -29,17 +29,18 @@ $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl
 
 <?php if ($homeNoticeEnabled): ?>
     <aside class="registration-open-note" id="aviso-principal" aria-label="Aviso principal">
-        <?php if (trim((string) ($homeNotice['title'] ?? '')) !== ''): ?>
-            <strong><?= e($homeNotice['title']) ?></strong>
-        <?php endif; ?>
-        <div>
-            <?php if (trim((string) ($homeNotice['text'] ?? '')) !== ''): ?>
-                <span><?= e($homeNotice['text']) ?></span>
+        <div class="registration-open-copy">
+            <span>Comunicado</span>
+            <?php if (trim((string) ($homeNotice['title'] ?? '')) !== ''): ?>
+                <strong><?= e($homeNotice['title']) ?></strong>
             <?php endif; ?>
-            <?php if ($homeNoticeUrl !== ''): ?>
-                <a href="<?= e($homeNoticeHref) ?>"><?= e($homeNoticeLabel) ?></a>
+            <?php if (trim((string) ($homeNotice['text'] ?? '')) !== ''): ?>
+                <p><?= e($homeNotice['text']) ?></p>
             <?php endif; ?>
         </div>
+        <?php if ($homeNoticeUrl !== ''): ?>
+            <a href="<?= e($homeNoticeHref) ?>"><?= e($homeNoticeLabel) ?></a>
+        <?php endif; ?>
     </aside>
 <?php endif; ?>
 

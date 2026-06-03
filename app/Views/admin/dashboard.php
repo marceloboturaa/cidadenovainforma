@@ -53,7 +53,7 @@
                 <input class="form-control" name="home_notice_title" maxlength="120" value="<?= e($homeNotice['title'] ?? '') ?>" placeholder="Ex.: Inscrições abertas">
             </label>
             <label class="form-label">Texto
-                <input class="form-control" name="home_notice_text" maxlength="260" value="<?= e($homeNotice['text'] ?? '') ?>" placeholder="Ex.: Garanta sua vaga nas atividades desta semana.">
+                <textarea class="form-control" name="home_notice_text" maxlength="260" rows="3" placeholder="Ex.: Garanta sua vaga nas atividades desta semana."><?= e($homeNotice['text'] ?? '') ?></textarea>
             </label>
             <label class="form-label">Link
                 <input class="form-control" name="home_notice_url" maxlength="255" value="<?= e($homeNotice['url'] ?? '') ?>" placeholder="/evento/1, /admin/education/course?id=1 ou https://...">

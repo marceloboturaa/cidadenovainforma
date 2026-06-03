@@ -235,58 +235,84 @@
 
 .registration-open-note {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
     align-items: center;
-    margin: -8px 0 24px;
-    padding: 12px 14px;
-    border: 1px solid #bbf7d0;
-    border-left: 5px solid #16a34a;
+    position: relative;
+    overflow: hidden;
+    margin: -8px 0 26px;
+    padding: 18px 20px;
+    border: 1px solid #86efac;
+    border-left: 6px solid #16a34a;
     border-radius: 8px;
-    background: #f0fdf4;
+    background:
+        radial-gradient(circle at 96% 8%, rgba(22, 163, 74, 0.18), transparent 28%),
+        linear-gradient(135deg, #ecfdf5 0%, #f8fafc 58%, #fff7ed 100%);
+    box-shadow: 0 16px 34px rgba(20, 83, 45, 0.12);
+}
+
+.registration-open-note::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 6px;
+    background: linear-gradient(180deg, #16a34a, #facc15);
+}
+
+.registration-open-copy {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.registration-open-copy > span {
+    color: #166534;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .registration-open-note strong,
 .registration-open-badge {
-    color: #166534;
-    font-size: 0.78rem;
+    color: #052e16;
+    font-size: clamp(1.05rem, 2vw, 1.34rem);
     font-weight: 900;
-    text-transform: uppercase;
+    line-height: 1.15;
+    text-transform: none;
 }
 
-.registration-open-note div {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-.registration-open-note span {
+.registration-open-note p {
+    margin: 0;
     color: #14532d;
-    font-size: 0.86rem;
+    font-size: 0.94rem;
     font-weight: 700;
+    line-height: 1.45;
 }
 
 .registration-open-note a,
 .registration-open-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     width: fit-content;
-    min-height: 28px;
-    padding: 5px 8px;
-    border: 1px solid #bbf7d0;
+    min-height: 40px;
+    padding: 9px 15px;
+    border: 1px solid #15803d;
     border-radius: 999px;
-    background: #ffffff;
-    color: #166534;
-    font-size: 0.78rem;
+    background: #15803d;
+    color: #ffffff;
+    font-size: 0.86rem;
     font-weight: 900;
-    line-height: 1;
+    line-height: 1.1;
+    text-decoration: none;
+    box-shadow: 0 10px 20px rgba(21, 128, 61, 0.22);
 }
 
 .registration-open-note a:hover {
-    border-color: #16a34a;
-    background: #dcfce7;
+    border-color: #166534;
+    background: #166534;
+    color: #ffffff;
 }
 
 .public-events-grid {
