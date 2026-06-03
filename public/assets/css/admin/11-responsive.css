@@ -953,9 +953,13 @@
         max-width: none;
     }
 
-    .certificate-toolbar-actions,
+    .certificate-toolbar-actions {
+        justify-items: stretch;
+    }
+
     .certificate-toolbar-primary {
-        justify-content: stretch;
+        display: grid;
+        grid-template-columns: 1fr;
     }
 
     .certificate-toolbar .btn,

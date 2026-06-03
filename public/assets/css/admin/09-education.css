@@ -1149,7 +1149,7 @@
 .certificate-toolbar {
     align-items: start;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 520px);
+    grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .certificate-toolbar > div:first-child {
@@ -1157,19 +1157,14 @@
 }
 
 .certificate-toolbar h1 {
-    max-width: 760px;
+    max-width: 820px;
     line-height: 1.18;
 }
 
 .certificate-toolbar-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
+    display: grid;
+    justify-items: end;
     gap: 8px;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
 }
 
 .certificate-toolbar-primary {
@@ -1177,12 +1172,12 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
-    min-width: 0;
+    gap: 6px;
 }
 
 .certificate-toolbar .btn {
-    min-height: 38px;
+    min-height: 36px;
+    padding: 7px 11px;
     white-space: nowrap;
 }
 
