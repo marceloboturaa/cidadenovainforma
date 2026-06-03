@@ -127,6 +127,7 @@
 
     .dashboard-grid,
     .student-response-grid,
+    .home-notice-grid,
     .editor-grid {
         grid-template-columns: 1fr;
     }

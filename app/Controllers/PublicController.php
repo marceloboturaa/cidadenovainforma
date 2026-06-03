@@ -18,6 +18,7 @@ use App\Models\MenuItem;
 use App\Models\News;
 use App\Models\Person;
 use App\Models\Role;
+use App\Models\SiteSetting;
 use App\Models\Tag;
 use App\Models\User;
 
@@ -35,6 +36,13 @@ class PublicController
             'publicCourses' => Education::publicCourses(6),
             'libraryEvents' => LibraryEvent::publicUpcoming(6),
             'menuItems' => MenuItem::visible(),
+            'homeNotice' => [
+                'enabled' => SiteSetting::get('home_notice_enabled', '0'),
+                'title' => SiteSetting::get('home_notice_title', ''),
+                'text' => SiteSetting::get('home_notice_text', ''),
+                'url' => SiteSetting::get('home_notice_url', ''),
+                'label' => SiteSetting::get('home_notice_label', ''),
+            ],
             'pageTitle' => 'Cidade Nova Informa',
             'canonicalUrl' => url('/'),
         ], 'public');

@@ -9,8 +9,11 @@ $eventSlotsText = function (array $event): string {
     $occupied = max(0, (int) ($event['participant_count'] ?? 0));
     return max(0, $capacity - $occupied) . ' de ' . $capacity . ' vaga(s)';
 };
-$openRegistrationEvents = array_values(array_filter($libraryEvents ?? [], fn (array $event): bool => !empty($event['registration_enabled'])));
-$hasOpenRegistrationHighlights = !empty($publicCourses) || !empty($openRegistrationEvents);
+$homeNotice = $homeNotice ?? [];
+$homeNoticeEnabled = ($homeNotice['enabled'] ?? '0') === '1' && (trim((string) ($homeNotice['title'] ?? '')) !== '' || trim((string) ($homeNotice['text'] ?? '')) !== '');
+$homeNoticeUrl = trim((string) ($homeNotice['url'] ?? ''));
+$homeNoticeLabel = trim((string) ($homeNotice['label'] ?? '')) ?: 'Saiba mais';
+$homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl : url($homeNoticeUrl);
 ?>
 
 <?php if ($urgent): ?>
@@ -24,16 +27,18 @@ $hasOpenRegistrationHighlights = !empty($publicCourses) || !empty($openRegistrat
     </section>
 <?php endif; ?>
 
-<?php if ($hasOpenRegistrationHighlights): ?>
-    <aside class="registration-open-note" id="inscricoes-abertas" aria-label="Inscrições abertas">
-        <strong>Inscrições abertas</strong>
+<?php if ($homeNoticeEnabled): ?>
+    <aside class="registration-open-note" id="aviso-principal" aria-label="Aviso principal">
+        <?php if (trim((string) ($homeNotice['title'] ?? '')) !== ''): ?>
+            <strong><?= e($homeNotice['title']) ?></strong>
+        <?php endif; ?>
         <div>
-            <?php foreach (array_slice($publicCourses, 0, 3) as $course): ?>
-                <a href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">Curso: <?= e($course['title']) ?></a>
-            <?php endforeach; ?>
-            <?php foreach (array_slice($openRegistrationEvents, 0, 3) as $event): ?>
-                <a href="<?= e(url('/evento/' . $event['id'])) ?>">Evento: <?= e($event['title']) ?></a>
-            <?php endforeach; ?>
+            <?php if (trim((string) ($homeNotice['text'] ?? '')) !== ''): ?>
+                <span><?= e($homeNotice['text']) ?></span>
+            <?php endif; ?>
+            <?php if ($homeNoticeUrl !== ''): ?>
+                <a href="<?= e($homeNoticeHref) ?>"><?= e($homeNoticeLabel) ?></a>
+            <?php endif; ?>
         </div>
     </aside>
 <?php endif; ?>

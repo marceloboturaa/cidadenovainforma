@@ -61,6 +61,7 @@ $router->get('/reset-password', [AuthController::class, 'showReset']);
 $router->post('/reset-password', [AuthController::class, 'reset']);
 
 $router->get('/admin', [DashboardController::class, 'index']);
+$router->post('/admin/home-notice', [DashboardController::class, 'homeNotice']);
 $router->post('/admin/media/tinymce', [MediaController::class, 'tinyMceUpload']);
 $router->post('/admin/latex/compile', [LatexController::class, 'compile']);
 $router->get('/admin/password', [UserController::class, 'password']);

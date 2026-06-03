@@ -257,8 +257,15 @@
 .registration-open-note div {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
     min-width: 0;
+}
+
+.registration-open-note span {
+    color: #14532d;
+    font-size: 0.86rem;
+    font-weight: 700;
 }
 
 .registration-open-note a,

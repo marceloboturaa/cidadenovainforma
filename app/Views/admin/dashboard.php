@@ -36,6 +36,37 @@
 </div>
 <?php endif; ?>
 
+<?php if (!($isStudent ?? false) && ($canViewEditorialDashboard ?? false)): ?>
+<section class="panel">
+    <div class="section-heading">
+        <h2>Aviso no topo do site</h2>
+        <span>Independente dos cursos públicos</span>
+    </div>
+    <form method="post" action="<?= e(url('/admin/home-notice')) ?>" class="home-notice-form">
+        <?= csrf_field() ?>
+        <label class="form-check home-notice-toggle">
+            <input class="form-check-input" type="checkbox" name="home_notice_enabled" value="1" <?= checked(($homeNotice['enabled'] ?? '0') === '1') ?>>
+            <span class="form-check-label">Mostrar aviso na página inicial</span>
+        </label>
+        <div class="home-notice-grid">
+            <label class="form-label">Título
+                <input class="form-control" name="home_notice_title" maxlength="120" value="<?= e($homeNotice['title'] ?? '') ?>" placeholder="Ex.: Inscrições abertas">
+            </label>
+            <label class="form-label">Texto
+                <input class="form-control" name="home_notice_text" maxlength="260" value="<?= e($homeNotice['text'] ?? '') ?>" placeholder="Ex.: Garanta sua vaga nas atividades desta semana.">
+            </label>
+            <label class="form-label">Link
+                <input class="form-control" name="home_notice_url" maxlength="255" value="<?= e($homeNotice['url'] ?? '') ?>" placeholder="/evento/1, /admin/education/course?id=1 ou https://...">
+            </label>
+            <label class="form-label">Texto do botão
+                <input class="form-control" name="home_notice_label" maxlength="60" value="<?= e($homeNotice['label'] ?? '') ?>" placeholder="Saiba mais">
+            </label>
+        </div>
+        <button class="btn btn-primary icon-btn"><i class="bi bi-megaphone" aria-hidden="true"></i>Salvar aviso</button>
+    </form>
+</section>
+<?php endif; ?>
+
 <?php if ($canViewEditorialDashboard ?? false): ?>
 <div class="<?= ($canViewSensitiveDashboard ?? false) ? 'dashboard-grid' : '' ?>">
     <section class="panel">
