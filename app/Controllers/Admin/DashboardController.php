@@ -48,7 +48,7 @@ class DashboardController
             return;
         }
 
-        if (!Csrf::check($_POST['_csrf'] ?? '')) {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
             Session::flash('error', 'Sessao expirada. Tente novamente.');
             redirect('/admin');
         }
