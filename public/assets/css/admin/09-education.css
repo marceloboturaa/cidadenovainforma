@@ -1354,10 +1354,11 @@
 
 .education-certificate-qr {
     display: grid;
+    align-self: end;
     justify-items: center;
     gap: 4px;
     width: 108px;
-    margin: -48px 0 0;
+    margin: 0;
     color: #334155;
     font-size: 0.5rem;
     font-weight: 800;
@@ -1811,7 +1812,7 @@
 
     .education-certificate-qr {
         width: 108px;
-        margin-top: -48px;
+        margin-top: 0;
         font-size: 7px;
     }
 
