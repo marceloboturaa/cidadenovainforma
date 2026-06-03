@@ -212,6 +212,7 @@ $router->post('/admin/education/certificate/settings', [EducationController::cla
 $router->post('/admin/education/certificate/request', [EducationController::class, 'requestCertificate']);
 $router->post('/admin/education/certificate/name-change', [EducationController::class, 'requestCertificateNameChange']);
 $router->post('/admin/education/certificate/name-review', [EducationController::class, 'reviewCertificateNameChange']);
+$router->get('/admin/education/certificate/download', [EducationController::class, 'downloadCertificate']);
 $router->get('/admin/education/certificate', [EducationController::class, 'certificate']);
 
 $router->get('/admin/forum', [ForumController::class, 'index']);

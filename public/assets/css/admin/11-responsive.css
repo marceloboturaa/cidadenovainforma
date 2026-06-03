@@ -944,6 +944,26 @@
         flex-direction: column;
     }
 
+    .certificate-toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .certificate-toolbar h1 {
+        max-width: none;
+    }
+
+    .certificate-toolbar-actions,
+    .certificate-toolbar-primary {
+        justify-content: stretch;
+    }
+
+    .certificate-toolbar .btn,
+    .certificate-toolbar-primary .inline-form,
+    .certificate-toolbar-primary .inline-form .btn {
+        width: 100%;
+    }
+
     .page-heading .btn {
         width: 100%;
     }

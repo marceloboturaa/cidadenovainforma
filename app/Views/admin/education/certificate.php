@@ -45,9 +45,11 @@ $courseCompetencies = array_values(array_filter(array_map('trim', preg_split('/\
 $courseResponsible = trim((string) ($course['certificate_responsible_name'] ?? '')) ?: trim((string) ($course['teacher_name'] ?? ''));
 $courseResponsibleCredential = trim((string) ($course['certificate_responsible_credential'] ?? ''));
 $hasProgramSummary = $courseObjectives !== '' || $courseCompetencies || $courseResponsible !== '' || $courseResponsibleCredential !== '';
+$hasCertificateProgramBack = $programExtra !== '' || $hasProgramSummary || !empty($certificateProgram);
 $verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? ''));
 $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' . rawurlencode($verificationUrl);
 $downloadFilename = 'certificado-' . slugify((string) ($course['title'] ?? 'curso')) . '-' . slugify((string) ($certificate['student_name'] ?? 'aluno')) . '.pdf';
+$downloadUrl = url('/admin/education/certificate/download?certificate_id=' . (int) ($certificate['id'] ?? 0));
 $backUrl = $isRecognitionCertificate
     ? url(!empty($isManagedCertificate) ? '/admin/education/recognitions' : '/admin/education/certificates')
     : url('/admin/education/course?id=' . $course['id'] . '#course-certificate');
@@ -64,7 +66,7 @@ $backLabel = $isRecognitionCertificate
     <div class="certificate-toolbar-actions">
         <div class="certificate-toolbar-primary">
             <button class="btn btn-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
-            <button class="btn btn-outline-primary icon-btn" type="button" data-certificate-download data-filename="<?= e($downloadFilename) ?>"><i class="bi bi-download" aria-hidden="true"></i>Baixar PDF</button>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e($downloadUrl) ?>" download="<?= e($downloadFilename) ?>"><i class="bi bi-download" aria-hidden="true"></i>Baixar PDF</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
             <?php if (!empty($isManagedCertificate) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
                 <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Excluir este certificado? Ele deixara de aparecer nas listas.');">
@@ -132,7 +134,7 @@ $backLabel = $isRecognitionCertificate
             </figure>
         </footer>
     </article>
-    <?php if ($programEnabled): ?>
+    <?php if ($programEnabled && $hasCertificateProgramBack): ?>
         <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
             <?php if ($programBackground !== ''): ?>
                 <img class="education-certificate-background" src="<?= e(media_url($programBackground)) ?>" alt="" aria-hidden="true">
@@ -199,9 +201,6 @@ $backLabel = $isRecognitionCertificate
                         <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
-                <?php if (!$certificateProgram): ?>
-                    <p class="education-certificate-program-empty"><?= $isRecognitionCertificate ? 'Nenhuma informação complementar cadastrada para este reconhecimento.' : 'Nenhuma aula cadastrada para este curso.' ?></p>
-                <?php endif; ?>
             </section>
         </article>
     <?php endif; ?>
@@ -228,123 +227,3 @@ $backLabel = $isRecognitionCertificate
         <?php endif; ?>
     </section>
 <?php endif; ?>
-
-<script>
-(() => {
-    const downloadButton = document.querySelector('[data-certificate-download]');
-    const sourcePanel = document.querySelector('.education-certificate-sheet-panel');
-
-    if (!downloadButton || !sourcePanel) {
-        return;
-    }
-
-    const loadHtml2Pdf = () => new Promise((resolve, reject) => {
-        if (window.html2pdf) {
-            resolve(window.html2pdf);
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.crossOrigin = 'anonymous';
-        script.referrerPolicy = 'no-referrer';
-        script.onload = () => resolve(window.html2pdf);
-        script.onerror = () => reject(new Error('Nao foi possivel carregar o gerador de PDF.'));
-        document.head.appendChild(script);
-    });
-
-    const waitForImages = async (container) => {
-        const images = Array.from(container.querySelectorAll('img'));
-        await Promise.all(images.map((image) => {
-            if (image.complete && image.naturalWidth > 0) {
-                return Promise.resolve();
-            }
-
-            return new Promise((resolve) => {
-                image.addEventListener('load', resolve, { once: true });
-                image.addEventListener('error', resolve, { once: true });
-            });
-        }));
-    };
-
-    const nextPaint = () => new Promise((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(resolve));
-    });
-
-    const buildExportNode = () => {
-        const exportNode = document.createElement('div');
-        exportNode.className = 'education-certificate-pdf-export';
-
-        sourcePanel.querySelectorAll('.education-certificate-sheet').forEach((sheet, index, sheets) => {
-            const clone = sheet.cloneNode(true);
-            clone.style.width = '297mm';
-            clone.style.height = '210mm';
-            clone.style.maxWidth = 'none';
-            clone.style.margin = '0';
-            clone.style.border = '0';
-            clone.style.borderRadius = '0';
-            clone.style.boxShadow = 'none';
-            clone.style.pageBreakAfter = index === sheets.length - 1 ? 'auto' : 'always';
-            clone.style.breakAfter = index === sheets.length - 1 ? 'auto' : 'page';
-            exportNode.appendChild(clone);
-        });
-
-        Object.assign(exportNode.style, {
-            position: 'fixed',
-            left: '0',
-            top: '0',
-            width: '297mm',
-            background: '#ffffff',
-            pointerEvents: 'none',
-            zIndex: '2147483647',
-        });
-
-        return exportNode;
-    };
-
-    downloadButton.addEventListener('click', async () => {
-        const originalHtml = downloadButton.innerHTML;
-        downloadButton.disabled = true;
-        downloadButton.innerHTML = '<i class="bi bi-hourglass-split" aria-hidden="true"></i>Gerando PDF';
-
-        let exportNode = null;
-
-        try {
-            const html2pdf = await loadHtml2Pdf();
-            exportNode = buildExportNode();
-            document.body.appendChild(exportNode);
-            await waitForImages(exportNode);
-            if (document.fonts && document.fonts.ready) {
-                await document.fonts.ready;
-            }
-            await nextPaint();
-
-            await html2pdf().set({
-                filename: downloadButton.dataset.filename || 'certificado.pdf',
-                margin: 0,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    scrollX: 0,
-                    scrollY: 0,
-                    windowWidth: 1123,
-                    windowHeight: 794,
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-                pagebreak: { mode: ['css', 'legacy'] },
-            }).from(exportNode).save();
-        } catch (error) {
-            alert(error.message || 'Nao foi possivel baixar o PDF agora.');
-        } finally {
-            if (exportNode) {
-                exportNode.remove();
-            }
-            downloadButton.disabled = false;
-            downloadButton.innerHTML = originalHtml;
-        }
-    });
-})();
-</script>

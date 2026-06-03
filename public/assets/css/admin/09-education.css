@@ -1148,6 +1148,8 @@
 
 .certificate-toolbar {
     align-items: start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 520px);
 }
 
 .certificate-toolbar > div:first-child {
@@ -1155,22 +1157,33 @@
 }
 
 .certificate-toolbar h1 {
-    max-width: 820px;
+    max-width: 760px;
     line-height: 1.18;
 }
 
 .certificate-toolbar-actions {
-    display: grid;
-    justify-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
     gap: 8px;
-    min-width: min(100%, 520px);
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
 }
 
 .certificate-toolbar-primary {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-end;
     gap: 8px;
+    min-width: 0;
+}
+
+.certificate-toolbar .btn {
+    min-height: 38px;
+    white-space: nowrap;
 }
 
 .certificate-toolbar-primary .inline-form {
@@ -1178,7 +1191,7 @@
 }
 
 .certificate-toolbar-back {
-    min-width: 240px;
+    min-width: 0;
 }
 
 .education-certificate-sheet-panel {

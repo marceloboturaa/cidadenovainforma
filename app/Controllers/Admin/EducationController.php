@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Core\Logger;
 use App\Core\Middleware;
 use App\Core\Session;
+use App\Core\SimplePdf;
 use App\Core\View;
 use App\Models\Education;
 use App\Models\Forum;
@@ -1374,6 +1375,103 @@ class EducationController
             'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), $lessons),
             'certificatePeriod' => Education::certificatePeriodForCourseUser((int) $course['id'], $userId),
         ]);
+    }
+
+    public function downloadCertificate(): void
+    {
+        Middleware::auth();
+        $certificateId = filter_input(INPUT_GET, 'certificate_id', FILTER_VALIDATE_INT);
+        $userId = (int) (current_user()['id'] ?? 0);
+
+        if ($certificateId) {
+            $certificate = Education::certificateById($certificateId);
+            if (!$certificate) {
+                http_response_code(404);
+                View::render('errors/404');
+                return;
+            }
+
+            $canViewManaged = Auth::can('certificates.issue') || Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin']);
+            $isOwner = (int) ($certificate['user_id'] ?? 0) === $userId;
+            if (!$canViewManaged && !$isOwner) {
+                http_response_code(403);
+                View::render('errors/403');
+                return;
+            }
+
+            $course = Education::findCourse((int) $certificate['course_id']);
+            if (!$course) {
+                http_response_code(404);
+                View::render('errors/404');
+                return;
+            }
+
+            $status = ['frequency' => 0, 'minimum_frequency' => (int) ($course['certificate_min_frequency'] ?? 0)];
+            $period = ['issued_at' => $certificate['issued_at'] ?? null];
+        } else {
+            $course = $this->courseFromQuery();
+            if ($this->isEnrollmentPendingForCourse($course, $userId)) {
+                $this->redirectPendingEnrollment((int) $course['id']);
+            }
+
+            if (!Education::userCanAccessCourse((int) $course['id'], $userId, false)) {
+                http_response_code(403);
+                View::render('errors/403');
+                return;
+            }
+
+            $certificate = Education::certificateForCourseUser((int) $course['id'], $userId);
+            if (!$certificate) {
+                Session::flash('error', 'Solicite o certificado quando o curso estiver concluido.');
+                redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+            }
+
+            $status = Education::certificateStatusForCourseUser((int) $course['id'], $userId);
+            $period = Education::certificatePeriodForCourseUser((int) $course['id'], $userId);
+        }
+
+        if (!$course) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : date('d/m/Y');
+        $periodStart = !empty($period['start'] ?? null) ? date('d/m/Y', strtotime((string) $period['start'])) : $issuedAt;
+        $periodEnd = !empty($period['end'] ?? null) ? date('d/m/Y', strtotime((string) $period['end'])) : $issuedAt;
+        $minimumFrequency = max(75, (int) ($status['minimum_frequency'] ?? 0));
+        $isRecognitionCertificate = ($course['certificate_activity_type'] ?? '') === 'reconhecimento';
+        $title = trim((string) ($course['certificate_title'] ?? '')) ?: ($isRecognitionCertificate ? 'Certificado de reconhecimento' : 'Certificado de conclusão');
+        $institution = trim((string) ($course['certificate_institution_name'] ?? '')) ?: trim((string) ($course['certificate_institution_official_name'] ?? '')) ?: 'Cidade Nova Informa - CNI';
+        $verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? ''));
+        $details = [];
+
+        if (!$isRecognitionCertificate) {
+            $details[] = 'Curso: ' . (string) ($course['title'] ?? '');
+            $details[] = 'Periodo: ' . $periodStart . ' ate ' . $periodEnd;
+            $details[] = 'Frequencia registrada: ' . (string) ((int) ($status['frequency'] ?? 0)) . '%';
+            $details[] = 'Criterio: frequencia minima de ' . $minimumFrequency . '% e aproveitamento satisfatorio.';
+        } else {
+            $details[] = 'Reconhecimento: ' . (string) ($course['title'] ?? '');
+        }
+
+        $pdf = SimplePdf::certificate([
+            'title' => $title,
+            'certificate_text' => $this->certificateText($course, $certificate, $status),
+            'student_name' => (string) ($certificate['student_name'] ?? ''),
+            'details' => $details,
+            'institution' => $institution,
+            'issued_at' => 'Emitido em ' . $issuedAt,
+            'verification_code' => (string) ($certificate['verification_code'] ?? ''),
+            'verification_url' => $verificationUrl,
+        ]);
+
+        $downloadName = 'certificado-' . slugify((string) ($course['title'] ?? 'curso')) . '-' . slugify((string) ($certificate['student_name'] ?? 'aluno')) . '.pdf';
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . str_replace(['"', "\r", "\n"], '', $downloadName) . '"');
+        header('Content-Length: ' . strlen($pdf));
+        echo $pdf;
+        return;
     }
 
     public function requestCertificateNameChange(): void
