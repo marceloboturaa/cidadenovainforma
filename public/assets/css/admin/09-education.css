@@ -1313,8 +1313,8 @@
     align-items: end;
     justify-content: space-between;
     gap: 8px 18px;
-    padding-top: 7px;
-    border-top: 1px solid rgba(23, 32, 51, 0.18);
+    padding-top: 0;
+    border-top: 0;
     color: #475569;
     font-size: 0.76rem;
     line-height: 1.35;
@@ -1789,7 +1789,7 @@
         bottom: 20px;
         left: 42px;
         gap: 8px 18px;
-        padding-top: 7px;
+        padding-top: 0;
         font-size: 11px;
         line-height: 1.35;
         max-height: 36mm;

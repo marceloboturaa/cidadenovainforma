@@ -267,6 +267,10 @@ $backLabel = $isRecognitionCertificate
         }));
     };
 
+    const nextPaint = () => new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+
     const buildExportNode = () => {
         const exportNode = document.createElement('div');
         exportNode.className = 'education-certificate-pdf-export';
@@ -287,11 +291,12 @@ $backLabel = $isRecognitionCertificate
 
         Object.assign(exportNode.style, {
             position: 'fixed',
-            left: '-10000px',
+            left: '0',
             top: '0',
             width: '297mm',
             background: '#ffffff',
-            zIndex: '-1',
+            pointerEvents: 'none',
+            zIndex: '2147483647',
         });
 
         return exportNode;
@@ -309,6 +314,10 @@ $backLabel = $isRecognitionCertificate
             exportNode = buildExportNode();
             document.body.appendChild(exportNode);
             await waitForImages(exportNode);
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+            await nextPaint();
 
             await html2pdf().set({
                 filename: downloadButton.dataset.filename || 'certificado.pdf',

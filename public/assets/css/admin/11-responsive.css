@@ -824,7 +824,7 @@
         bottom: clamp(8px, 1.8vw, 20px);
         left: clamp(20px, 3vw, 42px);
         gap: 8px 18px;
-        padding-top: 7px;
+        padding-top: 0;
         font-size: 0.76rem;
         max-height: 36mm;
         overflow: hidden;
