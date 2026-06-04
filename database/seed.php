@@ -841,7 +841,7 @@ $grants = [
     'diretor' => ['documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],
     'editor-jornalistico' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate'],
     'jornalista' => ['news.create'],
-    'colunista' => ['news.create'],
+    'colunista' => [],
     'professor' => ['education.teach', 'education.view', 'education.forum', 'forum.view', 'forum.create'],
     'voluntario' => ['people.manage', 'events.manage', 'event_participants.manage', 'forum.view', 'forum.create'],
     'editor-lgpd' => ['consent.view', 'consent.texts'],
@@ -897,6 +897,16 @@ $stmt = $pdo->prepare(
      INNER JOIN permissions ON permissions.id = role_permissions.permission_id
      WHERE roles.slug IN ("jornalista", "colunista", "voluntario")
        AND permissions.slug IN ("education.manage", "education.teach")'
+);
+$stmt->execute();
+
+$stmt = $pdo->prepare(
+    'DELETE role_permissions
+     FROM role_permissions
+     INNER JOIN roles ON roles.id = role_permissions.role_id
+     INNER JOIN permissions ON permissions.id = role_permissions.permission_id
+     WHERE roles.slug = "colunista"
+       AND permissions.slug IN ("news.create", "news.manage", "news.approve")'
 );
 $stmt->execute();
 

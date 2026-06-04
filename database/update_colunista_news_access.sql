@@ -1,9 +1,6 @@
-INSERT INTO roles (name, slug, level, created_at, updated_at)
-VALUES ('COLUNISTA', 'colunista', 35, NOW(), NOW())
-ON DUPLICATE KEY UPDATE
-    name = VALUES(name),
-    level = VALUES(level),
-    updated_at = NOW();
+-- Remove o acesso editorial padrao do cargo COLUNISTA.
+-- Para liberar um colunista, atribua tambem um cargo com permissao editorial
+-- em Usuarios, ou ajuste as permissoes do cargo em Autorizações.
 
 DELETE role_permissions
 FROM role_permissions

@@ -19,9 +19,10 @@ class NewsController
     {
         Middleware::auth();
         $user = current_user();
+        $canUseNews = Auth::hasRole(['master', 'admin']) || Auth::can('news.create') || Auth::can('news.manage') || Auth::can('news.approve');
         $canManage = Auth::can('news.manage') || Auth::can('news.approve');
 
-        if (!$canManage && !Auth::can('news.create')) {
+        if (!$canUseNews) {
             Middleware::permission('news.manage');
         }
 

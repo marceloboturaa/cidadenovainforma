@@ -10,6 +10,7 @@
 <?php $institutionPageAccess = $user ? \App\Models\InstitutionPage::manageableForUser((int) $user['id'], ($user['role_slug'] ?? '') === 'master') : []; ?>
 <?php $canManageInstitutionLanding = $user ? \App\Core\Auth::hasRole(['master', 'admin']) : false; ?>
 <?php $roleSlugs = $user ? \App\Core\Auth::roleSlugs($user) : []; ?>
+<?php $canUseNews = $user && (\App\Core\Auth::hasRole(['master', 'admin']) || \App\Core\Auth::can('news.create') || \App\Core\Auth::can('news.manage') || \App\Core\Auth::can('news.approve')); ?>
 <?php $canAccessEducation = $user && (\App\Core\Auth::can('education.view') || \App\Core\Auth::can('education.manage') || \App\Core\Auth::can('education.teach')); ?>
 <?php $canManageEducationCourses = $user && (\App\Core\Auth::can('education.manage') || \App\Core\Auth::can('education.teach') || \App\Core\Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor'])); ?>
 <?php $canAccessOwnCertificates = $user && ($canAccessEducation || \App\Core\Auth::can('certificates.issue') || \App\Core\Auth::can('certificates.manage')); ?>
@@ -47,7 +48,7 @@
                 <?php if (\App\Core\Auth::hasRole('master')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/authorizations') ? 'active' : '' ?>" href="<?= e(url('/admin/authorizations')) ?>" title="Autorizações"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Autorizações</span></a>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('news.create') || \App\Core\Auth::can('news.manage') || \App\Core\Auth::can('news.approve')): ?>
+                <?php if ($canUseNews): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/news') ? 'active' : '' ?>" href="<?= e(url('/admin/news')) ?>" title="Notícias"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Notícias</span></a>
                 <?php endif; ?>
                 <?php if (\App\Core\Auth::can('categories.manage')): ?>
