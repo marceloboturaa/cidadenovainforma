@@ -4,7 +4,10 @@ $pastEvents = $pastEvents ?? [];
 $mode = $mode ?? 'all';
 $totalEvents = count($upcomingEvents) + count($pastEvents);
 $featuredEvent = $mode !== 'past' ? ($upcomingEvents[0] ?? null) : null;
+$listedUpcomingEvents = $featuredEvent ? array_slice($upcomingEvents, 1) : $upcomingEvents;
 $formatDate = fn (?string $value): string => $value ? date('d/m/Y H:i', strtotime($value)) : 'Data a definir';
+$formatDay = fn (?string $value): string => $value ? date('d', strtotime($value)) : '--';
+$formatMonth = fn (?string $value): string => $value ? date('m', strtotime($value)) : 'MES';
 $slotsText = function (array $event): string {
     $capacity = (int) ($event['capacity'] ?? 0);
     if ($capacity <= 0) {
@@ -34,7 +37,7 @@ $eventStatus = function (array $event): string {
     <div class="events-hub-copy">
         <span>Agenda da comunidade e região</span>
         <h1><?= $mode === 'past' ? 'Eventos realizados' : ($mode === 'upcoming' ? 'Eventos futuros' : 'Eventos') ?></h1>
-        <p>Programação, atividades, oficinas e encontros do Cidade Nova Informa em uma página organizada para acompanhar o que vem pela frente e o que já aconteceu.</p>
+        <p>Atividades, oficinas e encontros organizados por data, com acesso rápido aos detalhes de cada programação.</p>
         <nav class="events-hub-tabs" aria-label="Seções de eventos">
             <a class="<?= $mode === 'all' ? 'is-active' : '' ?>" href="<?= e(url('/eventos')) ?>">Todos</a>
             <a class="<?= $mode === 'upcoming' ? 'is-active' : '' ?>" href="<?= e(url('/eventos/futuros')) ?>">Futuros</a>
@@ -43,9 +46,18 @@ $eventStatus = function (array $event): string {
     </div>
 
     <div class="events-hub-summary">
-        <strong><?= e((string) $totalEvents) ?></strong>
-        <span>evento(s) nesta página</span>
-        <small><?= e((string) count($upcomingEvents)) ?> futuro(s) · <?= e((string) count($pastEvents)) ?> realizado(s)</small>
+        <article>
+            <strong><?= e((string) $totalEvents) ?></strong>
+            <span>Total</span>
+        </article>
+        <article>
+            <strong><?= e((string) count($upcomingEvents)) ?></strong>
+            <span>Futuros</span>
+        </article>
+        <article>
+            <strong><?= e((string) count($pastEvents)) ?></strong>
+            <span>Realizados</span>
+        </article>
     </div>
 </section>
 
@@ -71,7 +83,7 @@ $eventStatus = function (array $event): string {
                     <div><dt>Vagas</dt><dd><?= e($slotsText($featuredEvent)) ?></dd></div>
                 <?php endif; ?>
             </dl>
-            <a class="public-event-more" href="<?= e(url('/evento/' . $featuredEvent['id'])) ?>">Abrir página do evento</a>
+            <a class="public-event-more" href="<?= e(url('/evento/' . $featuredEvent['id'])) ?>">Ver detalhes do evento</a>
         </div>
     </section>
 <?php endif; ?>
@@ -85,9 +97,9 @@ $eventStatus = function (array $event): string {
             </div>
             <a href="<?= e(url('/eventos/futuros')) ?>">Ver somente futuros</a>
         </div>
-        <?php if ($upcomingEvents): ?>
+        <?php if ($listedUpcomingEvents): ?>
             <div class="events-modern-grid">
-                <?php foreach ($upcomingEvents as $event): ?>
+                <?php foreach ($listedUpcomingEvents as $event): ?>
                     <?php $eventImage = event_public_image($event); ?>
                     <article class="events-modern-card">
                         <a class="events-modern-media<?= $eventImage ? '' : ' is-empty' ?>" href="<?= e(url('/evento/' . $event['id'])) ?>">
@@ -95,6 +107,10 @@ $eventStatus = function (array $event): string {
                                 <img src="<?= e(media_url($eventImage)) ?>" alt="<?= e($event['title']) ?>" loading="lazy" onerror="this.parentElement.classList.add('is-empty'); this.remove()">
                             <?php endif; ?>
                             <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                            <span class="events-date-tile">
+                                <strong><?= e($formatDay($event['starts_at'] ?? null)) ?></strong>
+                                <small><?= e($formatMonth($event['starts_at'] ?? null)) ?></small>
+                            </span>
                         </a>
                         <div class="events-modern-body">
                             <span class="event-status-badge">Próximo evento</span>
@@ -105,11 +121,13 @@ $eventStatus = function (array $event): string {
                                 <?php if (!empty($event['public_show_location']) && !empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
                                 <?php if (!empty($event['public_show_capacity']) && !empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
                             </dl>
-                            <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Detalhes</a>
+                            <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Ver detalhes</a>
                         </div>
                     </article>
                 <?php endforeach; ?>
             </div>
+        <?php elseif ($featuredEvent): ?>
+            <div class="events-soft-note">O próximo evento está destacado acima.</div>
         <?php else: ?>
             <div class="empty-state">Nenhum evento futuro publicado no momento.</div>
         <?php endif; ?>
@@ -144,10 +162,11 @@ $eventStatus = function (array $event): string {
                             <p><?= e(text_excerpt($event['description'] ?? '', 150)) ?></p>
                         </div>
                         <dl>
+                            <div><dt>Quando</dt><dd><?= e($formatDate($event['starts_at'] ?? null)) ?></dd></div>
                             <?php if (!empty($event['public_show_location']) && !empty($event['location'])): ?><div><dt>Local</dt><dd><?= e($event['location']) ?></dd></div><?php endif; ?>
                             <?php if (!empty($event['public_show_capacity']) && !empty($event['capacity'])): ?><div><dt>Vagas</dt><dd><?= e($slotsText($event)) ?></dd></div><?php endif; ?>
                         </dl>
-                        <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Ver registro</a>
+                        <a class="events-card-link" href="<?= e(url('/evento/' . $event['id'])) ?>">Ver detalhes</a>
                     </article>
                 <?php endforeach; ?>
             </div>
