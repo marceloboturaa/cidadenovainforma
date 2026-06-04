@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Admin;
 
+use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Middleware;
 use App\Core\Session;
@@ -20,15 +21,17 @@ class DashboardController
         $isStudent = in_array('estudante', $roleSlugs, true);
         $canViewSensitiveDashboard = Stats::canViewSensitiveInfo($user);
         $canViewEditorialDashboard = $canViewSensitiveDashboard || Stats::canViewEditorialInfo($user);
+        $canManageHomeNotice = Auth::hasRole(['master', 'admin']) || Auth::can('home_notice.manage');
 
         View::render('admin/dashboard', [
             'stats' => Stats::dashboard($user),
             'showsAllLogs' => $canViewSensitiveDashboard,
             'canViewSensitiveDashboard' => $canViewSensitiveDashboard,
             'canViewEditorialDashboard' => $canViewEditorialDashboard,
+            'canManageHomeNotice' => $canManageHomeNotice,
             'isStudent' => $isStudent,
             'studentResponses' => $isStudent ? Education::studentResponsesForDashboard((int) ($user['id'] ?? 0)) : [],
-            'homeNotice' => $canViewEditorialDashboard ? [
+            'homeNotice' => $canManageHomeNotice ? [
                 'enabled' => SiteSetting::get('home_notice_enabled', '0'),
                 'title' => SiteSetting::get('home_notice_title', ''),
                 'text' => SiteSetting::get('home_notice_text', ''),
@@ -41,8 +44,7 @@ class DashboardController
     public function homeNotice(): void
     {
         Middleware::auth();
-        $user = current_user();
-        if (!Stats::canViewSensitiveInfo($user) && !Stats::canViewEditorialInfo($user)) {
+        if (!Auth::hasRole(['master', 'admin']) && !Auth::can('home_notice.manage')) {
             http_response_code(403);
             View::render('errors/403');
             return;

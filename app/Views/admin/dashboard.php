@@ -36,7 +36,7 @@
 </div>
 <?php endif; ?>
 
-<?php if (!($isStudent ?? false) && ($canViewEditorialDashboard ?? false)): ?>
+<?php if (!($isStudent ?? false) && ($canManageHomeNotice ?? false)): ?>
 <section class="panel">
     <div class="section-heading">
         <h2>Aviso no topo do site</h2>
