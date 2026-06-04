@@ -196,22 +196,17 @@ class Education
             ) ENGINE=InnoDB'
         );
 
-        $lessonColumns = $db->query('SHOW COLUMNS FROM education_lessons')->fetchAll(\PDO::FETCH_COLUMN);
-        if (!in_array('module_id', $lessonColumns, true)) {
-            $db->exec('ALTER TABLE education_lessons ADD COLUMN module_id BIGINT UNSIGNED NULL AFTER course_id');
-        }
-        if (!in_array('image_url', $lessonColumns, true)) {
-            $db->exec('ALTER TABLE education_lessons ADD COLUMN image_url VARCHAR(255) NULL AFTER video_url');
-        }
-        if (!in_array('locked', $lessonColumns, true)) {
-            $db->exec('ALTER TABLE education_lessons ADD COLUMN locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
-        }
-        if (!in_array('available_at', $lessonColumns, true)) {
-            $db->exec('ALTER TABLE education_lessons ADD COLUMN available_at DATETIME NULL AFTER locked');
-        }
-        if (!in_array('attendance_mode', $lessonColumns, true)) {
-            $db->exec('ALTER TABLE education_lessons ADD COLUMN attendance_mode VARCHAR(20) NOT NULL DEFAULT "video" AFTER available_at');
-        }
+        self::ensureColumn('education_lessons', 'module_id', 'BIGINT UNSIGNED NULL AFTER course_id');
+        self::ensureColumn('education_lessons', 'description', 'TEXT NULL AFTER title');
+        self::ensureColumn('education_lessons', 'video_url', 'VARCHAR(255) NULL AFTER description');
+        self::ensureColumn('education_lessons', 'image_url', 'VARCHAR(255) NULL AFTER video_url');
+        self::ensureColumn('education_lessons', 'locked', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
+        self::ensureColumn('education_lessons', 'available_at', 'DATETIME NULL AFTER locked');
+        self::ensureColumn('education_lessons', 'attendance_mode', 'VARCHAR(20) NOT NULL DEFAULT "video" AFTER available_at');
+        self::ensureColumn('education_lessons', 'sort_order', 'INT NOT NULL DEFAULT 0 AFTER attendance_mode');
+        self::ensureColumn('education_lessons', 'active', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER sort_order');
+        self::ensureColumn('education_lessons', 'created_at', 'TIMESTAMP NULL AFTER active');
+        self::ensureColumn('education_lessons', 'updated_at', 'TIMESTAMP NULL AFTER created_at');
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_lesson_blocks (

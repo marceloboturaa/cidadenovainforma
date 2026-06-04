@@ -450,10 +450,17 @@ class EducationController
             redirect('/admin/education/course?id=' . $course['id']);
         }
 
-        Education::createLesson(array_merge($_POST, [
-            'course_id' => $course['id'],
-            'image_url' => $this->lessonImageFromRequest(),
-        ]));
+        try {
+            Education::createLesson(array_merge($_POST, [
+                'course_id' => $course['id'],
+                'image_url' => $this->lessonImageFromRequest(),
+            ]));
+        } catch (\Throwable $exception) {
+            error_log('education.lesson_create_failed: ' . $exception->getMessage());
+            Session::flash('error', 'Não foi possível criar a aula agora. Verifique os campos e tente novamente.');
+            redirect('/admin/education/course?id=' . $course['id']);
+        }
+
         Session::flash('success', 'Aula criada.');
         redirect('/admin/education/course?id=' . $course['id']);
     }
@@ -473,10 +480,17 @@ class EducationController
             redirect('/admin/education/course?id=' . $lesson['course_id'] . '&lesson_id=' . $lesson['id']);
         }
 
-        Education::updateLesson((int) $lesson['id'], array_merge($_POST, [
-            'course_id' => $lesson['course_id'],
-            'image_url' => $this->lessonImageFromRequest(),
-        ]));
+        try {
+            Education::updateLesson((int) $lesson['id'], array_merge($_POST, [
+                'course_id' => $lesson['course_id'],
+                'image_url' => $this->lessonImageFromRequest(),
+            ]));
+        } catch (\Throwable $exception) {
+            error_log('education.lesson_update_failed: ' . $exception->getMessage());
+            Session::flash('error', 'Não foi possível salvar a aula agora. Verifique os campos e tente novamente.');
+            redirect('/admin/education/course?id=' . $lesson['course_id'] . '&lesson_id=' . $lesson['id']);
+        }
+
         Session::flash('success', 'Aula atualizada.');
         redirect('/admin/education/course?id=' . $lesson['course_id']);
     }
