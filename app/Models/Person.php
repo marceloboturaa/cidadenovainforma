@@ -11,7 +11,7 @@ class Person
         LibraryEvent::ensureSchema();
     }
 
-    public static function all(string $query = '', ?int $createdBy = null): array
+    public static function all(string $query = '', ?int $createdBy = null, ?int $limit = null, int $offset = 0): array
     {
         self::ensureSchema();
 
@@ -23,37 +23,55 @@ class Person
 
         if ($query !== '') {
             $digits = preg_replace('/\D+/', '', $query);
+            $searchableColumns = [
+                'people.full_name',
+                'people.email',
+                'people.whatsapp',
+                'people.phone',
+                'people.cpf',
+                'people.district',
+                'people.city',
+                'people.guardian_name',
+                'people.guardian_phone',
+            ];
+            $conditions = [];
+            foreach ($searchableColumns as $column) {
+                $conditions[] = $column . ' LIKE ?';
+                $params[] = '%' . $query . '%';
+            }
+
             $sql .= ' AND (
-                people.full_name LIKE :query
-                OR people.email LIKE :query
-                OR people.whatsapp LIKE :query
-                OR people.phone LIKE :query
-                OR people.cpf LIKE :query
-                OR people.district LIKE :query
-                OR people.city LIKE :query
-                OR people.guardian_name LIKE :query
-                OR people.guardian_phone LIKE :query';
+                ' . implode(' OR ', $conditions);
             if ($digits !== '') {
                 $sql .= '
-                OR REPLACE(REPLACE(REPLACE(people.cpf, ".", ""), "-", ""), " ", "") LIKE :digits_query
-                OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(people.whatsapp, "(", ""), ")", ""), "-", ""), " ", ""), ".", "") LIKE :digits_query
-                OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(people.phone, "(", ""), ")", ""), "-", ""), " ", ""), ".", "") LIKE :digits_query';
-                $params['digits_query'] = '%' . $digits . '%';
+                OR REPLACE(REPLACE(REPLACE(people.cpf, ".", ""), "-", ""), " ", "") LIKE ?
+                OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(people.whatsapp, "(", ""), ")", ""), "-", ""), " ", ""), ".", "") LIKE ?
+                OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(people.phone, "(", ""), ")", ""), "-", ""), " ", ""), ".", "") LIKE ?';
+                $params[] = '%' . $digits . '%';
+                $params[] = '%' . $digits . '%';
+                $params[] = '%' . $digits . '%';
             }
             $sql .= ')';
-            $params['query'] = '%' . $query . '%';
         }
 
         if ($createdBy !== null) {
-            $sql .= ' AND people.created_by = :created_by';
-            $params['created_by'] = $createdBy;
+            $sql .= ' AND people.created_by = ?';
+            $params[] = $createdBy;
         }
 
         $sql .= ' ORDER BY people.full_name ASC';
+        if ($limit !== null) {
+            $sql .= ' LIMIT ' . max(1, $limit) . ' OFFSET ' . max(0, $offset);
+        }
         $stmt = Database::connection()->prepare($sql);
         $stmt->execute($params);
 
         return $stmt->fetchAll();
+    }
+
+    public static function count(string $query = '', ?int $createdBy = null): int
+    {
+        return count(self::all($query, $createdBy));
     }
 
     public static function find(int $id): ?array

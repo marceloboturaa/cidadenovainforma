@@ -587,7 +587,7 @@
 
 .registration-directory-tools {
     display: grid;
-    grid-template-columns: minmax(260px, 1fr) minmax(0, auto) auto;
+    grid-template-columns: minmax(260px, 1fr) minmax(0, auto) auto auto;
     gap: 12px;
     align-items: center;
     margin-bottom: 14px;
@@ -705,6 +705,11 @@
     gap: 12px;
 }
 
+.participant-linked-panel {
+    padding: 20px;
+    background: #f8fafc;
+}
+
 .participant-linked-panel > .section-heading h2 {
     margin-bottom: 0;
 }
@@ -731,6 +736,26 @@
     grid-template-columns: 34px minmax(0, 1fr);
     gap: 12px;
     align-items: start;
+    padding: 16px;
+    border-left: 4px solid #94a3b8;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.04);
+}
+
+.admin-list-card.participant-list-card[data-linked-participant-status="inscrito"] {
+    border-left-color: #16a34a;
+}
+
+.admin-list-card.participant-list-card[data-linked-participant-status="presente"] {
+    border-left-color: #2563eb;
+}
+
+.admin-list-card.participant-list-card[data-linked-participant-status="pendente"] {
+    border-left-color: #d97706;
+}
+
+.admin-list-card.participant-list-card[data-linked-participant-status="ausente"],
+.admin-list-card.participant-list-card[data-linked-participant-status="cancelado"] {
+    border-left-color: #dc2626;
 }
 
 .participant-select-box {
@@ -759,8 +784,8 @@
 
 .participant-management-actions {
     grid-column: 2;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     gap: 8px;
     min-width: 0;
     padding-top: 10px;
@@ -769,8 +794,7 @@
 
 .participant-management-actions .participant-add-form {
     display: grid;
-    grid-template-columns: 130px minmax(180px, 1fr) auto;
-    flex: 1 1 520px;
+    grid-template-columns: 130px minmax(180px, 1.4fr) 170px minmax(160px, 1fr) auto;
     gap: 8px;
     min-width: 0;
 }
@@ -788,6 +812,81 @@
     border-color: #111827;
     background: #111827;
     color: #ffffff;
+}
+
+.participant-export-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 7px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.participant-export-form label {
+    display: grid;
+    gap: 3px;
+    min-width: 210px;
+}
+
+.participant-export-form label > span {
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.participant-export-form .btn {
+    min-height: 34px;
+}
+
+.people-list-toolbar,
+.people-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.people-list-toolbar .internal-search-form {
+    flex: 1 1 620px;
+    margin: 0;
+}
+
+.people-page-size {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 11px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.people-pagination {
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+}
+
+.people-pagination > span,
+.people-pagination strong {
+    color: var(--muted);
+    font-size: 0.84rem;
+}
+
+.people-pagination > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 @media (max-width: 900px) {
@@ -826,11 +925,11 @@
 
     .participant-management-actions {
         grid-column: 1 / -1;
+        grid-template-columns: 1fr;
     }
 
     .participant-management-actions .participant-add-form {
         grid-template-columns: 1fr;
-        flex-basis: 100%;
     }
 
     .participant-management-actions > a,
@@ -838,6 +937,25 @@
     .participant-management-actions > a.btn,
     .participant-management-actions > form.inline-form button {
         width: 100%;
+    }
+
+    .participant-export-form,
+    .participant-export-form label,
+    .participant-export-form .btn,
+    .people-list-toolbar,
+    .people-pagination,
+    .people-pagination > div {
+        width: 100%;
+    }
+
+    .people-list-toolbar,
+    .people-pagination {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .people-pagination > div {
+        justify-content: space-between;
     }
 }
 

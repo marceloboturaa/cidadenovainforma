@@ -17,12 +17,22 @@ class PersonController
     {
         Middleware::permission('people.manage');
         $query = trim((string) ($_GET['q'] ?? ''));
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $perPage = 20;
+        $scopeUserId = $this->volunteerScopeUserId();
+        $totalPeople = Person::count($query, $scopeUserId);
+        $totalPages = max(1, (int) ceil($totalPeople / $perPage));
+        $page = min($page, $totalPages);
 
         View::render('admin/people/index', [
-            'people' => Person::all($query, $this->volunteerScopeUserId()),
+            'people' => Person::all($query, $scopeUserId, $perPage, ($page - 1) * $perPage),
             'editing' => $this->editing(),
             'query' => $query,
             'canDeactivate' => $this->currentUserIsMaster(),
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalPeople' => $totalPeople,
+            'totalPages' => $totalPages,
         ]);
     }
 

@@ -187,12 +187,15 @@ $formatDate = function (?string $date): string {
 <section class="panel">
     <div class="section-heading">
         <h2><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Cadastros internos</h2>
-        <span><?= e((string) count($people)) ?> pessoa(s)</span>
+        <span><?= e((string) ($totalPeople ?? count($people))) ?> pessoa(s)</span>
     </div>
-    <form class="internal-search-form" method="get" action="<?= e(url('/admin/people')) ?>">
-        <input class="form-control" name="q" value="<?= e($query ?? '') ?>" placeholder="Buscar por nome, CPF, e-mail, telefone ou WhatsApp">
-        <button class="btn btn-outline-secondary icon-btn"><i class="bi bi-search" aria-hidden="true"></i>Buscar</button>
-    </form>
+    <div class="people-list-toolbar">
+        <form class="internal-search-form" method="get" action="<?= e(url('/admin/people')) ?>">
+            <input class="form-control" name="q" value="<?= e($query ?? '') ?>" placeholder="Buscar por nome, CPF, e-mail, telefone ou WhatsApp">
+            <button class="btn btn-outline-secondary icon-btn"><i class="bi bi-search" aria-hidden="true"></i>Buscar</button>
+        </form>
+        <span class="people-page-size"><i class="bi bi-list-ol" aria-hidden="true"></i>20 cadastros por página</span>
+    </div>
     <div class="admin-card-list">
         <?php foreach ($people as $person): ?>
             <article class="admin-list-card internal-list-card">
@@ -228,4 +231,29 @@ $formatDate = function (?string $date): string {
             <div class="empty-state">Nenhuma pessoa cadastrada.</div>
         <?php endif; ?>
     </div>
+    <?php if (($totalPages ?? 1) > 1): ?>
+        <?php
+        $pageUrl = static function (int $targetPage) use ($query): string {
+            $params = ['page' => $targetPage];
+            if ($query !== '') {
+                $params['q'] = $query;
+            }
+            return url('/admin/people?' . http_build_query($params));
+        };
+        $firstVisible = (($page - 1) * $perPage) + 1;
+        $lastVisible = min($totalPeople, $page * $perPage);
+        ?>
+        <nav class="people-pagination" aria-label="Paginação de cadastros">
+            <span>Exibindo <?= e((string) $firstVisible) ?>–<?= e((string) $lastVisible) ?> de <?= e((string) $totalPeople) ?></span>
+            <div>
+                <?php if ($page > 1): ?>
+                    <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e($pageUrl($page - 1)) ?>"><i class="bi bi-chevron-left" aria-hidden="true"></i>Anterior</a>
+                <?php endif; ?>
+                <strong>Página <?= e((string) $page) ?> de <?= e((string) $totalPages) ?></strong>
+                <?php if ($page < $totalPages): ?>
+                    <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e($pageUrl($page + 1)) ?>">Próxima<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+                <?php endif; ?>
+            </div>
+        </nav>
+    <?php endif; ?>
 </section>

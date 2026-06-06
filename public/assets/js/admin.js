@@ -616,46 +616,51 @@
         const empty = list.querySelector('[data-linked-participant-empty]');
         const count = document.querySelector('[data-linked-participant-count]');
         const filterButtons = Array.from(document.querySelectorAll('[data-linked-participant-filter]'));
-        const exportLinks = Array.from(document.querySelectorAll('[data-participant-export-link]'));
+        const exportStatus = document.querySelector('[data-participant-export-status]');
+        const limitButton = document.querySelector('[data-linked-participant-limit]');
         let activeFilter = 'all';
+        let showAll = false;
 
         const applyFilter = () => {
             const term = normalizeSearch(searchInput.value);
-            let visible = 0;
+            let matched = 0;
 
             cards.forEach((card) => {
                 const haystack = normalizeSearch(card.dataset.linkedParticipantSearch || card.textContent || '');
                 const matchesText = term === '' || haystack.includes(term);
                 const matchesStatus = activeFilter === 'all' || card.dataset.linkedParticipantStatus === activeFilter;
-                const matches = matchesText && matchesStatus;
-                card.classList.toggle('is-hidden', !matches);
+                const matchesFilter = matchesText && matchesStatus;
+                const matchesLimit = showAll || matched < 20;
+                const matches = matchesFilter && matchesLimit;
+                if (matchesFilter) {
+                    matched += 1;
+                }
                 card.querySelectorAll('[data-participant-select]').forEach((input) => {
                     input.disabled = !matches;
                     if (!matches) {
                         input.checked = false;
                     }
                 });
-                if (matches) {
-                    visible += 1;
-                }
+                card.classList.toggle('is-hidden', !matches);
             });
 
             if (count) {
-                count.textContent = String(visible);
+                count.textContent = String(matched);
             }
             if (empty) {
-                empty.hidden = visible > 0 || cards.length === 0;
+                empty.hidden = matched > 0 || cards.length === 0;
             }
 
-            exportLinks.forEach((link) => {
-                const url = new URL(link.href, window.location.href);
-                if (activeFilter === 'all') {
-                    url.searchParams.delete('status');
-                } else {
-                    url.searchParams.set('status', activeFilter);
-                }
-                link.href = url.toString();
-            });
+            if (exportStatus) {
+                exportStatus.value = activeFilter === 'all' ? '' : activeFilter;
+            }
+            if (limitButton) {
+                limitButton.hidden = matched <= 20;
+                limitButton.setAttribute('aria-pressed', showAll ? 'true' : 'false');
+                limitButton.innerHTML = showAll
+                    ? '<i class="bi bi-list-ol" aria-hidden="true"></i>Mostrar 20'
+                    : '<i class="bi bi-list" aria-hidden="true"></i>Mostrar todos';
+            }
         };
 
         searchInput.addEventListener('input', applyFilter);
@@ -666,6 +671,12 @@
                 applyFilter();
             });
         });
+        if (limitButton) {
+            limitButton.addEventListener('click', () => {
+                showAll = !showAll;
+                applyFilter();
+            });
+        }
         applyFilter();
     }
 

@@ -123,6 +123,59 @@ class SimplePdf
         return self::build($pages ?: [[]]);
     }
 
+    public static function attendanceReport(array $event, array $participants): string
+    {
+        $pages = [];
+        $current = [];
+        $cursor = self::TOP;
+        $eventTitle = (string) ($event['title'] ?? 'Evento');
+
+        $add = function (string $text, int $size = 9, int $gap = 14) use (&$pages, &$current, &$cursor): void {
+            if ($cursor < 70) {
+                $pages[] = $current;
+                $current = [];
+                $cursor = self::TOP;
+            }
+            $current[] = ['text' => $text, 'size' => $size, 'y' => $cursor];
+            $cursor -= $gap;
+        };
+
+        $rule = function () use (&$current, &$cursor): void {
+            $current[] = ['type' => 'rule', 'y' => $cursor + 5];
+            $cursor -= 8;
+        };
+
+        $add('Lista de Chamada e Presença', 18, 22);
+        $add('Evento: ' . $eventTitle, 12, 18);
+        if (!empty($event['starts_at'])) {
+            $add('Data: ' . date('d/m/Y H:i', strtotime((string) $event['starts_at'])), 9, 13);
+        }
+        $add('Local: ' . (($event['location'] ?? '') ?: '-'), 9, 13);
+        $add('Total na lista: ' . count($participants), 9, 18);
+        $rule();
+
+        if (!$participants) {
+            $add('Nenhum participante encontrado.', 10, 16);
+        }
+
+        foreach ($participants as $index => $participant) {
+            $name = (string) ($participant['full_name'] ?? '');
+            $status = ucfirst((string) ($participant['status'] ?? 'inscrito'));
+            $contact = ($participant['whatsapp'] ?? '') ?: (($participant['phone'] ?? '') ?: '-');
+
+            $add(($index + 1) . '. ' . $name . '  [' . $status . ']', 10, 16);
+            $add('Contato: ' . $contact . '    Presença: [   ] Sim  [   ] Não    Horário: ________', 8, 14);
+            $add('Assinatura: ______________________________________________________________', 8, 17);
+            $rule();
+        }
+
+        if ($current) {
+            $pages[] = $current;
+        }
+
+        return self::build($pages ?: [[]]);
+    }
+
     private static function wrap(string $text, int $width): array
     {
         $text = trim(preg_replace('/\s+/', ' ', $text) ?? '');

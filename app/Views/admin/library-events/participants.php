@@ -4,8 +4,24 @@
         <h1><?= e($event['title']) ?></h1>
     </div>
     <div class="export-actions">
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/participants/export?id=' . $event['id'] . '&format=csv')) ?>" data-participant-export-link><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</a>
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/participants/export?id=' . $event['id'] . '&format=pdf')) ?>" data-participant-export-link><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</a>
+        <form class="participant-export-form" method="get" action="<?= e(url('/admin/library-events/participants/export')) ?>">
+            <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
+            <label>
+                <span>Exportar</span>
+                <select class="form-select form-select-sm" name="status" data-participant-export-status>
+                    <option value="">Todos os cadastros</option>
+                    <option value="pendente">Somente pendentes</option>
+                    <option value="inscrito">Somente inscritos</option>
+                    <option value="presente">Somente presentes</option>
+                    <option value="ausente">Somente ausentes</option>
+                    <option value="cancelado">Somente cancelados</option>
+                </select>
+            </label>
+            <button class="btn btn-outline-secondary icon-btn" name="format" value="csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</button>
+            <button class="btn btn-outline-secondary icon-btn" name="format" value="pdf"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</button>
+            <button class="btn btn-outline-primary icon-btn" name="report" value="attendance"><i class="bi bi-clipboard2-check" aria-hidden="true"></i>Lista de chamada PDF</button>
+            <button class="btn btn-outline-primary icon-btn" name="report" value="attendance_csv"><i class="bi bi-table" aria-hidden="true"></i>Chamada CSV</button>
+        </form>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/edit?id=' . $event['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
@@ -372,6 +388,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
             <button type="button" data-linked-participant-filter="ausente">Ausentes</button>
             <button type="button" data-linked-participant-filter="cancelado">Cancelados</button>
         </div>
+        <button class="btn btn-sm btn-outline-secondary icon-btn" type="button" data-linked-participant-limit aria-pressed="false"><i class="bi bi-list-ol" aria-hidden="true"></i>Mostrar todos</button>
         <span><strong data-linked-participant-count><?= e((string) count($participants)) ?></strong> resultado(s)</span>
     </div>
     <div class="admin-card-list" data-linked-participants>
