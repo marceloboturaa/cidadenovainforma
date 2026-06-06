@@ -176,6 +176,21 @@ class SimplePdf
         return self::build($pages ?: [[]]);
     }
 
+    public static function participantNamesReport(array $event, array $participants): string
+    {
+        $eventTitle = (string) ($event['title'] ?? 'Cursinho');
+        $lines = [];
+
+        foreach ($participants as $index => $participant) {
+            $lines[] = ($index + 1) . '. ' . (string) ($participant['full_name'] ?? '');
+        }
+
+        return self::fromLines(
+            'Inscritos - ' . $eventTitle . ' | Total: ' . count($participants),
+            $lines ?: ['Nenhum inscrito encontrado.']
+        );
+    }
+
     private static function wrap(string $text, int $width): array
     {
         $text = trim(preg_replace('/\s+/', ' ', $text) ?? '');

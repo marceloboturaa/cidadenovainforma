@@ -242,6 +242,33 @@ class LibraryEventController
         $slug = preg_replace('/[^a-z0-9]+/i', '-', strtolower((string) $event['title'])) ?: 'evento';
         $slug = trim($slug, '-');
 
+        if (in_array($report, ['names', 'names_csv'], true)) {
+            $participants = LibraryEvent::participants((int) $event['id'], 'inscrito');
+
+            if ($report === 'names') {
+                $pdf = SimplePdf::participantNamesReport($event, $participants);
+                header('Content-Type: application/pdf');
+                header('Content-Disposition: attachment; filename="' . $slug . '-nomes-dos-inscritos.pdf"');
+                header('Content-Length: ' . strlen($pdf));
+                echo $pdf;
+                exit;
+            }
+
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $slug . '-nomes-dos-inscritos.csv"');
+            echo "\xEF\xBB\xBF";
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Nº', 'Nome'], ';');
+            foreach ($participants as $index => $participant) {
+                fputcsv($output, [
+                    $index + 1,
+                    $participant['full_name'] ?? '',
+                ], ';');
+            }
+            fclose($output);
+            exit;
+        }
+
         if (in_array($report, ['attendance', 'attendance_csv'], true)) {
             if ($status === null) {
                 $participants = array_values(array_filter(

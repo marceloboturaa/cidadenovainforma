@@ -21,6 +21,8 @@
             <button class="btn btn-outline-secondary icon-btn" name="format" value="pdf"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</button>
             <button class="btn btn-outline-primary icon-btn" name="report" value="attendance"><i class="bi bi-clipboard2-check" aria-hidden="true"></i>Lista de chamada PDF</button>
             <button class="btn btn-outline-primary icon-btn" name="report" value="attendance_csv"><i class="bi bi-table" aria-hidden="true"></i>Chamada CSV</button>
+            <button class="btn btn-outline-primary icon-btn" name="report" value="names"><i class="bi bi-person-lines-fill" aria-hidden="true"></i>Nomes dos inscritos PDF</button>
+            <button class="btn btn-outline-primary icon-btn" name="report" value="names_csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>Nomes CSV</button>
         </form>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/edit?id=' . $event['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
