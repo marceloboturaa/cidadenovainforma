@@ -179,6 +179,8 @@ $pdo->exec(
         person_id BIGINT UNSIGNED NOT NULL,
         status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente',
         notes TEXT NULL,
+        heard_about VARCHAR(80) NULL,
+        event_expectations TEXT NULL,
         created_by BIGINT UNSIGNED NULL,
         created_at TIMESTAMP NULL,
         PRIMARY KEY (event_id, person_id),
@@ -899,6 +901,14 @@ $stmt = $pdo->prepare(
      WHERE roles.slug IN ("jornalista", "colunista", "voluntario")
        AND permissions.slug IN ("education.manage", "education.teach")'
 );
+
+$participantColumns = $pdo->query('SHOW COLUMNS FROM library_event_participants')->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array('heard_about', $participantColumns, true)) {
+    $pdo->exec('ALTER TABLE library_event_participants ADD COLUMN heard_about VARCHAR(80) NULL AFTER notes');
+}
+if (!in_array('event_expectations', $participantColumns, true)) {
+    $pdo->exec('ALTER TABLE library_event_participants ADD COLUMN event_expectations TEXT NULL AFTER heard_about');
+}
 $stmt->execute();
 
 $stmt = $pdo->prepare(

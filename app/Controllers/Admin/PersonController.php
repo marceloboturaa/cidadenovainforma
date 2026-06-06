@@ -115,7 +115,7 @@ class PersonController
         header('Content-Disposition: attachment; filename="lista-pessoas.csv"');
         echo "\xEF\xBB\xBF";
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['Nome', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Uso de imagem autorizado', 'Observacoes'], ';');
+        fputcsv($output, ['Nome', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereço', 'Número', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsável', 'Parentesco', 'CPF responsável', 'Telefone responsável', 'E-mail responsável', 'Contato autorizado', 'Uso de imagem autorizado', 'Observações'], ';');
         foreach ($people as $person) {
             fputcsv($output, [
                 $person['full_name'] ?? '',

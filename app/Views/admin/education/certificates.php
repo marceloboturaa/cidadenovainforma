@@ -28,7 +28,7 @@
                 ?>
                 <article class="education-certificate-card">
                     <div class="education-certificate-icon">
-                        <i class="bi bi-award" aria-hidden="true"></i>
+                        <i class="bi <?= $isRecognitionCertificate ? 'bi-stars' : 'bi-award' ?>" aria-hidden="true"></i>
                     </div>
                     <div>
                         <span><?= e($certificateTitle) ?></span>

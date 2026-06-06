@@ -228,7 +228,9 @@ class PublicController
             $personId,
             'pendente',
             'Inscrição enviada pela página pública. Aguardando confirmação do master/admin.',
-            null
+            null,
+            $_POST['heard_about'] ?? null,
+            $_POST['event_expectations'] ?? null
         );
 
         $loginRequested = $this->createPendingLoginIfRequested($person ?: ['full_name' => $name, 'email' => $_POST['email'] ?? ''], $event, $personId);

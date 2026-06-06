@@ -22,7 +22,25 @@ class Person
         $params = [];
 
         if ($query !== '') {
-            $sql .= ' AND (people.full_name LIKE :query OR people.email LIKE :query OR people.whatsapp LIKE :query OR people.phone LIKE :query OR people.cpf LIKE :query)';
+            $digits = preg_replace('/\D+/', '', $query);
+            $sql .= ' AND (
+                people.full_name LIKE :query
+                OR people.email LIKE :query
+                OR people.whatsapp LIKE :query
+                OR people.phone LIKE :query
+                OR people.cpf LIKE :query
+                OR people.district LIKE :query
+                OR people.city LIKE :query
+                OR people.guardian_name LIKE :query
+                OR people.guardian_phone LIKE :query';
+            if ($digits !== '') {
+                $sql .= '
+                OR REPLACE(REPLACE(REPLACE(people.cpf, ".", ""), "-", ""), " ", "") LIKE :digits_query
+                OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(people.whatsapp, "(", ""), ")", ""), "-", ""), " ", ""), ".", "") LIKE :digits_query
+                OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(people.phone, "(", ""), ")", ""), "-", ""), " ", ""), ".", "") LIKE :digits_query';
+                $params['digits_query'] = '%' . $digits . '%';
+            }
+            $sql .= ')';
             $params['query'] = '%' . $query . '%';
         }
 

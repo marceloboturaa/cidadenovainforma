@@ -66,6 +66,8 @@ $router->post('/admin/media/tinymce', [MediaController::class, 'tinyMceUpload'])
 $router->post('/admin/latex/compile', [LatexController::class, 'compile']);
 $router->get('/admin/password', [UserController::class, 'password']);
 $router->post('/admin/password', [UserController::class, 'updatePassword']);
+$router->get('/admin/profile', [UserController::class, 'profile']);
+$router->post('/admin/profile', [UserController::class, 'updateProfile']);
 $router->get('/admin/users', [UserController::class, 'index']);
 $router->post('/admin/users', [UserController::class, 'store']);
 $router->post('/admin/users/update', [UserController::class, 'update']);
@@ -78,6 +80,7 @@ $router->post('/admin/users/responsibilities', [UserController::class, 'responsi
 $router->post('/admin/users/document-uploads', [UserController::class, 'documentUploads']);
 $router->post('/admin/users/role', [UserController::class, 'updateRole']);
 $router->post('/admin/users/reset-password', [UserController::class, 'resetPassword']);
+$router->post('/admin/users/request-profile-update', [UserController::class, 'requestProfileUpdate']);
 $router->get('/admin/authorizations', [AuthorizationController::class, 'index']);
 $router->post('/admin/authorizations', [AuthorizationController::class, 'update']);
 

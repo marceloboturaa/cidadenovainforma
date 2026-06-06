@@ -47,6 +47,15 @@ class User
         if (!in_array('registration_course_id', $columns, true)) {
             $db->exec('ALTER TABLE users ADD COLUMN registration_course_id BIGINT UNSIGNED NULL AFTER registration_person_id');
         }
+        if (!in_array('profile_update_required', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN profile_update_required TINYINT(1) NOT NULL DEFAULT 0 AFTER registration_course_id');
+        }
+        if (!in_array('profile_update_requested_by', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN profile_update_requested_by BIGINT UNSIGNED NULL AFTER profile_update_required');
+        }
+        if (!in_array('profile_update_requested_at', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN profile_update_requested_at DATETIME NULL AFTER profile_update_requested_by');
+        }
     }
 
     public static function findByEmail(string $email): ?array
@@ -345,6 +354,45 @@ class User
             'id' => $userId,
             'name' => trim($name),
             'email' => strtolower(trim($email)),
+        ]);
+    }
+
+    public static function updateOwnProfile(int $userId, string $name, string $email): void
+    {
+        self::ensureRoleSchema();
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE users
+             SET name = :name,
+                 email = :email,
+                 profile_update_required = 0,
+                 profile_update_requested_by = NULL,
+                 profile_update_requested_at = NULL,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'id' => $userId,
+            'name' => trim($name),
+            'email' => strtolower(trim($email)),
+        ]);
+    }
+
+    public static function requestProfileUpdate(int $userId, int $requestedBy): void
+    {
+        self::ensureRoleSchema();
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE users
+             SET profile_update_required = 1,
+                 profile_update_requested_by = :requested_by,
+                 profile_update_requested_at = NOW(),
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'id' => $userId,
+            'requested_by' => $requestedBy,
         ]);
     }
 

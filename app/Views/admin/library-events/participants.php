@@ -4,8 +4,8 @@
         <h1><?= e($event['title']) ?></h1>
     </div>
     <div class="export-actions">
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/participants/export?id=' . $event['id'] . '&format=csv')) ?>"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</a>
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/participants/export?id=' . $event['id'] . '&format=pdf')) ?>"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</a>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/participants/export?id=' . $event['id'] . '&format=csv')) ?>" data-participant-export-link><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</a>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/participants/export?id=' . $event['id'] . '&format=pdf')) ?>" data-participant-export-link><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</a>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/edit?id=' . $event['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
@@ -221,6 +221,19 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                 </label>
                 <label class="form-label">Observações da inscrição</label>
                 <textarea class="form-control" name="participant_notes" rows="4"></textarea>
+                <label class="form-label">Como soube do evento?</label>
+                <select class="form-select" name="heard_about">
+                    <option value="">Não informado</option>
+                    <option value="Internet">Internet</option>
+                    <option value="Redes sociais">Redes sociais</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Indicação de amigo/familiar">Indicação de amigo/familiar</option>
+                    <option value="Escola ou instituição">Escola ou instituição</option>
+                    <option value="Comunidade/igreja">Comunidade/igreja</option>
+                    <option value="Outro">Outro</option>
+                </select>
+                <label class="form-label">O que espera do evento?</label>
+                <textarea class="form-control" name="event_expectations" rows="3"></textarea>
             </section>
             <div class="person-form-actions">
                 <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Cadastrar inscrição</button>
@@ -372,6 +385,8 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                 $participant['district'] ?? '',
                 $participant['status'] ?? '',
                 $participant['notes'] ?? '',
+                $participant['heard_about'] ?? '',
+                $participant['event_expectations'] ?? '',
             ]);
             ?>
             <article class="admin-list-card internal-list-card participant-list-card" data-linked-participant-card data-linked-participant-status="<?= e((string) $participant['status']) ?>" data-linked-participant-search="<?= e($participantSearchText) ?>">
@@ -389,7 +404,11 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                         <div><dt>E-mail</dt><dd><?= e($participant['email'] ?? '-') ?></dd></div>
                         <div><dt>Bairro</dt><dd><?= e($participant['district'] ?? '-') ?></dd></div>
                         <div><dt>Imagem</dt><dd><?= !empty($participant['image_authorized']) ? 'Autorizada' : 'Não autorizada' ?></dd></div>
+                        <div><dt>Soube por</dt><dd><?= e($participant['heard_about'] ?? '-') ?></dd></div>
                     </dl>
+                    <?php if (!empty($participant['event_expectations'])): ?>
+                        <p class="admin-list-description"><strong>Espera do evento:</strong> <?= e(text_excerpt($participant['event_expectations'], 180)) ?></p>
+                    <?php endif; ?>
                 </div>
                 <div class="participant-management-actions">
                     <form class="participant-add-form" method="post" action="<?= e(url('/admin/library-events/participants?id=' . $event['id'])) ?>">
@@ -401,6 +420,12 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                             <?php endforeach; ?>
                         </select>
                         <input class="form-control form-control-sm" name="notes" value="<?= e($participant['notes'] ?? '') ?>" placeholder="Observação">
+                        <select class="form-select form-select-sm" name="heard_about" aria-label="Como soube do evento">
+                            <?php foreach (['' => 'Não informado', 'Internet' => 'Internet', 'Redes sociais' => 'Redes sociais', 'WhatsApp' => 'WhatsApp', 'Indicação de amigo/familiar' => 'Indicação', 'Escola ou instituição' => 'Escola/instituição', 'Comunidade/igreja' => 'Comunidade/igreja', 'Outro' => 'Outro'] as $value => $label): ?>
+                                <option value="<?= e($value) ?>" <?= selected($value, (string) ($participant['heard_about'] ?? '')) ?>><?= e($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input class="form-control form-control-sm" name="event_expectations" value="<?= e($participant['event_expectations'] ?? '') ?>" placeholder="Expectativa">
                         <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-check2" aria-hidden="true"></i>Salvar</button>
                     </form>
                     <?php if ($link = $whatsappLink($participant['whatsapp'] ?? $participant['phone'] ?? null, (string) $participant['full_name'], (string) $event['title'])): ?>

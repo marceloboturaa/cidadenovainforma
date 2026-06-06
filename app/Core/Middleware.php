@@ -10,6 +10,12 @@ class Middleware
             redirect('/login');
         }
 
+        $user = Auth::user();
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+        if (!empty($user['profile_update_required']) && !in_array($path, ['/admin/profile', '/logout'], true)) {
+            redirect('/admin/profile');
+        }
+
         self::adminHeaders();
     }
 

@@ -46,7 +46,7 @@ class SimplePdf
 
     public static function registrationReport(array $event, array $participants): string
     {
-        $title = 'Lista de Inscricoes';
+        $title = 'Lista de Inscrições';
         $eventTitle = (string) ($event['title'] ?? 'Evento');
         $pages = [];
         $current = [];
@@ -88,7 +88,8 @@ class SimplePdf
             $contact = ($participant['whatsapp'] ?? '') ?: (($participant['phone'] ?? '') ?: '-');
             $email = ($participant['email'] ?? '') ?: '-';
             $city = trim((string) (($participant['district'] ?? '') . ' / ' . ($participant['city'] ?? '')), ' /') ?: '-';
-            $image = !empty($participant['image_authorized']) ? 'Sim' : 'Nao';
+            $image = !empty($participant['image_authorized']) ? 'Sim' : 'Não';
+            $heardAbout = ($participant['heard_about'] ?? '') ?: '-';
             $guardian = !empty($participant['is_minor'])
                 ? trim((string) (($participant['guardian_name'] ?? '-') . ' | ' . ($participant['guardian_phone'] ?? '-')), ' |')
                 : '-';
@@ -97,6 +98,12 @@ class SimplePdf
             $add('CPF: ' . (($participant['cpf'] ?? '') ?: '-') . '    Nascimento: ' . (($participant['birth_date'] ?? '') ?: '-') . '    Contato: ' . $contact, 8, 12);
             $add('E-mail: ' . $email, 8, 12);
             $add('Bairro/Cidade: ' . $city . '    Uso de imagem: ' . $image, 8, 12);
+            $add('Como soube do evento: ' . $heardAbout, 8, 12);
+            if (!empty($participant['event_expectations'])) {
+                foreach (self::wrap('O que espera do evento: ' . (string) $participant['event_expectations'], 96) as $line) {
+                    $add($line, 8, 11);
+                }
+            }
             if (!empty($participant['is_minor'])) {
                 $add('Responsável: ' . $guardian . '    Parentesco: ' . (($participant['guardian_relation'] ?? '') ?: '-'), 8, 12);
             }

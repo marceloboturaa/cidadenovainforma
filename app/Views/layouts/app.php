@@ -80,7 +80,7 @@
                 <?php endif; ?>
                 <?php if ($canAccessCertificateCenter): ?>
                     <a class="<?= $currentPath === '/admin/education/certificate-center' ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificate-center')) ?>" title="Central de certificados"><i class="bi bi-patch-check" aria-hidden="true"></i><span>Certificados</span></a>
-                    <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-award" aria-hidden="true"></i><span>Reconhecimentos</span></a>
+                    <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-stars" aria-hidden="true"></i><span>Reconhecimentos</span></a>
                 <?php endif; ?>
                 <?php if ($canManageEducationCourses): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Cursos"><i class="bi bi-journal-richtext" aria-hidden="true"></i><span>Cursos</span></a>
@@ -95,6 +95,7 @@
                 <?php if (\App\Core\Auth::can('consent.view')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/consent') ? 'active' : '' ?>" href="<?= e(url('/admin/consent')) ?>" title="LGPD Cookies"><i class="bi bi-shield-check" aria-hidden="true"></i><span>LGPD Cookies</span></a>
                 <?php endif; ?>
+                <a class="<?= $currentPath === '/admin/profile' ? 'active' : '' ?>" href="<?= e(url('/admin/profile')) ?>" title="Meu cadastro"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Meu cadastro</span></a>
                 <a class="<?= $currentPath === '/admin/password' ? 'active' : '' ?>" href="<?= e(url('/admin/password')) ?>" title="Minha senha"><i class="bi bi-key" aria-hidden="true"></i><span>Minha senha</span></a>
             </nav>
         </aside>

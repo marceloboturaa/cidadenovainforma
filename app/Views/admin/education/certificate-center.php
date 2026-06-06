@@ -20,7 +20,7 @@ $statusLabels = [
     <div class="heading-actions">
         <?php if (!empty($canIssueCertificates)): ?>
             <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-journal-plus" aria-hidden="true"></i>Certificado de curso</a>
-            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/recognitions')) ?>"><i class="bi bi-award" aria-hidden="true"></i>Reconhecimentos</a>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/recognitions')) ?>"><i class="bi bi-stars" aria-hidden="true"></i>Reconhecimentos</a>
         <?php endif; ?>
         <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/certificados')) ?>" target="_blank" rel="noopener"><i class="bi bi-qr-code-scan" aria-hidden="true"></i>Verificador público</a>
     </div>

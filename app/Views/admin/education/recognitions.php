@@ -199,7 +199,7 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                         </select>
                     </div>
                     <div class="form-action-cell">
-                        <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i><?= $isEditingRecognition ? 'Salvar reconhecimento' : 'Emitir reconhecimento' ?></button>
+                        <button class="btn btn-primary icon-btn"><i class="bi bi-stars" aria-hidden="true"></i><?= $isEditingRecognition ? 'Salvar reconhecimento' : 'Emitir reconhecimento' ?></button>
                         <?php if ($isEditingRecognition): ?>
                             <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/recognitions')) ?>"><i class="bi bi-x-lg" aria-hidden="true"></i>Cancelar</a>
                         <?php endif; ?>

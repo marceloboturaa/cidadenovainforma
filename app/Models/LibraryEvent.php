@@ -163,6 +163,13 @@ class LibraryEvent
         if ($participantStatus && !str_contains((string) ($participantStatus['Type'] ?? ''), "'pendente'")) {
             $db->exec("ALTER TABLE library_event_participants MODIFY status ENUM('pendente','inscrito','presente','ausente','cancelado') NOT NULL DEFAULT 'pendente'");
         }
+        $participantColumns = $db->query('SHOW COLUMNS FROM library_event_participants')->fetchAll(\PDO::FETCH_COLUMN);
+        if (!in_array('heard_about', $participantColumns, true)) {
+            $db->exec('ALTER TABLE library_event_participants ADD COLUMN heard_about VARCHAR(80) NULL AFTER notes');
+        }
+        if (!in_array('event_expectations', $participantColumns, true)) {
+            $db->exec('ALTER TABLE library_event_participants ADD COLUMN event_expectations TEXT NULL AFTER heard_about');
+        }
 
         $done = true;
     }
@@ -353,9 +360,16 @@ class LibraryEvent
         return $event ? self::hydrateEventWithCourses($event) : null;
     }
 
-    public static function participants(int $eventId): array
+    public static function participants(int $eventId, ?string $status = null): array
     {
         self::ensureSchema();
+
+        $where = 'WHERE library_event_participants.event_id = :event_id';
+        $params = ['event_id' => $eventId];
+        if ($status && in_array($status, ['pendente', 'inscrito', 'presente', 'ausente', 'cancelado'], true)) {
+            $where .= ' AND library_event_participants.status = :status';
+            $params['status'] = $status;
+        }
 
         $stmt = Database::connection()->prepare(
             'SELECT library_event_participants.*,
@@ -382,10 +396,10 @@ class LibraryEvent
                     people.image_authorized
              FROM library_event_participants
              INNER JOIN people ON people.id = library_event_participants.person_id
-             WHERE library_event_participants.event_id = :event_id
+             ' . $where . '
              ORDER BY people.full_name ASC'
         );
-        $stmt->execute(['event_id' => $eventId]);
+        $stmt->execute($params);
 
         return $stmt->fetchAll();
     }
@@ -572,20 +586,22 @@ class LibraryEvent
             ->execute(['id' => $id]);
     }
 
-    public static function attachParticipant(int $eventId, int $personId, string $status, ?string $notes, ?int $createdBy): void
+    public static function attachParticipant(int $eventId, int $personId, string $status, ?string $notes, ?int $createdBy, ?string $heardAbout = null, ?string $eventExpectations = null): void
     {
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO library_event_participants (event_id, person_id, status, notes, created_by, created_at)
-             VALUES (:event_id, :person_id, :status, :notes, :created_by, NOW())
-             ON DUPLICATE KEY UPDATE status = VALUES(status), notes = VALUES(notes)'
+            'INSERT INTO library_event_participants (event_id, person_id, status, notes, heard_about, event_expectations, created_by, created_at)
+             VALUES (:event_id, :person_id, :status, :notes, :heard_about, :event_expectations, :created_by, NOW())
+             ON DUPLICATE KEY UPDATE status = VALUES(status), notes = VALUES(notes), heard_about = VALUES(heard_about), event_expectations = VALUES(event_expectations)'
         );
         $stmt->execute([
             'event_id' => $eventId,
             'person_id' => $personId,
             'status' => in_array($status, ['pendente', 'inscrito', 'presente', 'ausente', 'cancelado'], true) ? $status : 'pendente',
             'notes' => self::nullable($notes),
+            'heard_about' => self::nullable($heardAbout),
+            'event_expectations' => self::nullable($eventExpectations),
             'created_by' => $createdBy,
         ]);
     }

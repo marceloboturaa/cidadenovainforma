@@ -230,6 +230,23 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                             <input type="checkbox" name="image_authorized" value="1">
                             <span>Autorizo, nos termos da LGPD, o uso gratuito da minha imagem em fotos e vídeos deste evento para divulgação institucional do Cidade Nova Informa.</span>
                         </label>
+                        <div class="field-wide">
+                            <label>Como você ficou sabendo deste evento?</label>
+                            <select name="heard_about">
+                                <option value="">Selecione uma opção</option>
+                                <option value="Internet">Internet</option>
+                                <option value="Redes sociais">Redes sociais</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Indicação de amigo/familiar">Indicação de amigo/familiar</option>
+                                <option value="Escola ou instituição">Escola ou instituição</option>
+                                <option value="Comunidade/igreja">Comunidade/igreja</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="field-wide">
+                            <label>O que você espera deste evento?</label>
+                            <textarea name="event_expectations" rows="3"></textarea>
+                        </div>
                         <label class="event-registration-check event-login-option field-wide">
                             <input type="checkbox" name="create_login" value="1" data-public-login-toggle>
                             <span>Também quero criar login com este e-mail. O acesso só será liberado após aprovação do administrador.</span>

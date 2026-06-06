@@ -140,7 +140,9 @@ class LibraryEventController
             (int) $person['id'],
             (string) ($_POST['status'] ?? 'inscrito'),
             $_POST['notes'] ?? null,
-            current_user()['id'] ?? null
+            current_user()['id'] ?? null,
+            $_POST['heard_about'] ?? null,
+            $_POST['event_expectations'] ?? null
         );
 
         RegistrationNotifier::eventStatus($event, $person, (string) ($_POST['status'] ?? 'inscrito'));
@@ -173,7 +175,9 @@ class LibraryEventController
             $personId,
             (string) ($_POST['status'] ?? 'inscrito'),
             $_POST['participant_notes'] ?? null,
-            $userId ?: null
+            $userId ?: null,
+            $_POST['heard_about'] ?? null,
+            $_POST['event_expectations'] ?? null
         );
 
         $person = Person::find($personId);
@@ -231,7 +235,8 @@ class LibraryEventController
     {
         $event = $this->eventFromQuery();
         $this->authorizeParticipantManagement($event);
-        $participants = LibraryEvent::participants((int) $event['id']);
+        $status = $this->participantStatusFromQuery();
+        $participants = LibraryEvent::participants((int) $event['id'], $status);
         $format = strtolower((string) ($_GET['format'] ?? 'csv'));
         $slug = preg_replace('/[^a-z0-9]+/i', '-', strtolower((string) $event['title'])) ?: 'evento';
         $slug = trim($slug, '-');
@@ -250,7 +255,7 @@ class LibraryEventController
         header('Content-Disposition: attachment; filename="' . $slug . '-participantes.csv"');
         echo "\xEF\xBB\xBF";
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['Evento', 'Nome', 'Status', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereco', 'Numero', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsavel', 'Parentesco', 'CPF responsavel', 'Telefone responsavel', 'E-mail responsavel', 'Contato autorizado', 'Uso de imagem autorizado', 'Observacoes da inscricao'], ';');
+        fputcsv($output, ['Evento', 'Nome', 'Status', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereço', 'Número', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsável', 'Parentesco', 'CPF responsável', 'Telefone responsável', 'E-mail responsável', 'Contato autorizado', 'Uso de imagem autorizado', 'Como soube do evento', 'O que espera do evento', 'Observações da inscrição'], ';');
         foreach ($participants as $participant) {
             fputcsv($output, [
                 $event['title'] ?? '',
@@ -276,6 +281,8 @@ class LibraryEventController
                 $participant['guardian_email'] ?? '',
                 !empty($participant['contact_authorized']) ? 'Sim' : 'Nao',
                 !empty($participant['image_authorized']) ? 'Sim' : 'Nao',
+                $participant['heard_about'] ?? '',
+                $participant['event_expectations'] ?? '',
                 $participant['notes'] ?? '',
             ], ';');
         }
@@ -476,5 +483,11 @@ class LibraryEventController
         header('Content-Length: ' . strlen($pdf));
         echo $pdf;
         exit;
+    }
+
+    private function participantStatusFromQuery(): ?string
+    {
+        $status = strtolower(trim((string) ($_GET['status'] ?? '')));
+        return in_array($status, ['pendente', 'inscrito', 'presente', 'ausente', 'cancelado'], true) ? $status : null;
     }
 }

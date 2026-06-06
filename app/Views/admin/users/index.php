@@ -1,6 +1,7 @@
 <?php
 $currentUser = current_user();
 $isMaster = ($currentUser['role_slug'] ?? '') === 'master';
+$canRequestProfileUpdate = in_array($currentUser['role_slug'] ?? '', ['master', 'admin'], true);
 $totalUsers = count($users);
 $activeUsers = count(array_filter($users, fn (array $user): bool => (bool) ($user['active'] ?? false)));
 $pendingCount = count($pendingUsers ?? []);
@@ -307,7 +308,7 @@ $onlineCount = count($onlineUserIds ?? []);
                         </div>
                     </header>
 
-                    <?php if ($isMaster): ?>
+                    <?php if ($isMaster || $canRequestProfileUpdate): ?>
                         <details class="user-manage-drawer">
                             <summary>
                                 <span><i class="bi bi-sliders" aria-hidden="true"></i> Gerenciar</span>
@@ -315,21 +316,29 @@ $onlineCount = count($onlineUserIds ?? []);
                             </summary>
 
                             <div class="user-access-grid">
-                                <section class="user-action-panel">
-                                    <h3>Dados</h3>
-                                    <form method="post" action="<?= e(url('/admin/users/update?id=' . $item['id'])) ?>" class="user-stacked-form">
-                                        <?= csrf_field() ?>
-                                        <label>
-                                            <span>Nome</span>
-                                            <input class="form-control form-control-sm" name="name" value="<?= e($item['name']) ?>" required>
-                                        </label>
-                                        <label>
-                                            <span>E-mail</span>
-                                            <input class="form-control form-control-sm" name="email" type="email" value="<?= e($item['email']) ?>" required>
-                                        </label>
-                                        <button class="btn btn-sm btn-outline-primary">Salvar dados</button>
-                                    </form>
-                                </section>
+                                    <section class="user-action-panel">
+                                        <h3>Dados</h3>
+                                        <?php if ($isMaster): ?>
+                                            <form method="post" action="<?= e(url('/admin/users/update?id=' . $item['id'])) ?>" class="user-stacked-form">
+                                                <?= csrf_field() ?>
+                                                <label>
+                                                    <span>Nome</span>
+                                                    <input class="form-control form-control-sm" name="name" value="<?= e($item['name']) ?>" required>
+                                                </label>
+                                                <label>
+                                                    <span>E-mail</span>
+                                                    <input class="form-control form-control-sm" name="email" type="email" value="<?= e($item['email']) ?>" required>
+                                                </label>
+                                                <button class="btn btn-sm btn-outline-primary">Salvar dados</button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <?php if ($canRequestProfileUpdate && (int) $item['id'] !== (int) ($currentUser['id'] ?? 0)): ?>
+                                            <form method="post" action="<?= e(url('/admin/users/request-profile-update?id=' . $item['id'])) ?>" class="user-stacked-form" onsubmit="return confirm('Solicitar atualização de cadastro para este usuário?');">
+                                                <?= csrf_field() ?>
+                                                <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-person-vcard" aria-hidden="true"></i>Solicitar atualização</button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </section>
 
                                 <?php if ($canManageAccess): ?>
                                     <section class="user-action-panel">

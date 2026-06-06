@@ -39,11 +39,48 @@ class UserController
 
     public function password(): void
     {
+        Middleware::auth();
         View::render('admin/users/password');
+    }
+
+    public function profile(): void
+    {
+        Middleware::auth();
+        View::render('admin/users/profile', [
+            'user' => current_user(),
+        ]);
+    }
+
+    public function updateProfile(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/profile');
+
+        $user = current_user();
+        $name = trim($_POST['name'] ?? '');
+        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+
+        if (!$user || $name === '' || !$email) {
+            Session::flash('error', 'Informe nome e e-mail válidos.');
+            redirect('/admin/profile');
+        }
+
+        $existing = User::findByEmail($email);
+        if ($existing && (int) $existing['id'] !== (int) $user['id']) {
+            Session::flash('error', 'Este e-mail já está em uso por outro usuário.');
+            redirect('/admin/profile');
+        }
+
+        User::updateOwnProfile((int) $user['id'], $name, $email);
+        Session::put('auth_login_at', time());
+        Logger::info('users.profile_updated_by_owner', 'Cadastro atualizado pelo próprio usuário.', (int) $user['id']);
+        Session::flash('success', 'Cadastro atualizado.');
+        redirect('/admin');
     }
 
     public function updatePassword(): void
     {
+        Middleware::auth();
         $this->validateCsrf('/admin/password');
 
         $user = current_user();
@@ -385,6 +422,31 @@ class UserController
         User::updatePassword((int) $user['id'], $password);
         Logger::info('users.password_reset', 'Senha redefinida para: ' . $user['email'], current_user()['id'] ?? null);
         Session::flash('success', 'Senha redefinida para ' . $user['name'] . '.');
+        redirect('/admin/users');
+    }
+
+    public function requestProfileUpdate(): void
+    {
+        Middleware::permission('users.manage');
+        $this->validateCsrf();
+
+        if (!in_array(current_user()['role_slug'] ?? '', ['master', 'admin'], true)) {
+            http_response_code(403);
+            View::render('errors/403');
+            exit;
+        }
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $user = $id ? User::find($id) : null;
+
+        if (!$user) {
+            Session::flash('error', 'Usuário não encontrado.');
+            redirect('/admin/users');
+        }
+
+        User::requestProfileUpdate((int) $user['id'], (int) (current_user()['id'] ?? 0));
+        Logger::info('users.profile_update_requested', 'Atualização de cadastro solicitada para: ' . $user['email'], current_user()['id'] ?? null);
+        Session::flash('success', 'Atualização de cadastro solicitada para ' . $user['name'] . '.');
         redirect('/admin/users');
     }
 

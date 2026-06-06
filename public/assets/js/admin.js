@@ -307,7 +307,7 @@
             { title: 'Educação', items: ['Ensino', 'Meus certificados', 'Certificados', 'Reconhecimentos', 'Cursos'] },
             { title: 'Comunicação', items: ['Fóruns', 'Foruns'] },
             { title: 'Sistema', items: ['Menu', 'Backups', 'LGPD Cookies'] },
-            { title: 'Conta', items: ['Minha senha'] }
+            { title: 'Conta', items: ['Meu cadastro', 'Minha senha'] }
         ];
 
         nav.textContent = '';
@@ -591,15 +591,17 @@
         }
 
         const syncButton = () => {
-            const checked = inputs.filter((input) => input.checked).length;
-            toggleButton.classList.toggle('is-active', checked > 0 && checked === inputs.length);
-            toggleButton.querySelector('i')?.classList.toggle('bi-ui-checks', checked !== inputs.length);
-            toggleButton.querySelector('i')?.classList.toggle('bi-ui-checks-grid', checked === inputs.length);
+            const availableInputs = inputs.filter((input) => !input.disabled);
+            const checked = availableInputs.filter((input) => input.checked).length;
+            toggleButton.classList.toggle('is-active', availableInputs.length > 0 && checked === availableInputs.length);
+            toggleButton.querySelector('i')?.classList.toggle('bi-ui-checks', checked !== availableInputs.length);
+            toggleButton.querySelector('i')?.classList.toggle('bi-ui-checks-grid', availableInputs.length > 0 && checked === availableInputs.length);
         };
 
         toggleButton.addEventListener('click', () => {
-            const shouldCheck = inputs.some((input) => !input.checked);
-            inputs.forEach((input) => {
+            const availableInputs = inputs.filter((input) => !input.disabled);
+            const shouldCheck = availableInputs.some((input) => !input.checked);
+            availableInputs.forEach((input) => {
                 input.checked = shouldCheck;
             });
             syncButton();
@@ -614,6 +616,7 @@
         const empty = list.querySelector('[data-linked-participant-empty]');
         const count = document.querySelector('[data-linked-participant-count]');
         const filterButtons = Array.from(document.querySelectorAll('[data-linked-participant-filter]'));
+        const exportLinks = Array.from(document.querySelectorAll('[data-participant-export-link]'));
         let activeFilter = 'all';
 
         const applyFilter = () => {
@@ -626,6 +629,12 @@
                 const matchesStatus = activeFilter === 'all' || card.dataset.linkedParticipantStatus === activeFilter;
                 const matches = matchesText && matchesStatus;
                 card.classList.toggle('is-hidden', !matches);
+                card.querySelectorAll('[data-participant-select]').forEach((input) => {
+                    input.disabled = !matches;
+                    if (!matches) {
+                        input.checked = false;
+                    }
+                });
                 if (matches) {
                     visible += 1;
                 }
@@ -637,6 +646,16 @@
             if (empty) {
                 empty.hidden = visible > 0 || cards.length === 0;
             }
+
+            exportLinks.forEach((link) => {
+                const url = new URL(link.href, window.location.href);
+                if (activeFilter === 'all') {
+                    url.searchParams.delete('status');
+                } else {
+                    url.searchParams.set('status', activeFilter);
+                }
+                link.href = url.toString();
+            });
         };
 
         searchInput.addEventListener('input', applyFilter);
