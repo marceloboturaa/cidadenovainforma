@@ -171,6 +171,24 @@ class LibraryEvent
             $db->exec('ALTER TABLE library_event_participants ADD COLUMN event_expectations TEXT NULL AFTER heard_about');
         }
 
+        $db->exec(
+            "CREATE TABLE IF NOT EXISTS library_event_attendance (
+                event_id BIGINT UNSIGNED NOT NULL,
+                person_id BIGINT UNSIGNED NOT NULL,
+                attendance_date DATE NOT NULL,
+                status ENUM('presente','ausente','justificado') NOT NULL DEFAULT 'presente',
+                notes VARCHAR(255) NULL,
+                recorded_by BIGINT UNSIGNED NULL,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                PRIMARY KEY (event_id, person_id, attendance_date),
+                INDEX idx_event_attendance_date (event_id, attendance_date),
+                CONSTRAINT fk_event_attendance_event FOREIGN KEY (event_id) REFERENCES library_events(id) ON DELETE CASCADE,
+                CONSTRAINT fk_event_attendance_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
+                CONSTRAINT fk_event_attendance_recorder FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
+            ) ENGINE=InnoDB"
+        );
+
         $done = true;
     }
 
@@ -397,6 +415,139 @@ class LibraryEvent
              FROM library_event_participants
              INNER JOIN people ON people.id = library_event_participants.person_id
              ' . $where . '
+             ORDER BY people.full_name ASC'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function attendanceForDate(int $eventId, string $date): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT library_event_participants.person_id,
+                    library_event_participants.status AS participant_status,
+                    people.full_name,
+                    people.email,
+                    people.whatsapp,
+                    people.phone,
+                    library_event_attendance.status AS attendance_status,
+                    library_event_attendance.notes AS attendance_notes,
+                    library_event_attendance.updated_at AS attendance_updated_at
+             FROM library_event_participants
+             INNER JOIN people ON people.id = library_event_participants.person_id
+             LEFT JOIN library_event_attendance
+                    ON library_event_attendance.event_id = library_event_participants.event_id
+                   AND library_event_attendance.person_id = library_event_participants.person_id
+                   AND library_event_attendance.attendance_date = :attendance_date
+             WHERE library_event_participants.event_id = :event_id
+               AND library_event_participants.status <> "cancelado"
+             ORDER BY people.full_name ASC'
+        );
+        $stmt->execute([
+            'event_id' => $eventId,
+            'attendance_date' => $date,
+        ]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function attendanceDates(int $eventId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            "SELECT attendance_date,
+                    SUM(status = 'presente') AS presentes,
+                    SUM(status = 'ausente') AS ausentes,
+                    SUM(status = 'justificado') AS justificados,
+                    COUNT(*) AS total
+             FROM library_event_attendance
+             WHERE event_id = :event_id
+             GROUP BY attendance_date
+             ORDER BY attendance_date DESC"
+        );
+        $stmt->execute(['event_id' => $eventId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function saveAttendance(int $eventId, string $date, array $attendance, int $recordedBy): int
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO library_event_attendance (event_id, person_id, attendance_date, status, notes, recorded_by, created_at, updated_at)
+             VALUES (:event_id, :person_id, :attendance_date, :status, :notes, :recorded_by, NOW(), NOW())
+             ON DUPLICATE KEY UPDATE status = VALUES(status), notes = VALUES(notes), recorded_by = VALUES(recorded_by), updated_at = NOW()'
+        );
+
+        $saved = 0;
+        foreach ($attendance as $personId => $row) {
+            $personId = (int) $personId;
+            if ($personId <= 0 || !is_array($row)) {
+                continue;
+            }
+            $status = in_array((string) ($row['status'] ?? ''), ['presente', 'ausente', 'justificado'], true)
+                ? (string) $row['status']
+                : 'presente';
+            $stmt->execute([
+                'event_id' => $eventId,
+                'person_id' => $personId,
+                'attendance_date' => $date,
+                'status' => $status,
+                'notes' => self::nullable($row['notes'] ?? null),
+                'recorded_by' => $recordedBy ?: null,
+            ]);
+            $saved++;
+        }
+
+        return $saved;
+    }
+
+    public static function emailRecipients(int $eventId, string $mode, array $personIds = [], ?string $date = null, ?string $attendanceStatus = null): array
+    {
+        self::ensureSchema();
+
+        $params = ['event_id' => $eventId];
+        $where = ['library_event_participants.event_id = :event_id', 'people.email IS NOT NULL', 'people.email <> ""'];
+        $joinAttendance = '';
+
+        if ($mode === 'selected') {
+            $personIds = array_values(array_unique(array_filter(array_map('intval', $personIds))));
+            if (!$personIds) {
+                return [];
+            }
+            $placeholders = [];
+            foreach ($personIds as $index => $personId) {
+                $key = 'person_' . $index;
+                $placeholders[] = ':' . $key;
+                $params[$key] = $personId;
+            }
+            $where[] = 'library_event_participants.person_id IN (' . implode(',', $placeholders) . ')';
+        } elseif ($mode === 'attendance') {
+            if (!$date) {
+                return [];
+            }
+            $joinAttendance = 'INNER JOIN library_event_attendance ON library_event_attendance.event_id = library_event_participants.event_id AND library_event_attendance.person_id = library_event_participants.person_id';
+            $where[] = 'library_event_attendance.attendance_date = :attendance_date';
+            $params['attendance_date'] = $date;
+            if ($attendanceStatus && in_array($attendanceStatus, ['presente', 'ausente', 'justificado'], true)) {
+                $where[] = 'library_event_attendance.status = :attendance_status';
+                $params['attendance_status'] = $attendanceStatus;
+            }
+        } else {
+            $where[] = 'library_event_participants.status <> "cancelado"';
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT DISTINCT people.id AS person_id, people.full_name, people.email
+             FROM library_event_participants
+             INNER JOIN people ON people.id = library_event_participants.person_id
+             ' . $joinAttendance . '
+             WHERE ' . implode(' AND ', $where) . '
              ORDER BY people.full_name ASC'
         );
         $stmt->execute($params);

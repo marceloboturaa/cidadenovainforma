@@ -863,7 +863,7 @@
 
 .participant-export-form {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.8fr) auto;
+    grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.8fr) minmax(160px, 0.7fr) auto;
     gap: 10px;
     align-items: end;
 }
@@ -879,6 +879,73 @@
     font-size: 0.7rem;
     font-weight: 900;
     text-transform: uppercase;
+}
+
+.participant-attendance-panel,
+.participant-email-panel {
+    display: grid;
+    gap: 14px;
+}
+
+.participant-attendance-date-form,
+.participant-email-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.participant-email-form {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+}
+
+.participant-email-message {
+    grid-column: span 2;
+}
+
+.attendance-history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.attendance-history a {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 10px;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    color: #172033;
+    background: #fff;
+    text-decoration: none;
+}
+
+.attendance-row-list {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.attendance-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.4fr) 150px minmax(180px, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e3e8f0;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.attendance-row strong,
+.attendance-row span {
+    display: block;
+}
+
+.attendance-row span {
+    color: #64748b;
+    font-size: .84rem;
 }
 
 .participant-export-buttons {
@@ -1011,8 +1078,15 @@
     }
 
     .participant-report-panel,
-    .participant-export-form {
+    .participant-export-form,
+    .participant-attendance-date-form,
+    .participant-email-form,
+    .attendance-row {
         grid-template-columns: 1fr;
+    }
+
+    .participant-email-message {
+        grid-column: auto;
     }
 
     .participant-export-buttons,

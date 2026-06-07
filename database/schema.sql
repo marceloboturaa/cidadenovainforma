@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS users (
     registration_person_id BIGINT UNSIGNED NULL,
     registration_course_id BIGINT UNSIGNED NULL,
     profile_update_required TINYINT(1) NOT NULL DEFAULT 0,
+    profile_update_fields TEXT NULL,
     profile_update_requested_by BIGINT UNSIGNED NULL,
     profile_update_requested_at DATETIME NULL,
     last_login_at TIMESTAMP NULL,
@@ -169,6 +170,22 @@ CREATE TABLE IF NOT EXISTS library_event_participants (
     CONSTRAINT fk_event_participants_event FOREIGN KEY (event_id) REFERENCES library_events(id) ON DELETE CASCADE,
     CONSTRAINT fk_event_participants_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
     CONSTRAINT fk_event_participants_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS library_event_attendance (
+    event_id BIGINT UNSIGNED NOT NULL,
+    person_id BIGINT UNSIGNED NOT NULL,
+    attendance_date DATE NOT NULL,
+    status ENUM('presente','ausente','justificado') NOT NULL DEFAULT 'presente',
+    notes VARCHAR(255) NULL,
+    recorded_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    PRIMARY KEY (event_id, person_id, attendance_date),
+    INDEX idx_event_attendance_date (event_id, attendance_date),
+    CONSTRAINT fk_event_attendance_event FOREIGN KEY (event_id) REFERENCES library_events(id) ON DELETE CASCADE,
+    CONSTRAINT fk_event_attendance_person FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
+    CONSTRAINT fk_event_attendance_recorder FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS site_settings (

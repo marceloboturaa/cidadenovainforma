@@ -302,6 +302,9 @@ $onlineCount = count($onlineUserIds ?? []);
                         </div>
                         <div class="user-status-stack">
                             <span class="state-pill <?= $item['active'] ? 'is-active' : 'is-muted' ?>"><?= $item['active'] ? 'Ativo' : 'Inativo' ?></span>
+                            <?php if (!empty($item['profile_update_required'])): ?>
+                                <span class="state-pill is-muted">Atualização pendente</span>
+                            <?php endif; ?>
                             <?php if (in_array((int) $item['id'], $onlineUserIds ?? [], true)): ?>
                                 <span class="state-pill is-online">Online</span>
                             <?php endif; ?>
@@ -333,8 +336,16 @@ $onlineCount = count($onlineUserIds ?? []);
                                             </form>
                                         <?php endif; ?>
                                         <?php if ($canRequestProfileUpdate && (int) $item['id'] !== (int) ($currentUser['id'] ?? 0)): ?>
-                                            <form method="post" action="<?= e(url('/admin/users/request-profile-update?id=' . $item['id'])) ?>" class="user-stacked-form" onsubmit="return confirm('Solicitar atualização de cadastro para este usuário?');">
+                                            <form method="post" action="<?= e(url('/admin/users/request-profile-update?id=' . $item['id'])) ?>" class="user-stacked-form" onsubmit="return confirm('Solicitar atualização de cadastro para este usuário? Ele ficará bloqueado até concluir.');">
                                                 <?= csrf_field() ?>
+                                                <span class="field-hint">Escolha o que este usuário precisa atualizar no próximo login.</span>
+                                                <div class="responsibility-options compact">
+                                                    <label><input type="checkbox" name="profile_update_fields[]" value="name" checked><span>Nome</span></label>
+                                                    <label><input type="checkbox" name="profile_update_fields[]" value="email" checked><span>E-mail</span></label>
+                                                    <label><input type="checkbox" name="profile_update_fields[]" value="address"><span>Endereço</span></label>
+                                                    <label><input type="checkbox" name="profile_update_fields[]" value="password"><span>Nova senha</span></label>
+                                                    <label><input type="checkbox" name="profile_update_fields[]" value="all"><span>Tudo</span></label>
+                                                </div>
                                                 <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-person-vcard" aria-hidden="true"></i>Solicitar atualização</button>
                                             </form>
                                         <?php endif; ?>

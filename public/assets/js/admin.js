@@ -208,6 +208,8 @@
         bindLinkedParticipantsFilter(linkedParticipants, linkedParticipantSearch);
     }
 
+    bindParticipantEmailForm();
+
     bindDocumentAccessTools();
 
     if (documentList && documentSearch) {
@@ -678,6 +680,37 @@
             });
         }
         applyFilter();
+    }
+
+    function bindParticipantEmailForm() {
+        const form = document.querySelector('[data-participant-email-form]');
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener('submit', (event) => {
+            form.querySelectorAll('[data-email-selected-hidden]').forEach((input) => input.remove());
+            const mode = form.querySelector('[data-participant-email-mode]')?.value || 'all';
+            if (mode !== 'selected') {
+                return;
+            }
+
+            const selected = Array.from(document.querySelectorAll('[data-participant-select]:checked'));
+            if (!selected.length) {
+                event.preventDefault();
+                window.alert('Marque pelo menos um participante na lista abaixo.');
+                return;
+            }
+
+            selected.forEach((checkbox) => {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'person_ids[]';
+                hidden.value = checkbox.value;
+                hidden.dataset.emailSelectedHidden = '1';
+                form.appendChild(hidden);
+            });
+        });
     }
 
     function bindDocumentAccessTools() {

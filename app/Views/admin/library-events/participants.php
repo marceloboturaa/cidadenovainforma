@@ -34,6 +34,10 @@
                 <option value="cancelado">Somente cancelados</option>
             </select>
         </label>
+        <label>
+            <span>Data da chamada</span>
+            <input class="form-control" type="date" name="attendance_date" value="<?= e((string) ($attendanceDate ?? date('Y-m-d'))) ?>">
+        </label>
         <div class="participant-export-buttons">
             <button class="btn btn-outline-secondary icon-btn" name="format" value="csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</button>
             <button class="btn btn-primary icon-btn" name="format" value="pdf"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</button>
@@ -109,6 +113,103 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
         </div>
         <p class="event-capacity-caption"><?= e((string) $occupiedSlots) ?> vaga(s) ocupada(s) de <?= e((string) $capacity) ?>. <?= e((string) $remainingSlots) ?> livre(s).</p>
     <?php endif; ?>
+</section>
+
+<section class="panel participant-attendance-panel">
+    <div class="section-heading">
+        <h2><i class="bi bi-calendar-check" aria-hidden="true"></i> Chamada do dia</h2>
+        <span><?= e(date('d/m/Y', strtotime((string) ($attendanceDate ?? date('Y-m-d'))))) ?></span>
+    </div>
+    <form class="participant-attendance-date-form" method="get" action="<?= e(url('/admin/library-events/participants')) ?>">
+        <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
+        <label>
+            <span>Data do encontro</span>
+            <input class="form-control" type="date" name="attendance_date" value="<?= e((string) ($attendanceDate ?? date('Y-m-d'))) ?>">
+        </label>
+        <button class="btn btn-outline-primary icon-btn"><i class="bi bi-search" aria-hidden="true"></i>Ver chamada</button>
+    </form>
+
+    <?php if (!empty($attendanceDates)): ?>
+        <div class="attendance-history">
+            <?php foreach ($attendanceDates as $dateRow): ?>
+                <a href="<?= e(url('/admin/library-events/participants?id=' . $event['id'] . '&attendance_date=' . $dateRow['attendance_date'])) ?>">
+                    <strong><?= e(date('d/m/Y', strtotime((string) $dateRow['attendance_date']))) ?></strong>
+                    <span><?= e((string) ($dateRow['presentes'] ?? 0)) ?> presente(s)</span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($attendanceRows)): ?>
+        <form class="participant-attendance-form" method="post" action="<?= e(url('/admin/library-events/participants/attendance?id=' . $event['id'])) ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="attendance_date" value="<?= e((string) ($attendanceDate ?? date('Y-m-d'))) ?>">
+            <div class="attendance-row-list">
+                <?php foreach ($attendanceRows as $row): ?>
+                    <?php $attendanceStatus = (string) ($row['attendance_status'] ?? 'presente'); ?>
+                    <article class="attendance-row">
+                        <div>
+                            <strong><?= e($row['full_name']) ?></strong>
+                            <span><?= e($row['email'] ?: ($row['whatsapp'] ?: '-')) ?></span>
+                        </div>
+                        <select class="form-select form-select-sm" name="attendance[<?= e((string) $row['person_id']) ?>][status]" aria-label="Presença de <?= e($row['full_name']) ?>">
+                            <option value="presente" <?= selected('presente', $attendanceStatus) ?>>Presente</option>
+                            <option value="ausente" <?= selected('ausente', $attendanceStatus) ?>>Ausente</option>
+                            <option value="justificado" <?= selected('justificado', $attendanceStatus) ?>>Justificado</option>
+                        </select>
+                        <input class="form-control form-control-sm" name="attendance[<?= e((string) $row['person_id']) ?>][notes]" value="<?= e($row['attendance_notes'] ?? '') ?>" placeholder="Observação">
+                    </article>
+                <?php endforeach; ?>
+            </div>
+            <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar chamada do dia</button>
+        </form>
+    <?php else: ?>
+        <div class="empty-state">Nenhum participante ativo para chamada nesta data.</div>
+    <?php endif; ?>
+</section>
+
+<section class="panel participant-email-panel">
+    <div class="section-heading">
+        <h2><i class="bi bi-envelope-paper" aria-hidden="true"></i> Enviar documento por e-mail</h2>
+        <span>todos, selecionados ou chamada do dia</span>
+    </div>
+    <form id="participant-email-form" class="participant-email-form" method="post" action="<?= e(url('/admin/library-events/participants/email-document?id=' . $event['id'])) ?>" enctype="multipart/form-data" data-participant-email-form>
+        <?= csrf_field() ?>
+        <label>
+            <span>Destinatários</span>
+            <select class="form-select" name="recipient_mode" data-participant-email-mode>
+                <option value="all">Todos os participantes ativos</option>
+                <option value="selected">Somente marcados na lista abaixo</option>
+                <option value="attendance">Participantes da chamada do dia</option>
+            </select>
+        </label>
+        <label>
+            <span>Data da chamada</span>
+            <input class="form-control" type="date" name="attendance_date" value="<?= e((string) ($attendanceDate ?? date('Y-m-d'))) ?>">
+        </label>
+        <label>
+            <span>Status na chamada</span>
+            <select class="form-select" name="attendance_status">
+                <option value="">Todos da data</option>
+                <option value="presente">Presentes</option>
+                <option value="ausente">Ausentes</option>
+                <option value="justificado">Justificados</option>
+            </select>
+        </label>
+        <label>
+            <span>Assunto</span>
+            <input class="form-control" name="subject" value="<?= e('Documento do evento ' . ($event['title'] ?? '')) ?>">
+        </label>
+        <label class="participant-email-message">
+            <span>Mensagem</span>
+            <textarea class="form-control" name="message" rows="3">Segue o documento do evento.</textarea>
+        </label>
+        <label>
+            <span>Documento</span>
+            <input class="form-control" type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required>
+        </label>
+        <button class="btn btn-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar e-mail</button>
+    </form>
 </section>
 
 <details class="panel person-register-panel">

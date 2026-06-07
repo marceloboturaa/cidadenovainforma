@@ -50,8 +50,11 @@ class User
         if (!in_array('profile_update_required', $columns, true)) {
             $db->exec('ALTER TABLE users ADD COLUMN profile_update_required TINYINT(1) NOT NULL DEFAULT 0 AFTER registration_course_id');
         }
+        if (!in_array('profile_update_fields', $columns, true)) {
+            $db->exec('ALTER TABLE users ADD COLUMN profile_update_fields TEXT NULL AFTER profile_update_required');
+        }
         if (!in_array('profile_update_requested_by', $columns, true)) {
-            $db->exec('ALTER TABLE users ADD COLUMN profile_update_requested_by BIGINT UNSIGNED NULL AFTER profile_update_required');
+            $db->exec('ALTER TABLE users ADD COLUMN profile_update_requested_by BIGINT UNSIGNED NULL AFTER profile_update_fields');
         }
         if (!in_array('profile_update_requested_at', $columns, true)) {
             $db->exec('ALTER TABLE users ADD COLUMN profile_update_requested_at DATETIME NULL AFTER profile_update_requested_by');
@@ -131,6 +134,9 @@ class User
                     users.name,
                     users.email,
                     users.active,
+                    users.profile_update_required,
+                    users.profile_update_fields,
+                    users.profile_update_requested_at,
                     users.created_at,
                     primary_role.name AS primary_role_name,
                     primary_role.slug AS primary_role_slug,
@@ -357,34 +363,42 @@ class User
         ]);
     }
 
-    public static function updateOwnProfile(int $userId, string $name, string $email): void
+    public static function updateOwnProfile(int $userId, array $data, array $fields): void
     {
         self::ensureRoleSchema();
+
+        $fields = self::profileUpdateFields($fields);
+        $set = ['profile_update_required = 0', 'profile_update_fields = NULL', 'profile_update_requested_by = NULL', 'profile_update_requested_at = NULL', 'updated_at = NOW()'];
+        $params = ['id' => $userId];
+
+        if (in_array('name', $fields, true)) {
+            $set[] = 'name = :name';
+            $params['name'] = trim((string) ($data['name'] ?? ''));
+        }
+        if (in_array('email', $fields, true)) {
+            $set[] = 'email = :email';
+            $params['email'] = strtolower(trim((string) ($data['email'] ?? '')));
+        }
+        if (in_array('password', $fields, true) && !empty($data['password'])) {
+            $set[] = 'password_hash = :password_hash';
+            $params['password_hash'] = password_hash((string) $data['password'], PASSWORD_DEFAULT);
+        }
 
         $stmt = Database::connection()->prepare(
-            'UPDATE users
-             SET name = :name,
-                 email = :email,
-                 profile_update_required = 0,
-                 profile_update_requested_by = NULL,
-                 profile_update_requested_at = NULL,
-                 updated_at = NOW()
-             WHERE id = :id'
+            'UPDATE users SET ' . implode(', ', $set) . ' WHERE id = :id'
         );
-        $stmt->execute([
-            'id' => $userId,
-            'name' => trim($name),
-            'email' => strtolower(trim($email)),
-        ]);
+        $stmt->execute($params);
     }
 
-    public static function requestProfileUpdate(int $userId, int $requestedBy): void
+    public static function requestProfileUpdate(int $userId, int $requestedBy, array $fields): void
     {
         self::ensureRoleSchema();
+        $fields = self::profileUpdateFields($fields);
 
         $stmt = Database::connection()->prepare(
             'UPDATE users
              SET profile_update_required = 1,
+                 profile_update_fields = :fields,
                  profile_update_requested_by = :requested_by,
                  profile_update_requested_at = NOW(),
                  updated_at = NOW()
@@ -392,8 +406,30 @@ class User
         );
         $stmt->execute([
             'id' => $userId,
+            'fields' => json_encode($fields, JSON_UNESCAPED_UNICODE),
             'requested_by' => $requestedBy,
         ]);
+    }
+
+    public static function profileUpdateFields(array|string|null $fields): array
+    {
+        if (is_string($fields)) {
+            $decoded = json_decode($fields, true);
+            $fields = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $fields)));
+        }
+
+        $fields = array_values(array_unique(array_map('strval', $fields ?? [])));
+        if (!$fields) {
+            return ['name', 'email'];
+        }
+        if (in_array('all', $fields, true)) {
+            return ['name', 'email', 'address', 'password'];
+        }
+
+        $allowed = ['name', 'email', 'address', 'password'];
+        $fields = array_values(array_intersect($allowed, $fields));
+
+        return $fields ?: ['name', 'email'];
     }
 
     public static function updateRole(int $userId, int $roleId): void

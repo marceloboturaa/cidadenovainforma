@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Logger;
+use App\Core\Mailer;
 use App\Core\Middleware;
 use App\Core\RegistrationNotifier;
 use App\Core\Session;
@@ -111,11 +112,15 @@ class LibraryEventController
     {
         $event = $this->eventFromQuery();
         $this->authorizeParticipantManagement($event);
+        $attendanceDate = $this->attendanceDateFromRequest($_GET['attendance_date'] ?? null);
 
         View::render('admin/library-events/participants', [
             'event' => $event,
             'participants' => LibraryEvent::participants((int) $event['id']),
             'participantStats' => LibraryEvent::participantStats((int) $event['id']),
+            'attendanceDate' => $attendanceDate,
+            'attendanceRows' => LibraryEvent::attendanceForDate((int) $event['id'], $attendanceDate),
+            'attendanceDates' => LibraryEvent::attendanceDates((int) $event['id']),
             'people' => Person::all(trim((string) ($_GET['q'] ?? '')), $this->volunteerScopeUserId()),
             'users' => User::activeForAccessLists(),
             'query' => trim((string) ($_GET['q'] ?? '')),
@@ -149,6 +154,75 @@ class LibraryEventController
 
         Logger::info('library_events.participant_added', 'Participante vinculado: ' . $person['full_name'], current_user()['id'] ?? null);
         Session::flash('success', 'Participante adicionado ao evento.');
+        redirect('/admin/library-events/participants?id=' . $event['id']);
+    }
+
+    public function saveAttendance(): void
+    {
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+        $date = $this->attendanceDateFromRequest($_POST['attendance_date'] ?? null);
+        $attendance = $_POST['attendance'] ?? [];
+        $attendance = is_array($attendance) ? $attendance : [];
+
+        $saved = LibraryEvent::saveAttendance((int) $event['id'], $date, $attendance, (int) (current_user()['id'] ?? 0));
+        Logger::info('library_events.attendance_saved', 'Chamada salva para o evento: ' . $event['title'] . ' em ' . $date, current_user()['id'] ?? null);
+        Session::flash($saved > 0 ? 'success' : 'error', $saved > 0 ? 'Chamada salva para ' . $saved . ' participante(s).' : 'Nenhuma presença foi salva.');
+        redirect('/admin/library-events/participants?id=' . $event['id'] . '&attendance_date=' . urlencode($date));
+    }
+
+    public function emailDocument(): void
+    {
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+
+        $mode = in_array((string) ($_POST['recipient_mode'] ?? 'all'), ['all', 'selected', 'attendance'], true)
+            ? (string) $_POST['recipient_mode']
+            : 'all';
+        $personIds = $_POST['person_ids'] ?? [];
+        $personIds = is_array($personIds) ? $personIds : [];
+        $date = $mode === 'attendance' ? $this->attendanceDateFromRequest($_POST['attendance_date'] ?? null) : null;
+        $attendanceStatus = in_array((string) ($_POST['attendance_status'] ?? ''), ['presente', 'ausente', 'justificado'], true)
+            ? (string) $_POST['attendance_status']
+            : null;
+        $subject = trim((string) ($_POST['subject'] ?? ''));
+        $message = trim((string) ($_POST['message'] ?? ''));
+
+        if ($subject === '') {
+            $subject = 'Documento do evento ' . ($event['title'] ?? '');
+        }
+
+        $documentPath = $this->uploadEventDocument();
+        if (!$documentPath) {
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
+        $recipients = LibraryEvent::emailRecipients((int) $event['id'], $mode, $personIds, $date, $attendanceStatus);
+        if (!$recipients) {
+            Session::flash('error', 'Nenhum participante com e-mail válido foi encontrado para este envio.');
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
+        $documentUrl = url($documentPath);
+        $sent = 0;
+        foreach ($recipients as $recipient) {
+            $html = '<p>Olá, ' . e($recipient['full_name'] ?? '') . '.</p>'
+                . '<p>' . nl2br(e($message !== '' ? $message : 'Segue o documento do evento.')) . '</p>'
+                . '<p><a href="' . e($documentUrl) . '">Abrir documento</a></p>'
+                . '<p>Evento: ' . e($event['title'] ?? '') . '</p>';
+            $text = "Olá, " . ($recipient['full_name'] ?? '') . ".\n\n"
+                . ($message !== '' ? $message : 'Segue o documento do evento.') . "\n\n"
+                . "Documento: " . $documentUrl . "\n"
+                . "Evento: " . ($event['title'] ?? '');
+            if (Mailer::send((string) $recipient['email'], $subject, $html, $text)) {
+                $sent++;
+            }
+        }
+
+        Logger::info('library_events.document_emailed', 'Documento enviado por e-mail no evento: ' . $event['title'], current_user()['id'] ?? null);
+        Session::flash($sent > 0 ? 'success' : 'error', $sent > 0 ? 'Documento enviado para ' . $sent . ' participante(s).' : 'Não foi possível enviar o e-mail.');
         redirect('/admin/library-events/participants?id=' . $event['id']);
     }
 
@@ -270,7 +344,15 @@ class LibraryEventController
         }
 
         if ($report === 'attendance') {
-            if ($status === null) {
+            $attendanceDate = isset($_GET['attendance_date']) && $_GET['attendance_date'] !== ''
+                ? $this->attendanceDateFromRequest($_GET['attendance_date'])
+                : null;
+            if ($attendanceDate) {
+                $participants = array_map(static function (array $row): array {
+                    $row['status'] = $row['attendance_status'] ?? 'sem chamada';
+                    return $row;
+                }, LibraryEvent::attendanceForDate((int) $event['id'], $attendanceDate));
+            } elseif ($status === null) {
                 $participants = array_values(array_filter(
                     $participants,
                     fn (array $participant): bool => ($participant['status'] ?? '') !== 'cancelado'
@@ -290,15 +372,15 @@ class LibraryEventController
             header('Content-Disposition: attachment; filename="' . $slug . '-lista-de-chamada.csv"');
             echo "\xEF\xBB\xBF";
             $output = fopen('php://output', 'w');
-            fputcsv($output, ['Nº', 'Nome', 'Status da inscrição', 'WhatsApp', 'Presença', 'Horário', 'Assinatura'], ';');
+            fputcsv($output, ['Nº', 'Data', 'Nome', 'Status', 'WhatsApp', 'Observação', 'Assinatura'], ';');
             foreach ($participants as $index => $participant) {
                 fputcsv($output, [
                     $index + 1,
+                    $attendanceDate ?? '',
                     $participant['full_name'] ?? '',
                     $participant['status'] ?? '',
                     $participant['whatsapp'] ?? $participant['phone'] ?? '',
-                    '',
-                    '',
+                    $participant['attendance_notes'] ?? '',
                     '',
                 ], ';');
             }
@@ -522,6 +604,57 @@ class LibraryEventController
         }
 
         return '/public/uploads/events/' . $filename;
+    }
+
+    private function uploadEventDocument(): ?string
+    {
+        if (empty($_FILES['document']['name']) || ($_FILES['document']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            Session::flash('error', 'Selecione um documento para enviar.');
+            return null;
+        }
+
+        if (($_FILES['document']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            Session::flash('error', 'Não foi possível receber o documento enviado.');
+            return null;
+        }
+
+        $tmpName = (string) ($_FILES['document']['tmp_name'] ?? '');
+        $size = (int) ($_FILES['document']['size'] ?? 0);
+        $extension = strtolower(pathinfo((string) $_FILES['document']['name'], PATHINFO_EXTENSION));
+        $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'];
+
+        if ($size <= 0 || $size > 8 * 1024 * 1024 || !in_array($extension, $allowed, true)) {
+            Session::flash('error', 'Envie um arquivo PDF, Word, Excel ou imagem com até 8 MB.');
+            return null;
+        }
+
+        $directory = dirname(__DIR__, 3) . '/public/uploads/event-documents';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+        if (!is_writable($directory)) {
+            Session::flash('error', 'A pasta de documentos do evento não está gravável.');
+            return null;
+        }
+
+        $filename = bin2hex(random_bytes(12)) . '.' . $extension;
+        $target = $directory . '/' . $filename;
+        if (!move_uploaded_file($tmpName, $target)) {
+            Session::flash('error', 'Não foi possível salvar o documento.');
+            return null;
+        }
+
+        return '/public/uploads/event-documents/' . $filename;
+    }
+
+    private function attendanceDateFromRequest(mixed $value): string
+    {
+        $date = trim((string) $value);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+
+        return date('Y-m-d');
     }
 
     private function authorizeParticipantManagement(array $event): void
