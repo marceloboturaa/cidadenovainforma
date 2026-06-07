@@ -126,8 +126,8 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
 
 <details class="panel participant-attendance-panel">
     <summary class="section-heading">
-        <h2><i class="bi bi-calendar-check" aria-hidden="true"></i> Chamada do dia</h2>
-        <span><?= e(date('d/m/Y', strtotime((string) ($attendanceDate ?? date('Y-m-d'))))) ?></span>
+        <h2><i class="bi bi-calendar-check" aria-hidden="true"></i> Painel de presença</h2>
+        <span>Chamada de <?= e(date('d/m/Y', strtotime((string) ($attendanceDate ?? date('Y-m-d'))))) ?></span>
     </summary>
     <form class="participant-attendance-date-form" method="get" action="<?= e(url('/admin/library-events/participants')) ?>">
         <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
@@ -165,10 +165,12 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
             <div class="attendance-row-list">
                 <?php foreach ($attendanceRows as $row): ?>
                     <?php $attendanceStatus = (string) ($row['attendance_status'] ?? 'presente'); ?>
-                    <article class="attendance-row">
+                    <?php $attendanceStatusLabel = $attendanceStatus === 'justificado' ? 'Justificado' : ucfirst($attendanceStatus); ?>
+                    <article class="attendance-row attendance-row-<?= e($attendanceStatus) ?>">
                         <div>
                             <strong><?= e($row['full_name']) ?></strong>
                             <span><?= e($row['email'] ?: ($row['whatsapp'] ?: '-')) ?></span>
+                            <span class="attendance-status-pill attendance-status-<?= e($attendanceStatus) ?>"><?= e($attendanceStatusLabel) ?></span>
                         </div>
                         <select class="form-select form-select-sm" name="attendance[<?= e((string) $row['person_id']) ?>][status]" aria-label="Presença de <?= e($row['full_name']) ?>">
                             <option value="presente" <?= selected('presente', $attendanceStatus) ?>>Presente</option>

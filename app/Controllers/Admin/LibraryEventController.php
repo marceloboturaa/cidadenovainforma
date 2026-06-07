@@ -386,6 +386,9 @@ class LibraryEventController
             $attendanceStatus = in_array((string) ($_GET['attendance_status'] ?? ''), ['presente', 'ausente', 'justificado'], true)
                 ? (string) $_GET['attendance_status']
                 : null;
+            if ($attendanceStatus === null && in_array((string) ($_GET['status'] ?? ''), ['presente', 'ausente', 'justificado'], true)) {
+                $attendanceStatus = (string) $_GET['status'];
+            }
             if ($attendanceDate) {
                 $participants = array_map(static function (array $row): array {
                     $row['status'] = $row['attendance_status'] ?? 'sem chamada';
@@ -405,7 +408,7 @@ class LibraryEventController
             }
 
             if ($format === 'pdf') {
-                $pdf = SimplePdf::attendanceReport($event, $participants);
+                $pdf = SimplePdf::attendanceReport($event, $participants, $attendanceDate, $attendanceStatus);
                 header('Content-Type: application/pdf');
                 header('Content-Disposition: attachment; filename="' . $slug . '-lista-de-chamada.pdf"');
                 header('Content-Length: ' . strlen($pdf));

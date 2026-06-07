@@ -123,12 +123,17 @@ class SimplePdf
         return self::build($pages ?: [[]]);
     }
 
-    public static function attendanceReport(array $event, array $participants): string
+    public static function attendanceReport(array $event, array $participants, ?string $attendanceDate = null, ?string $attendanceStatus = null): string
     {
         $pages = [];
         $current = [];
         $cursor = self::TOP;
         $eventTitle = (string) ($event['title'] ?? 'Evento');
+        $statusLabels = [
+            'presente' => 'presentes',
+            'ausente' => 'ausentes',
+            'justificado' => 'justificados',
+        ];
 
         $add = function (string $text, int $size = 9, int $gap = 14) use (&$pages, &$current, &$cursor): void {
             if ($cursor < 70) {
@@ -145,26 +150,39 @@ class SimplePdf
             $cursor -= 8;
         };
 
-        $add('Lista de Chamada e Presença', 18, 22);
+        $add('Lista de Presença', 18, 22);
         $add('Evento: ' . $eventTitle, 12, 18);
         if (!empty($event['starts_at'])) {
-            $add('Data: ' . date('d/m/Y H:i', strtotime((string) $event['starts_at'])), 9, 13);
+            $add('Data do evento: ' . date('d/m/Y H:i', strtotime((string) $event['starts_at'])), 9, 13);
+        }
+        if ($attendanceDate) {
+            $add('Data da chamada: ' . date('d/m/Y', strtotime($attendanceDate)), 9, 13);
+        }
+        if ($attendanceStatus) {
+            $add('Filtro: somente ' . ($statusLabels[$attendanceStatus] ?? $attendanceStatus), 9, 13);
         }
         $add('Local: ' . (($event['location'] ?? '') ?: '-'), 9, 13);
         $add('Total na lista: ' . count($participants), 9, 18);
         $rule();
 
         if (!$participants) {
-            $add('Nenhum participante encontrado.', 10, 16);
+            $add('Nenhum participante encontrado para este filtro.', 10, 16);
         }
 
         foreach ($participants as $index => $participant) {
             $name = (string) ($participant['full_name'] ?? '');
-            $status = ucfirst((string) ($participant['status'] ?? 'inscrito'));
+            $rawStatus = (string) ($participant['attendance_status'] ?? $participant['status'] ?? 'inscrito');
+            $status = ucfirst($rawStatus);
             $contact = ($participant['whatsapp'] ?? '') ?: (($participant['phone'] ?? '') ?: '-');
+            $notes = trim((string) ($participant['attendance_notes'] ?? ''));
 
             $add(($index + 1) . '. ' . $name . '  [' . $status . ']', 10, 16);
-            $add('Contato: ' . $contact . '    Presença: [   ] Sim  [   ] Não    Horário: ________', 8, 14);
+            $add('Contato: ' . $contact . '    Presença: [   ] Sim  [   ] Não  [   ] Justificada    Horário: ________', 8, 14);
+            if ($notes !== '') {
+                foreach (self::wrap('Observação: ' . $notes, 96) as $line) {
+                    $add($line, 8, 11);
+                }
+            }
             $add('Assinatura: ______________________________________________________________', 8, 17);
             $rule();
         }
