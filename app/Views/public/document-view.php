@@ -2,6 +2,9 @@
     <div>
         <h1><?= e($document['title'] ?? 'Documento') ?></h1>
         <p><?= e($document['original_name'] ?? 'Documento publico') ?></p>
+        <?php if (!empty($document['source_label'])): ?>
+            <p><?= e($document['source_label']) ?></p>
+        <?php endif; ?>
     </div>
     <div class="public-document-view-actions">
         <a href="<?= e(url('/documentos')) ?>">Voltar</a>

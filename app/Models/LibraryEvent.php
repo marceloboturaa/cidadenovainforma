@@ -66,6 +66,10 @@ class LibraryEvent
                 event_address VARCHAR(255) NULL,
                 cover_image VARCHAR(255) NULL,
                 related_links TEXT NULL,
+                registration_question_label VARCHAR(180) NULL,
+                registration_question_type VARCHAR(20) NOT NULL DEFAULT 'text',
+                registration_question_options TEXT NULL,
+                registration_question_required TINYINT(1) NOT NULL DEFAULT 0,
                 event_course_id BIGINT UNSIGNED NULL,
                 capacity INT UNSIGNED NULL,
                 public_enabled TINYINT(1) NOT NULL DEFAULT 1,
@@ -118,6 +122,16 @@ class LibraryEvent
         if (!in_array('related_links', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN related_links TEXT NULL AFTER cover_image');
         }
+        foreach ([
+            'registration_question_label' => 'ALTER TABLE library_events ADD COLUMN registration_question_label VARCHAR(180) NULL AFTER related_links',
+            'registration_question_type' => 'ALTER TABLE library_events ADD COLUMN registration_question_type VARCHAR(20) NOT NULL DEFAULT "text" AFTER registration_question_label',
+            'registration_question_options' => 'ALTER TABLE library_events ADD COLUMN registration_question_options TEXT NULL AFTER registration_question_type',
+            'registration_question_required' => 'ALTER TABLE library_events ADD COLUMN registration_question_required TINYINT(1) NOT NULL DEFAULT 0 AFTER registration_question_options',
+        ] as $column => $sql) {
+            if (!in_array($column, $eventColumns, true)) {
+                $db->exec($sql);
+            }
+        }
         if (!in_array('event_course_id', $eventColumns, true)) {
             $db->exec('ALTER TABLE library_events ADD COLUMN event_course_id BIGINT UNSIGNED NULL AFTER related_links');
         }
@@ -169,6 +183,9 @@ class LibraryEvent
         }
         if (!in_array('event_expectations', $participantColumns, true)) {
             $db->exec('ALTER TABLE library_event_participants ADD COLUMN event_expectations TEXT NULL AFTER heard_about');
+        }
+        if (!in_array('registration_extra_answer', $participantColumns, true)) {
+            $db->exec('ALTER TABLE library_event_participants ADD COLUMN registration_extra_answer TEXT NULL AFTER event_expectations');
         }
 
         $db->exec(
@@ -232,7 +249,7 @@ class LibraryEvent
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status,
+            "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status,
                     COALESCE(participant_counts.total, 0) AS participant_count
              FROM library_events
              LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -261,7 +278,7 @@ class LibraryEvent
 
         $events = Database::connection()
             ->query(
-                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -287,7 +304,7 @@ class LibraryEvent
 
         $events = Database::connection()
             ->query(
-                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -316,7 +333,7 @@ class LibraryEvent
 
         $events = Database::connection()
             ->query(
-                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -507,6 +524,24 @@ class LibraryEvent
         return $saved;
     }
 
+    public static function renameAttendanceDate(int $eventId, string $oldDate, string $newDate): int
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE library_event_attendance
+             SET attendance_date = :new_date, updated_at = NOW()
+             WHERE event_id = :event_id AND attendance_date = :old_date'
+        );
+        $stmt->execute([
+            'event_id' => $eventId,
+            'old_date' => $oldDate,
+            'new_date' => $newDate,
+        ]);
+
+        return $stmt->rowCount();
+    }
+
     public static function emailRecipients(int $eventId, string $mode, array $personIds = [], ?string $date = null, ?string $attendanceStatus = null): array
     {
         self::ensureSchema();
@@ -678,9 +713,9 @@ class LibraryEvent
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO library_events
-                (title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, related_links, event_course_id, capacity, public_enabled, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
+                (title, description, starts_at, ends_at, location, event_cep, event_address, cover_image, related_links, registration_question_label, registration_question_type, registration_question_options, registration_question_required, event_course_id, capacity, public_enabled, registration_enabled, public_show_location, public_show_address, public_show_capacity, public_show_responsible, responsible_user_id, status, notes, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :description, :starts_at, :ends_at, :location, :event_cep, :event_address, :cover_image, :related_links, :event_course_id, :capacity, :public_enabled, :registration_enabled, :public_show_location, :public_show_address, :public_show_capacity, :public_show_responsible, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :description, :starts_at, :ends_at, :location, :event_cep, :event_address, :cover_image, :related_links, :registration_question_label, :registration_question_type, :registration_question_options, :registration_question_required, :event_course_id, :capacity, :public_enabled, :registration_enabled, :public_show_location, :public_show_address, :public_show_capacity, :public_show_responsible, :responsible_user_id, :status, :notes, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::payload($data));
 
@@ -709,6 +744,10 @@ class LibraryEvent
                  event_address = :event_address,
                  cover_image = :cover_image,
                  related_links = :related_links,
+                 registration_question_label = :registration_question_label,
+                 registration_question_type = :registration_question_type,
+                 registration_question_options = :registration_question_options,
+                 registration_question_required = :registration_question_required,
                  event_course_id = :event_course_id,
                  capacity = :capacity,
                  public_enabled = :public_enabled,
@@ -737,14 +776,14 @@ class LibraryEvent
             ->execute(['id' => $id]);
     }
 
-    public static function attachParticipant(int $eventId, int $personId, string $status, ?string $notes, ?int $createdBy, ?string $heardAbout = null, ?string $eventExpectations = null): void
+    public static function attachParticipant(int $eventId, int $personId, string $status, ?string $notes, ?int $createdBy, ?string $heardAbout = null, ?string $eventExpectations = null, ?string $registrationExtraAnswer = null): void
     {
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO library_event_participants (event_id, person_id, status, notes, heard_about, event_expectations, created_by, created_at)
-             VALUES (:event_id, :person_id, :status, :notes, :heard_about, :event_expectations, :created_by, NOW())
-             ON DUPLICATE KEY UPDATE status = VALUES(status), notes = VALUES(notes), heard_about = VALUES(heard_about), event_expectations = VALUES(event_expectations)'
+            'INSERT INTO library_event_participants (event_id, person_id, status, notes, heard_about, event_expectations, registration_extra_answer, created_by, created_at)
+             VALUES (:event_id, :person_id, :status, :notes, :heard_about, :event_expectations, :registration_extra_answer, :created_by, NOW())
+             ON DUPLICATE KEY UPDATE status = VALUES(status), notes = VALUES(notes), heard_about = VALUES(heard_about), event_expectations = VALUES(event_expectations), registration_extra_answer = VALUES(registration_extra_answer)'
         );
         $stmt->execute([
             'event_id' => $eventId,
@@ -753,6 +792,7 @@ class LibraryEvent
             'notes' => self::nullable($notes),
             'heard_about' => self::nullable($heardAbout),
             'event_expectations' => self::nullable($eventExpectations),
+            'registration_extra_answer' => self::nullable($registrationExtraAnswer),
             'created_by' => $createdBy,
         ]);
     }
@@ -795,6 +835,10 @@ class LibraryEvent
             'event_address' => self::nullable($data['event_address'] ?? null),
             'cover_image' => self::nullable($data['cover_image'] ?? null),
             'related_links' => self::nullable($data['related_links'] ?? null),
+            'registration_question_label' => self::nullable($data['registration_question_label'] ?? null),
+            'registration_question_type' => in_array((string) ($data['registration_question_type'] ?? 'text'), ['text', 'select', 'checkboxes'], true) ? (string) $data['registration_question_type'] : 'text',
+            'registration_question_options' => self::nullable($data['registration_question_options'] ?? null),
+            'registration_question_required' => (int) !empty($data['registration_question_required']),
             'event_course_id' => self::primaryCourseId($data),
             'capacity' => !empty($data['capacity']) ? (int) $data['capacity'] : null,
             'public_enabled' => array_key_exists('public_enabled', $data) ? (int) !empty($data['public_enabled']) : 1,

@@ -621,7 +621,7 @@
         const exportStatus = document.querySelector('[data-participant-export-status]');
         const limitButton = document.querySelector('[data-linked-participant-limit]');
         let activeFilter = 'all';
-        let showAll = false;
+        let visibleLimit = 10;
 
         const applyFilter = () => {
             const term = normalizeSearch(searchInput.value);
@@ -632,7 +632,7 @@
                 const matchesText = term === '' || haystack.includes(term);
                 const matchesStatus = activeFilter === 'all' || card.dataset.linkedParticipantStatus === activeFilter;
                 const matchesFilter = matchesText && matchesStatus;
-                const matchesLimit = showAll || matched < 20;
+                const matchesLimit = matched < visibleLimit;
                 const matches = matchesFilter && matchesLimit;
                 if (matchesFilter) {
                     matched += 1;
@@ -657,25 +657,27 @@
                 exportStatus.value = activeFilter === 'all' ? '' : activeFilter;
             }
             if (limitButton) {
-                limitButton.hidden = matched <= 20;
-                limitButton.setAttribute('aria-pressed', showAll ? 'true' : 'false');
-                limitButton.innerHTML = showAll
-                    ? '<i class="bi bi-list-ol" aria-hidden="true"></i>Mostrar 20'
-                    : '<i class="bi bi-list" aria-hidden="true"></i>Mostrar todos';
+                limitButton.hidden = visibleLimit >= matched;
+                limitButton.setAttribute('aria-pressed', 'false');
+                limitButton.innerHTML = '<i class="bi bi-list" aria-hidden="true"></i>Mostrar mais 10';
             }
         };
 
-        searchInput.addEventListener('input', applyFilter);
+        searchInput.addEventListener('input', () => {
+            visibleLimit = 10;
+            applyFilter();
+        });
         filterButtons.forEach((button) => {
             button.addEventListener('click', () => {
                 activeFilter = button.dataset.linkedParticipantFilter || 'all';
+                visibleLimit = 10;
                 filterButtons.forEach((item) => item.classList.toggle('is-active', item === button));
                 applyFilter();
             });
         });
         if (limitButton) {
             limitButton.addEventListener('click', () => {
-                showAll = !showAll;
+                visibleLimit += 10;
                 applyFilter();
             });
         }

@@ -17,6 +17,7 @@ class Document
                 mime_type VARCHAR(120) NOT NULL,
                 original_name VARCHAR(190) NOT NULL,
                 size_bytes BIGINT UNSIGNED NOT NULL,
+                source_label VARCHAR(255) NULL,
                 is_public TINYINT(1) NOT NULL DEFAULT 0,
                 allow_download TINYINT(1) NOT NULL DEFAULT 1,
                 active TINYINT(1) NOT NULL DEFAULT 1,
@@ -29,6 +30,9 @@ class Document
         $columns = Database::connection()->query('SHOW COLUMNS FROM team_documents')->fetchAll(\PDO::FETCH_COLUMN);
         if (!in_array('is_public', $columns, true)) {
             Database::connection()->exec('ALTER TABLE team_documents ADD COLUMN is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes');
+        }
+        if (!in_array('source_label', $columns, true)) {
+            Database::connection()->exec('ALTER TABLE team_documents ADD COLUMN source_label VARCHAR(255) NULL AFTER size_bytes');
         }
         if (!in_array('allow_download', $columns, true)) {
             Database::connection()->exec('ALTER TABLE team_documents ADD COLUMN allow_download TINYINT(1) NOT NULL DEFAULT 1 AFTER is_public');
@@ -360,8 +364,8 @@ class Document
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO team_documents (uploaded_by, title, path, mime_type, original_name, size_bytes, is_public, allow_download, active, created_at, updated_at)
-             VALUES (:uploaded_by, :title, :path, :mime_type, :original_name, :size_bytes, :is_public, :allow_download, 1, NOW(), NOW())'
+            'INSERT INTO team_documents (uploaded_by, title, path, mime_type, original_name, size_bytes, source_label, is_public, allow_download, active, created_at, updated_at)
+             VALUES (:uploaded_by, :title, :path, :mime_type, :original_name, :size_bytes, :source_label, :is_public, :allow_download, 1, NOW(), NOW())'
         );
         $stmt->execute([
             'uploaded_by' => $data['uploaded_by'],
@@ -370,6 +374,7 @@ class Document
             'mime_type' => $data['mime_type'],
             'original_name' => $data['original_name'],
             'size_bytes' => $data['size_bytes'],
+            'source_label' => self::nullable($data['source_label'] ?? null),
             'is_public' => (int) !empty($data['is_public']),
             'allow_download' => (int) !empty($data['allow_download']),
         ]);
@@ -506,6 +511,12 @@ class Document
         Database::connection()
             ->prepare('UPDATE team_documents SET active = 0, updated_at = NOW() WHERE id = :id')
             ->execute(['id' => $id]);
+    }
+
+    private static function nullable(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+        return $value === '' ? null : $value;
     }
 
     public static function annotations(int $documentId): array

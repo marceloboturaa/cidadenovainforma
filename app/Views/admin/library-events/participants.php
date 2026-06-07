@@ -38,6 +38,15 @@
             <span>Data da chamada</span>
             <input class="form-control" type="date" name="attendance_date" value="<?= e((string) ($attendanceDate ?? date('Y-m-d'))) ?>">
         </label>
+        <label>
+            <span>Status da chamada</span>
+            <select class="form-select" name="attendance_status">
+                <option value="">Todos da data</option>
+                <option value="presente">Somente presentes</option>
+                <option value="ausente">Somente ausentes</option>
+                <option value="justificado">Somente justificados</option>
+            </select>
+        </label>
         <div class="participant-export-buttons">
             <button class="btn btn-outline-secondary icon-btn" name="format" value="csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</button>
             <button class="btn btn-primary icon-btn" name="format" value="pdf"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</button>
@@ -115,11 +124,11 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
     <?php endif; ?>
 </section>
 
-<section class="panel participant-attendance-panel">
-    <div class="section-heading">
+<details class="panel participant-attendance-panel">
+    <summary class="section-heading">
         <h2><i class="bi bi-calendar-check" aria-hidden="true"></i> Chamada do dia</h2>
         <span><?= e(date('d/m/Y', strtotime((string) ($attendanceDate ?? date('Y-m-d'))))) ?></span>
-    </div>
+    </summary>
     <form class="participant-attendance-date-form" method="get" action="<?= e(url('/admin/library-events/participants')) ?>">
         <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
         <label>
@@ -139,6 +148,15 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
+    <form class="participant-attendance-date-form" method="post" action="<?= e(url('/admin/library-events/participants/attendance-date?id=' . $event['id'])) ?>">
+        <?= csrf_field() ?>
+        <input type="hidden" name="old_attendance_date" value="<?= e((string) ($attendanceDate ?? date('Y-m-d'))) ?>">
+        <label>
+            <span>Alterar data desta chamada para</span>
+            <input class="form-control" type="date" name="new_attendance_date" value="<?= e((string) ($attendanceDate ?? date('Y-m-d'))) ?>">
+        </label>
+        <button class="btn btn-outline-secondary icon-btn"><i class="bi bi-calendar2-week" aria-hidden="true"></i>Alterar data</button>
+    </form>
 
     <?php if (!empty($attendanceRows)): ?>
         <form class="participant-attendance-form" method="post" action="<?= e(url('/admin/library-events/participants/attendance?id=' . $event['id'])) ?>">
@@ -166,7 +184,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
     <?php else: ?>
         <div class="empty-state">Nenhum participante ativo para chamada nesta data.</div>
     <?php endif; ?>
-</section>
+</details>
 
 <section class="panel participant-email-panel">
     <div class="section-heading">
@@ -207,6 +225,18 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
         <label>
             <span>Documento</span>
             <input class="form-control" type="file" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required>
+        </label>
+        <label>
+            <span>Título público</span>
+            <input class="form-control" name="public_document_title" value="<?= e('Documento do evento - ' . ($event['title'] ?? '')) ?>">
+        </label>
+        <label class="event-registration-check">
+            <input type="checkbox" name="publish_public_document" value="1">
+            <span>Publicar também em Documentos</span>
+        </label>
+        <label class="event-registration-check">
+            <input type="checkbox" name="public_document_download" value="1" checked>
+            <span>Permitir baixar no público</span>
         </label>
         <button class="btn btn-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar e-mail</button>
     </form>
@@ -366,6 +396,10 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                 </select>
                 <label class="form-label">O que espera do evento?</label>
                 <textarea class="form-control" name="event_expectations" rows="3"></textarea>
+                <?php if (!empty($event['registration_question_label'])): ?>
+                    <label class="form-label"><?= e($event['registration_question_label']) ?></label>
+                    <textarea class="form-control" name="registration_extra_answer" rows="3"></textarea>
+                <?php endif; ?>
             </section>
             <div class="person-form-actions">
                 <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Cadastrar inscrição</button>
@@ -520,6 +554,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                 $participant['notes'] ?? '',
                 $participant['heard_about'] ?? '',
                 $participant['event_expectations'] ?? '',
+                $participant['registration_extra_answer'] ?? '',
             ]);
             ?>
             <article class="admin-list-card internal-list-card participant-list-card" data-linked-participant-card data-linked-participant-status="<?= e((string) $participant['status']) ?>" data-linked-participant-search="<?= e($participantSearchText) ?>">
@@ -542,6 +577,9 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                     <?php if (!empty($participant['event_expectations'])): ?>
                         <p class="admin-list-description"><strong>Espera do evento:</strong> <?= e(text_excerpt($participant['event_expectations'], 180)) ?></p>
                     <?php endif; ?>
+                    <?php if (!empty($participant['registration_extra_answer'])): ?>
+                        <p class="admin-list-description"><strong><?= e($event['registration_question_label'] ?? 'Resposta do evento') ?>:</strong> <?= e(text_excerpt($participant['registration_extra_answer'], 180)) ?></p>
+                    <?php endif; ?>
                 </div>
                 <div class="participant-management-actions">
                     <form class="participant-add-form" method="post" action="<?= e(url('/admin/library-events/participants?id=' . $event['id'])) ?>">
@@ -559,6 +597,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                             <?php endforeach; ?>
                         </select>
                         <input class="form-control form-control-sm participant-expectation-field" name="event_expectations" value="<?= e($participant['event_expectations'] ?? '') ?>" placeholder="O que espera do evento">
+                        <input class="form-control form-control-sm participant-extra-answer-field" name="registration_extra_answer" value="<?= e($participant['registration_extra_answer'] ?? '') ?>" placeholder="Resposta da pergunta">
                         <button class="btn btn-sm btn-primary icon-btn participant-save-button"><i class="bi bi-check2" aria-hidden="true"></i>Salvar</button>
                     </form>
                     <?php if ($link = $whatsappLink($participant['whatsapp'] ?? $participant['phone'] ?? null, (string) $participant['full_name'], (string) $event['title'])): ?>

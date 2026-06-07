@@ -217,6 +217,31 @@ $selectedCourseIds = array_map('intval', $editing['event_course_ids'] ?? (!empty
                             <input class="form-check-input" type="checkbox" name="registration_enabled" value="1" <?= checked((bool) ($editing['registration_enabled'] ?? false)) ?>>
                             <span><strong>Ativar inscrição pública</strong><small>Se desligar, o formulário de inscrição não aparece na página do evento.</small></span>
                         </label>
+                        <details class="users-check-options">
+                            <summary>Pergunta extra no cadastro</summary>
+                            <div class="user-stacked-form">
+                                <label>
+                                    <span>Pergunta</span>
+                                    <input class="form-control" name="registration_question_label" value="<?= e($editing['registration_question_label'] ?? '') ?>" placeholder="Ex.: Quais temas você quer acompanhar?">
+                                </label>
+                                <label>
+                                    <span>Tipo de resposta</span>
+                                    <select class="form-select" name="registration_question_type">
+                                        <option value="text" <?= selected('text', (string) ($editing['registration_question_type'] ?? 'text')) ?>>Resposta aberta</option>
+                                        <option value="select" <?= selected('select', (string) ($editing['registration_question_type'] ?? '')) ?>>Seleção única</option>
+                                        <option value="checkboxes" <?= selected('checkboxes', (string) ($editing['registration_question_type'] ?? '')) ?>>Caixas de seleção</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Opções/tópicos</span>
+                                    <textarea class="form-control" name="registration_question_options" rows="4" placeholder="Uma opção por linha"><?= e($editing['registration_question_options'] ?? '') ?></textarea>
+                                </label>
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="registration_question_required" value="1" <?= checked((bool) ($editing['registration_question_required'] ?? false)) ?>>
+                                    <span class="form-check-label">Resposta obrigatória</span>
+                                </label>
+                            </div>
+                        </details>
                         <label class="person-toggle-row">
                             <input class="form-check-input" type="checkbox" name="public_show_location" value="1" <?= checked((bool) ($editing['public_show_location'] ?? true)) ?>>
                             <span><strong>Mostrar local no público</strong><small>Exibe o espaço onde será realizado.</small></span>

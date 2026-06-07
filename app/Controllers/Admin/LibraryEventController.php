@@ -11,6 +11,7 @@ use App\Core\RegistrationNotifier;
 use App\Core\Session;
 use App\Core\SimplePdf;
 use App\Core\View;
+use App\Models\Document;
 use App\Models\Education;
 use App\Models\LibraryEvent;
 use App\Models\Person;
@@ -147,7 +148,8 @@ class LibraryEventController
             $_POST['notes'] ?? null,
             current_user()['id'] ?? null,
             $_POST['heard_about'] ?? null,
-            $_POST['event_expectations'] ?? null
+            $_POST['event_expectations'] ?? null,
+            $_POST['registration_extra_answer'] ?? null
         );
 
         RegistrationNotifier::eventStatus($event, $person, (string) ($_POST['status'] ?? 'inscrito'));
@@ -172,6 +174,25 @@ class LibraryEventController
         redirect('/admin/library-events/participants?id=' . $event['id'] . '&attendance_date=' . urlencode($date));
     }
 
+    public function renameAttendanceDate(): void
+    {
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+        $oldDate = $this->attendanceDateFromRequest($_POST['old_attendance_date'] ?? null);
+        $newDate = $this->attendanceDateFromRequest($_POST['new_attendance_date'] ?? null);
+
+        if ($oldDate === $newDate) {
+            Session::flash('error', 'Informe uma nova data diferente da atual.');
+            redirect('/admin/library-events/participants?id=' . $event['id'] . '&attendance_date=' . urlencode($oldDate));
+        }
+
+        $updated = LibraryEvent::renameAttendanceDate((int) $event['id'], $oldDate, $newDate);
+        Logger::info('library_events.attendance_date_changed', 'Data da chamada alterada no evento: ' . $event['title'], current_user()['id'] ?? null);
+        Session::flash($updated > 0 ? 'success' : 'error', $updated > 0 ? 'Data da chamada atualizada.' : 'Nenhuma chamada foi encontrada nessa data.');
+        redirect('/admin/library-events/participants?id=' . $event['id'] . '&attendance_date=' . urlencode($newDate));
+    }
+
     public function emailDocument(): void
     {
         $this->validateCsrf('/admin/library-events');
@@ -194,8 +215,8 @@ class LibraryEventController
             $subject = 'Documento do evento ' . ($event['title'] ?? '');
         }
 
-        $documentPath = $this->uploadEventDocument();
-        if (!$documentPath) {
+        $document = $this->uploadEventDocument();
+        if (!$document) {
             redirect('/admin/library-events/participants?id=' . $event['id']);
         }
 
@@ -205,7 +226,21 @@ class LibraryEventController
             redirect('/admin/library-events/participants?id=' . $event['id']);
         }
 
-        $documentUrl = url($documentPath);
+        $documentUrl = url($document['path']);
+        if (!empty($_POST['publish_public_document'])) {
+            $documentId = Document::create([
+                'uploaded_by' => current_user()['id'] ?? 0,
+                'title' => trim((string) ($_POST['public_document_title'] ?? '')) ?: ('Documento do evento - ' . ($event['title'] ?? '')),
+                'path' => $document['path'],
+                'mime_type' => $document['mime_type'],
+                'original_name' => $document['original_name'],
+                'size_bytes' => $document['size_bytes'],
+                'source_label' => 'Documento enviado pelo evento: ' . ($event['title'] ?? 'Evento'),
+                'is_public' => 1,
+                'allow_download' => !empty($_POST['public_document_download']),
+            ]);
+            $documentUrl = url('/documentos/visualizar?id=' . $documentId);
+        }
         $sent = 0;
         foreach ($recipients as $recipient) {
             $html = '<p>Olá, ' . e($recipient['full_name'] ?? '') . '.</p>'
@@ -251,7 +286,8 @@ class LibraryEventController
             $_POST['participant_notes'] ?? null,
             $userId ?: null,
             $_POST['heard_about'] ?? null,
-            $_POST['event_expectations'] ?? null
+            $_POST['event_expectations'] ?? null,
+            $_POST['registration_extra_answer'] ?? null
         );
 
         $person = Person::find($personId);
@@ -347,11 +383,20 @@ class LibraryEventController
             $attendanceDate = isset($_GET['attendance_date']) && $_GET['attendance_date'] !== ''
                 ? $this->attendanceDateFromRequest($_GET['attendance_date'])
                 : null;
+            $attendanceStatus = in_array((string) ($_GET['attendance_status'] ?? ''), ['presente', 'ausente', 'justificado'], true)
+                ? (string) $_GET['attendance_status']
+                : null;
             if ($attendanceDate) {
                 $participants = array_map(static function (array $row): array {
                     $row['status'] = $row['attendance_status'] ?? 'sem chamada';
                     return $row;
                 }, LibraryEvent::attendanceForDate((int) $event['id'], $attendanceDate));
+                if ($attendanceStatus) {
+                    $participants = array_values(array_filter(
+                        $participants,
+                        fn (array $participant): bool => ($participant['attendance_status'] ?? '') === $attendanceStatus
+                    ));
+                }
             } elseif ($status === null) {
                 $participants = array_values(array_filter(
                     $participants,
@@ -402,7 +447,7 @@ class LibraryEventController
         header('Content-Disposition: attachment; filename="' . $slug . '-participantes.csv"');
         echo "\xEF\xBB\xBF";
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['Evento', 'Nome', 'Status', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereço', 'Número', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsável', 'Parentesco', 'CPF responsável', 'Telefone responsável', 'E-mail responsável', 'Contato autorizado', 'Uso de imagem autorizado', 'Como soube do evento', 'O que espera do evento', 'Observações da inscrição'], ';');
+        fputcsv($output, ['Evento', 'Nome', 'Status', 'CPF', 'Nascimento', 'Telefone', 'WhatsApp', 'E-mail', 'CEP', 'Endereço', 'Número', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Menor', 'Responsável', 'Parentesco', 'CPF responsável', 'Telefone responsável', 'E-mail responsável', 'Contato autorizado', 'Uso de imagem autorizado', 'Como soube do evento', 'O que espera do evento', 'Resposta da pergunta do evento', 'Observações da inscrição'], ';');
         foreach ($participants as $participant) {
             fputcsv($output, [
                 $event['title'] ?? '',
@@ -430,6 +475,7 @@ class LibraryEventController
                 !empty($participant['image_authorized']) ? 'Sim' : 'Nao',
                 $participant['heard_about'] ?? '',
                 $participant['event_expectations'] ?? '',
+                $participant['registration_extra_answer'] ?? '',
                 $participant['notes'] ?? '',
             ], ';');
         }
@@ -606,7 +652,7 @@ class LibraryEventController
         return '/public/uploads/events/' . $filename;
     }
 
-    private function uploadEventDocument(): ?string
+    private function uploadEventDocument(): ?array
     {
         if (empty($_FILES['document']['name']) || ($_FILES['document']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             Session::flash('error', 'Selecione um documento para enviar.');
@@ -628,7 +674,7 @@ class LibraryEventController
             return null;
         }
 
-        $directory = dirname(__DIR__, 3) . '/public/uploads/event-documents';
+        $directory = dirname(__DIR__, 3) . '/public/uploads/documents';
         if (!is_dir($directory)) {
             mkdir($directory, 0775, true);
         }
@@ -644,7 +690,12 @@ class LibraryEventController
             return null;
         }
 
-        return '/public/uploads/event-documents/' . $filename;
+        return [
+            'path' => '/public/uploads/documents/' . $filename,
+            'mime_type' => (string) ($_FILES['document']['type'] ?? 'application/octet-stream'),
+            'original_name' => (string) $_FILES['document']['name'],
+            'size_bytes' => $size,
+        ];
     }
 
     private function attendanceDateFromRequest(mixed $value): string

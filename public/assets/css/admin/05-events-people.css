@@ -794,8 +794,8 @@
 
 .participant-management-actions .participant-add-form {
     display: grid;
-    grid-template-columns: 130px minmax(220px, 1.5fr) 190px minmax(220px, 1.5fr) auto;
-    grid-template-areas: "status notes source expectation save";
+    grid-template-columns: 130px minmax(180px, 1fr) 170px minmax(180px, 1fr) minmax(180px, 1fr) auto;
+    grid-template-areas: "status notes source expectation extra save";
     gap: 8px;
     min-width: 0;
 }
@@ -814,6 +814,10 @@
 
 .participant-expectation-field {
     grid-area: expectation;
+}
+
+.participant-extra-answer-field {
+    grid-area: extra;
 }
 
 .participant-save-button {
@@ -837,7 +841,7 @@
 
 .participant-report-panel {
     display: grid;
-    grid-template-columns: minmax(180px, 0.4fr) minmax(0, 1.6fr);
+    grid-template-columns: minmax(180px, 0.35fr) minmax(0, 1.65fr);
     gap: 18px;
     align-items: end;
     padding: 16px 18px;
@@ -863,7 +867,7 @@
 
 .participant-export-form {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.8fr) minmax(160px, 0.7fr) auto;
+    grid-template-columns: minmax(190px, 1fr) minmax(190px, 0.8fr) minmax(150px, 0.7fr) minmax(160px, 0.7fr) auto;
     gap: 10px;
     align-items: end;
 }
@@ -887,6 +891,15 @@
     gap: 14px;
 }
 
+.participant-attendance-panel > summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.participant-attendance-panel > summary::-webkit-details-marker {
+    display: none;
+}
+
 .participant-attendance-date-form,
 .participant-email-form {
     display: grid;
@@ -897,6 +910,11 @@
 
 .participant-email-form {
     grid-template-columns: repeat(3, minmax(150px, 1fr));
+}
+
+.participant-email-form .event-registration-check {
+    align-self: center;
+    min-height: 42px;
 }
 
 .participant-email-message {
@@ -1009,7 +1027,8 @@
         grid-template-columns: 130px minmax(200px, 1fr) auto;
         grid-template-areas:
             "status notes save"
-            "source expectation save";
+            "source expectation save"
+            "extra extra save";
     }
 }
 
@@ -1059,6 +1078,7 @@
             "notes"
             "source"
             "expectation"
+            "extra"
             "save";
     }
 

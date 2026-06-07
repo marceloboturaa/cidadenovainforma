@@ -247,6 +247,34 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                             <label>O que você espera deste evento?</label>
                             <textarea name="event_expectations" rows="3"></textarea>
                         </div>
+                        <?php if (!empty($event['registration_question_label'])): ?>
+                            <?php
+                            $questionType = (string) ($event['registration_question_type'] ?? 'text');
+                            $questionOptions = array_values(array_filter(array_map('trim', preg_split('/\R+/', (string) ($event['registration_question_options'] ?? '')) ?: [])));
+                            ?>
+                            <div class="field-wide">
+                                <label><?= e($event['registration_question_label']) ?></label>
+                                <?php if ($questionType === 'select' && $questionOptions): ?>
+                                    <select name="registration_extra_answer" <?= !empty($event['registration_question_required']) ? 'required' : '' ?>>
+                                        <option value="">Selecione uma opção</option>
+                                        <?php foreach ($questionOptions as $option): ?>
+                                            <option value="<?= e($option) ?>"><?= e($option) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                <?php elseif ($questionType === 'checkboxes' && $questionOptions): ?>
+                                    <div class="event-topic-options">
+                                        <?php foreach ($questionOptions as $option): ?>
+                                            <label class="event-registration-check">
+                                                <input type="checkbox" name="registration_extra_answer[]" value="<?= e($option) ?>">
+                                                <span><?= e($option) ?></span>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <textarea name="registration_extra_answer" rows="3" <?= !empty($event['registration_question_required']) ? 'required' : '' ?>></textarea>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                         <label class="event-registration-check event-login-option field-wide">
                             <input type="checkbox" name="create_login" value="1" data-public-login-toggle>
                             <span>Também quero criar login com este e-mail. O acesso só será liberado após aprovação do administrador.</span>

@@ -85,6 +85,9 @@ sort($documentTypes);
             <div>
                 <span><?= e($documentType) ?></span>
                 <h2><?= e($document['title']) ?></h2>
+                <?php if (!empty($document['source_label'])): ?>
+                    <small><?= e($document['source_label']) ?></small>
+                <?php endif; ?>
             </div>
             <div class="public-document-card-actions">
                 <a href="<?= e($viewUrl) ?>">Ver</a>

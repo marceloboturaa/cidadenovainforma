@@ -103,6 +103,7 @@ $router->post('/admin/library-events/participants/create', [LibraryEventControll
 $router->post('/admin/library-events/participants/user', [LibraryEventController::class, 'addUserParticipant']);
 $router->post('/admin/library-events/participants/bulk-status', [LibraryEventController::class, 'bulkParticipantStatus']);
 $router->post('/admin/library-events/participants/attendance', [LibraryEventController::class, 'saveAttendance']);
+$router->post('/admin/library-events/participants/attendance-date', [LibraryEventController::class, 'renameAttendanceDate']);
 $router->post('/admin/library-events/participants/email-document', [LibraryEventController::class, 'emailDocument']);
 $router->get('/admin/library-events/participants/export', [LibraryEventController::class, 'exportParticipants']);
 $router->post('/admin/library-events/participants/remove', [LibraryEventController::class, 'removeParticipant']);

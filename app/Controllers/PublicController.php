@@ -180,6 +180,12 @@ class PublicController
             redirect('/evento/' . $event['id'] . '#inscricao');
         }
 
+        $extraAnswer = $this->registrationExtraAnswer($event);
+        if (!empty($event['registration_question_required']) && trim($extraAnswer) === '') {
+            Session::flash('registration_error', 'Responda a pergunta obrigatória do evento.');
+            redirect('/evento/' . $event['id'] . '#inscricao');
+        }
+
         $name = trim((string) ($_POST['full_name'] ?? ''));
         $contact = trim((string) ($_POST['whatsapp'] ?? '') . (string) ($_POST['phone'] ?? '') . (string) ($_POST['email'] ?? ''));
 
@@ -230,7 +236,8 @@ class PublicController
             'Inscrição enviada pela página pública. Aguardando confirmação do master/admin.',
             null,
             $_POST['heard_about'] ?? null,
-            $_POST['event_expectations'] ?? null
+            $_POST['event_expectations'] ?? null,
+            $extraAnswer
         );
 
         $loginRequested = $this->createPendingLoginIfRequested($person ?: ['full_name' => $name, 'email' => $_POST['email'] ?? ''], $event, $personId);
@@ -266,6 +273,20 @@ class PublicController
             'metaDescription' => $area['summary'],
             'canonicalUrl' => url('/instituicao/' . $area['slug']),
         ], 'public');
+    }
+
+    private function registrationExtraAnswer(array $event): string
+    {
+        if (empty($event['registration_question_label'])) {
+            return '';
+        }
+
+        $answer = $_POST['registration_extra_answer'] ?? '';
+        if (is_array($answer)) {
+            $answer = implode(', ', array_filter(array_map('trim', array_map('strval', $answer))));
+        }
+
+        return trim((string) $answer);
     }
 
     public function documents(): void
