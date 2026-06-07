@@ -1,32 +1,45 @@
-<div class="page-heading">
+<div class="page-heading participant-page-heading">
     <div>
         <p>Inscrições e participantes</p>
         <h1><?= e($event['title']) ?></h1>
     </div>
     <div class="export-actions">
-        <form class="participant-export-form" method="get" action="<?= e(url('/admin/library-events/participants/export')) ?>">
-            <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
-            <label>
-                <span>Exportar</span>
-                <select class="form-select form-select-sm" name="status" data-participant-export-status>
-                    <option value="">Todos os cadastros</option>
-                    <option value="pendente">Somente pendentes</option>
-                    <option value="inscrito">Somente inscritos</option>
-                    <option value="presente">Somente presentes</option>
-                    <option value="ausente">Somente ausentes</option>
-                    <option value="cancelado">Somente cancelados</option>
-                </select>
-            </label>
-            <button class="btn btn-outline-secondary icon-btn" name="format" value="csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</button>
-            <button class="btn btn-outline-secondary icon-btn" name="format" value="pdf"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</button>
-            <button class="btn btn-outline-primary icon-btn" name="report" value="attendance"><i class="bi bi-clipboard2-check" aria-hidden="true"></i>Lista de chamada PDF</button>
-            <button class="btn btn-outline-primary icon-btn" name="report" value="attendance_csv"><i class="bi bi-table" aria-hidden="true"></i>Chamada CSV</button>
-            <button class="btn btn-outline-primary icon-btn" name="report" value="names"><i class="bi bi-person-lines-fill" aria-hidden="true"></i>Nomes dos inscritos PDF</button>
-            <button class="btn btn-outline-primary icon-btn" name="report" value="names_csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>Nomes CSV</button>
-        </form>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/edit?id=' . $event['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
+
+<section class="panel participant-report-panel">
+    <div>
+        <span>Relatórios do evento</span>
+        <strong>Exportar listas</strong>
+    </div>
+    <form class="participant-export-form" method="get" action="<?= e(url('/admin/library-events/participants/export')) ?>">
+        <input type="hidden" name="id" value="<?= e((string) $event['id']) ?>">
+        <label>
+            <span>Tipo de lista</span>
+            <select class="form-select" name="report">
+                <option value="participants">Cadastro completo</option>
+                <option value="names">Somente nomes dos inscritos</option>
+                <option value="attendance">Lista de chamada/presença</option>
+            </select>
+        </label>
+        <label>
+            <span>Situação</span>
+            <select class="form-select" name="status" data-participant-export-status>
+                <option value="">Todos os cadastros</option>
+                <option value="pendente">Somente pendentes</option>
+                <option value="inscrito">Somente inscritos</option>
+                <option value="presente">Somente presentes</option>
+                <option value="ausente">Somente ausentes</option>
+                <option value="cancelado">Somente cancelados</option>
+            </select>
+        </label>
+        <div class="participant-export-buttons">
+            <button class="btn btn-outline-secondary icon-btn" name="format" value="csv"><i class="bi bi-filetype-csv" aria-hidden="true"></i>CSV</button>
+            <button class="btn btn-primary icon-btn" name="format" value="pdf"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>PDF</button>
+        </div>
+    </form>
+</section>
 <?php
 $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?string {
     $digits = preg_replace('/\D+/', '', (string) $phone);
@@ -433,19 +446,19 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                     <form class="participant-add-form" method="post" action="<?= e(url('/admin/library-events/participants?id=' . $event['id'])) ?>">
                         <?= csrf_field() ?>
                         <input type="hidden" name="person_id" value="<?= e((string) $participant['person_id']) ?>">
-                        <select class="form-select form-select-sm" name="status">
+                        <select class="form-select form-select-sm participant-status-field" name="status">
                             <?php foreach (['pendente' => 'Pendente', 'inscrito' => 'Inscrito', 'presente' => 'Presente', 'ausente' => 'Ausente', 'cancelado' => 'Cancelado'] as $value => $label): ?>
                                 <option value="<?= e($value) ?>" <?= selected($value, (string) $participant['status']) ?>><?= e($label) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <input class="form-control form-control-sm" name="notes" value="<?= e($participant['notes'] ?? '') ?>" placeholder="Observação">
-                        <select class="form-select form-select-sm" name="heard_about" aria-label="Como soube do evento">
+                        <input class="form-control form-control-sm participant-notes-field" name="notes" value="<?= e($participant['notes'] ?? '') ?>" placeholder="Observação da inscrição">
+                        <select class="form-select form-select-sm participant-source-field" name="heard_about" aria-label="Como soube do evento">
                             <?php foreach (['' => 'Não informado', 'Internet' => 'Internet', 'Redes sociais' => 'Redes sociais', 'WhatsApp' => 'WhatsApp', 'Indicação de amigo/familiar' => 'Indicação', 'Escola ou instituição' => 'Escola/instituição', 'Comunidade/igreja' => 'Comunidade/igreja', 'Outro' => 'Outro'] as $value => $label): ?>
                                 <option value="<?= e($value) ?>" <?= selected($value, (string) ($participant['heard_about'] ?? '')) ?>><?= e($label) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <input class="form-control form-control-sm" name="event_expectations" value="<?= e($participant['event_expectations'] ?? '') ?>" placeholder="Expectativa">
-                        <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-check2" aria-hidden="true"></i>Salvar</button>
+                        <input class="form-control form-control-sm participant-expectation-field" name="event_expectations" value="<?= e($participant['event_expectations'] ?? '') ?>" placeholder="O que espera do evento">
+                        <button class="btn btn-sm btn-primary icon-btn participant-save-button"><i class="bi bi-check2" aria-hidden="true"></i>Salvar</button>
                     </form>
                     <?php if ($link = $whatsappLink($participant['whatsapp'] ?? $participant['phone'] ?? null, (string) $participant['full_name'], (string) $event['title'])): ?>
                         <a class="btn btn-sm btn-outline-success icon-btn" href="<?= e($link) ?>" target="_blank" rel="noopener"><i class="bi bi-whatsapp" aria-hidden="true"></i>WhatsApp</a>

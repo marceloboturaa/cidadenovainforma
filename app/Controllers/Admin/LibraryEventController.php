@@ -242,10 +242,10 @@ class LibraryEventController
         $slug = preg_replace('/[^a-z0-9]+/i', '-', strtolower((string) $event['title'])) ?: 'evento';
         $slug = trim($slug, '-');
 
-        if (in_array($report, ['names', 'names_csv'], true)) {
+        if ($report === 'names') {
             $participants = LibraryEvent::participants((int) $event['id'], 'inscrito');
 
-            if ($report === 'names') {
+            if ($format === 'pdf') {
                 $pdf = SimplePdf::participantNamesReport($event, $participants);
                 header('Content-Type: application/pdf');
                 header('Content-Disposition: attachment; filename="' . $slug . '-nomes-dos-inscritos.pdf"');
@@ -269,7 +269,7 @@ class LibraryEventController
             exit;
         }
 
-        if (in_array($report, ['attendance', 'attendance_csv'], true)) {
+        if ($report === 'attendance') {
             if ($status === null) {
                 $participants = array_values(array_filter(
                     $participants,
@@ -277,7 +277,7 @@ class LibraryEventController
                 ));
             }
 
-            if ($report === 'attendance') {
+            if ($format === 'pdf') {
                 $pdf = SimplePdf::attendanceReport($event, $participants);
                 header('Content-Type: application/pdf');
                 header('Content-Disposition: attachment; filename="' . $slug . '-lista-de-chamada.pdf"');

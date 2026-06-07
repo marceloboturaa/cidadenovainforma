@@ -706,7 +706,7 @@
 }
 
 .participant-linked-panel {
-    padding: 20px;
+    padding: 18px;
     background: #f8fafc;
 }
 
@@ -734,9 +734,9 @@
 
 .admin-list-card.participant-list-card {
     grid-template-columns: 34px minmax(0, 1fr);
-    gap: 12px;
+    gap: 10px;
     align-items: start;
-    padding: 16px;
+    padding: 14px;
     border-left: 4px solid #94a3b8;
     box-shadow: 0 5px 16px rgba(15, 23, 42, 0.04);
 }
@@ -794,9 +794,30 @@
 
 .participant-management-actions .participant-add-form {
     display: grid;
-    grid-template-columns: 130px minmax(180px, 1.4fr) 170px minmax(160px, 1fr) auto;
+    grid-template-columns: 130px minmax(220px, 1.5fr) 190px minmax(220px, 1.5fr) auto;
+    grid-template-areas: "status notes source expectation save";
     gap: 8px;
     min-width: 0;
+}
+
+.participant-status-field {
+    grid-area: status;
+}
+
+.participant-notes-field {
+    grid-area: notes;
+}
+
+.participant-source-field {
+    grid-area: source;
+}
+
+.participant-expectation-field {
+    grid-area: expectation;
+}
+
+.participant-save-button {
+    grid-area: save;
 }
 
 .participant-management-actions > a,
@@ -814,21 +835,43 @@
     color: #ffffff;
 }
 
-.participant-export-form {
-    display: flex;
-    flex-wrap: wrap;
+.participant-report-panel {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.4fr) minmax(0, 1.6fr);
+    gap: 18px;
     align-items: end;
-    gap: 7px;
-    padding: 8px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #ffffff;
+    padding: 16px 18px;
+}
+
+.participant-report-panel > div > span,
+.participant-report-panel > div > strong {
+    display: block;
+}
+
+.participant-report-panel > div > span {
+    margin-bottom: 3px;
+    color: var(--brand);
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.participant-report-panel > div > strong {
+    color: var(--ink);
+    font-size: 1.05rem;
+}
+
+.participant-export-form {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.8fr) auto;
+    gap: 10px;
+    align-items: end;
 }
 
 .participant-export-form label {
     display: grid;
     gap: 3px;
-    min-width: 210px;
+    min-width: 0;
 }
 
 .participant-export-form label > span {
@@ -838,8 +881,13 @@
     text-transform: uppercase;
 }
 
-.participant-export-form .btn {
-    min-height: 34px;
+.participant-export-buttons {
+    display: flex;
+    gap: 7px;
+}
+
+.participant-export-buttons .btn {
+    min-height: 38px;
 }
 
 .people-list-toolbar,
@@ -889,6 +937,15 @@
     gap: 10px;
 }
 
+@media (max-width: 1180px) {
+    .participant-management-actions .participant-add-form {
+        grid-template-columns: 130px minmax(200px, 1fr) auto;
+        grid-template-areas:
+            "status notes save"
+            "source expectation save";
+    }
+}
+
 @media (max-width: 900px) {
     .registration-directory-tools {
         grid-template-columns: 1fr;
@@ -930,6 +987,12 @@
 
     .participant-management-actions .participant-add-form {
         grid-template-columns: 1fr;
+        grid-template-areas:
+            "status"
+            "notes"
+            "source"
+            "expectation"
+            "save";
     }
 
     .participant-management-actions > a,
@@ -941,11 +1004,24 @@
 
     .participant-export-form,
     .participant-export-form label,
-    .participant-export-form .btn,
     .people-list-toolbar,
     .people-pagination,
     .people-pagination > div {
         width: 100%;
+    }
+
+    .participant-report-panel,
+    .participant-export-form {
+        grid-template-columns: 1fr;
+    }
+
+    .participant-export-buttons,
+    .participant-export-buttons .btn {
+        width: 100%;
+    }
+
+    .participant-export-buttons .btn {
+        flex: 1 1 0;
     }
 
     .people-list-toolbar,

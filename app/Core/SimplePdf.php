@@ -179,15 +179,19 @@ class SimplePdf
     public static function participantNamesReport(array $event, array $participants): string
     {
         $eventTitle = (string) ($event['title'] ?? 'Cursinho');
-        $lines = [];
+        $lines = [
+            'Curso/evento: ' . $eventTitle,
+            'Total de inscritos: ' . count($participants),
+            '',
+        ];
 
         foreach ($participants as $index => $participant) {
             $lines[] = ($index + 1) . '. ' . (string) ($participant['full_name'] ?? '');
         }
 
         return self::fromLines(
-            'Inscritos - ' . $eventTitle . ' | Total: ' . count($participants),
-            $lines ?: ['Nenhum inscrito encontrado.']
+            'Lista de inscritos',
+            count($participants) > 0 ? $lines : array_merge($lines, ['Nenhum inscrito encontrado.'])
         );
     }
 
