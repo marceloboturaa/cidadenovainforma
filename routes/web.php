@@ -100,6 +100,7 @@ $router->post('/admin/library-events/delete', [LibraryEventController::class, 'd
 $router->get('/admin/library-events/participants', [LibraryEventController::class, 'participants']);
 $router->post('/admin/library-events/participants', [LibraryEventController::class, 'addParticipant']);
 $router->post('/admin/library-events/participants/create', [LibraryEventController::class, 'createParticipant']);
+$router->post('/admin/library-events/participants/person', [LibraryEventController::class, 'updateParticipantPerson']);
 $router->post('/admin/library-events/participants/user', [LibraryEventController::class, 'addUserParticipant']);
 $router->post('/admin/library-events/participants/bulk-status', [LibraryEventController::class, 'bulkParticipantStatus']);
 $router->post('/admin/library-events/participants/attendance', [LibraryEventController::class, 'saveAttendance']);

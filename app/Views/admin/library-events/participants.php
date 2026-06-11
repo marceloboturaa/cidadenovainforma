@@ -65,6 +65,14 @@ $whatsappLink = function (?string $phone, string $name, string $eventTitle): ?st
     $message = 'Olá, ' . $name . '. Sua inscrição para "' . $eventTitle . '" foi atualizada. Acompanhe as informações com a equipe do Cidade Nova Informa.';
     return 'https://wa.me/' . $digits . '?text=' . rawurlencode($message);
 };
+$formatDate = static function (?string $date): string {
+    if (!$date) {
+        return '';
+    }
+
+    $timestamp = strtotime($date);
+    return $timestamp ? date('d/m/Y', $timestamp) : $date;
+};
 $capacity = !empty($event['capacity']) ? (int) $event['capacity'] : null;
 $occupiedSlots = (int) (($participantStats['pendente'] ?? 0) + ($participantStats['inscrito'] ?? 0) + ($participantStats['presente'] ?? 0) + ($participantStats['ausente'] ?? 0));
 $remainingSlots = $capacity ? max(0, $capacity - $occupiedSlots) : null;
@@ -570,12 +578,24 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                         <span class="state-pill <?= in_array($participant['status'], ['inscrito', 'presente'], true) ? 'is-active' : 'is-muted' ?>"><?= e(ucfirst($participant['status'])) ?></span>
                     </div>
                     <dl class="admin-list-meta">
+                        <div><dt>CPF</dt><dd><?= e($participant['cpf'] ?? '-') ?></dd></div>
+                        <div><dt>Nascimento</dt><dd><?= e($formatDate($participant['birth_date'] ?? null) ?: '-') ?></dd></div>
+                        <div><dt>Telefone</dt><dd><?= e($participant['phone'] ?? '-') ?></dd></div>
                         <div><dt>WhatsApp</dt><dd><?= e($participant['whatsapp'] ?? '-') ?></dd></div>
                         <div><dt>E-mail</dt><dd><?= e($participant['email'] ?? '-') ?></dd></div>
-                        <div><dt>Bairro</dt><dd><?= e($participant['district'] ?? '-') ?></dd></div>
+                        <div><dt>Endereço</dt><dd><?= e(trim(implode(', ', array_filter([
+                            $participant['address'] ?? '',
+                            $participant['address_number'] ?? '',
+                            $participant['district'] ?? '',
+                            $participant['city'] ?? '',
+                            $participant['state'] ?? '',
+                        ]))) ?: '-') ?></dd></div>
                         <div><dt>Imagem</dt><dd><?= !empty($participant['image_authorized']) ? 'Autorizada' : 'Não autorizada' ?></dd></div>
                         <div><dt>Soube por</dt><dd><?= e($participant['heard_about'] ?? '-') ?></dd></div>
                     </dl>
+                    <?php if (!empty($participant['is_minor'])): ?>
+                        <p class="admin-list-description"><strong>Responsável:</strong> <?= e($participant['guardian_name'] ?? '-') ?><?= !empty($participant['guardian_relation']) ? ' (' . e($participant['guardian_relation']) . ')' : '' ?><?= !empty($participant['guardian_phone']) ? ' - ' . e($participant['guardian_phone']) : '' ?></p>
+                    <?php endif; ?>
                     <?php if (!empty($participant['event_expectations'])): ?>
                         <p class="admin-list-description"><strong>Espera do evento:</strong> <?= e(text_excerpt($participant['event_expectations'], 180)) ?></p>
                     <?php endif; ?>
@@ -609,6 +629,43 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                         <?= csrf_field() ?>
                         <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-x-circle" aria-hidden="true"></i>Remover</button>
                     </form>
+                    <details class="participant-person-editor">
+                        <summary class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar estudante</summary>
+                        <form class="participant-person-edit-form" method="post" action="<?= e(url('/admin/library-events/participants/person?id=' . $event['id'])) ?>" data-person-form>
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="person_id" value="<?= e((string) $participant['person_id']) ?>">
+                            <div class="participant-person-edit-grid">
+                                <label class="field-wide"><span>Nome completo</span><input class="form-control" name="full_name" value="<?= e($participant['full_name'] ?? '') ?>" required></label>
+                                <label><span>CPF</span><input class="form-control" name="cpf" value="<?= e($participant['cpf'] ?? '') ?>" data-cpf-input></label>
+                                <label><span>Nascimento</span><input class="form-control" name="birth_date" value="<?= e($formatDate($participant['birth_date'] ?? null)) ?>" placeholder="dd/mm/aaaa" inputmode="numeric" data-birth-date-input></label>
+                                <label><span>Telefone</span><input class="form-control" name="phone" value="<?= e($participant['phone'] ?? '') ?>" inputmode="tel" data-phone-input></label>
+                                <label><span>WhatsApp</span><input class="form-control" name="whatsapp" value="<?= e($participant['whatsapp'] ?? '') ?>" inputmode="tel" data-phone-input></label>
+                                <label class="field-wide"><span>E-mail</span><input class="form-control" name="email" type="email" value="<?= e($participant['email'] ?? '') ?>"></label>
+                                <label><span>CEP</span><div class="input-action-row"><input class="form-control" name="cep" value="<?= e($participant['cep'] ?? '') ?>" data-cep-input><button class="btn btn-outline-secondary icon-btn" type="button" data-cep-search><i class="bi bi-search" aria-hidden="true"></i>CEP</button></div></label>
+                                <label class="field-wide"><span>Endereço</span><input class="form-control" name="address" value="<?= e($participant['address'] ?? '') ?>" data-address-input></label>
+                                <label><span>Número</span><input class="form-control" name="address_number" value="<?= e($participant['address_number'] ?? '') ?>"></label>
+                                <label><span>Complemento</span><input class="form-control" name="address_complement" value="<?= e($participant['address_complement'] ?? '') ?>"></label>
+                                <label><span>Bairro</span><input class="form-control" name="district" value="<?= e($participant['district'] ?? '') ?>" data-district-input></label>
+                                <label><span>Cidade</span><input class="form-control" name="city" value="<?= e($participant['city'] ?? '') ?>" data-city-input></label>
+                                <label><span>UF</span><input class="form-control" name="state" maxlength="2" value="<?= e($participant['state'] ?? '') ?>" data-state-input></label>
+                                <label class="participant-edit-check"><input class="form-check-input" type="checkbox" name="contact_authorized" value="1" <?= checked(!empty($participant['contact_authorized'])) ?>><span>Autoriza contato</span></label>
+                                <label class="participant-edit-check"><input class="form-check-input" type="checkbox" name="image_authorized" value="1" <?= checked(!empty($participant['image_authorized'])) ?>><span>Autoriza uso de imagem</span></label>
+                                <label class="participant-edit-check"><input class="form-check-input" type="checkbox" name="is_minor" value="1" <?= checked(!empty($participant['is_minor'])) ?> data-minor-toggle><span>Criança/adolescente</span></label>
+                            </div>
+                            <section class="participant-guardian-editor" data-guardian-fields <?= empty($participant['is_minor']) ? 'hidden' : '' ?>>
+                                <h3>Dados do responsável</h3>
+                                <div class="participant-person-edit-grid">
+                                    <label class="field-wide"><span>Nome do responsável</span><input class="form-control" name="guardian_name" value="<?= e($participant['guardian_name'] ?? '') ?>"></label>
+                                    <label><span>Parentesco</span><input class="form-control" name="guardian_relation" value="<?= e($participant['guardian_relation'] ?? '') ?>"></label>
+                                    <label><span>CPF do responsável</span><input class="form-control" name="guardian_cpf" value="<?= e($participant['guardian_cpf'] ?? '') ?>" data-cpf-input></label>
+                                    <label><span>Telefone do responsável</span><input class="form-control" name="guardian_phone" value="<?= e($participant['guardian_phone'] ?? '') ?>" inputmode="tel" data-phone-input></label>
+                                    <label class="field-wide"><span>E-mail do responsável</span><input class="form-control" name="guardian_email" type="email" value="<?= e($participant['guardian_email'] ?? '') ?>"></label>
+                                </div>
+                            </section>
+                            <label class="participant-person-notes"><span>Observações do cadastro</span><textarea class="form-control" name="notes" rows="3"><?= e($participant['person_notes'] ?? '') ?></textarea></label>
+                            <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar dados do estudante</button>
+                        </form>
+                    </details>
                 </div>
             </article>
         <?php endforeach; ?>

@@ -7,7 +7,7 @@
     const focusButtons = document.querySelectorAll('[data-editor-focus]');
     const galleryList = document.querySelector('[data-gallery-list]');
     const galleryAdd = document.querySelector('[data-gallery-add]');
-    const personForm = document.querySelector('[data-person-form]');
+    const personForms = document.querySelectorAll('[data-person-form]');
     const modalOpeners = document.querySelectorAll('[data-modal-open]');
     const educationStudentList = document.querySelector('[data-education-student-list]');
     const educationStudentSearch = document.querySelector('[data-education-student-search]');
@@ -216,57 +216,57 @@
         bindDocumentSearch(documentList, documentSearch);
     }
 
-    if (personForm) {
-        const minorToggle = personForm.querySelector('[data-minor-toggle]');
-        const guardianFields = personForm.querySelector('[data-guardian-fields]');
-        const cepInput = personForm.querySelector('[data-cep-input]');
-        const cepSearch = personForm.querySelector('[data-cep-search]');
+    personForms.forEach((personForm) => {
+            const minorToggle = personForm.querySelector('[data-minor-toggle]');
+            const guardianFields = personForm.querySelector('[data-guardian-fields]');
+            const cepInput = personForm.querySelector('[data-cep-input]');
+            const cepSearch = personForm.querySelector('[data-cep-search]');
 
-        personForm.querySelectorAll('[data-cpf-input]').forEach((input) => {
-            input.addEventListener('input', () => {
-                input.value = cpfMask(input.value);
-                input.setCustomValidity('');
+            personForm.querySelectorAll('[data-cpf-input]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    input.value = cpfMask(input.value);
+                    input.setCustomValidity('');
+                });
+                input.addEventListener('blur', () => {
+                    const value = input.value.replace(/\D/g, '');
+                    input.setCustomValidity(value && !isValidCpf(value) ? 'CPF inválido.' : '');
+                });
             });
-            input.addEventListener('blur', () => {
-                const value = input.value.replace(/\D/g, '');
-                input.setCustomValidity(value && !isValidCpf(value) ? 'CPF inválido.' : '');
+
+            personForm.querySelectorAll('[data-birth-date-input]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    input.value = dateMask(input.value);
+                    input.setCustomValidity('');
+                });
+                input.addEventListener('blur', () => {
+                    input.setCustomValidity(input.value && !isValidDate(input.value) ? 'Data inválida. Use dd/mm/aaaa.' : '');
+                    if (input.validationMessage) {
+                        input.reportValidity();
+                    }
+                });
             });
+
+            personForm.querySelectorAll('[data-phone-input]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    input.value = phoneMask(input.value);
+                });
+            });
+
+            if (minorToggle && guardianFields) {
+                const syncGuardian = () => guardianFields.hidden = !minorToggle.checked;
+                minorToggle.addEventListener('change', syncGuardian);
+                syncGuardian();
+            }
+
+            if (cepInput && cepSearch) {
+                bindCepLookup(cepInput, cepSearch, personForm, {
+                    address: '[data-address-input]',
+                    district: '[data-district-input]',
+                    city: '[data-city-input]',
+                    state: '[data-state-input]'
+                });
+            }
         });
-
-        personForm.querySelectorAll('[data-birth-date-input]').forEach((input) => {
-            input.addEventListener('input', () => {
-                input.value = dateMask(input.value);
-                input.setCustomValidity('');
-            });
-            input.addEventListener('blur', () => {
-                input.setCustomValidity(input.value && !isValidDate(input.value) ? 'Data inválida. Use dd/mm/aaaa.' : '');
-                if (input.validationMessage) {
-                    input.reportValidity();
-                }
-            });
-        });
-
-        personForm.querySelectorAll('[data-phone-input]').forEach((input) => {
-            input.addEventListener('input', () => {
-                input.value = phoneMask(input.value);
-            });
-        });
-
-        if (minorToggle && guardianFields) {
-            const syncGuardian = () => guardianFields.hidden = !minorToggle.checked;
-            minorToggle.addEventListener('change', syncGuardian);
-            syncGuardian();
-        }
-
-        if (cepInput && cepSearch) {
-            bindCepLookup(cepInput, cepSearch, personForm, {
-                address: '[data-address-input]',
-                district: '[data-district-input]',
-                city: '[data-city-input]',
-                state: '[data-state-input]'
-            });
-        }
-    }
 
     function closeMenu() {
         body.classList.remove('admin-menu-open');

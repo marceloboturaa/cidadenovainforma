@@ -263,7 +263,7 @@ $selectedCourseIds = array_map('intval', $editing['event_course_ids'] ?? (!empty
                     <section class="event-course-picker">
                         <div>
                             <label class="form-label">Cursos vinculados ao evento</label>
-                            <small>Marque um ou mais cursos para aparecerem dentro da pÃ¡gina do evento.</small>
+                            <small>Marque um ou mais cursos para aparecerem dentro da página do evento.</small>
                         </div>
                         <div class="event-course-options">
                             <?php foreach (($courses ?? []) as $course): ?>

@@ -833,6 +833,92 @@
     justify-self: auto;
 }
 
+.participant-person-editor {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+.participant-person-editor > summary {
+    width: fit-content;
+    cursor: pointer;
+    list-style: none;
+}
+
+.participant-person-editor > summary::-webkit-details-marker {
+    display: none;
+}
+
+.participant-person-editor[open] > summary {
+    margin-bottom: 12px;
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+.participant-person-edit-form {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.participant-person-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.participant-person-edit-grid label,
+.participant-person-notes {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.participant-person-edit-grid label > span,
+.participant-person-notes > span {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 900;
+}
+
+.participant-person-edit-grid .field-wide {
+    grid-column: span 2;
+}
+
+.participant-person-edit-grid .participant-edit-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #fff;
+}
+
+.participant-guardian-editor {
+    display: grid;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+
+.participant-guardian-editor[hidden] {
+    display: none;
+}
+
+.participant-guardian-editor h3 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.admin-list-card.participant-list-card .admin-list-meta dd,
+.admin-list-card.participant-list-card .admin-list-description {
+    overflow-wrap: anywhere;
+}
+
 .participant-bulk-actions > .btn.is-active {
     border-color: #111827;
     background: #111827;
@@ -1072,6 +1158,10 @@
             "source expectation save"
             "extra extra save";
     }
+
+    .participant-person-edit-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 900px) {
@@ -1131,6 +1221,14 @@
         width: 100%;
     }
 
+    .participant-person-editor > summary {
+        width: 100%;
+    }
+
+    .participant-person-edit-form {
+        padding: 12px;
+    }
+
     .participant-export-form,
     .participant-export-form label,
     .people-list-toolbar,
@@ -1168,6 +1266,41 @@
 
     .people-pagination > div {
         justify-content: space-between;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-list-card.participant-list-card {
+        grid-template-columns: 1fr;
+    }
+
+    .participant-select-box {
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .participant-select-box span {
+        position: static;
+        width: auto;
+        height: auto;
+        margin-left: 8px;
+        overflow: visible;
+        clip: auto;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .participant-person-edit-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .participant-person-edit-grid .field-wide {
+        grid-column: auto;
+    }
+
+    .participant-person-edit-form > .btn {
+        width: 100%;
     }
 }
 

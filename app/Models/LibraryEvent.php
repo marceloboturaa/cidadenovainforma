@@ -428,7 +428,8 @@ class LibraryEvent
                     people.guardian_phone,
                     people.guardian_email,
                     people.contact_authorized,
-                    people.image_authorized
+                    people.image_authorized,
+                    people.notes AS person_notes
              FROM library_event_participants
              INNER JOIN people ON people.id = library_event_participants.person_id
              ' . $where . '

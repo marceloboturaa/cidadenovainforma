@@ -341,6 +341,35 @@ class LibraryEventController
         redirect('/admin/library-events/participants?id=' . $event['id']);
     }
 
+    public function updateParticipantPerson(): void
+    {
+        $this->validateCsrf('/admin/library-events');
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+        $personId = filter_input(INPUT_POST, 'person_id', FILTER_VALIDATE_INT);
+        $person = $personId ? Person::find($personId) : null;
+        $participant = $personId ? LibraryEvent::participant((int) $event['id'], $personId) : null;
+        $name = trim((string) ($_POST['full_name'] ?? ''));
+
+        if (!$person || !$participant) {
+            Session::flash('error', 'Participante não encontrado neste evento.');
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
+        if ($name === '') {
+            Session::flash('error', 'Informe o nome completo do participante.');
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
+        Person::update((int) $person['id'], array_merge($_POST, [
+            'updated_by' => current_user()['id'] ?? null,
+        ]));
+
+        Logger::info('library_events.participant_person_updated', 'Cadastro do participante atualizado: ' . $name, current_user()['id'] ?? null);
+        Session::flash('success', 'Dados do participante atualizados.');
+        redirect('/admin/library-events/participants?id=' . $event['id']);
+    }
+
     public function exportParticipants(): void
     {
         $event = $this->eventFromQuery();
@@ -499,14 +528,14 @@ class LibraryEventController
 
         if ($action === 'all_pending') {
             $updated = LibraryEvent::updatePendingParticipantStatuses((int) $event['id'], 'inscrito');
-            $message = $updated . ' inscriÃ§Ã£o(Ãµes) pendente(s) atualizada(s).';
+            $message = $updated . ' inscrição(ões) pendente(s) atualizada(s).';
         } else {
             $updated = LibraryEvent::updateParticipantStatuses((int) $event['id'], $personIds, $status);
             $message = $updated . ' participante(s) selecionado(s) atualizado(s).';
         }
 
         Logger::info('library_events.participants_bulk_status', 'Status em lote atualizado no evento: ' . $event['title'], current_user()['id'] ?? null);
-        Session::flash($updated > 0 ? 'success' : 'error', $updated > 0 ? $message : 'Nenhuma inscriÃ§Ã£o foi alterada.');
+        Session::flash($updated > 0 ? 'success' : 'error', $updated > 0 ? $message : 'Nenhuma inscrição foi alterada.');
         redirect('/admin/library-events/participants?id=' . $event['id']);
     }
 
