@@ -3,6 +3,7 @@
 use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\AuthorizationController;
 use App\Controllers\Admin\BackupController;
+use App\Controllers\Admin\CommunicationController;
 use App\Controllers\Admin\ConsentController;
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\DocumentController;
@@ -61,6 +62,10 @@ $router->get('/reset-password', [AuthController::class, 'showReset']);
 $router->post('/reset-password', [AuthController::class, 'reset']);
 
 $router->get('/admin', [DashboardController::class, 'index']);
+$router->get('/admin/communication', [CommunicationController::class, 'index']);
+$router->get('/admin/communication/show', [CommunicationController::class, 'show']);
+$router->post('/admin/communication/start', [CommunicationController::class, 'start']);
+$router->post('/admin/communication/send', [CommunicationController::class, 'send']);
 $router->post('/admin/home-notice', [DashboardController::class, 'homeNotice']);
 $router->post('/admin/media/tinymce', [MediaController::class, 'tinyMceUpload']);
 $router->post('/admin/latex/compile', [LatexController::class, 'compile']);
