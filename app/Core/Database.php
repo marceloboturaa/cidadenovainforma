@@ -42,11 +42,6 @@ class Database
 
     private static function logConnectionError(PDOException $exception, array $config): void
     {
-        $dir = dirname(__DIR__, 2) . '/storage/temp';
-        if (!is_dir($dir) || !is_writable($dir)) {
-            return;
-        }
-
         $message = sprintf(
             "[%s] %s | host=%s port=%s database=%s username=%s\n",
             date('Y-m-d H:i:s'),
@@ -57,6 +52,17 @@ class Database
             (string) ($config['username'] ?? '')
         );
 
+        $dir = dirname(__DIR__, 2) . '/storage/temp';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+
+        if (!is_dir($dir) || !is_writable($dir)) {
+            error_log('Database connection error: ' . $message);
+            return;
+        }
+
         @file_put_contents($dir . '/database-error.log', $message, FILE_APPEND);
+        error_log('Database connection error: ' . trim($message));
     }
 }

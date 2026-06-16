@@ -614,8 +614,19 @@
     }
 
     .person-field-grid,
+    .profile-field-grid,
+    .profile-consent-grid,
+    .profile-password-grid,
     .person-form-section .guardian-grid {
         grid-template-columns: 1fr;
+    }
+
+    .profile-complete-form {
+        padding: 16px;
+    }
+
+    .profile-form-section {
+        padding: 14px;
     }
 
     .person-field-grid > div,

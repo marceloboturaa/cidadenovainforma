@@ -16,7 +16,7 @@ if (!function_exists('load_env_file')) {
 
             [$key, $value] = array_map('trim', explode('=', $line, 2));
 
-            if ($key === '' || getenv($key) !== false) {
+            if ($key === '') {
                 continue;
             }
 
