@@ -16,6 +16,7 @@ class Communication
         }
 
         LibraryEvent::ensureSchema();
+        Education::ensureSchema();
 
         $db = Database::connection();
         $db->exec(
@@ -52,10 +53,52 @@ class Communication
             ) ENGINE=InnoDB"
         );
 
+        $db->exec(
+            "CREATE TABLE IF NOT EXISTS education_conversations (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                course_id BIGINT UNSIGNED NOT NULL,
+                student_user_id BIGINT UNSIGNED NOT NULL,
+                teacher_user_id BIGINT UNSIGNED NULL,
+                status ENUM('aberta','encerrada') NOT NULL DEFAULT 'aberta',
+                last_message_at DATETIME NULL,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL,
+                UNIQUE KEY uniq_education_conversation_user (course_id, student_user_id),
+                INDEX idx_education_conversations_teacher (teacher_user_id),
+                INDEX idx_education_conversations_last_message (last_message_at),
+                CONSTRAINT fk_education_conversations_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_conversations_student FOREIGN KEY (student_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_conversations_teacher FOREIGN KEY (teacher_user_id) REFERENCES users(id) ON DELETE SET NULL
+            ) ENGINE=InnoDB"
+        );
+
+        $db->exec(
+            "CREATE TABLE IF NOT EXISTS education_conversation_messages (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                conversation_id BIGINT UNSIGNED NOT NULL,
+                sender_user_id BIGINT UNSIGNED NOT NULL,
+                body TEXT NOT NULL,
+                created_at TIMESTAMP NULL,
+                read_at DATETIME NULL,
+                INDEX idx_education_messages_conversation (conversation_id, created_at),
+                INDEX idx_education_messages_sender (sender_user_id),
+                CONSTRAINT fk_education_messages_conversation FOREIGN KEY (conversation_id) REFERENCES education_conversations(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB"
+        );
+
         $done = true;
     }
 
     public static function conversationsForUser(array $user): array
+    {
+        return self::sortConversations(array_merge(
+            self::eventConversationsForUser($user),
+            self::educationConversationsForUser($user)
+        ));
+    }
+
+    public static function eventConversationsForUser(array $user): array
     {
         self::ensureSchema();
 
@@ -73,6 +116,31 @@ class Communication
         $sql = self::conversationSelect()
             . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
             . ' ORDER BY COALESCE(event_conversations.last_message_at, event_conversations.created_at) DESC';
+
+        $stmt = Database::connection()->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function educationConversationsForUser(array $user): array
+    {
+        self::ensureSchema();
+
+        $userId = (int) $user['id'];
+        $canManage = self::canModerateEducation($user);
+        $params = [];
+        $where = [];
+
+        if (!$canManage) {
+            $where[] = '(education_conversations.student_user_id = :student_user_id OR education_conversations.teacher_user_id = :teacher_user_id)';
+            $params['student_user_id'] = $userId;
+            $params['teacher_user_id'] = $userId;
+        }
+
+        $sql = self::educationConversationSelect()
+            . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
+            . ' ORDER BY COALESCE(education_conversations.last_message_at, education_conversations.created_at) DESC';
 
         $stmt = Database::connection()->prepare($sql);
         $stmt->execute($params);
@@ -127,6 +195,61 @@ class Communication
         return $stmt->fetchAll();
     }
 
+    public static function availableCoursesForUser(array $user): array
+    {
+        self::ensureSchema();
+
+        $userId = (int) $user['id'];
+
+        if (self::canModerateEducation($user)) {
+            return Education::coursesForManagement();
+        }
+
+        if (self::isTeacher($user)) {
+            return Education::coursesForManagement($userId);
+        }
+
+        return Education::coursesForUser($userId);
+    }
+
+    public static function availableCourseContactsForUser(array $user): array
+    {
+        self::ensureSchema();
+
+        if (!self::canModerateEducation($user) && !self::isTeacher($user)) {
+            return [];
+        }
+
+        $params = [];
+        $where = [
+            'education_courses.active = 1',
+            'education_courses.certificate_activity_type <> "reconhecimento"',
+            'education_enrollments.status = "approved"',
+        ];
+
+        if (!self::canModerateEducation($user)) {
+            $where[] = 'education_courses.teacher_user_id = :teacher_user_id';
+            $params['teacher_user_id'] = (int) $user['id'];
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_courses.id AS course_id,
+                    education_courses.title AS course_title,
+                    education_courses.teacher_user_id,
+                    users.id AS student_user_id,
+                    users.name AS student_name,
+                    users.email AS student_email
+             FROM education_enrollments
+             INNER JOIN education_courses ON education_courses.id = education_enrollments.course_id
+             INNER JOIN users ON users.id = education_enrollments.user_id
+             WHERE ' . implode(' AND ', $where) . '
+             ORDER BY education_courses.title ASC, users.name ASC'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
     public static function startConversation(int $eventId, array $user, ?int $targetUserId = null): int
     {
         self::ensureSchema();
@@ -167,6 +290,49 @@ class Communication
         return (int) $existing->fetchColumn();
     }
 
+    public static function startEducationConversation(int $courseId, array $user, ?int $studentUserId = null): int
+    {
+        self::ensureSchema();
+
+        $course = Education::findCourse($courseId);
+        if (!$course || !self::canAccessCourse($course, $user, $studentUserId)) {
+            return 0;
+        }
+
+        $studentUserId = (self::canModerateEducation($user) || self::isTeacherForCourse($course, $user))
+            ? (int) ($studentUserId ?: 0)
+            : (int) $user['id'];
+
+        if ($studentUserId <= 0 || !Education::userCanAccessCourse($courseId, $studentUserId)) {
+            return 0;
+        }
+
+        $teacherUserId = !empty($course['teacher_user_id']) ? (int) $course['teacher_user_id'] : null;
+
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO education_conversations
+                (course_id, student_user_id, teacher_user_id, status, created_at, updated_at)
+             VALUES
+                (:course_id, :student_user_id, :teacher_user_id, "aberta", NOW(), NOW())
+             ON DUPLICATE KEY UPDATE teacher_user_id = VALUES(teacher_user_id), updated_at = NOW()'
+        );
+        $stmt->execute([
+            'course_id' => $courseId,
+            'student_user_id' => $studentUserId,
+            'teacher_user_id' => $teacherUserId,
+        ]);
+
+        $existing = Database::connection()->prepare(
+            'SELECT id FROM education_conversations WHERE course_id = :course_id AND student_user_id = :student_user_id LIMIT 1'
+        );
+        $existing->execute([
+            'course_id' => $courseId,
+            'student_user_id' => $studentUserId,
+        ]);
+
+        return (int) $existing->fetchColumn();
+    }
+
     public static function findConversationForUser(int $id, array $user): ?array
     {
         self::ensureSchema();
@@ -186,6 +352,25 @@ class Communication
         return $stmt->fetch() ?: null;
     }
 
+    public static function findEducationConversationForUser(int $id, array $user): ?array
+    {
+        self::ensureSchema();
+
+        $params = ['id' => $id];
+        $where = ['education_conversations.id = :id'];
+
+        if (!self::canModerateEducation($user)) {
+            $where[] = '(education_conversations.student_user_id = :student_user_id OR education_conversations.teacher_user_id = :teacher_user_id)';
+            $params['student_user_id'] = (int) $user['id'];
+            $params['teacher_user_id'] = (int) $user['id'];
+        }
+
+        $stmt = Database::connection()->prepare(self::educationConversationSelect() . ' WHERE ' . implode(' AND ', $where) . ' LIMIT 1');
+        $stmt->execute($params);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function messages(int $conversationId): array
     {
         self::ensureSchema();
@@ -199,6 +384,25 @@ class Communication
              INNER JOIN roles ON roles.id = users.role_id
              WHERE event_conversation_messages.conversation_id = :conversation_id
              ORDER BY event_conversation_messages.created_at ASC, event_conversation_messages.id ASC'
+        );
+        $stmt->execute(['conversation_id' => $conversationId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function educationMessages(int $conversationId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_conversation_messages.*,
+                    users.name AS sender_name,
+                    roles.name AS sender_role_name
+             FROM education_conversation_messages
+             INNER JOIN users ON users.id = education_conversation_messages.sender_user_id
+             INNER JOIN roles ON roles.id = users.role_id
+             WHERE education_conversation_messages.conversation_id = :conversation_id
+             ORDER BY education_conversation_messages.created_at ASC, education_conversation_messages.id ASC'
         );
         $stmt->execute(['conversation_id' => $conversationId]);
 
@@ -242,12 +446,57 @@ class Communication
         }
     }
 
+    public static function addEducationMessage(int $conversationId, int $senderUserId, string $body): bool
+    {
+        self::ensureSchema();
+
+        $body = trim($body);
+        if ($body === '') {
+            return false;
+        }
+
+        $db = Database::connection();
+        $db->beginTransaction();
+
+        try {
+            $stmt = $db->prepare(
+                'INSERT INTO education_conversation_messages (conversation_id, sender_user_id, body, created_at)
+                 VALUES (:conversation_id, :sender_user_id, :body, NOW())'
+            );
+            $stmt->execute([
+                'conversation_id' => $conversationId,
+                'sender_user_id' => $senderUserId,
+                'body' => $body,
+            ]);
+
+            $db->prepare(
+                'UPDATE education_conversations
+                 SET last_message_at = NOW(), updated_at = NOW()
+                 WHERE id = :id'
+            )->execute(['id' => $conversationId]);
+
+            $db->commit();
+            return true;
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+    }
+
     public static function canModerate(?array $user = null): bool
     {
         $user ??= Auth::user();
 
         return $user
             && (Auth::hasRole(['master', 'admin', 'admin-local']) || Auth::can('events.manage') || Auth::can('event_participants.manage'));
+    }
+
+    public static function canModerateEducation(?array $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        return $user
+            && (Auth::hasRole(['master', 'admin', 'admin-local']) || Auth::can('education.manage'));
     }
 
     private static function canAccessEvent(array $event, array $user): bool
@@ -261,14 +510,55 @@ class Communication
         return in_array((int) $event['id'], $availableIds, true);
     }
 
+    private static function canAccessCourse(array $course, array $user, ?int $studentUserId = null): bool
+    {
+        if (self::canModerateEducation($user)) {
+            return true;
+        }
+
+        if (self::isTeacherForCourse($course, $user)) {
+            return $studentUserId ? Education::userCanAccessCourse((int) $course['id'], $studentUserId) : true;
+        }
+
+        return Education::userCanAccessCourse((int) $course['id'], (int) $user['id']);
+    }
+
+    private static function isTeacher(?array $user): bool
+    {
+        return $user
+            && (Auth::hasRole('professor') || Auth::can('education.teach'));
+    }
+
+    private static function isTeacherForCourse(array $course, array $user): bool
+    {
+        return self::isTeacher($user) && (int) ($course['teacher_user_id'] ?? 0) === (int) ($user['id'] ?? 0);
+    }
+
+    private static function sortConversations(array $conversations): array
+    {
+        usort($conversations, static function (array $a, array $b): int {
+            $aDate = strtotime((string) ($a['last_message_created_at'] ?? $a['last_message_at'] ?? $a['created_at'] ?? '')) ?: 0;
+            $bDate = strtotime((string) ($b['last_message_created_at'] ?? $b['last_message_at'] ?? $b['created_at'] ?? '')) ?: 0;
+
+            return $bDate <=> $aDate;
+        });
+
+        return $conversations;
+    }
+
     private static function conversationSelect(): string
     {
         return 'SELECT event_conversations.*,
+                       "event" AS conversation_type,
+                       CONCAT("event:", event_conversations.id) AS conversation_key,
                        library_events.title AS event_title,
+                       library_events.title AS context_title,
                        library_events.starts_at AS event_starts_at,
+                       library_events.starts_at AS context_at,
                        participant.name AS participant_name,
                        participant.email AS participant_email,
                        responsible.name AS responsible_name,
+                       responsible.name AS counterpart_name,
                        last_message.body AS last_message_body,
                        last_message.created_at AS last_message_created_at
                 FROM event_conversations
@@ -280,6 +570,33 @@ class Communication
                     FROM event_conversation_messages event_conversation_messages_inner
                     WHERE event_conversation_messages_inner.conversation_id = event_conversations.id
                     ORDER BY event_conversation_messages_inner.created_at DESC, event_conversation_messages_inner.id DESC
+                    LIMIT 1
+                )';
+    }
+
+    private static function educationConversationSelect(): string
+    {
+        return 'SELECT education_conversations.*,
+                       "education" AS conversation_type,
+                       CONCAT("education:", education_conversations.id) AS conversation_key,
+                       education_courses.title AS course_title,
+                       education_courses.title AS context_title,
+                       education_courses.starts_at AS context_at,
+                       student.name AS participant_name,
+                       student.email AS participant_email,
+                       teacher.name AS responsible_name,
+                       teacher.name AS counterpart_name,
+                       last_message.body AS last_message_body,
+                       last_message.created_at AS last_message_created_at
+                FROM education_conversations
+                INNER JOIN education_courses ON education_courses.id = education_conversations.course_id
+                INNER JOIN users student ON student.id = education_conversations.student_user_id
+                LEFT JOIN users teacher ON teacher.id = education_conversations.teacher_user_id
+                LEFT JOIN education_conversation_messages last_message ON last_message.id = (
+                    SELECT education_conversation_messages_inner.id
+                    FROM education_conversation_messages education_conversation_messages_inner
+                    WHERE education_conversation_messages_inner.conversation_id = education_conversations.id
+                    ORDER BY education_conversation_messages_inner.created_at DESC, education_conversation_messages_inner.id DESC
                     LIMIT 1
                 )';
     }
