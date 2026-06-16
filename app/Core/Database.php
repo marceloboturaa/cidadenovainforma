@@ -32,10 +32,31 @@ class Database
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
         } catch (PDOException $exception) {
+            self::logConnectionError($exception, $config);
             http_response_code(500);
             exit('Erro ao conectar ao banco de dados.');
         }
 
         return self::$connection;
+    }
+
+    private static function logConnectionError(PDOException $exception, array $config): void
+    {
+        $dir = dirname(__DIR__, 2) . '/storage/temp';
+        if (!is_dir($dir) || !is_writable($dir)) {
+            return;
+        }
+
+        $message = sprintf(
+            "[%s] %s | host=%s port=%s database=%s username=%s\n",
+            date('Y-m-d H:i:s'),
+            $exception->getMessage(),
+            (string) ($config['host'] ?? ''),
+            (string) ($config['port'] ?? ''),
+            (string) ($config['database'] ?? ''),
+            (string) ($config['username'] ?? '')
+        );
+
+        @file_put_contents($dir . '/database-error.log', $message, FILE_APPEND);
     }
 }

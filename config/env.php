@@ -28,4 +28,20 @@ if (!function_exists('load_env_file')) {
     }
 }
 
+if (!function_exists('env_value')) {
+    function env_value(string $key, mixed $default = null): mixed
+    {
+        if (array_key_exists($key, $_ENV)) {
+            return $_ENV[$key];
+        }
+
+        if (array_key_exists($key, $_SERVER)) {
+            return $_SERVER[$key];
+        }
+
+        $value = getenv($key);
+        return $value !== false ? $value : $default;
+    }
+}
+
 load_env_file(dirname(__DIR__) . '/.env');
