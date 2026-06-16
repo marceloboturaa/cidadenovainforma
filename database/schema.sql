@@ -199,6 +199,29 @@ CREATE TABLE IF NOT EXISTS site_settings (
     updated_at TIMESTAMP NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS announcements (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(160) NOT NULL,
+    body TEXT NOT NULL,
+    url VARCHAR(255) NULL,
+    button_label VARCHAR(80) NULL,
+    active TINYINT(1) NOT NULL DEFAULT 1,
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX idx_announcements_active_created (active, created_at),
+    CONSTRAINT fk_announcements_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS announcement_reads (
+    announcement_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    read_at DATETIME NOT NULL,
+    PRIMARY KEY (announcement_id, user_id),
+    CONSTRAINT fk_announcement_reads_announcement FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+    CONSTRAINT fk_announcement_reads_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS consent_settings (
     id TINYINT UNSIGNED PRIMARY KEY,
     banner_title VARCHAR(160) NOT NULL,
@@ -672,10 +695,13 @@ CREATE TABLE IF NOT EXISTS education_conversation_messages (
     body TEXT NOT NULL,
     created_at TIMESTAMP NULL,
     read_at DATETIME NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT UNSIGNED NULL,
     INDEX idx_education_messages_conversation (conversation_id, created_at),
     INDEX idx_education_messages_sender (sender_user_id),
     CONSTRAINT fk_education_messages_conversation FOREIGN KEY (conversation_id) REFERENCES education_conversations(id) ON DELETE CASCADE,
-    CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_messages_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS education_lesson_progress (

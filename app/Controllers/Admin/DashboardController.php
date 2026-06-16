@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Announcement;
 use App\Models\Education;
 use App\Models\SiteSetting;
 use App\Models\Stats;
@@ -22,6 +23,7 @@ class DashboardController
         $canViewSensitiveDashboard = Stats::canViewSensitiveInfo($user);
         $canViewEditorialDashboard = $canViewSensitiveDashboard || Stats::canViewEditorialInfo($user);
         $canManageHomeNotice = Auth::hasRole(['master', 'admin']) || Auth::can('home_notice.manage');
+        $canManageAnnouncements = Announcement::canManage($user);
 
         View::render('admin/dashboard', [
             'stats' => Stats::dashboard($user),
@@ -29,6 +31,7 @@ class DashboardController
             'canViewSensitiveDashboard' => $canViewSensitiveDashboard,
             'canViewEditorialDashboard' => $canViewEditorialDashboard,
             'canManageHomeNotice' => $canManageHomeNotice,
+            'canManageAnnouncements' => $canManageAnnouncements,
             'isStudent' => $isStudent,
             'studentResponses' => $isStudent ? Education::studentResponsesForDashboard((int) ($user['id'] ?? 0)) : [],
             'homeNotice' => $canManageHomeNotice ? [
@@ -72,5 +75,62 @@ class DashboardController
 
         Session::flash('success', 'Aviso do topo do site atualizado.');
         redirect('/admin');
+    }
+
+    public function announcement(): void
+    {
+        Middleware::auth();
+        $user = current_user();
+        if (!Announcement::canManage($user)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('error', 'Sessao expirada. Tente novamente.');
+            redirect('/admin');
+        }
+
+        $title = trim((string) ($_POST['announcement_title'] ?? ''));
+        $body = trim((string) ($_POST['announcement_body'] ?? ''));
+
+        if ($title === '' || $body === '') {
+            Session::flash('error', 'Informe titulo e mensagem do aviso.');
+            redirect('/admin');
+        }
+
+        Announcement::create([
+            'title' => $title,
+            'body' => $body,
+            'url' => $_POST['announcement_url'] ?? null,
+            'button_label' => $_POST['announcement_button_label'] ?? null,
+            'created_by' => $user['id'] ?? null,
+        ]);
+
+        Session::flash('success', 'Aviso enviado para todos os usuarios do painel.');
+        redirect('/admin');
+    }
+
+    public function readAnnouncement(): void
+    {
+        Middleware::auth();
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('error', 'Sessao expirada. Tente novamente.');
+            redirect('/admin');
+        }
+
+        $id = filter_input(INPUT_POST, 'announcement_id', FILTER_VALIDATE_INT);
+        $user = current_user();
+        if ($id && $user) {
+            Announcement::markRead($id, (int) $user['id']);
+        }
+
+        $returnTo = (string) ($_POST['return_to'] ?? '/admin');
+        if ($returnTo === '' || !str_starts_with($returnTo, '/')) {
+            $returnTo = '/admin';
+        }
+
+        redirect($returnTo);
     }
 }

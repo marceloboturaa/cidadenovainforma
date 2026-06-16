@@ -201,6 +201,66 @@
     font-size: 0.86rem;
 }
 
+.topbar-announcements {
+    position: relative;
+}
+
+.topbar-announcements .btn span {
+    display: inline-grid;
+    min-width: 20px;
+    height: 20px;
+    place-items: center;
+    margin-left: 2px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--brand);
+    font-size: 0.75rem;
+    font-weight: 900;
+}
+
+.announcement-popover {
+    position: absolute;
+    z-index: 50;
+    right: 0;
+    top: calc(100% + 10px);
+    display: grid;
+    width: min(420px, calc(100vw - 32px));
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ink);
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.22);
+}
+
+.announcement-popover article {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.announcement-popover strong {
+    color: var(--ink);
+}
+
+.announcement-popover p {
+    margin: 0;
+    color: #374151;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.announcement-popover footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
 .content {
     padding: 28px;
 }

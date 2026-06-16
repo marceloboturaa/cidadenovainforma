@@ -22,8 +22,11 @@ CREATE TABLE IF NOT EXISTS education_conversation_messages (
     body TEXT NOT NULL,
     created_at TIMESTAMP NULL,
     read_at DATETIME NULL,
+    deleted_at DATETIME NULL,
+    deleted_by BIGINT UNSIGNED NULL,
     INDEX idx_education_messages_conversation (conversation_id, created_at),
     INDEX idx_education_messages_sender (sender_user_id),
     CONSTRAINT fk_education_messages_conversation FOREIGN KEY (conversation_id) REFERENCES education_conversations(id) ON DELETE CASCADE,
-    CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_education_messages_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;

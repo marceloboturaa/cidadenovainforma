@@ -46,12 +46,17 @@ class Communication
                 body TEXT NOT NULL,
                 created_at TIMESTAMP NULL,
                 read_at DATETIME NULL,
+                deleted_at DATETIME NULL,
+                deleted_by BIGINT UNSIGNED NULL,
                 INDEX idx_event_messages_conversation (conversation_id, created_at),
                 INDEX idx_event_messages_sender (sender_user_id),
                 CONSTRAINT fk_event_messages_conversation FOREIGN KEY (conversation_id) REFERENCES event_conversations(id) ON DELETE CASCADE,
-                CONSTRAINT fk_event_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+                CONSTRAINT fk_event_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                CONSTRAINT fk_event_messages_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL
             ) ENGINE=InnoDB"
         );
+        self::ensureColumn('event_conversation_messages', 'deleted_at', 'DATETIME NULL AFTER read_at');
+        self::ensureColumn('event_conversation_messages', 'deleted_by', 'BIGINT UNSIGNED NULL AFTER deleted_at');
 
         $db->exec(
             "CREATE TABLE IF NOT EXISTS education_conversations (
@@ -80,12 +85,17 @@ class Communication
                 body TEXT NOT NULL,
                 created_at TIMESTAMP NULL,
                 read_at DATETIME NULL,
+                deleted_at DATETIME NULL,
+                deleted_by BIGINT UNSIGNED NULL,
                 INDEX idx_education_messages_conversation (conversation_id, created_at),
                 INDEX idx_education_messages_sender (sender_user_id),
                 CONSTRAINT fk_education_messages_conversation FOREIGN KEY (conversation_id) REFERENCES education_conversations(id) ON DELETE CASCADE,
-                CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+                CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_messages_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL
             ) ENGINE=InnoDB"
         );
+        self::ensureColumn('education_conversation_messages', 'deleted_at', 'DATETIME NULL AFTER read_at');
+        self::ensureColumn('education_conversation_messages', 'deleted_by', 'BIGINT UNSIGNED NULL AFTER deleted_at');
 
         $done = true;
     }
@@ -483,6 +493,32 @@ class Communication
         }
     }
 
+    public static function deleteMessage(int $messageId, int $userId, string $type): bool
+    {
+        self::ensureSchema();
+
+        $table = $type === 'education' ? 'education_conversation_messages' : 'event_conversation_messages';
+        $conversationTable = $type === 'education' ? 'education_conversations' : 'event_conversations';
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE ' . $table . '
+             INNER JOIN ' . $conversationTable . ' ON ' . $conversationTable . '.id = ' . $table . '.conversation_id
+             SET ' . $table . '.deleted_at = NOW(),
+                 ' . $table . '.deleted_by = :deleted_by,
+                 ' . $conversationTable . '.updated_at = NOW()
+             WHERE ' . $table . '.id = :id
+               AND ' . $table . '.sender_user_id = :sender_user_id
+               AND ' . $table . '.deleted_at IS NULL'
+        );
+        $stmt->execute([
+            'id' => $messageId,
+            'sender_user_id' => $userId,
+            'deleted_by' => $userId,
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     public static function canModerate(?array $user = null): bool
     {
         $user ??= Auth::user();
@@ -560,6 +596,7 @@ class Communication
                        responsible.name AS responsible_name,
                        responsible.name AS counterpart_name,
                        last_message.body AS last_message_body,
+                       last_message.deleted_at AS last_message_deleted_at,
                        last_message.created_at AS last_message_created_at
                 FROM event_conversations
                 INNER JOIN library_events ON library_events.id = event_conversations.event_id
@@ -587,6 +624,7 @@ class Communication
                        teacher.name AS responsible_name,
                        teacher.name AS counterpart_name,
                        last_message.body AS last_message_body,
+                       last_message.deleted_at AS last_message_deleted_at,
                        last_message.created_at AS last_message_created_at
                 FROM education_conversations
                 INNER JOIN education_courses ON education_courses.id = education_conversations.course_id
@@ -599,5 +637,18 @@ class Communication
                     ORDER BY education_conversation_messages_inner.created_at DESC, education_conversation_messages_inner.id DESC
                     LIMIT 1
                 )';
+    }
+
+    private static function ensureColumn(string $table, string $column, string $definition): void
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return;
+        }
+
+        $db = Database::connection();
+        $stmt = $db->query("SHOW COLUMNS FROM `{$table}` LIKE " . $db->quote($column));
+        if (!$stmt->fetch()) {
+            $db->exec("ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$definition}");
+        }
     }
 }

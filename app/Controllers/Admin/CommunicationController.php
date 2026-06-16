@@ -145,6 +145,34 @@ class CommunicationController
         redirect('/admin/communication/show?type=' . $type . '&id=' . $conversation['id']);
     }
 
+    public function deleteMessage(): void
+    {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('error', 'Sessao expirada. Tente novamente.');
+            redirect('/admin/communication');
+        }
+
+        $user = current_user();
+        $messageId = filter_input(INPUT_POST, 'message_id', FILTER_VALIDATE_INT);
+        $conversationId = filter_input(INPUT_POST, 'conversation_id', FILTER_VALIDATE_INT);
+        $type = strtolower((string) ($_POST['conversation_type'] ?? 'event'));
+        $type = $type === 'education' ? 'education' : 'event';
+
+        if (!$user || !$messageId || !$conversationId) {
+            Session::flash('error', 'Mensagem nao encontrada.');
+            redirect('/admin/communication');
+        }
+
+        if (!Communication::deleteMessage($messageId, (int) $user['id'], $type)) {
+            Session::flash('error', 'Voce so pode apagar mensagens enviadas por voce.');
+            redirect('/admin/communication/show?type=' . $type . '&id=' . $conversationId);
+        }
+
+        Logger::info('communication.message_deleted', 'Mensagem removida pelo autor.', (int) $user['id']);
+        Session::flash('success', 'Mensagem apagada.');
+        redirect('/admin/communication/show?type=' . $type . '&id=' . $conversationId);
+    }
+
     private function courseStartPayload(): array
     {
         $contact = trim((string) ($_POST['course_contact'] ?? ''));

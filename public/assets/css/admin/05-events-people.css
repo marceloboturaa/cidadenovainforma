@@ -1579,6 +1579,11 @@
     background: #eff6ff;
 }
 
+.communication-message.is-deleted {
+    border-style: dashed;
+    opacity: 0.78;
+}
+
 .communication-message div {
     display: flex;
     flex-wrap: wrap;
@@ -1601,6 +1606,23 @@
     color: var(--ink);
     line-height: 1.5;
     overflow-wrap: anywhere;
+}
+
+.communication-delete-form {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.communication-delete-form button {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #b91c1c;
+    font-size: 0.78rem;
+    font-weight: 900;
 }
 
 .communication-reply {

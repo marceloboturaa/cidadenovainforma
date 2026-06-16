@@ -15,6 +15,7 @@
 <?php $canManageEducationCourses = $user && (\App\Core\Auth::can('education.manage') || \App\Core\Auth::can('education.teach') || \App\Core\Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor'])); ?>
 <?php $canAccessOwnCertificates = $user && ($canAccessEducation || \App\Core\Auth::can('certificates.issue') || \App\Core\Auth::can('certificates.manage')); ?>
 <?php $canAccessCertificateCenter = $user && (\App\Core\Auth::can('certificates.manage') || \App\Core\Auth::can('certificates.issue') || \App\Core\Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])); ?>
+<?php $panelAnnouncements = $user ? \App\Models\Announcement::unreadForUser((int) $user['id'], 3) : []; ?>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -110,6 +111,35 @@
                     <strong><?= e($user['name'] ?? 'Usuário') ?></strong>
                     <span><?= e($user['role_names'] ?? $user['role_name'] ?? '') ?></span>
                 </div>
+                <?php if ($panelAnnouncements): ?>
+                    <div class="topbar-announcements">
+                        <button class="btn btn-outline-light btn-sm icon-btn" type="button" data-announcement-toggle aria-expanded="false">
+                            <i class="bi bi-bell" aria-hidden="true"></i>Avisos
+                            <span><?= e((string) count($panelAnnouncements)) ?></span>
+                        </button>
+                        <div class="announcement-popover" data-announcement-popover hidden>
+                            <?php foreach ($panelAnnouncements as $announcement): ?>
+                                <?php $announcementUrl = (string) ($announcement['url'] ?? ''); ?>
+                                <?php $announcementHref = preg_match('#^https?://#i', $announcementUrl) ? $announcementUrl : url($announcementUrl); ?>
+                                <article>
+                                    <strong><?= e($announcement['title']) ?></strong>
+                                    <p><?= nl2br(e($announcement['body'])) ?></p>
+                                    <footer>
+                                        <?php if ($announcementUrl !== ''): ?>
+                                            <a class="btn btn-sm btn-outline-secondary" href="<?= e($announcementHref) ?>"><?= e($announcement['button_label'] ?: 'Abrir') ?></a>
+                                        <?php endif; ?>
+                                        <form method="post" action="<?= e(url('/admin/announcement/read')) ?>">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="announcement_id" value="<?= e((string) $announcement['id']) ?>">
+                                            <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/admin') ?>">
+                                            <button class="btn btn-sm btn-primary" type="submit">Marcar como lido</button>
+                                        </form>
+                                    </footer>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <form method="post" action="<?= e(url('/logout')) ?>">
                     <?= csrf_field() ?>
                     <button class="btn btn-outline-light btn-sm icon-btn"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Sair</button>

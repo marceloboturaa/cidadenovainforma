@@ -69,7 +69,7 @@
                     <em><?= $threadType === 'education' ? 'Curso' : 'Evento' ?></em>
                     <strong><?= e($conversation['context_title'] ?? $conversation['event_title'] ?? $conversation['course_title'] ?? '') ?></strong>
                     <span><?= e($conversation['participant_name']) ?><?= !empty($conversation['responsible_name']) ? ' -> ' . e($conversation['responsible_name']) : '' ?></span>
-                    <small><?= e(text_excerpt($conversation['last_message_body'] ?? 'Sem mensagens ainda.', 82)) ?></small>
+                    <small><?= e(!empty($conversation['last_message_deleted_at']) ? 'Mensagem apagada.' : text_excerpt($conversation['last_message_body'] ?? 'Sem mensagens ainda.', 82)) ?></small>
                 </a>
             <?php endforeach; ?>
         </aside>
@@ -102,12 +102,22 @@
                     <?php endif; ?>
                     <?php foreach ($messages as $message): ?>
                         <?php $mine = (int) $message['sender_user_id'] === (int) (current_user()['id'] ?? 0); ?>
-                        <article class="communication-message <?= $mine ? 'is-mine' : '' ?>">
+                        <?php $deleted = !empty($message['deleted_at']); ?>
+                        <article class="communication-message <?= $mine ? 'is-mine' : '' ?> <?= $deleted ? 'is-deleted' : '' ?>">
                             <div>
                                 <strong><?= e($message['sender_name']) ?></strong>
                                 <span><?= e($message['sender_role_name'] ?? '') ?> - <?= e(date('d/m/Y H:i', strtotime((string) $message['created_at']))) ?></span>
                             </div>
-                            <p><?= nl2br(e($message['body'])) ?></p>
+                            <p><?= $deleted ? 'Mensagem apagada pelo autor.' : nl2br(e($message['body'])) ?></p>
+                            <?php if ($mine && !$deleted): ?>
+                                <form method="post" action="<?= e(url('/admin/communication/message/delete')) ?>" class="communication-delete-form" onsubmit="return confirm('Apagar esta mensagem?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="message_id" value="<?= e((string) $message['id']) ?>">
+                                    <input type="hidden" name="conversation_id" value="<?= e((string) $selectedConversation['id']) ?>">
+                                    <input type="hidden" name="conversation_type" value="<?= e((string) ($selectedType ?? $selectedConversation['conversation_type'] ?? 'event')) ?>">
+                                    <button type="submit"><i class="bi bi-trash" aria-hidden="true"></i>Apagar</button>
+                                </form>
+                            <?php endif; ?>
                         </article>
                     <?php endforeach; ?>
                 </div>

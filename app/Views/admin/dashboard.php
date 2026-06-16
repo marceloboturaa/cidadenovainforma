@@ -67,6 +67,33 @@
 </section>
 <?php endif; ?>
 
+<?php if (!($isStudent ?? false) && ($canManageAnnouncements ?? false)): ?>
+<section class="panel">
+    <div class="section-heading">
+        <h2>Aviso interno para todos</h2>
+        <span>Notificação no painel</span>
+    </div>
+    <form method="post" action="<?= e(url('/admin/announcement')) ?>" class="home-notice-form">
+        <?= csrf_field() ?>
+        <div class="home-notice-grid">
+            <label class="form-label">Título
+                <input class="form-control" name="announcement_title" maxlength="160" required placeholder="Ex.: Reunião geral">
+            </label>
+            <label class="form-label">Mensagem
+                <textarea class="form-control" name="announcement_body" maxlength="2000" rows="4" required placeholder="Escreva o aviso que aparecerá para todos no painel."></textarea>
+            </label>
+            <label class="form-label">Link opcional
+                <input class="form-control" name="announcement_url" maxlength="255" placeholder="/admin/education, /admin/library-events ou https://...">
+            </label>
+            <label class="form-label">Texto do botão
+                <input class="form-control" name="announcement_button_label" maxlength="80" placeholder="Abrir">
+            </label>
+        </div>
+        <button class="btn btn-primary icon-btn"><i class="bi bi-bell" aria-hidden="true"></i>Enviar aviso</button>
+    </form>
+</section>
+<?php endif; ?>
+
 <?php if ($canViewEditorialDashboard ?? false): ?>
 <div class="<?= ($canViewSensitiveDashboard ?? false) ? 'dashboard-grid' : '' ?>">
     <section class="panel">

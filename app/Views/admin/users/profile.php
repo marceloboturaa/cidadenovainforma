@@ -7,6 +7,10 @@ $needsName = in_array('name', $requiredFields, true);
 $needsEmail = in_array('email', $requiredFields, true);
 $needsAddress = in_array('address', $requiredFields, true);
 $needsPassword = in_array('password', $requiredFields, true);
+$birthDate = '';
+if (!empty($person['birth_date'])) {
+    $birthDate = date('d/m/Y', strtotime((string) $person['birth_date']));
+}
 ?>
 
 <div class="page-heading">
@@ -29,52 +33,110 @@ $needsPassword = in_array('password', $requiredFields, true);
         <strong>Obrigatório quando solicitado</strong>
     </div>
 
-    <form method="post" action="<?= e(url('/admin/profile')) ?>" class="user-stacked-form">
+    <form method="post" action="<?= e(url('/admin/profile')) ?>" class="user-stacked-form" data-person-form>
         <?= csrf_field() ?>
-        <?php if ($needsName): ?>
+        <div class="person-field-grid">
             <label>
                 <span>Nome</span>
                 <input class="form-control" name="name" value="<?= e($profileUser['name'] ?? '') ?>" required autocomplete="name">
             </label>
-        <?php endif; ?>
-        <?php if ($needsEmail): ?>
             <label>
                 <span>E-mail</span>
                 <input class="form-control" name="email" type="email" value="<?= e($profileUser['email'] ?? '') ?>" required autocomplete="email">
             </label>
-        <?php endif; ?>
-        <?php if ($needsAddress): ?>
-            <div class="person-field-grid">
-                <label>
-                    <span>CEP</span>
-                    <input class="form-control" name="cep" value="<?= e($person['cep'] ?? '') ?>" autocomplete="postal-code">
-                </label>
-                <label>
-                    <span>Endereço</span>
-                    <input class="form-control" name="address" value="<?= e($person['address'] ?? '') ?>" required autocomplete="street-address">
-                </label>
-                <label>
-                    <span>Número</span>
-                    <input class="form-control" name="address_number" value="<?= e($person['address_number'] ?? '') ?>">
-                </label>
-                <label>
-                    <span>Complemento</span>
-                    <input class="form-control" name="address_complement" value="<?= e($person['address_complement'] ?? '') ?>">
-                </label>
-                <label>
-                    <span>Bairro</span>
-                    <input class="form-control" name="district" value="<?= e($person['district'] ?? '') ?>">
-                </label>
-                <label>
-                    <span>Cidade</span>
-                    <input class="form-control" name="city" value="<?= e($person['city'] ?? '') ?>" required autocomplete="address-level2">
-                </label>
-                <label>
-                    <span>UF</span>
-                    <input class="form-control" name="state" value="<?= e($person['state'] ?? '') ?>" maxlength="2" required autocomplete="address-level1">
-                </label>
-            </div>
-        <?php endif; ?>
+            <label>
+                <span>CPF</span>
+                <input class="form-control" name="cpf" value="<?= e($person['cpf'] ?? '') ?>" data-cpf-input inputmode="numeric">
+            </label>
+            <label>
+                <span>Nascimento</span>
+                <input class="form-control" name="birth_date" value="<?= e($birthDate) ?>" data-birth-date-input placeholder="dd/mm/aaaa">
+            </label>
+            <label>
+                <span>Telefone</span>
+                <input class="form-control" name="phone" value="<?= e($person['phone'] ?? '') ?>" data-phone-input autocomplete="tel">
+            </label>
+            <label>
+                <span>WhatsApp</span>
+                <input class="form-control" name="whatsapp" value="<?= e($person['whatsapp'] ?? '') ?>" data-phone-input autocomplete="tel">
+            </label>
+        </div>
+
+        <div class="person-field-grid">
+            <label>
+                <span>CEP</span>
+                <input class="form-control" name="cep" value="<?= e($person['cep'] ?? '') ?>" data-cep-input autocomplete="postal-code">
+            </label>
+            <label>
+                <span>Endereço</span>
+                <input class="form-control" name="address" value="<?= e($person['address'] ?? '') ?>" <?= $needsAddress ? 'required' : '' ?> data-address-input autocomplete="street-address">
+            </label>
+            <label>
+                <span>Número</span>
+                <input class="form-control" name="address_number" value="<?= e($person['address_number'] ?? '') ?>">
+            </label>
+            <label>
+                <span>Complemento</span>
+                <input class="form-control" name="address_complement" value="<?= e($person['address_complement'] ?? '') ?>">
+            </label>
+            <label>
+                <span>Bairro</span>
+                <input class="form-control" name="district" value="<?= e($person['district'] ?? '') ?>" data-district-input>
+            </label>
+            <label>
+                <span>Cidade</span>
+                <input class="form-control" name="city" value="<?= e($person['city'] ?? '') ?>" <?= $needsAddress ? 'required' : '' ?> data-city-input autocomplete="address-level2">
+            </label>
+            <label>
+                <span>UF</span>
+                <input class="form-control" name="state" value="<?= e($person['state'] ?? '') ?>" maxlength="2" <?= $needsAddress ? 'required' : '' ?> data-state-input autocomplete="address-level1">
+            </label>
+            <button class="btn btn-outline-secondary icon-btn" type="button" data-cep-search><i class="bi bi-search" aria-hidden="true"></i>Buscar CEP</button>
+        </div>
+
+        <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="is_minor" value="1" <?= checked(!empty($person['is_minor'])) ?> data-minor-toggle>
+            <span class="form-check-label">Sou menor de idade ou preciso informar responsável</span>
+        </label>
+
+        <div class="person-field-grid" data-guardian-fields>
+            <label>
+                <span>Responsável</span>
+                <input class="form-control" name="guardian_name" value="<?= e($person['guardian_name'] ?? '') ?>">
+            </label>
+            <label>
+                <span>Parentesco</span>
+                <input class="form-control" name="guardian_relation" value="<?= e($person['guardian_relation'] ?? '') ?>">
+            </label>
+            <label>
+                <span>CPF do responsável</span>
+                <input class="form-control" name="guardian_cpf" value="<?= e($person['guardian_cpf'] ?? '') ?>" data-cpf-input>
+            </label>
+            <label>
+                <span>Telefone do responsável</span>
+                <input class="form-control" name="guardian_phone" value="<?= e($person['guardian_phone'] ?? '') ?>" data-phone-input>
+            </label>
+            <label>
+                <span>E-mail do responsável</span>
+                <input class="form-control" name="guardian_email" type="email" value="<?= e($person['guardian_email'] ?? '') ?>">
+            </label>
+        </div>
+
+        <div class="person-field-grid">
+            <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="contact_authorized" value="1" <?= checked(!empty($person['contact_authorized'])) ?>>
+                <span class="form-check-label">Autorizo contato por e-mail, telefone ou WhatsApp</span>
+            </label>
+            <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="image_authorized" value="1" <?= checked(!empty($person['image_authorized'])) ?>>
+                <span class="form-check-label">Autorizo uso de imagem em registros institucionais</span>
+            </label>
+            <label>
+                <span>Observações</span>
+                <textarea class="form-control" name="notes" rows="3"><?= e($person['notes'] ?? '') ?></textarea>
+            </label>
+        </div>
+
         <?php if ($needsPassword): ?>
             <label>
                 <span>Nova senha</span>

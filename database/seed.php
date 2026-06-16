@@ -41,6 +41,33 @@ $pdo->exec(
 );
 
 $pdo->exec(
+    'CREATE TABLE IF NOT EXISTS announcements (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(160) NOT NULL,
+        body TEXT NOT NULL,
+        url VARCHAR(255) NULL,
+        button_label VARCHAR(80) NULL,
+        active TINYINT(1) NOT NULL DEFAULT 1,
+        created_by BIGINT UNSIGNED NULL,
+        created_at TIMESTAMP NULL,
+        updated_at TIMESTAMP NULL,
+        INDEX idx_announcements_active_created (active, created_at),
+        CONSTRAINT fk_announcements_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS announcement_reads (
+        announcement_id BIGINT UNSIGNED NOT NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
+        read_at DATETIME NOT NULL,
+        PRIMARY KEY (announcement_id, user_id),
+        CONSTRAINT fk_announcement_reads_announcement FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+        CONSTRAINT fk_announcement_reads_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB'
+);
+
+$pdo->exec(
     'CREATE TABLE IF NOT EXISTS user_presence (
         user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
         last_seen_at DATETIME NOT NULL,
@@ -602,10 +629,13 @@ $pdo->exec(
         body TEXT NOT NULL,
         created_at TIMESTAMP NULL,
         read_at DATETIME NULL,
+        deleted_at DATETIME NULL,
+        deleted_by BIGINT UNSIGNED NULL,
         INDEX idx_education_messages_conversation (conversation_id, created_at),
         INDEX idx_education_messages_sender (sender_user_id),
         CONSTRAINT fk_education_messages_conversation FOREIGN KEY (conversation_id) REFERENCES education_conversations(id) ON DELETE CASCADE,
-        CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+        CONSTRAINT fk_education_messages_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_education_messages_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB'
 );
 
@@ -827,6 +857,7 @@ $permissions = [
     ['Gerenciar regiões', 'regions.manage'],
     ['Gerenciar menu', 'menu.manage'],
     ['Gerenciar aviso da pagina inicial', 'home_notice.manage'],
+    ['Gerenciar avisos internos', 'announcements.manage'],
     ['Ver documentos', 'documents.view'],
     ['Gerenciar documentos', 'documents.manage'],
     ['Gerenciar pessoas internas', 'people.manage'],
@@ -872,7 +903,7 @@ $permissionIds = array_column($permissionRows, 'id', 'slug');
 
 $grants = [
     'master' => array_keys($permissionIds),
-    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.audit', 'certificates.institutions', 'certificates.templates', 'certificates.batches.approve', 'forum.view', 'forum.create', 'forum.moderate', 'home_notice.manage', 'consent.view', 'consent.texts', 'consent.manage'],
+    'admin' => ['users.manage', 'news.manage', 'news.approve', 'news.create', 'categories.manage', 'tags.manage', 'comments.moderate', 'ads.manage', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.audit', 'certificates.institutions', 'certificates.templates', 'certificates.batches.approve', 'forum.view', 'forum.create', 'forum.moderate', 'home_notice.manage', 'announcements.manage', 'consent.view', 'consent.texts', 'consent.manage'],
     'admin-local' => ['news.manage', 'news.approve', 'news.create', 'categories.manage', 'people.manage', 'events.manage', 'event_participants.manage', 'education.manage', 'education.view', 'education.forum', 'certificates.manage', 'certificates.issue', 'certificates.templates', 'forum.view', 'forum.create'],
     'delegado-emissor' => ['education.view', 'certificates.issue'],
     'diretor' => ['documents.view', 'people.manage', 'education.manage', 'education.view', 'education.forum', 'forum.view', 'forum.create', 'forum.moderate'],

@@ -74,10 +74,10 @@ class UserController
         $requiredFields = !empty($user['profile_update_required'])
             ? User::profileUpdateFields($user['profile_update_fields'] ?? null)
             : ['name', 'email'];
-        $name = in_array('name', $requiredFields, true) ? trim((string) ($_POST['name'] ?? '')) : (string) ($user['name'] ?? '');
-        $email = in_array('email', $requiredFields, true) ? filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL) : (string) ($user['email'] ?? '');
+        $name = trim((string) ($_POST['name'] ?? ($user['name'] ?? '')));
+        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL) ?: (string) ($user['email'] ?? '');
 
-        if ((in_array('name', $requiredFields, true) && $name === '') || !$email) {
+        if ($name === '' || !$email) {
             Session::flash('error', 'Informe nome e e-mail válidos.');
             redirect('/admin/profile');
         }
@@ -97,48 +97,60 @@ class UserController
             }
         }
 
-        if (in_array('address', $requiredFields, true)) {
-            $address = trim((string) ($_POST['address'] ?? ''));
-            $city = trim((string) ($_POST['city'] ?? ''));
-            $state = strtoupper(trim((string) ($_POST['state'] ?? '')));
-            if ($address === '' || $city === '' || !preg_match('/^[A-Z]{2}$/', $state)) {
-                Session::flash('error', 'Informe endereço, cidade e UF para concluir a atualização.');
-                redirect('/admin/profile');
-            }
-
-            $person = !empty($user['registration_person_id']) ? Person::find((int) $user['registration_person_id']) : null;
-            $person = $person ?: Person::findByIdentity(null, (string) $email, null);
-            $personData = array_merge($person ?: [], [
-                'full_name' => $name ?: ($user['name'] ?? ''),
-                'email' => $email ?: ($user['email'] ?? ''),
-                'cep' => $_POST['cep'] ?? null,
-                'address' => $address,
-                'address_number' => $_POST['address_number'] ?? null,
-                'address_complement' => $_POST['address_complement'] ?? null,
-                'district' => $_POST['district'] ?? null,
-                'city' => $city,
-                'state' => $state,
-                'updated_by' => (int) $user['id'],
-            ]);
-
-            if ($person) {
-                Person::update((int) $person['id'], $personData);
-            } else {
-                Person::create(array_merge($personData, [
-                    'created_by' => (int) $user['id'],
-                ]));
-            }
+        $address = trim((string) ($_POST['address'] ?? ''));
+        $city = trim((string) ($_POST['city'] ?? ''));
+        $state = strtoupper(trim((string) ($_POST['state'] ?? '')));
+        if (in_array('address', $requiredFields, true) && ($address === '' || $city === '' || !preg_match('/^[A-Z]{2}$/', $state))) {
+            Session::flash('error', 'Informe endereço, cidade e UF para concluir a atualização.');
+            redirect('/admin/profile');
         }
 
+        $person = !empty($user['registration_person_id']) ? Person::find((int) $user['registration_person_id']) : null;
+        $person = $person ?: Person::findByIdentity((string) ($_POST['cpf'] ?? ''), (string) $email, (string) ($_POST['whatsapp'] ?? ''));
+        $personData = array_merge($person ?: [], [
+            'full_name' => $name,
+            'cpf' => $_POST['cpf'] ?? null,
+            'birth_date' => $_POST['birth_date'] ?? null,
+            'phone' => $_POST['phone'] ?? null,
+            'whatsapp' => $_POST['whatsapp'] ?? null,
+            'email' => $email,
+            'cep' => $_POST['cep'] ?? null,
+            'address' => $address,
+            'address_number' => $_POST['address_number'] ?? null,
+            'address_complement' => $_POST['address_complement'] ?? null,
+            'district' => $_POST['district'] ?? null,
+            'city' => $city,
+            'state' => $state,
+            'is_minor' => !empty($_POST['is_minor']) ? 1 : 0,
+            'guardian_name' => $_POST['guardian_name'] ?? null,
+            'guardian_relation' => $_POST['guardian_relation'] ?? null,
+            'guardian_cpf' => $_POST['guardian_cpf'] ?? null,
+            'guardian_phone' => $_POST['guardian_phone'] ?? null,
+            'guardian_email' => $_POST['guardian_email'] ?? null,
+            'contact_authorized' => !empty($_POST['contact_authorized']) ? 1 : 0,
+            'image_authorized' => !empty($_POST['image_authorized']) ? 1 : 0,
+            'notes' => $_POST['notes'] ?? null,
+            'updated_by' => (int) $user['id'],
+        ]);
+
+        if ($person) {
+            Person::update((int) $person['id'], $personData);
+        } else {
+            Person::create(array_merge($personData, [
+                'created_by' => (int) $user['id'],
+            ]));
+        }
+
+        $userUpdateFields = array_values(array_unique(array_merge($requiredFields, ['name', 'email'])));
         User::updateOwnProfile((int) $user['id'], [
             'name' => $name,
             'email' => $email,
             'password' => $_POST['password'] ?? null,
-        ], $requiredFields);
+        ], $userUpdateFields);
         Session::put('auth_login_at', time());
         Logger::info('users.profile_updated_by_owner', 'Cadastro atualizado pelo próprio usuário.', (int) $user['id']);
         Session::flash('success', 'Cadastro atualizado.');
-        redirect('/admin');
+        redirect('/admin/profile');
     }
 
     public function updatePassword(): void

@@ -30,6 +30,8 @@
     const linkedParticipantSearch = document.querySelector('[data-linked-participant-search]');
     const documentList = document.querySelector('[data-document-list]');
     const documentSearch = document.querySelector('[data-document-search]');
+    const announcementToggle = document.querySelector('[data-announcement-toggle]');
+    const announcementPopover = document.querySelector('[data-announcement-popover]');
 
     if (toggle) {
         toggle.addEventListener('click', () => {
@@ -64,8 +66,23 @@
             closeMenu();
             closeEditorFocus();
             closeModal();
+            closeAnnouncementPopover();
         }
     });
+
+    if (announcementToggle && announcementPopover) {
+        announcementToggle.addEventListener('click', () => {
+            const expanded = announcementToggle.getAttribute('aria-expanded') === 'true';
+            announcementToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+            announcementPopover.hidden = expanded;
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.topbar-announcements')) {
+                closeAnnouncementPopover();
+            }
+        });
+    }
 
     modalOpeners.forEach((button) => {
         button.addEventListener('click', () => {
@@ -307,7 +324,7 @@
             { title: 'Conteúdo', items: ['Notícias', 'Noticias', 'Categorias', 'Tags'] },
             { title: 'Institucional', items: ['Instituição', 'Instituicao', 'Pessoas', 'Eventos', 'Documentos'] },
             { title: 'Educação', items: ['Ensino', 'Meus certificados', 'Certificados', 'Reconhecimentos', 'Cursos'] },
-            { title: 'Comunicação', items: ['Fóruns', 'Foruns'] },
+            { title: 'Comunicação', items: ['Comunicação', 'Comunicacao', 'Fóruns', 'Foruns'] },
             { title: 'Sistema', items: ['Menu', 'Backups', 'LGPD Cookies'] },
             { title: 'Conta', items: ['Meu cadastro', 'Minha senha'] }
         ];
@@ -351,6 +368,13 @@
             modal.setAttribute('aria-hidden', 'true');
         });
         document.body.classList.remove('modal-open');
+    }
+
+    function closeAnnouncementPopover() {
+        if (announcementToggle && announcementPopover) {
+            announcementToggle.setAttribute('aria-expanded', 'false');
+            announcementPopover.hidden = true;
+        }
     }
 
     function clearEducationEditParams() {
