@@ -123,6 +123,7 @@ $router->get('/admin/institution-pages/landing', [InstitutionPageController::cla
 $router->post('/admin/institution-pages/landing', [InstitutionPageController::class, 'updateLanding']);
 $router->get('/admin/institution-pages/edit', [InstitutionPageController::class, 'edit']);
 $router->post('/admin/institution-pages/update', [InstitutionPageController::class, 'update']);
+$router->post('/admin/institution-pages/visibility', [InstitutionPageController::class, 'visibility']);
 
 $router->get('/admin/news', [NewsController::class, 'index']);
 $router->get('/admin/news/create', [NewsController::class, 'create']);

@@ -44,6 +44,21 @@
                 <div class="institution-admin-actions">
                     <a class="btn btn-primary" href="<?= e(url('/admin/institution-pages/edit?slug=' . $page['slug'])) ?>">Editar informações</a>
                     <a class="btn btn-outline-secondary" href="<?= e(url('/instituicao/' . $page['slug'])) ?>" target="_blank" rel="noopener">Ver pública</a>
+                    <form method="post" action="<?= e(url('/admin/institution-pages/visibility')) ?>" class="inline-form">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="slug" value="<?= e($page['slug']) ?>">
+                        <?php if (!empty($page['show_on_landing'])): ?>
+                            <input type="hidden" name="show_on_landing" value="0">
+                            <button class="btn btn-outline-danger" type="submit">
+                                <i class="bi bi-eye-slash" aria-hidden="true"></i>Ocultar da página principal
+                            </button>
+                        <?php else: ?>
+                            <input type="hidden" name="show_on_landing" value="1">
+                            <button class="btn btn-outline-success" type="submit">
+                                <i class="bi bi-eye" aria-hidden="true"></i>Exibir na página principal
+                            </button>
+                        <?php endif; ?>
+                    </form>
                 </div>
             </article>
         <?php endforeach; ?>

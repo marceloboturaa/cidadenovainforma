@@ -83,6 +83,21 @@ class InstitutionPage
         ]);
     }
 
+    public static function setLandingVisibility(string $slug, bool $visible): void
+    {
+        self::ensureTables();
+
+        Database::connection()->prepare(
+            'UPDATE institution_pages
+             SET show_on_landing = :show_on_landing,
+                 updated_at = NOW()
+             WHERE slug = :slug'
+        )->execute([
+            'slug' => $slug,
+            'show_on_landing' => $visible ? 1 : 0,
+        ]);
+    }
+
     public static function manageableForUser(int $userId, bool $isMaster = false): array
     {
         self::ensureTables();

@@ -103,6 +103,36 @@ class InstitutionPageController
         redirect('/admin/institution-pages');
     }
 
+    public function visibility(): void
+    {
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('error', 'Sessão expirada. Tente novamente.');
+            redirect('/admin/institution-pages');
+        }
+
+        $slug = trim((string) ($_POST['slug'] ?? ''));
+        $page = $slug !== '' ? InstitutionPage::find($slug) : null;
+
+        if (!$page) {
+            http_response_code(404);
+            View::render('errors/404');
+            exit;
+        }
+
+        $this->authorize($slug);
+
+        $visible = !empty($_POST['show_on_landing']);
+        InstitutionPage::setLandingVisibility($slug, $visible);
+
+        Logger::info(
+            'institution_pages.visibility',
+            ($visible ? 'Projeto exibido na página institucional: ' : 'Projeto ocultado da página institucional: ') . ($page['name'] ?? $slug),
+            current_user()['id'] ?? null
+        );
+        Session::flash('success', $visible ? 'Projeto exibido na página institucional.' : 'Projeto ocultado da página institucional.');
+        redirect('/admin/institution-pages');
+    }
+
     public function updateLanding(): void
     {
         if (!Csrf::validate($_POST['_token'] ?? null)) {
