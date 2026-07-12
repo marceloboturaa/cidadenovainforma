@@ -4,9 +4,11 @@ namespace App\Controllers\Admin;
 
 use App\Core\Auth;
 use App\Core\Csrf;
+use App\Core\Logger;
 use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
+use App\Core\WhatsAppNotifier;
 use App\Models\Announcement;
 use App\Models\Education;
 use App\Models\SiteSetting;
@@ -108,6 +110,16 @@ class DashboardController
             'created_by' => $user['id'] ?? null,
         ]);
 
+        if (!empty($_POST['send_whatsapp'])) {
+            $result = $this->sendAnnouncementToWhatsApp($title, $body, (string) ($_POST['announcement_url'] ?? ''), $user);
+
+            Session::flash(
+                'success',
+                'Aviso enviado no painel. WhatsApp: ' . $result['sent'] . ' enviado(s), ' . $result['failed'] . ' falha(s), ' . $result['total'] . ' contato(s) encontrado(s).'
+            );
+            redirect('/admin');
+        }
+
         Session::flash('success', 'Aviso enviado para todos os usuarios do painel.');
         redirect('/admin');
     }
@@ -132,5 +144,40 @@ class DashboardController
         }
 
         redirect($returnTo);
+    }
+
+    private function sendAnnouncementToWhatsApp(string $title, string $body, string $url, ?array $user): array
+    {
+        $recipients = Announcement::whatsappRecipients();
+        $message = "Cidade Nova Informa - Aviso\n\n" . $title . "\n\n" . $body;
+        $url = trim($url);
+
+        if ($url !== '') {
+            $href = preg_match('#^https?://#i', $url) ? $url : url($url);
+            $message .= "\n\nAcesse: " . $href;
+        }
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($recipients as $recipient) {
+            if (WhatsAppNotifier::sendText($recipient['phone'] ?? '', $message)) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        Logger::info(
+            'announcement.whatsapp_sent',
+            'Aviso enviado por WhatsApp. Destinatarios: ' . count($recipients) . '. Enviados: ' . $sent . '. Falhas: ' . $failed . '.',
+            isset($user['id']) ? (int) $user['id'] : null
+        );
+
+        return [
+            'total' => count($recipients),
+            'sent' => $sent,
+            'failed' => $failed,
+        ];
     }
 }

@@ -40,6 +40,9 @@ class InstitutionLanding
                 'title' => 'Comunicação popular que nasce do território',
                 'body' => '<p>O Cidade Nova Informa nasceu da necessidade de dar visibilidade à vida comunitária, organizar informações úteis e fortalecer a memória do território. O projeto mantém sua base no jornalismo comunitário, com escuta, presença local e compromisso com informações de interesse público.</p><p>A área institucional reúne as frentes sociais e culturais ligadas ao portal: ações sociais, biblioteca comunitária, educação popular, sustentabilidade, horta comunitária, convivência com idosos e iniciativas que aproximam moradores, parceiros, voluntários e lideranças.</p><p>Essa atuação é uma extensão do trabalho jornalístico, sem substituir o foco principal do portal de notícias. A proposta é fortalecer pertencimento, cultura comunitária e transformação social a partir da comunicação popular.</p>',
             ],
+            'projects' => [
+                'visible' => true,
+            ],
             'gallery' => [
                 'eyebrow' => 'Galeria',
                 'title' => 'Registros da comunidade em movimento',
@@ -164,6 +167,9 @@ class InstitutionLanding
                 'eyebrow' => self::text($data['about']['eyebrow'] ?? '', $defaults['about']['eyebrow']),
                 'title' => self::text($data['about']['title'] ?? '', $defaults['about']['title']),
                 'body' => trim((string) ($data['about']['body'] ?? '')) ?: $defaults['about']['body'],
+            ],
+            'projects' => [
+                'visible' => filter_var($data['projects']['visible'] ?? $defaults['projects']['visible'], FILTER_VALIDATE_BOOL),
             ],
             'gallery' => [
                 'eyebrow' => self::text($data['gallery']['eyebrow'] ?? '', $defaults['gallery']['eyebrow']),

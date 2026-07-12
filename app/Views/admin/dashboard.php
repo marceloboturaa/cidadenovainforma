@@ -89,6 +89,10 @@
                 <input class="form-control" name="announcement_button_label" maxlength="80" placeholder="Abrir">
             </label>
         </div>
+        <label class="form-check home-notice-toggle">
+            <input class="form-check-input" type="checkbox" name="send_whatsapp" value="1">
+            <span class="form-check-label">Enviar também por WhatsApp para usuários com contato autorizado</span>
+        </label>
         <button class="btn btn-primary icon-btn"><i class="bi bi-bell" aria-hidden="true"></i>Enviar aviso</button>
     </form>
 </section>

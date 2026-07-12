@@ -203,6 +203,9 @@ class InstitutionPageController
                 'title' => $_POST['about']['title'] ?? '',
                 'body' => $_POST['about']['body'] ?? '',
             ],
+            'projects' => [
+                'visible' => !empty($_POST['projects']['visible']),
+            ],
             'gallery' => [
                 'eyebrow' => $_POST['gallery_meta']['eyebrow'] ?? '',
                 'title' => $_POST['gallery_meta']['title'] ?? '',

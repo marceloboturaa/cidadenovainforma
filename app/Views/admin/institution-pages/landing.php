@@ -12,6 +12,7 @@
 <nav class="institution-editor-nav" aria-label="Seções da página institucional">
     <a href="#capa">Capa</a>
     <a href="#quem-somos">Quem somos</a>
+    <a href="#projetos">Projetos</a>
     <a href="#galeria">Galeria</a>
     <a href="#impacto">Impacto</a>
     <a href="#apoio">Apoie</a>
@@ -86,10 +87,28 @@
         </div>
     </section>
 
-    <section class="panel institution-editor-section" id="galeria">
+    <section class="panel institution-editor-section" id="projetos">
         <div class="institution-editor-section-head">
             <div>
                 <span>03</span>
+                <h2>Frentes de atuação social e cultural</h2>
+                <p>Controle a exibição dos cards de projetos na página institucional principal.</p>
+            </div>
+        </div>
+        <div class="institution-field-grid">
+            <div class="institution-checkbox-field">
+                <label>
+                    <input type="checkbox" name="projects[visible]" value="1" <?= checked((bool) ($landing['projects']['visible'] ?? true)) ?>>
+                    <span>Exibir a seção “Frentes de atuação social e cultural” na página pública</span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel institution-editor-section" id="galeria">
+        <div class="institution-editor-section-head">
+            <div>
+                <span>04</span>
                 <h2>Galeria</h2>
                 <p>Gerencie fotos, vídeos, eventos, oficinas, rádio, biblioteca, horta e registros da comunidade.</p>
             </div>
@@ -154,7 +173,7 @@
     <section class="panel institution-editor-section" id="impacto">
         <div class="institution-editor-section-head">
             <div>
-                <span>04</span>
+                <span>05</span>
                 <h2>Impacto social</h2>
                 <p>Números e estatísticas editáveis exibidos na página institucional.</p>
             </div>
@@ -186,7 +205,7 @@
     <section class="panel institution-editor-section" id="apoio">
         <div class="institution-editor-section-head">
             <div>
-                <span>05</span>
+                <span>06</span>
                 <h2>Apoie o projeto</h2>
                 <p>Campos de voluntariado, doações, parcerias e contato.</p>
             </div>
@@ -224,7 +243,7 @@
     <section class="panel institution-editor-section" id="seo">
         <div class="institution-editor-section-head">
             <div>
-                <span>06</span>
+                <span>07</span>
                 <h2>SEO básico</h2>
                 <p>Título e descrição usados no navegador, Google e redes sociais.</p>
             </div>

@@ -7,6 +7,7 @@ $about = $landing['about'];
 $gallery = $landing['gallery'];
 $impact = $landing['impact'];
 $support = $landing['support'];
+$projectsVisible = (bool) ($landing['projects']['visible'] ?? true);
 $linkHref = static function (string $value): string {
     $value = \App\Models\InstitutionLanding::linkUrl($value);
 
@@ -58,6 +59,7 @@ $heroImage = media_url($hero['image']);
         </div>
     </section>
 
+    <?php if ($projectsVisible): ?>
     <section class="institution-projects institution-landing-section" id="projetos">
         <div class="institution-projects-showcase-head">
             <div class="institution-projects-showcase-copy">
@@ -98,6 +100,7 @@ $heroImage = media_url($hero['image']);
         </div>
 
     </section>
+    <?php endif; ?>
     <section class="institution-gallery-showcase institution-landing-section" id="galeria">
         <div class="institution-section-head">
             <span><?= e($gallery['eyebrow']) ?></span>

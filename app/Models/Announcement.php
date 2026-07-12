@@ -57,6 +57,54 @@ class Announcement
         return (int) Database::connection()->lastInsertId();
     }
 
+    public static function whatsappRecipients(): array
+    {
+        self::ensureSchema();
+        Person::ensureSchema();
+
+        $stmt = Database::connection()->query(
+            'SELECT users.id AS user_id,
+                    users.name AS user_name,
+                    people.id AS person_id,
+                    COALESCE(NULLIF(people.whatsapp, ""), NULLIF(people.phone, "")) AS phone
+             FROM users
+             INNER JOIN people
+                ON people.active = 1
+               AND people.contact_authorized = 1
+               AND (
+                    people.id = users.registration_person_id
+                    OR (users.registration_person_id IS NULL AND people.email IS NOT NULL AND people.email = users.email)
+               )
+             WHERE users.active = 1
+               AND COALESCE(NULLIF(people.whatsapp, ""), NULLIF(people.phone, "")) IS NOT NULL
+             ORDER BY users.id ASC, people.updated_at DESC, people.id DESC'
+        );
+
+        $recipients = [];
+        $seenUsers = [];
+        $seenPhones = [];
+
+        foreach ($stmt->fetchAll() as $row) {
+            $userId = (int) ($row['user_id'] ?? 0);
+            $phone = trim((string) ($row['phone'] ?? ''));
+            $phoneKey = preg_replace('/\D+/', '', $phone) ?: $phone;
+
+            if ($userId <= 0 || $phone === '' || isset($seenUsers[$userId]) || isset($seenPhones[$phoneKey])) {
+                continue;
+            }
+
+            $seenUsers[$userId] = true;
+            $seenPhones[$phoneKey] = true;
+            $recipients[] = [
+                'user_id' => $userId,
+                'name' => (string) ($row['user_name'] ?? ''),
+                'phone' => $phone,
+            ];
+        }
+
+        return $recipients;
+    }
+
     public static function unreadForUser(int $userId, int $limit = 3): array
     {
         self::ensureSchema();
