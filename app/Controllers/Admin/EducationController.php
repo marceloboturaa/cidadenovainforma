@@ -355,7 +355,7 @@ class EducationController
         }
 
         $lessons = $isEnrollmentPending ? [] : Education::lessonsWithSequenceAccess(
-            Education::lessonsForCourse((int) $course['id'], (int) $user['id']),
+            Education::lessonsForCourse((int) $course['id'], (int) $user['id'], $canManage),
             $canManage
         );
         $forumTopics = $isEnrollmentPending ? [] : Education::forumTopics((int) $course['id']);
@@ -365,7 +365,7 @@ class EducationController
         View::render('admin/education/course', [
             'course' => $course,
             'lessons' => $lessons,
-            'modules' => Education::modulesForCourse((int) $course['id']),
+            'modules' => Education::modulesForCourse((int) $course['id'], $canManage),
             'canManage' => $canManage,
             'canAssignTeacher' => $this->canAssignTeacher(),
             'teacherOptions' => $this->teacherOptions(User::activeForAccessLists()),
@@ -432,7 +432,22 @@ class EducationController
         $this->authorizeCourseManage($course);
 
         Education::deactivateModule((int) $module['id']);
-        Session::flash('success', 'Módulo removido.');
+        Session::flash('success', 'Módulo ocultado.');
+        redirect('/admin/education/course?id=' . $module['course_id']);
+    }
+
+    public function visibilityModule(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education/manage');
+        $module = $this->moduleFromQuery();
+        $course = Education::findCourse((int) $module['course_id']);
+        $this->authorizeCourseManage($course);
+
+        $active = ($_POST['active'] ?? '') === '1';
+        Education::setModuleVisibility((int) $module['id'], $active);
+        Session::flash('success', $active ? 'Módulo exibido.' : 'Módulo ocultado.');
         redirect('/admin/education/course?id=' . $module['course_id']);
     }
 
@@ -528,13 +543,17 @@ class EducationController
             View::render('errors/403');
             return;
         }
+        if (!$canManage && !empty($lesson['module_id']) && empty($lesson['module_active'])) {
+            Session::flash('error', 'Esta aula faz parte de um módulo oculto.');
+            redirect('/admin/education/course?id=' . $lesson['course_id']);
+        }
         if (!Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)) {
             Session::flash('error', $isScheduleLocked ? 'Esta aula ainda não foi liberada no agendamento.' : 'Conclua a aula anterior antes de assistir esta aula.');
             redirect('/admin/education/course?id=' . $lesson['course_id']);
         }
 
         $playlist = Education::lessonsWithSequenceAccess(
-            Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id']),
+            Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id'], $canManage),
             $canManage
         );
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
@@ -1583,7 +1602,7 @@ class EducationController
     private function moduleFromQuery(bool $required = true): ?array
     {
         $id = filter_input(INPUT_GET, 'module_id', FILTER_VALIDATE_INT);
-        $module = $id ? Education::findModule($id) : null;
+        $module = $id ? Education::findModule($id, true) : null;
 
         if (!$module && $required) {
             http_response_code(404);

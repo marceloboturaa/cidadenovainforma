@@ -197,6 +197,7 @@ $router->post('/admin/education/course/delete', [EducationController::class, 'de
 $router->get('/admin/education/course', [EducationController::class, 'course']);
 $router->post('/admin/education/module', [EducationController::class, 'storeModule']);
 $router->post('/admin/education/module/update', [EducationController::class, 'updateModule']);
+$router->post('/admin/education/module/visibility', [EducationController::class, 'visibilityModule']);
 $router->post('/admin/education/module/delete', [EducationController::class, 'deleteModule']);
 $router->post('/admin/education/lesson', [EducationController::class, 'storeLesson']);
 $router->post('/admin/education/lesson/update', [EducationController::class, 'updateLesson']);

@@ -518,6 +518,15 @@
     background: #ffffff;
 }
 
+.education-module-card.is-hidden-module {
+    border-style: dashed;
+    background: #f8fafc;
+}
+
+.education-module-card.is-hidden-module > header span {
+    color: #64748b;
+}
+
 .education-module-card > header {
     display: flex;
     justify-content: space-between;
@@ -556,6 +565,19 @@
     color: var(--muted);
     font-size: 0.84rem;
     text-align: right;
+}
+
+.education-module-actions em {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.76rem;
+    font-style: normal;
+    font-weight: 900;
 }
 
 .education-simple-panel {

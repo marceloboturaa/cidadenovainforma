@@ -83,22 +83,29 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
     <div class="education-module-list">
         <?php foreach ($modules as $module): ?>
             <?php $moduleLessons = $lessonsByModule[(string) $module['id']] ?? []; ?>
-            <article class="education-module-card">
+            <?php $moduleHidden = empty($module['active']); ?>
+            <article class="education-module-card <?= $moduleHidden ? 'is-hidden-module' : '' ?>">
                 <header>
                     <div>
-                        <span>Módulo</span>
+                        <span><?= $moduleHidden ? 'Módulo oculto' : 'Módulo' ?></span>
                         <h3><?= e($module['title']) ?></h3>
                         <?php if (!empty($module['summary'])): ?>
                             <p><?= e($module['summary']) ?></p>
                         <?php endif; ?>
                     </div>
                     <div class="education-module-actions">
+                        <?php if ($moduleHidden): ?>
+                            <em>Oculto para alunos</em>
+                        <?php endif; ?>
                         <strong><?= e((string) count($moduleLessons)) ?> aula(s)</strong>
                         <?php if ($canManage): ?>
                             <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>">Editar módulo</a>
-                            <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/delete?module_id=' . $module['id'])) ?>" onsubmit="return confirm('Remover este módulo? As aulas ficam no curso, sem módulo.');">
+                            <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/visibility?module_id=' . $module['id'])) ?>">
                                 <?= csrf_field() ?>
-                                <button class="btn btn-sm btn-outline-danger">Remover</button>
+                                <input type="hidden" name="active" value="<?= $moduleHidden ? '1' : '0' ?>">
+                                <button class="btn btn-sm <?= $moduleHidden ? 'btn-outline-primary' : 'btn-outline-danger' ?>">
+                                    <?= $moduleHidden ? 'Mostrar' : 'Ocultar' ?>
+                                </button>
                             </form>
                         <?php endif; ?>
                     </div>

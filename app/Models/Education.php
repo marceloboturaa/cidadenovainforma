@@ -756,19 +756,23 @@ class Education
         return $stmt->fetch() ?: null;
     }
 
-    public static function modulesForCourse(int $courseId): array
+    public static function modulesForCourse(int $courseId, bool $includeHidden = false): array
     {
         self::ensureSchema();
+
+        $where = 'education_modules.course_id = :course_id';
+        if (!$includeHidden) {
+            $where .= ' AND education_modules.active = 1';
+        }
 
         $stmt = Database::connection()->prepare(
             'SELECT education_modules.*,
                     COUNT(DISTINCT education_lessons.id) AS lesson_count
              FROM education_modules
              LEFT JOIN education_lessons ON education_lessons.module_id = education_modules.id AND education_lessons.active = 1
-             WHERE education_modules.course_id = :course_id
-               AND education_modules.active = 1
+             WHERE ' . $where . '
              GROUP BY education_modules.id
-             ORDER BY education_modules.sort_order ASC, education_modules.id ASC'
+             ORDER BY education_modules.active DESC, education_modules.sort_order ASC, education_modules.id ASC'
         );
         $stmt->execute(['course_id' => $courseId]);
 
@@ -807,11 +811,16 @@ class Education
 
     public static function deactivateModule(int $id): void
     {
+        self::setModuleVisibility($id, false);
+    }
+
+    public static function setModuleVisibility(int $id, bool $active): void
+    {
         self::ensureSchema();
 
         Database::connection()
-            ->prepare('UPDATE education_modules SET active = 0, updated_at = NOW() WHERE id = :id')
-            ->execute(['id' => $id]);
+            ->prepare('UPDATE education_modules SET active = :active, updated_at = NOW() WHERE id = :id')
+            ->execute(['id' => $id, 'active' => $active ? 1 : 0]);
     }
 
     public static function userCanAccessCourse(int $courseId, int $userId, bool $canManage = false, bool $includePending = false): bool
@@ -848,7 +857,7 @@ class Education
         return ($status = $stmt->fetchColumn()) ? (string) $status : null;
     }
 
-    public static function lessonsForCourse(int $courseId, int $userId = 0): array
+    public static function lessonsForCourse(int $courseId, int $userId = 0, bool $includeHiddenModules = false): array
     {
         self::ensureSchema();
 
@@ -872,7 +881,9 @@ class Education
                           AND certificate_blocks.type = "certificate"
                     ) AS certificate_count
              FROM education_lessons
-             LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id AND education_modules.active = 1
+             LEFT JOIN education_modules
+                ON education_modules.id = education_lessons.module_id
+               AND (education_modules.active = 1 OR :include_hidden_modules_join = 1)
              LEFT JOIN education_lesson_progress progress
                 ON progress.lesson_id = education_lessons.id
                AND progress.user_id = :user_id
@@ -881,11 +892,18 @@ class Education
                AND watches.user_id = :watch_user_id
              WHERE education_lessons.course_id = :course_id
                AND education_lessons.active = 1
+               AND (education_lessons.module_id IS NULL OR education_modules.id IS NOT NULL OR :include_hidden_modules_where = 1)
              ORDER BY COALESCE(education_modules.sort_order, 0) ASC,
                       education_lessons.sort_order ASC,
                       education_lessons.id ASC'
         );
-        $stmt->execute(['course_id' => $courseId, 'user_id' => $userId, 'watch_user_id' => $userId]);
+        $stmt->execute([
+            'course_id' => $courseId,
+            'user_id' => $userId,
+            'watch_user_id' => $userId,
+            'include_hidden_modules_join' => $includeHiddenModules ? 1 : 0,
+            'include_hidden_modules_where' => $includeHiddenModules ? 1 : 0,
+        ]);
 
         return $stmt->fetchAll();
     }
@@ -938,9 +956,12 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'SELECT education_lessons.*, education_courses.title AS course_title
+            'SELECT education_lessons.*,
+                    education_courses.title AS course_title,
+                    education_modules.active AS module_active
              FROM education_lessons
              INNER JOIN education_courses ON education_courses.id = education_lessons.course_id
+             LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id
              WHERE education_lessons.id = :id
                AND education_lessons.active = 1
                AND education_courses.active = 1
@@ -967,16 +988,17 @@ class Education
         return $stmt->fetchAll();
     }
 
-    public static function findModule(int $id): ?array
+    public static function findModule(int $id, bool $includeHidden = false): ?array
     {
         self::ensureSchema();
 
+        $activeFilter = $includeHidden ? '' : ' AND education_modules.active = 1';
         $stmt = Database::connection()->prepare(
             'SELECT education_modules.*, education_courses.teacher_user_id
              FROM education_modules
              INNER JOIN education_courses ON education_courses.id = education_modules.course_id
              WHERE education_modules.id = :id
-               AND education_modules.active = 1
+               ' . $activeFilter . '
                AND education_courses.active = 1
              LIMIT 1'
         );
