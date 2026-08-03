@@ -15,6 +15,7 @@ use App\Models\Document;
 use App\Models\Education;
 use App\Models\LibraryEvent;
 use App\Models\Person;
+use App\Models\Role;
 use App\Models\User;
 
 class LibraryEventController
@@ -532,6 +533,22 @@ class LibraryEventController
         $personIds = is_array($personIds) ? $personIds : [];
         $enrolled = 0;
 
+        if ($action === 'temporary_login') {
+            $result = $this->createTemporaryLoginsForParticipants($event, $personIds);
+            if (!empty($result['credentials'])) {
+                Session::flash('temporary_credentials', implode("\n", $result['credentials']));
+            }
+
+            $message = $result['created'] . ' login(s) provisório(s) gerado(s).';
+            if ($result['skipped'] > 0) {
+                $message .= ' ' . $result['skipped'] . ' participante(s) sem e-mail foram ignorados.';
+            }
+
+            Logger::info('library_events.temporary_logins_created', 'Logins provisórios gerados no evento: ' . $event['title'], current_user()['id'] ?? null);
+            Session::flash($result['created'] > 0 ? 'success' : 'error', $result['created'] > 0 ? $message : 'Nenhum login foi gerado. Selecione participantes com e-mail cadastrado.');
+            redirect('/admin/library-events/participants?id=' . $event['id']);
+        }
+
         if ($action === 'all_pending') {
             $updated = LibraryEvent::updatePendingParticipantStatuses((int) $event['id'], 'inscrito');
             $enrolled = $this->enrollEventParticipantUsers($event);
@@ -785,6 +802,68 @@ class LibraryEventController
         }
 
         return $enrolled;
+    }
+
+    private function createTemporaryLoginsForParticipants(array $event, array $personIds): array
+    {
+        $personIds = array_values(array_unique(array_filter(array_map('intval', $personIds))));
+        if (!$personIds) {
+            return ['created' => 0, 'skipped' => 0, 'credentials' => []];
+        }
+
+        $role = Role::findBySlug('estudante') ?: Role::findBySlug('jornalista');
+        if (!$role) {
+            return ['created' => 0, 'skipped' => count($personIds), 'credentials' => []];
+        }
+
+        $participants = array_filter(
+            LibraryEvent::participants((int) $event['id']),
+            fn (array $participant): bool => in_array((int) $participant['person_id'], $personIds, true)
+        );
+        $courseIds = LibraryEvent::courseIds((int) $event['id']);
+        $created = 0;
+        $skipped = 0;
+        $credentials = [];
+
+        foreach ($participants as $participant) {
+            $email = filter_var($participant['email'] ?? null, FILTER_VALIDATE_EMAIL);
+            if (!$email) {
+                $skipped++;
+                continue;
+            }
+
+            $password = $this->temporaryPassword();
+            $user = User::findByEmail((string) $email);
+            if ($user) {
+                User::updatePassword((int) $user['id'], $password);
+                User::activate((int) $user['id']);
+                $userId = (int) $user['id'];
+            } else {
+                $userId = User::create([
+                    'name' => $participant['full_name'] ?? $email,
+                    'email' => $email,
+                    'password' => $password,
+                    'role_id' => $role['id'],
+                    'active' => 1,
+                    'registration_origin' => 'event',
+                    'registration_event_id' => $event['id'] ?? null,
+                    'registration_person_id' => $participant['person_id'] ?? null,
+                    'registration_course_id' => $courseIds[0] ?? null,
+                ]);
+            }
+
+            Education::enrollUserInCourses($userId, $courseIds, 'approved');
+            User::requestProfileUpdate($userId, (int) (current_user()['id'] ?? 0), ['password']);
+            $credentials[] = ($participant['full_name'] ?? 'Participante') . ' | ' . $email . ' | Senha: ' . $password;
+            $created++;
+        }
+
+        return ['created' => $created, 'skipped' => $skipped, 'credentials' => $credentials];
+    }
+
+    private function temporaryPassword(): string
+    {
+        return 'CN-' . strtoupper(bin2hex(random_bytes(4)));
     }
 
     private function downloadPdf(string $filename, string $title, array $lines): void
