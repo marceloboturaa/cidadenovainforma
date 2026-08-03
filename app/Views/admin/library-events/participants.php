@@ -524,7 +524,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                         <option value="pendente">Pendente</option>
                     </select>
                     <button class="btn btn-sm btn-primary icon-btn" name="bulk_action" value="selected" type="submit"><i class="bi bi-check2-square" aria-hidden="true"></i>Aplicar nos marcados</button>
-                    <button class="btn btn-sm btn-outline-success icon-btn" name="bulk_action" value="temporary_login" type="submit" onclick="return confirm('Gerar senha provisoria para os participantes marcados? Senhas existentes serao redefinidas.');"><i class="bi bi-key" aria-hidden="true"></i>Login provisorio</button>
+                    <button class="btn btn-sm btn-outline-success icon-btn" name="bulk_action" value="temporary_login" type="submit" onclick="return confirm('Gerar senha provisoria apenas para participantes marcados que ainda nao tem login?');"><i class="bi bi-key" aria-hidden="true"></i>Login provisorio</button>
                     <button class="btn btn-sm btn-outline-primary icon-btn" name="bulk_action" value="all_pending" type="submit" onclick="return confirm('Confirmar todas as inscrições pendentes deste evento?');"><i class="bi bi-check2-all" aria-hidden="true"></i>Aceitar pendentes</button>
                 </form>
                 <button class="btn btn-sm btn-outline-secondary icon-btn" type="button" data-participant-select-all><i class="bi bi-ui-checks" aria-hidden="true"></i>Selecionar todos</button>

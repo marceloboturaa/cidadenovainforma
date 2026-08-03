@@ -543,9 +543,16 @@ class LibraryEventController
             if ($result['skipped'] > 0) {
                 $message .= ' ' . $result['skipped'] . ' participante(s) sem e-mail foram ignorados.';
             }
+            if (($result['existing'] ?? 0) > 0) {
+                $message .= ' ' . $result['existing'] . ' participante(s) já tinham login e não receberam senha provisória.';
+            }
+            if (($result['email_failed'] ?? 0) > 0) {
+                $message .= ' ' . $result['email_failed'] . ' e-mail(s) de senha provisória não puderam ser enviados.';
+            }
 
             Logger::info('library_events.temporary_logins_created', 'Logins provisórios gerados no evento: ' . $event['title'], current_user()['id'] ?? null);
-            Session::flash($result['created'] > 0 ? 'success' : 'error', $result['created'] > 0 ? $message : 'Nenhum login foi gerado. Selecione participantes com e-mail cadastrado.');
+            $hasHandledParticipants = $result['created'] > 0 || ($result['existing'] ?? 0) > 0;
+            Session::flash($hasHandledParticipants ? 'success' : 'error', $hasHandledParticipants ? $message : 'Nenhum login foi gerado. Selecione participantes com e-mail cadastrado.');
             redirect('/admin/library-events/participants?id=' . $event['id']);
         }
 
@@ -808,12 +815,12 @@ class LibraryEventController
     {
         $personIds = array_values(array_unique(array_filter(array_map('intval', $personIds))));
         if (!$personIds) {
-            return ['created' => 0, 'skipped' => 0, 'credentials' => []];
+            return ['created' => 0, 'skipped' => 0, 'existing' => 0, 'email_sent' => 0, 'email_failed' => 0, 'credentials' => []];
         }
 
         $role = Role::findBySlug('estudante') ?: Role::findBySlug('jornalista');
         if (!$role) {
-            return ['created' => 0, 'skipped' => count($personIds), 'credentials' => []];
+            return ['created' => 0, 'skipped' => count($personIds), 'existing' => 0, 'email_sent' => 0, 'email_failed' => 0, 'credentials' => []];
         }
 
         $participants = array_filter(
@@ -823,6 +830,9 @@ class LibraryEventController
         $courseIds = LibraryEvent::courseIds((int) $event['id']);
         $created = 0;
         $skipped = 0;
+        $existing = 0;
+        $emailSent = 0;
+        $emailFailed = 0;
         $credentials = [];
 
         foreach ($participants as $participant) {
@@ -835,9 +845,10 @@ class LibraryEventController
             $password = $this->temporaryPassword();
             $user = User::findByEmail((string) $email);
             if ($user) {
-                User::updatePassword((int) $user['id'], $password);
                 User::activate((int) $user['id']);
-                $userId = (int) $user['id'];
+                Education::enrollUserInCourses((int) $user['id'], $courseIds, 'approved');
+                $existing++;
+                continue;
             } else {
                 $userId = User::create([
                     'name' => $participant['full_name'] ?? $email,
@@ -855,10 +866,65 @@ class LibraryEventController
             Education::enrollUserInCourses($userId, $courseIds, 'approved');
             User::requestProfileUpdate($userId, (int) (current_user()['id'] ?? 0), ['password']);
             $credentials[] = ($participant['full_name'] ?? 'Participante') . ' | ' . $email . ' | Senha: ' . $password;
+            if ($this->sendTemporaryLoginEmail($event, $participant, (string) $email, $password)) {
+                $emailSent++;
+            } else {
+                $emailFailed++;
+            }
             $created++;
         }
 
-        return ['created' => $created, 'skipped' => $skipped, 'credentials' => $credentials];
+        return [
+            'created' => $created,
+            'skipped' => $skipped,
+            'existing' => $existing,
+            'email_sent' => $emailSent,
+            'email_failed' => $emailFailed,
+            'credentials' => $credentials,
+        ];
+    }
+
+    private function sendTemporaryLoginEmail(array $event, array $participant, string $email, string $password): bool
+    {
+        $name = trim((string) ($participant['full_name'] ?? ''));
+        $eventTitle = trim((string) ($event['title'] ?? 'evento'));
+        $loginUrl = url('/login');
+        $subject = 'Senha provisória - ' . $eventTitle;
+
+        $html = '<div style="margin:0;padding:0;background:#f3f6fa;font-family:Arial,Helvetica,sans-serif;color:#1d171b;">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#f3f6fa;">'
+            . '<tr><td align="center" style="padding:34px 16px;">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;border-collapse:collapse;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 18px 46px rgba(17,24,39,.12);">'
+            . '<tr><td style="background:#1d171b;padding:24px 30px;text-align:center;color:#ffffff;"><strong style="font-size:28px;">Cidade Nova Informa</strong></td></tr>'
+            . '<tr><td style="padding:30px 30px 12px;">'
+            . '<div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#c5161d;">Acesso ao evento</div>'
+            . '<h1 style="margin:8px 0 0;font-size:24px;line-height:1.25;color:#1d171b;">Senha provisória criada</h1>'
+            . '<p style="margin:22px 0 0;font-size:15px;line-height:1.7;color:#4b5563;">Olá' . ($name !== '' ? ', ' . e($name) : '') . '.</p>'
+            . '<p style="margin:12px 0 0;font-size:15px;line-height:1.7;color:#4b5563;">Criamos um acesso provisório para sua participação em <strong>' . e($eventTitle) . '</strong>.</p>'
+            . '<div style="margin:18px 0 0;padding:14px 16px;border-radius:10px;background:#f8fafc;border:1px solid #e5e7eb;color:#374151;font-size:14px;line-height:1.8;">'
+            . '<strong>E-mail:</strong> ' . e($email) . '<br>'
+            . '<strong>Senha provisória:</strong> ' . e($password)
+            . '</div>'
+            . '<p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:#6b7280;">Ao entrar, você deverá cadastrar uma nova senha.</p>'
+            . '</td></tr>'
+            . '<tr><td style="padding:20px 30px 30px;text-align:center;"><a href="' . e($loginUrl) . '" style="display:inline-block;padding:13px 22px;border-radius:8px;background:#c5161d;color:#ffffff;font-size:14px;font-weight:800;text-decoration:none;">Entrar no painel</a></td></tr>'
+            . '</table>'
+            . '</td></tr></table>'
+            . '</div>';
+
+        $text = "Olá" . ($name !== '' ? ', ' . $name : '') . ".\n\n"
+            . 'Criamos um acesso provisório para sua participação em "' . $eventTitle . "\".\n\n"
+            . "E-mail: " . $email . "\n"
+            . "Senha provisória: " . $password . "\n\n"
+            . "Acesse: " . $loginUrl . "\n"
+            . "Ao entrar, você deverá cadastrar uma nova senha.";
+
+        try {
+            return Mailer::send($email, $subject, $html, $text);
+        } catch (\Throwable $exception) {
+            Logger::info('library_events.temporary_login_email_failed', 'Falha ao enviar senha provisória: ' . $exception->getMessage(), current_user()['id'] ?? null);
+            return false;
+        }
     }
 
     private function temporaryPassword(): string
