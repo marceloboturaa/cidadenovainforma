@@ -429,9 +429,12 @@ class LibraryEvent
                     people.guardian_email,
                     people.contact_authorized,
                     people.image_authorized,
-                    people.notes AS person_notes
+                    people.notes AS person_notes,
+                    users.id AS login_user_id,
+                    users.active AS login_active
              FROM library_event_participants
              INNER JOIN people ON people.id = library_event_participants.person_id
+             LEFT JOIN users ON LOWER(users.email) = LOWER(people.email)
              ' . $where . '
              ORDER BY people.full_name ASC'
         );

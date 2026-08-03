@@ -564,6 +564,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
             $participantSearchText = implode(' ', [
                 $participant['full_name'] ?? '',
                 $participant['email'] ?? '',
+                !empty($participant['login_user_id']) ? 'tem login senha cadastrada' : 'sem login',
                 $participant['phone'] ?? '',
                 $participant['whatsapp'] ?? '',
                 $participant['district'] ?? '',
@@ -583,6 +584,11 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($participant['full_name']) ?></strong>
                         <span class="state-pill <?= in_array($participant['status'], ['inscrito', 'presente'], true) ? 'is-active' : 'is-muted' ?>"><?= e(ucfirst($participant['status'])) ?></span>
+                        <?php if (!empty($participant['login_user_id'])): ?>
+                            <span class="state-pill is-active" title="Este participante já possui login e senha cadastrados."><i class="bi bi-key" aria-hidden="true"></i>Tem login e senha</span>
+                        <?php else: ?>
+                            <span class="state-pill is-muted" title="Este participante ainda não possui login cadastrado."><i class="bi bi-key" aria-hidden="true"></i>Sem login</span>
+                        <?php endif; ?>
                     </div>
                     <dl class="admin-list-meta">
                         <div><dt>CPF</dt><dd><?= e($participant['cpf'] ?? '-') ?></dd></div>
@@ -590,6 +596,7 @@ $registrationRole = function (array $record, string $fallback = 'person'): strin
                         <div><dt>Telefone</dt><dd><?= e($participant['phone'] ?? '-') ?></dd></div>
                         <div><dt>WhatsApp</dt><dd><?= e($participant['whatsapp'] ?? '-') ?></dd></div>
                         <div><dt>E-mail</dt><dd><?= e($participant['email'] ?? '-') ?></dd></div>
+                        <div><dt>Acesso</dt><dd><?= !empty($participant['login_user_id']) ? ('Login e senha cadastrados' . (empty($participant['login_active']) ? ' (bloqueado)' : '')) : 'Sem login cadastrado' ?></dd></div>
                         <div><dt>Endereço</dt><dd><?= e(trim(implode(', ', array_filter([
                             $participant['address'] ?? '',
                             $participant['address_number'] ?? '',
