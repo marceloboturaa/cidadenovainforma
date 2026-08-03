@@ -669,6 +669,16 @@
     justify-self: start;
 }
 
+.user-temporary-password-form .password-field {
+    min-width: 0;
+}
+
+.temporary-password-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .profile-complete-form {
     display: grid;
     gap: 18px;

@@ -418,17 +418,37 @@ $onlineCount = count($onlineUserIds ?? []);
 
                                 <section class="user-action-panel">
                                     <h3>Senha</h3>
-                                    <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="user-stacked-form">
+                                    <form method="post" action="<?= e(url('/admin/users/reset-password?id=' . $item['id'])) ?>" class="user-stacked-form user-temporary-password-form" data-temporary-password-form>
                                         <?= csrf_field() ?>
+                                        <span class="field-hint">Gere uma senha provisória ou informe uma senha manual. A senha atual só muda ao confirmar.</span>
                                         <label>
                                             <span>Nova senha</span>
-                                            <input class="form-control form-control-sm" name="password" type="password" minlength="8" placeholder="Nova senha" autocomplete="new-password" required>
+                                            <div class="password-field">
+                                                <input class="form-control form-control-sm" name="password" type="password" minlength="8" placeholder="Nova senha" autocomplete="new-password" data-temporary-password required>
+                                                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha"><i class="bi bi-eye" aria-hidden="true"></i></button>
+                                            </div>
                                         </label>
                                         <label>
                                             <span>Confirmar senha</span>
-                                            <input class="form-control form-control-sm" name="password_confirmation" type="password" minlength="8" placeholder="Confirmar senha" autocomplete="new-password" required>
+                                            <div class="password-field">
+                                                <input class="form-control form-control-sm" name="password_confirmation" type="password" minlength="8" placeholder="Confirmar senha" autocomplete="new-password" data-temporary-password-confirmation required>
+                                                <button type="button" class="password-toggle" aria-label="Mostrar senha" title="Mostrar senha"><i class="bi bi-eye" aria-hidden="true"></i></button>
+                                            </div>
                                         </label>
-                                        <button class="btn btn-sm btn-outline-secondary">Resetar</button>
+                                        <div class="temporary-password-actions">
+                                            <button class="btn btn-sm btn-outline-primary" type="button" data-generate-temporary-password>
+                                                <i class="bi bi-shuffle" aria-hidden="true"></i>
+                                                Gerar provisória
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-copy-temporary-password>
+                                                <i class="bi bi-clipboard" aria-hidden="true"></i>
+                                                Copiar
+                                            </button>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="return confirm('Definir esta senha provisória para este usuário?');">
+                                            <i class="bi bi-key" aria-hidden="true"></i>
+                                            Definir senha provisória
+                                        </button>
                                     </form>
                                 </section>
                             </div>

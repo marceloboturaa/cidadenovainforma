@@ -4,6 +4,7 @@
 <?php $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/admin', PHP_URL_PATH) ?: '/admin'; ?>
 <?php $adminCssFiles = $assets['css']['admin'] ?? ['/public/assets/css/admin.css']; ?>
 <?php $adminJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/admin.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/admin.js') : time(); ?>
+<?php $passwordToggleJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/password-toggle.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/password-toggle.js') : time(); ?>
 <?php $tinyMceJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/tinymce-init.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/tinymce-init.js') : time(); ?>
 <?php $faviconPath = str_starts_with($currentPath, '/admin/education') ? '/public/assets/img/favicon-education.svg' : '/public/assets/img/favicon-secondary.svg'; ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . $faviconPath); ?>
@@ -156,7 +157,7 @@
             </main>
         </div>
     </div>
-    <script src="<?= e(url('/public/assets/js/password-toggle.js')) ?>"></script>
+    <script src="<?= e(url('/public/assets/js/password-toggle.js') . '?v=' . $passwordToggleJsVersion) ?>"></script>
     <script src="<?= e(url('/public/assets/js/admin.js') . '?v=' . $adminJsVersion) ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>
     <script src="<?= e(url('/public/assets/js/tinymce-init.js') . '?v=' . $tinyMceJsVersion) ?>"></script>
