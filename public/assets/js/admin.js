@@ -820,11 +820,14 @@
 
         if (player.tagName === 'IFRAME' && /youtube\.com\/embed\//i.test(player.src)) {
             loadYouTubeApi(() => {
-                const id = player.id || `education-youtube-${Date.now()}`;
+                const id = player.id || `education-youtube-${Date.now()}-${Math.random().toString(16).slice(2)}`;
                 player.id = id;
                 new window.YT.Player(id, {
                     events: {
                         onStateChange(event) {
+                            if (event.data === window.YT.PlayerState.PLAYING) {
+                                scheduleEducationIframeFallback(player);
+                            }
                             if (event.data === window.YT.PlayerState.ENDED) {
                                 markEducationVideoWatched(player);
                             }
@@ -832,7 +835,17 @@
                     }
                 });
             });
+            window.setTimeout(() => {
+                if (player.dataset.watchSaved !== '1') {
+                    revealEducationVideoFallback(player);
+                }
+            }, 90000);
+            return;
         }
+
+        player.addEventListener('load', () => scheduleEducationIframeFallback(player), { once: true });
+        player.addEventListener('pointerenter', () => scheduleEducationIframeFallback(player), { once: true });
+        window.setTimeout(() => revealEducationVideoFallback(player), 90000);
     }
 
     function loadYouTubeApi(callback) {
@@ -884,6 +897,9 @@
             }
 
             player.dataset.watchSaved = '1';
+            player.closest('.education-block-card')?.querySelectorAll('[data-education-video-fallback]').forEach((fallback) => {
+                fallback.hidden = true;
+            });
             player.closest('.education-block-card')?.querySelectorAll('[data-education-watch-hint]').forEach((hint) => {
                 hint.textContent = 'Vídeo concluído. Agora você pode marcar a aula como concluída.';
                 hint.classList.add('is-complete');
@@ -892,6 +908,29 @@
         } catch (error) {
             return;
         }
+    }
+
+    function scheduleEducationIframeFallback(player) {
+        if (player.dataset.autoWatchTimer === '1' || player.dataset.watchSaved === '1') {
+            return;
+        }
+
+        player.dataset.autoWatchTimer = '1';
+        window.setTimeout(() => {
+            if (player.dataset.watchSaved !== '1') {
+                markEducationVideoWatched(player);
+            }
+        }, 60000);
+    }
+
+    function revealEducationVideoFallback(player) {
+        if (player.dataset.watchSaved === '1') {
+            return;
+        }
+
+        player.closest('.education-block-card')?.querySelectorAll('[data-education-video-fallback]').forEach((fallback) => {
+            fallback.hidden = false;
+        });
     }
 
     function refreshEducationCompletionState() {

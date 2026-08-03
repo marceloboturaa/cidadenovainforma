@@ -344,7 +344,7 @@ $embed = function (?string $url): ?string {
                         <?php endif; ?>
                     </div>
                     <?php if (!$canManage && $blockRequired && !$blockVideoWatched): ?>
-                        <form method="post" action="<?= e(url('/admin/education/block/watch?id=' . $block['id'])) ?>" class="education-video-complete-form">
+                        <form method="post" action="<?= e(url('/admin/education/block/watch?id=' . $block['id'])) ?>" class="education-video-complete-form" data-education-video-fallback hidden>
                             <?= csrf_field() ?>
                             <button class="btn btn-sm btn-outline-success icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Marcar vídeo como concluído</button>
                         </form>
