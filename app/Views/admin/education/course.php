@@ -25,6 +25,28 @@ $isEnrollmentPending = $isEnrollmentPending ?? false;
 $certificateVerificationUrl = !empty($certificateStatus['certificate']['verification_code'] ?? null)
     ? url('/certificado/' . $certificateStatus['certificate']['verification_code'])
     : null;
+$isStudentCourseView = !$canManage && !$canTakeAttendance;
+$lessonCount = count($lessons);
+$completedLessonCount = 0;
+$nextLesson = null;
+
+foreach ($lessons as $lessonItem) {
+    $lessonIsDone = !empty($lessonItem['completed_at']);
+    $lessonIsLocked = !empty($lessonItem['schedule_locked'])
+        || !empty($lessonItem['sequence_locked'])
+        || !empty($lessonItem['locked']);
+
+    if ($lessonIsDone) {
+        $completedLessonCount++;
+    }
+
+    if ($nextLesson === null && !$lessonIsDone && !$lessonIsLocked) {
+        $nextLesson = $lessonItem;
+    }
+}
+
+$nextLessonId = $nextLesson ? (int) $nextLesson['id'] : 0;
+$courseProgressPercent = $lessonCount > 0 ? (int) round(($completedLessonCount / $lessonCount) * 100) : 0;
 ?>
 
 <div class="page-heading">
@@ -46,6 +68,9 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
         <?php if ($canTakeAttendance): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Chamada</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance/report?id=' . $course['id'])) ?>"><i class="bi bi-bar-chart" aria-hidden="true"></i>Relatório</a>
+        <?php endif; ?>
+        <?php if ($isStudentCourseView && $nextLesson): ?>
+            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'])) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar</a>
         <?php endif; ?>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
@@ -74,10 +99,46 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
 <?php endif; ?>
 
 <?php if (!$isEnrollmentPending): ?>
-<section class="panel education-playlist-panel">
+<?php if ($isStudentCourseView): ?>
+    <section class="panel education-student-overview">
+        <div class="education-student-progress-card">
+            <div>
+                <span class="eyebrow">Seu progresso</span>
+                <strong><?= e((string) $courseProgressPercent) ?>%</strong>
+                <p><?= e((string) $completedLessonCount) ?> de <?= e((string) $lessonCount) ?> aula(s) concluída(s)</p>
+            </div>
+            <div class="education-progress">
+                <span><?= e((string) $courseProgressPercent) ?>%</span>
+                <div><i style="width: <?= e((string) $courseProgressPercent) ?>%"></i></div>
+            </div>
+        </div>
+        <div class="education-next-lesson-card">
+            <span class="eyebrow">Próximo passo</span>
+            <?php if ($nextLesson): ?>
+                <h2><?= e($nextLesson['title']) ?></h2>
+                <p><?= e(text_excerpt($nextLesson['description'] ?? 'Continue por esta aula.', 130)) ?></p>
+                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'])) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar aula</a>
+            <?php elseif ($lessonCount > 0): ?>
+                <h2>Curso concluído</h2>
+                <p>Todas as aulas disponíveis foram concluídas.</p>
+                <?php if (!empty($course['certificate_enabled'])): ?>
+                    <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-certificate')) ?>"><i class="bi bi-award" aria-hidden="true"></i>Ver certificado</a>
+                <?php endif; ?>
+            <?php else: ?>
+                <h2>Aulas em preparação</h2>
+                <p>As aulas deste curso ainda não foram publicadas.</p>
+            <?php endif; ?>
+        </div>
+    </section>
+<?php endif; ?>
+
+<section class="panel education-playlist-panel <?= $isStudentCourseView ? 'is-student-playlist' : '' ?>">
     <div class="section-heading">
-        <h2>Módulos e aulas</h2>
-        <span><?= e((string) count($lessons)) ?> aula(s) em <?= e((string) count($modules)) ?> módulo(s)</span>
+        <div>
+            <span class="eyebrow"><?= $isStudentCourseView ? 'Trilha do curso' : 'Organização do curso' ?></span>
+            <h2>Módulos e aulas</h2>
+        </div>
+        <span><?= e((string) $lessonCount) ?> aula(s) em <?= e((string) count($modules)) ?> módulo(s)</span>
     </div>
 
     <div class="education-module-list">

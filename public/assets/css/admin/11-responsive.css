@@ -223,6 +223,7 @@
     .education-module-form,
     .education-user-picker,
     .education-course-intro,
+    .education-student-overview,
     .education-lesson-row,
     .education-watch-layout,
     .education-builder-layout,
@@ -269,6 +270,34 @@
 
     .education-sidebar-scroll {
         max-height: 360px;
+    }
+
+    .education-playlist-row {
+        gap: 10px;
+    }
+
+    .education-playlist-row.is-next {
+        padding: 12px;
+    }
+
+    .education-playlist-main {
+        grid-template-columns: 32px minmax(0, 1fr);
+    }
+
+    .education-playlist-main > span:first-child {
+        width: 32px;
+        height: 32px;
+    }
+
+    .education-module-actions,
+    .education-lesson-actions {
+        justify-content: flex-start;
+    }
+
+    .education-lesson-actions .btn,
+    .education-lesson-actions form,
+    .education-lesson-actions button {
+        width: 100%;
     }
 
     .education-player-nav {
