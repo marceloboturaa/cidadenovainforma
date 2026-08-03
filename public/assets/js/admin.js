@@ -814,6 +814,7 @@
 
     function bindEducationVideoWatch(player) {
         if (player.tagName === 'VIDEO') {
+            bindNativeVideoProgressLock(player);
             player.addEventListener('ended', () => markEducationVideoWatched(player));
             return;
         }
@@ -824,6 +825,9 @@
                 player.id = id;
                 new window.YT.Player(id, {
                     events: {
+                        onReady(event) {
+                            bindYouTubeProgressLock(player, event.target);
+                        },
                         onStateChange(event) {
                             if (event.data === window.YT.PlayerState.PLAYING) {
                                 scheduleEducationIframeFallback(player);
@@ -846,6 +850,72 @@
         player.addEventListener('load', () => scheduleEducationIframeFallback(player), { once: true });
         player.addEventListener('pointerenter', () => scheduleEducationIframeFallback(player), { once: true });
         window.setTimeout(() => revealEducationVideoFallback(player), 90000);
+    }
+
+    function bindNativeVideoProgressLock(video) {
+        let maxWatched = 0;
+        let correctingSeek = false;
+        const allowedJump = 1.5;
+
+        video.addEventListener('timeupdate', () => {
+            if (!video.seeking && video.currentTime <= maxWatched + allowedJump) {
+                maxWatched = Math.max(maxWatched, video.currentTime);
+            }
+        });
+
+        video.addEventListener('seeking', () => {
+            if (correctingSeek || video.currentTime <= maxWatched + allowedJump) {
+                return;
+            }
+
+            correctingSeek = true;
+            video.currentTime = Math.max(0, maxWatched);
+            window.setTimeout(() => {
+                correctingSeek = false;
+            }, 120);
+        });
+
+        video.addEventListener('ratechange', () => {
+            if (video.playbackRate > 1) {
+                video.playbackRate = 1;
+            }
+        });
+    }
+
+    function bindYouTubeProgressLock(iframe, ytPlayer) {
+        let maxWatched = 0;
+        let lastTime = 0;
+        let correctingSeek = false;
+        const allowedJump = 3;
+
+        window.setInterval(() => {
+            if (iframe.dataset.watchSaved === '1' || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') {
+                return;
+            }
+
+            const state = typeof ytPlayer.getPlayerState === 'function' ? ytPlayer.getPlayerState() : null;
+            if (state !== window.YT?.PlayerState?.PLAYING) {
+                return;
+            }
+
+            const currentTime = Number(ytPlayer.getCurrentTime() || 0);
+            if (correctingSeek) {
+                lastTime = currentTime;
+                return;
+            }
+
+            if (currentTime > maxWatched + allowedJump && currentTime > lastTime + allowedJump) {
+                correctingSeek = true;
+                ytPlayer.seekTo(Math.max(0, maxWatched), true);
+                window.setTimeout(() => {
+                    correctingSeek = false;
+                }, 500);
+                return;
+            }
+
+            maxWatched = Math.max(maxWatched, currentTime);
+            lastTime = currentTime;
+        }, 1000);
     }
 
     function loadYouTubeApi(callback) {
