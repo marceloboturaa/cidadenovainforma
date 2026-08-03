@@ -446,6 +446,10 @@ $embed = function (?string $url): ?string {
                             <input type="hidden" name="active" value="<?= $blockHidden ? '1' : '0' ?>">
                             <button class="btn btn-sm <?= $blockHidden ? 'btn-outline-primary' : 'btn-outline-danger' ?>"><?= $blockHidden ? 'Mostrar' : 'Ocultar' ?></button>
                         </form>
+                        <form class="inline-form" method="post" action="<?= e(url('/admin/education/block/delete?id=' . $block['id'])) ?>" onsubmit="return confirm('Excluir este item definitivamente? Esta ação remove o item da aula.');">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-sm btn-danger">Excluir</button>
+                        </form>
                     </div>
                 <?php endif; ?>
             </section>

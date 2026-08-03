@@ -648,8 +648,8 @@ class EducationController
         $course = Education::findCourse((int) $block['course_id']);
         $this->authorizeCourseManage($course);
 
-        Education::deactivateLessonBlock((int) $block['id']);
-        Session::flash('success', 'Item ocultado para os alunos.');
+        Education::deleteLessonBlock((int) $block['id']);
+        Session::flash('success', 'Item excluído da aula.');
         redirect('/admin/education/lesson?id=' . $block['lesson_id']);
     }
 

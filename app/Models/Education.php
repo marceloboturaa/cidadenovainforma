@@ -1103,6 +1103,15 @@ class Education
             ->execute(['id' => $id, 'active' => $active ? 1 : 0]);
     }
 
+    public static function deleteLessonBlock(int $id): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('DELETE FROM education_lesson_blocks WHERE id = :id')
+            ->execute(['id' => $id]);
+    }
+
     public static function createCourse(array $data): int
     {
         self::ensureSchema();
