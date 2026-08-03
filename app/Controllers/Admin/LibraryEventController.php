@@ -151,11 +151,12 @@ class LibraryEventController
             $_POST['event_expectations'] ?? null,
             $_POST['registration_extra_answer'] ?? null
         );
+        $enrolled = $this->enrollEventParticipantUsers($event, [(int) $person['id']], (string) ($_POST['status'] ?? 'inscrito'));
 
         RegistrationNotifier::eventStatus($event, $person, (string) ($_POST['status'] ?? 'inscrito'));
 
         Logger::info('library_events.participant_added', 'Participante vinculado: ' . $person['full_name'], current_user()['id'] ?? null);
-        Session::flash('success', 'Participante adicionado ao evento.');
+        Session::flash('success', 'Participante adicionado ao evento.' . ($enrolled > 0 ? ' Matricula no curso vinculada.' : ''));
         redirect('/admin/library-events/participants?id=' . $event['id']);
     }
 
@@ -289,6 +290,7 @@ class LibraryEventController
             $_POST['event_expectations'] ?? null,
             $_POST['registration_extra_answer'] ?? null
         );
+        $enrolled = $this->enrollEventParticipantUsers($event, [$personId], (string) ($_POST['status'] ?? 'inscrito'));
 
         $person = Person::find($personId);
         if ($person) {
@@ -296,7 +298,7 @@ class LibraryEventController
         }
 
         Logger::info('library_events.registration_created', 'Inscrição cadastrada: ' . $name, $userId ?: null);
-        Session::flash('success', 'Pessoa cadastrada e inscrita no evento.');
+        Session::flash('success', 'Pessoa cadastrada e inscrita no evento.' . ($enrolled > 0 ? ' Matricula no curso vinculada.' : ''));
         redirect('/admin/library-events/participants?id=' . $event['id']);
     }
 
@@ -323,6 +325,9 @@ class LibraryEventController
             'updated_by' => current_user()['id'] ?? null,
         ]);
         $person = Person::find($personId);
+        if (in_array((string) ($_POST['status'] ?? 'inscrito'), ['inscrito', 'presente'], true)) {
+            Education::enrollUserInCourses((int) $user['id'], LibraryEvent::courseIds((int) $event['id']), 'approved');
+        }
 
         LibraryEvent::attachParticipant(
             (int) $event['id'],
@@ -525,13 +530,19 @@ class LibraryEventController
         $status = (string) ($_POST['status'] ?? 'inscrito');
         $personIds = $_POST['person_ids'] ?? [];
         $personIds = is_array($personIds) ? $personIds : [];
+        $enrolled = 0;
 
         if ($action === 'all_pending') {
             $updated = LibraryEvent::updatePendingParticipantStatuses((int) $event['id'], 'inscrito');
+            $enrolled = $this->enrollEventParticipantUsers($event);
             $message = $updated . ' inscrição(ões) pendente(s) atualizada(s).';
         } else {
             $updated = LibraryEvent::updateParticipantStatuses((int) $event['id'], $personIds, $status);
+            $enrolled = $this->enrollEventParticipantUsers($event, $personIds, $status);
             $message = $updated . ' participante(s) selecionado(s) atualizado(s).';
+        }
+        if ($enrolled > 0) {
+            $message .= ' ' . $enrolled . ' matricula(s) de curso vinculada(s).';
         }
 
         Logger::info('library_events.participants_bulk_status', 'Status em lote atualizado no evento: ' . $event['title'], current_user()['id'] ?? null);
@@ -754,6 +765,26 @@ class LibraryEventController
         http_response_code(403);
         View::render('errors/403');
         exit;
+    }
+
+    private function enrollEventParticipantUsers(array $event, array $personIds = [], ?string $status = null): int
+    {
+        if ($status !== null && !in_array($status, ['inscrito', 'presente'], true)) {
+            return 0;
+        }
+
+        $courseIds = LibraryEvent::courseIds((int) $event['id']);
+        if (!$courseIds) {
+            return 0;
+        }
+
+        $userIds = LibraryEvent::participantUserIds((int) $event['id'], $personIds, ['inscrito', 'presente']);
+        $enrolled = 0;
+        foreach ($userIds as $userId) {
+            $enrolled += Education::enrollUserInCourses($userId, $courseIds, 'approved');
+        }
+
+        return $enrolled;
     }
 
     private function downloadPdf(string $filename, string $title, array $lines): void

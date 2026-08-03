@@ -9,6 +9,7 @@ use App\Core\RegistrationNotifier;
 use App\Core\Session;
 use App\Core\View;
 use App\Models\Document;
+use App\Models\Education;
 use App\Models\InstitutionPage;
 use App\Models\LibraryEvent;
 use App\Models\Person;
@@ -260,9 +261,11 @@ class UserController
         }
 
         User::activate((int) $user['id']);
+        $confirmed = LibraryEvent::confirmPendingParticipantsByEmail((string) ($user['email'] ?? ''), 'Login aprovado no painel; inscricao confirmada no evento.');
+        $enrolled = $this->approveEventCourseEnrollmentsForUser($user);
         RegistrationNotifier::userApproved($user);
         Logger::info('users.approved', 'Cadastro aprovado: ' . $user['email'], current_user()['id'] ?? null);
-        Session::flash('success', 'Cadastro aprovado para ' . $user['name'] . '.');
+        Session::flash('success', 'Cadastro aprovado para ' . $user['name'] . '.' . ($confirmed > 0 ? ' Inscricao de evento confirmada.' : '') . ($enrolled > 0 ? ' Matricula no curso aprovada.' : ''));
         redirect('/admin/users');
     }
 
@@ -319,6 +322,8 @@ class UserController
 
             if (str_starts_with($action, 'approve')) {
                 User::activate((int) $user['id']);
+                $confirmed += LibraryEvent::confirmPendingParticipantsByEmail((string) ($user['email'] ?? ''), 'Login aprovado no painel; inscricao confirmada no evento.');
+                $confirmed += $this->approveEventCourseEnrollmentsForUser($user);
                 RegistrationNotifier::userApproved($user);
                 $approved++;
                 continue;
@@ -586,5 +591,19 @@ class UserController
         $roles = array_filter(array_map(fn (int $roleId): ?array => Role::find($roleId), $roleIds));
 
         return array_values(array_filter(array_map(fn (array $role): string => (string) ($role['slug'] ?? ''), $roles)));
+    }
+
+    private function approveEventCourseEnrollmentsForUser(array $user): int
+    {
+        if (empty($user['registration_event_id'])) {
+            return 0;
+        }
+
+        $courseIds = LibraryEvent::courseIds((int) $user['registration_event_id']);
+        if (!$courseIds && !empty($user['registration_course_id'])) {
+            $courseIds[] = (int) $user['registration_course_id'];
+        }
+
+        return Education::enrollUserInCourses((int) $user['id'], $courseIds, 'approved');
     }
 }

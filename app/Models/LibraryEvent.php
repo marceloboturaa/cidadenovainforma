@@ -638,6 +638,72 @@ class LibraryEvent
         return $stmt->fetch() ?: null;
     }
 
+    public static function courseIds(int $eventId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT course_id
+             FROM library_event_courses
+             WHERE event_id = :event_id
+             ORDER BY course_id ASC'
+        );
+        $stmt->execute(['event_id' => $eventId]);
+        $courseIds = array_map('intval', array_column($stmt->fetchAll(), 'course_id'));
+
+        if (!$courseIds) {
+            $event = self::find($eventId);
+            if (!empty($event['event_course_id'])) {
+                $courseIds[] = (int) $event['event_course_id'];
+            }
+        }
+
+        return array_values(array_unique(array_filter($courseIds)));
+    }
+
+    public static function participantUserIds(int $eventId, array $personIds = [], array $statuses = ['inscrito', 'presente']): array
+    {
+        self::ensureSchema();
+
+        $params = ['event_id' => $eventId];
+        $where = ['library_event_participants.event_id = :event_id', 'users.active = 1'];
+
+        $personIds = array_values(array_unique(array_filter(array_map('intval', $personIds))));
+        if ($personIds) {
+            $placeholders = [];
+            foreach ($personIds as $index => $personId) {
+                $key = 'person_' . $index;
+                $placeholders[] = ':' . $key;
+                $params[$key] = $personId;
+            }
+            $where[] = 'library_event_participants.person_id IN (' . implode(',', $placeholders) . ')';
+        }
+
+        $statuses = array_values(array_intersect($statuses, ['pendente', 'inscrito', 'presente', 'ausente', 'cancelado']));
+        if ($statuses) {
+            $placeholders = [];
+            foreach ($statuses as $index => $status) {
+                $key = 'status_' . $index;
+                $placeholders[] = ':' . $key;
+                $params[$key] = $status;
+            }
+            $where[] = 'library_event_participants.status IN (' . implode(',', $placeholders) . ')';
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT DISTINCT users.id
+             FROM library_event_participants
+             INNER JOIN people ON people.id = library_event_participants.person_id
+             INNER JOIN users
+                ON users.registration_person_id = people.id
+                OR (people.email IS NOT NULL AND people.email <> "" AND LOWER(users.email) = LOWER(people.email))
+             WHERE ' . implode(' AND ', $where)
+        );
+        $stmt->execute($params);
+
+        return array_map('intval', array_column($stmt->fetchAll(), 'id'));
+    }
+
     public static function updateParticipantStatuses(int $eventId, array $personIds, string $status): int
     {
         self::ensureSchema();
@@ -679,7 +745,7 @@ class LibraryEvent
         return $stmt->rowCount();
     }
 
-    public static function confirmPendingParticipantsByEmail(string $email): int
+    public static function confirmPendingParticipantsByEmail(string $email, ?string $note = null): int
     {
         self::ensureSchema();
 
@@ -687,6 +753,7 @@ class LibraryEvent
         if ($email === '') {
             return 0;
         }
+        $note = self::nullable($note) ?: 'Login negado no painel; inscricao mantida no evento.';
 
         $stmt = Database::connection()->prepare(
             "UPDATE library_event_participants
@@ -698,12 +765,12 @@ class LibraryEvent
                         WHEN COALESCE(NULLIF(library_event_participants.notes, ''), '') = '' THEN ''
                         ELSE '\n'
                     END,
-                    'Login negado no painel; inscricao mantida no evento.'
+                    :note
                  )
              WHERE LOWER(people.email) = :email
                AND library_event_participants.status = 'pendente'"
         );
-        $stmt->execute(['email' => $email]);
+        $stmt->execute(['email' => $email, 'note' => $note]);
 
         return $stmt->rowCount();
     }
