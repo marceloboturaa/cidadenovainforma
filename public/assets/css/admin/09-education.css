@@ -2221,6 +2221,11 @@
     color: #166534;
 }
 
+.education-video-complete-form {
+    display: flex;
+    justify-content: flex-start;
+}
+
 .education-block-type {
     display: inline-flex;
     gap: 6px;

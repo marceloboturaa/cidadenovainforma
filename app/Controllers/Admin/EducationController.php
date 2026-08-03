@@ -806,6 +806,41 @@ class EducationController
         echo json_encode(['ok' => true]);
     }
 
+    public function watchBlockVideo(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+        $user = current_user();
+        $block = $this->blockFromQuery();
+        $lesson = Education::findLesson((int) $block['lesson_id']);
+        $course = $lesson ? Education::findCourse((int) $lesson['course_id']) : null;
+        $canManage = $this->canManageCourse($course);
+
+        if (!$lesson || !$course || ($block['type'] ?? '') !== 'video' || empty($block['active'])) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $lesson['course_id']);
+        }
+
+        if (!Education::userCanAccessCourse((int) $lesson['course_id'], (int) $user['id'], $canManage)
+            || !Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], $canManage)
+            || (!empty($lesson['locked']) && !$canManage)
+            || (!$this->lessonIsAvailable($lesson) && !$canManage)
+        ) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        Education::markLessonBlockVideoWatched((int) $block['id'], (int) $user['id']);
+        Session::flash('success', 'Vídeo marcado como concluído.');
+        redirect('/admin/education/lesson?id=' . $lesson['id']);
+    }
+
     public function storeForumTopic(): void
     {
         Middleware::auth();

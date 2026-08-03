@@ -45,8 +45,8 @@ $embed = function (?string $url): ?string {
         return null;
     }
 
-    if (preg_match('#(?:youtube\.com/watch\?v=|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
-        return 'https://www.youtube.com/embed/' . $match[1];
+    if (preg_match('#(?:youtube\.com/watch\?v=|youtube\.com/embed/|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
+        return 'https://www.youtube.com/embed/' . $match[1] . '?enablejsapi=1';
     }
 
     return $url;
@@ -271,9 +271,9 @@ $embed = function (?string $url): ?string {
                 <?php endif; ?>
                 <div class="education-video-frame">
                     <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $videoEmbedUrl)): ?>
-                        <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls data-education-video-watch data-watch-url="<?= e(url('/admin/education/watch?id=' . $lesson['id'])) ?>"></video>
+                        <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls <?= (!$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></video>
                     <?php else: ?>
-                        <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen data-education-video-watch data-watch-url="<?= e(url('/admin/education/watch?id=' . $lesson['id'])) ?>"></iframe>
+                        <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen <?= (!$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></iframe>
                     <?php endif; ?>
                 </div>
             </section>
@@ -343,6 +343,12 @@ $embed = function (?string $url): ?string {
                             <iframe src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allowfullscreen <?= (!$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></iframe>
                         <?php endif; ?>
                     </div>
+                    <?php if (!$canManage && $blockRequired && !$blockVideoWatched): ?>
+                        <form method="post" action="<?= e(url('/admin/education/block/watch?id=' . $block['id'])) ?>" class="education-video-complete-form">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-sm btn-outline-success icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Marcar vídeo como concluído</button>
+                        </form>
+                    <?php endif; ?>
                 <?php elseif ($type === 'image' && (!empty($block['file_path']) || $media)): ?>
                     <img class="education-block-image" src="<?= e(media_url($block['file_path'] ?: $media)) ?>" alt="<?= e($blockTitle) ?>" onerror="this.remove()">
                 <?php endif; ?>
