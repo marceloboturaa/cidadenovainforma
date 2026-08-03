@@ -219,6 +219,7 @@ $router->post('/admin/education/assignment/grade', [EducationController::class, 
 $router->get('/admin/education/assignment/download', [EducationController::class, 'downloadSubmission']);
 $router->post('/admin/education/block', [EducationController::class, 'storeBlock']);
 $router->post('/admin/education/block/update', [EducationController::class, 'updateBlock']);
+$router->post('/admin/education/block/visibility', [EducationController::class, 'visibilityBlock']);
 $router->post('/admin/education/block/delete', [EducationController::class, 'deleteBlock']);
 $router->get('/admin/education/block/download', [EducationController::class, 'downloadBlock']);
 $router->post('/admin/education/watch', [EducationController::class, 'watchVideo']);

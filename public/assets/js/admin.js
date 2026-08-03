@@ -13,7 +13,7 @@
     const educationStudentSearch = document.querySelector('[data-education-student-search]');
     const educationSelectVisible = document.querySelector('[data-education-select-visible]');
     const educationClearVisible = document.querySelector('[data-education-clear-visible]');
-    const educationVideoWatch = document.querySelector('[data-education-video-watch]');
+    const educationVideoWatchPlayers = document.querySelectorAll('[data-education-video-watch]');
     const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
@@ -187,8 +187,8 @@
         }
     }
 
-    if (educationVideoWatch) {
-        bindEducationVideoWatch(educationVideoWatch);
+    if (educationVideoWatchPlayers.length) {
+        educationVideoWatchPlayers.forEach(bindEducationVideoWatch);
     }
 
     if (usersDirectory && usersSearch) {
@@ -884,15 +884,30 @@
             }
 
             player.dataset.watchSaved = '1';
-            educationCompleteButtons.forEach((button) => {
-                button.disabled = false;
-            });
-            document.querySelectorAll('[data-education-watch-hint]').forEach((hint) => {
+            player.closest('.education-block-card')?.querySelectorAll('[data-education-watch-hint]').forEach((hint) => {
                 hint.textContent = 'Vídeo concluído. Agora você pode marcar a aula como concluída.';
                 hint.classList.add('is-complete');
             });
+            refreshEducationCompletionState();
         } catch (error) {
             return;
+        }
+    }
+
+    function refreshEducationCompletionState() {
+        const pendingVideos = document.querySelectorAll('[data-education-video-watch]:not([data-watch-saved="1"])').length;
+        const requirementsHint = document.querySelector('[data-education-requirements-hint]');
+        const pendingAssignments = Number(requirementsHint?.dataset.pendingAssignments || 0);
+
+        if (requirementsHint && pendingVideos === 0 && pendingAssignments === 0) {
+            requirementsHint.textContent = 'Itens obrigatórios concluídos. Agora você pode finalizar a aula.';
+            requirementsHint.classList.add('is-complete');
+        }
+
+        if (pendingVideos === 0 && pendingAssignments === 0) {
+            educationCompleteButtons.forEach((button) => {
+                button.disabled = false;
+            });
         }
     }
 

@@ -559,8 +559,11 @@ class EducationController
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
         $videoWatched = !$hasVideo || $canManage || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
         $lessonForumTopics = Education::forumTopics((int) $lesson['course_id'], (int) $lesson['id']);
-        $blocks = $isLocked ? [] : Education::blocksForLesson((int) $lesson['id']);
+        $blocks = $isLocked ? [] : Education::blocksForLesson((int) $lesson['id'], $canManage, (int) $user['id']);
         $assignmentBlocks = array_values(array_filter($blocks, fn (array $block): bool => ($block['type'] ?? '') === 'assignment'));
+        $completionRequirements = $canManage || $isLocked
+            ? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0]
+            : Education::lessonCompletionRequirements((int) $lesson['id'], (int) $user['id']);
         $lessonForms = $isLocked ? [] : Education::formsForCourse((int) $lesson['course_id'], (int) $lesson['id']);
 
         View::render('admin/education/lesson', [
@@ -574,6 +577,7 @@ class EducationController
             'isScheduleLocked' => $isScheduleLocked,
             'hasVideo' => $hasVideo,
             'videoWatched' => $videoWatched,
+            'completionRequirements' => $completionRequirements,
             'modules' => Education::modulesForCourse((int) $lesson['course_id']),
             'playlist' => $playlist,
             'lessonForumTopics' => $lessonForumTopics,
@@ -645,7 +649,22 @@ class EducationController
         $this->authorizeCourseManage($course);
 
         Education::deactivateLessonBlock((int) $block['id']);
-        Session::flash('success', 'Material removido.');
+        Session::flash('success', 'Item ocultado para os alunos.');
+        redirect('/admin/education/lesson?id=' . $block['lesson_id']);
+    }
+
+    public function visibilityBlock(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $this->validateCsrf('/admin/education');
+        $block = $this->blockFromQuery();
+        $course = Education::findCourse((int) $block['course_id']);
+        $this->authorizeCourseManage($course);
+
+        $active = ($_POST['active'] ?? '') === '1';
+        Education::setLessonBlockVisibility((int) $block['id'], $active);
+        Session::flash('success', $active ? 'Item exibido para os alunos.' : 'Item ocultado para os alunos.');
         redirect('/admin/education/lesson?id=' . $block['lesson_id']);
     }
 
@@ -668,6 +687,11 @@ class EducationController
         }
 
         $relativePath = (string) ($block['file_path'] ?? '');
+        if (empty($block['active']) && !$canManage) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
         $path = dirname(__DIR__, 3) . '/' . ltrim($relativePath, '/');
 
         if ($relativePath === '' || !is_file($path)) {
@@ -723,6 +747,14 @@ class EducationController
             Session::flash('error', 'Assista ao vídeo completo antes de concluir a aula.');
             redirect('/admin/education/lesson?id=' . $lesson['id']);
         }
+        if (($_POST['completed'] ?? '') === '1' && !$canManage) {
+            $requirements = Education::lessonCompletionRequirements((int) $lesson['id'], (int) $user['id']);
+            if (empty($requirements['complete'])) {
+                $pending = array_map(static fn (array $item): string => $item['title'], array_slice($requirements['pending'] ?? [], 0, 3));
+                Session::flash('error', 'Conclua os itens obrigatórios antes de finalizar: ' . implode(', ', $pending));
+                redirect('/admin/education/lesson?id=' . $lesson['id']);
+            }
+        }
 
         Education::markLesson((int) $lesson['id'], (int) $user['id'], ($_POST['completed'] ?? '') === '1');
         Session::flash('success', 'Progresso atualizado.');
@@ -744,6 +776,8 @@ class EducationController
         $lesson = $this->lessonFromQuery();
         $course = Education::findCourse((int) $lesson['course_id']);
         $canManage = $this->canManageCourse($course);
+        $blockId = filter_input(INPUT_GET, 'block_id', FILTER_VALIDATE_INT) ?: null;
+        $block = $blockId ? Education::findLessonBlock((int) $blockId) : null;
 
         if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
             http_response_code(403);
@@ -761,8 +795,12 @@ class EducationController
             return;
         }
 
-        if (trim((string) ($lesson['video_url'] ?? '')) !== '') {
-            Education::markLessonVideoWatched((int) $lesson['id'], (int) $user['id']);
+        if ($block && (int) ($block['lesson_id'] ?? 0) === (int) $lesson['id'] && ($block['type'] ?? '') === 'video' && !empty($block['active'])) {
+            Education::markLessonBlockVideoWatched((int) $block['id'], (int) $user['id']);
+        } elseif (!$block) {
+            if (trim((string) ($lesson['video_url'] ?? '')) !== '') {
+                Education::markLessonVideoWatched((int) $lesson['id'], (int) $user['id']);
+            }
         }
 
         echo json_encode(['ok' => true]);
@@ -1105,7 +1143,7 @@ class EducationController
             $this->redirectPendingEnrollment((int) $block['course_id']);
         }
 
-        if (($block['type'] ?? '') !== 'assignment' || !$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+        if (($block['type'] ?? '') !== 'assignment' || (!$canManage && empty($block['active'])) || !$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
             http_response_code(403);
             View::render('errors/403');
             return;
@@ -1179,7 +1217,8 @@ class EducationController
 
         $course = Education::findCourse((int) $block['course_id']);
         $user = current_user();
-        if (!$this->canManageCourse($course) && (int) $submission['user_id'] !== (int) $user['id']) {
+        $canManage = $this->canManageCourse($course);
+        if ((!$canManage && empty($block['active'])) || (!$canManage && (int) $submission['user_id'] !== (int) $user['id'])) {
             http_response_code(403);
             View::render('errors/403');
             return;

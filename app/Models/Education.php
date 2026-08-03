@@ -217,6 +217,7 @@ class Education
                 content LONGTEXT NULL,
                 media_url VARCHAR(255) NULL,
                 file_path VARCHAR(255) NULL,
+                required TINYINT(1) NOT NULL DEFAULT 1,
                 sort_order INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
@@ -224,6 +225,8 @@ class Education
                 CONSTRAINT fk_education_blocks_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+        self::ensureColumn('education_lesson_blocks', 'required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER file_path');
+        self::ensureColumn('education_lesson_blocks', 'active', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER sort_order');
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_enrollments (
@@ -266,6 +269,18 @@ class Education
                 PRIMARY KEY (lesson_id, user_id),
                 CONSTRAINT fk_education_watches_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_watches_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS education_lesson_block_watches (
+                block_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                completed_at DATETIME NULL,
+                updated_at TIMESTAMP NULL,
+                PRIMARY KEY (block_id, user_id),
+                CONSTRAINT fk_education_block_watches_block FOREIGN KEY (block_id) REFERENCES education_lesson_blocks(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_block_watches_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
 
@@ -972,18 +987,23 @@ class Education
         return $stmt->fetch() ?: null;
     }
 
-    public static function blocksForLesson(int $lessonId): array
+    public static function blocksForLesson(int $lessonId, bool $includeHidden = false, int $userId = 0): array
     {
         self::ensureSchema();
 
+        $activeFilter = $includeHidden ? '' : ' AND education_lesson_blocks.active = 1';
         $stmt = Database::connection()->prepare(
-            'SELECT *
+            'SELECT education_lesson_blocks.*,
+                    block_watches.completed_at AS block_video_completed_at
              FROM education_lesson_blocks
-             WHERE lesson_id = :lesson_id
-               AND active = 1
+             LEFT JOIN education_lesson_block_watches AS block_watches
+                ON block_watches.block_id = education_lesson_blocks.id
+               AND block_watches.user_id = :user_id
+             WHERE education_lesson_blocks.lesson_id = :lesson_id
+               ' . $activeFilter . '
              ORDER BY sort_order ASC, id ASC'
         );
-        $stmt->execute(['lesson_id' => $lessonId]);
+        $stmt->execute(['lesson_id' => $lessonId, 'user_id' => $userId]);
 
         return $stmt->fetchAll();
     }
@@ -1019,7 +1039,6 @@ class Education
              INNER JOIN education_lessons ON education_lessons.id = education_lesson_blocks.lesson_id
              INNER JOIN education_courses ON education_courses.id = education_lessons.course_id
              WHERE education_lesson_blocks.id = :id
-               AND education_lesson_blocks.active = 1
                AND education_lessons.active = 1
                AND education_courses.active = 1
              LIMIT 1'
@@ -1035,9 +1054,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lesson_blocks
-                (lesson_id, type, title, content, media_url, file_path, sort_order, active, created_at, updated_at)
+                (lesson_id, type, title, content, media_url, file_path, required, sort_order, active, created_at, updated_at)
              VALUES
-                (:lesson_id, :type, :title, :content, :media_url, :file_path, :sort_order, 1, NOW(), NOW())'
+                (:lesson_id, :type, :title, :content, :media_url, :file_path, :required, :sort_order, :active, NOW(), NOW())'
         );
         $stmt->execute(self::blockPayload($data));
 
@@ -1058,7 +1077,9 @@ class Education
                  content = :content,
                  media_url = :media_url,
                  file_path = :file_path,
+                 required = :required,
                  sort_order = :sort_order,
+                 active = :active,
                  updated_at = NOW()
              WHERE id = :id'
         )->execute($payload);
@@ -1071,6 +1092,15 @@ class Education
         Database::connection()
             ->prepare('UPDATE education_lesson_blocks SET active = 0, updated_at = NOW() WHERE id = :id')
             ->execute(['id' => $id]);
+    }
+
+    public static function setLessonBlockVisibility(int $id, bool $active): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('UPDATE education_lesson_blocks SET active = :active, updated_at = NOW() WHERE id = :id')
+            ->execute(['id' => $id, 'active' => $active ? 1 : 0]);
     }
 
     public static function createCourse(array $data): int
@@ -2221,6 +2251,86 @@ class Education
         return (bool) $stmt->fetchColumn();
     }
 
+    public static function markLessonBlockVideoWatched(int $blockId, int $userId): void
+    {
+        self::ensureSchema();
+
+        Database::connection()->prepare(
+            'INSERT INTO education_lesson_block_watches (block_id, user_id, completed_at, updated_at)
+             VALUES (:block_id, :user_id, NOW(), NOW())
+             ON DUPLICATE KEY UPDATE completed_at = NOW(), updated_at = NOW()'
+        )->execute([
+            'block_id' => $blockId,
+            'user_id' => $userId,
+        ]);
+    }
+
+    public static function lessonCompletionRequirements(int $lessonId, int $userId): array
+    {
+        self::ensureSchema();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_lesson_blocks.id,
+                    education_lesson_blocks.type,
+                    education_lesson_blocks.title,
+                    education_lesson_blocks.media_url,
+                    block_watches.completed_at AS block_video_completed_at,
+                    assignment_submissions.id AS assignment_submission_id
+             FROM education_lesson_blocks
+             LEFT JOIN education_lesson_block_watches AS block_watches
+                ON block_watches.block_id = education_lesson_blocks.id
+               AND block_watches.user_id = :watch_user_id
+             LEFT JOIN education_assignment_submissions AS assignment_submissions
+                ON assignment_submissions.block_id = education_lesson_blocks.id
+               AND assignment_submissions.user_id = :assignment_user_id
+             WHERE education_lesson_blocks.lesson_id = :lesson_id
+               AND education_lesson_blocks.active = 1
+               AND education_lesson_blocks.required = 1
+               AND education_lesson_blocks.type IN ("video", "assignment")
+               AND (education_lesson_blocks.type <> "video" OR COALESCE(education_lesson_blocks.media_url, "") <> "")
+             ORDER BY education_lesson_blocks.sort_order ASC, education_lesson_blocks.id ASC'
+        );
+        $stmt->execute([
+            'lesson_id' => $lessonId,
+            'watch_user_id' => $userId,
+            'assignment_user_id' => $userId,
+        ]);
+
+        $requirements = [
+            'required_video_count' => 0,
+            'watched_video_count' => 0,
+            'required_assignment_count' => 0,
+            'submitted_assignment_count' => 0,
+            'pending' => [],
+        ];
+
+        foreach ($stmt->fetchAll() as $row) {
+            $title = trim((string) ($row['title'] ?? '')) ?: (($row['type'] ?? '') === 'assignment' ? 'Tarefa obrigatória' : 'Vídeo obrigatório');
+            if (($row['type'] ?? '') === 'video') {
+                $requirements['required_video_count']++;
+                if (!empty($row['block_video_completed_at'])) {
+                    $requirements['watched_video_count']++;
+                    continue;
+                }
+                $requirements['pending'][] = ['type' => 'video', 'title' => $title];
+                continue;
+            }
+
+            if (($row['type'] ?? '') === 'assignment') {
+                $requirements['required_assignment_count']++;
+                if (!empty($row['assignment_submission_id'])) {
+                    $requirements['submitted_assignment_count']++;
+                    continue;
+                }
+                $requirements['pending'][] = ['type' => 'assignment', 'title' => $title];
+            }
+        }
+
+        $requirements['complete'] = empty($requirements['pending']);
+
+        return $requirements;
+    }
+
     public static function forumTopics(?int $courseId = null, ?int $lessonId = null): array
     {
         self::ensureSchema();
@@ -3067,7 +3177,9 @@ class Education
             'content' => self::nullable($data['content'] ?? null),
             'media_url' => self::nullable($data['media_url'] ?? null),
             'file_path' => self::nullable($data['file_path'] ?? null),
+            'required' => array_key_exists('required', $data) ? (!empty($data['required']) ? 1 : 0) : 1,
             'sort_order' => (int) ($data['sort_order'] ?? 0),
+            'active' => array_key_exists('active', $data) ? (!empty($data['active']) ? 1 : 0) : 1,
         ];
     }
 

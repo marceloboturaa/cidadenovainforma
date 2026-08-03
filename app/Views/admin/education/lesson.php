@@ -13,6 +13,8 @@ $canAssignForumAuthor = $canAssignForumAuthor ?? false;
 $forumAuthorOptions = $forumAuthorOptions ?? [];
 $lessonForms = $lessonForms ?? [];
 $assignmentSubmissionsByBlock = $assignmentSubmissionsByBlock ?? [];
+$completionRequirements = $completionRequirements ?? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0];
+$requirementsComplete = !empty($completionRequirements['complete']);
 $playlist = $playlist ?? [];
 $modules = $modules ?? [];
 $playlistByModule = [];
@@ -91,7 +93,7 @@ $embed = function (?string $url): ?string {
                     <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
                         <?= csrf_field() ?>
                         <input type="hidden" name="completed" value="1">
-                        <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn" data-education-complete-button <?= ($hasVideo && !$videoWatched) || $requiresManualAttendance ? 'disabled' : '' ?>><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
+                        <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn" data-education-complete-button <?= ($hasVideo && !$videoWatched) || !$requirementsComplete || $requiresManualAttendance ? 'disabled' : '' ?>><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
                     </form>
                     <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
                         <?= csrf_field() ?>
@@ -99,6 +101,17 @@ $embed = function (?string $url): ?string {
                         <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
                     </form>
                 </div>
+                <?php if (!$canManage && !$isCompleted && !$requirementsComplete): ?>
+                    <div class="education-requirements-hint" data-education-requirements-hint data-pending-assignments="<?= e((string) max(0, (int) ($completionRequirements['required_assignment_count'] ?? 0) - (int) ($completionRequirements['submitted_assignment_count'] ?? 0))) ?>">
+                        <strong>Para concluir esta aula</strong>
+                        <?php if ((int) ($completionRequirements['required_video_count'] ?? 0) > 0): ?>
+                            <span><?= e((string) ($completionRequirements['watched_video_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_video_count'] ?? 0)) ?> vídeo(s) obrigatório(s) assistido(s)</span>
+                        <?php endif; ?>
+                        <?php if ((int) ($completionRequirements['required_assignment_count'] ?? 0) > 0): ?>
+                            <span><?= e((string) ($completionRequirements['submitted_assignment_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_assignment_count'] ?? 0)) ?> tarefa(s) entregue(s)</span>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
         <div class="education-sidebar-scroll">
@@ -173,6 +186,16 @@ $embed = function (?string $url): ?string {
                         <label class="form-label">Ordem</label>
                         <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingBlock['sort_order'] ?? ((count($blocks) + 1) * 10))) ?>">
                     </div>
+                    <input type="hidden" name="required" value="0">
+                    <input type="hidden" name="active" value="0">
+                    <label class="forum-check-line">
+                        <input type="checkbox" name="required" value="1" <?= checked((string) ($editingBlock['required'] ?? '1'), '1') ?>>
+                        <span>Obrigatório para concluir a aula</span>
+                    </label>
+                    <label class="forum-check-line">
+                        <input type="checkbox" name="active" value="1" <?= checked((string) ($editingBlock['active'] ?? '1'), '1') ?>>
+                        <span>Visível para alunos</span>
+                    </label>
                     <?php if ($editingBlock && !empty($editingBlock['file_path'])): ?>
                         <div class="education-current-file">
                             <i class="bi bi-paperclip" aria-hidden="true"></i>
@@ -276,7 +299,10 @@ $embed = function (?string $url): ?string {
             };
             $media = $embed($block['media_url'] ?? '');
             ?>
-            <section class="panel education-block-card">
+            <?php $blockHidden = empty($block['active']); ?>
+            <?php $blockRequired = !empty($block['required']); ?>
+            <?php $blockVideoWatched = !empty($block['block_video_completed_at']); ?>
+            <section class="panel education-block-card <?= $blockHidden ? 'is-hidden-block' : '' ?>">
                 <div class="education-block-heading">
                     <span class="education-block-type">
                         <?php if ($type === 'video'): ?>
@@ -294,14 +320,27 @@ $embed = function (?string $url): ?string {
                         <?php endif; ?>
                     </span>
                     <strong><?= e($blockTitle) ?></strong>
+                    <span class="education-block-flags">
+                        <?php if ($blockRequired && in_array($type, ['video', 'assignment'], true)): ?>
+                            <em>Obrigatório</em>
+                        <?php endif; ?>
+                        <?php if ($blockHidden): ?>
+                            <em>Oculto para alunos</em>
+                        <?php endif; ?>
+                    </span>
                 </div>
 
                 <?php if ($type === 'video' && $media): ?>
+                    <?php if (!$canManage && $blockRequired && !$blockVideoWatched): ?>
+                        <p class="education-video-watch-hint" data-education-watch-hint>Assista este vídeo obrigatório até o final para liberar a conclusão da aula.</p>
+                    <?php elseif (!$canManage && $blockRequired): ?>
+                        <p class="education-video-watch-hint is-complete">Vídeo obrigatório assistido.</p>
+                    <?php endif; ?>
                     <div class="education-video-frame">
                         <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $media)): ?>
-                            <video src="<?= e(media_url($media)) ?>" controls></video>
+                            <video src="<?= e(media_url($media)) ?>" controls <?= (!$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></video>
                         <?php else: ?>
-                            <iframe src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allowfullscreen></iframe>
+                            <iframe src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allowfullscreen <?= (!$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></iframe>
                         <?php endif; ?>
                     </div>
                 <?php elseif ($type === 'image' && (!empty($block['file_path']) || $media)): ?>
@@ -396,9 +435,10 @@ $embed = function (?string $url): ?string {
                 <?php if ($canManage): ?>
                     <div class="education-block-actions">
                         <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&block_id=' . $block['id'])) ?>">Editar</a>
-                        <form class="inline-form" method="post" action="<?= e(url('/admin/education/block/delete?id=' . $block['id'])) ?>" onsubmit="return confirm('Remover este item da sequência?');">
+                        <form class="inline-form" method="post" action="<?= e(url('/admin/education/block/visibility?id=' . $block['id'])) ?>">
                             <?= csrf_field() ?>
-                            <button class="btn btn-sm btn-outline-danger">Remover</button>
+                            <input type="hidden" name="active" value="<?= $blockHidden ? '1' : '0' ?>">
+                            <button class="btn btn-sm <?= $blockHidden ? 'btn-outline-primary' : 'btn-outline-danger' ?>"><?= $blockHidden ? 'Mostrar' : 'Ocultar' ?></button>
                         </form>
                     </div>
                 <?php endif; ?>
