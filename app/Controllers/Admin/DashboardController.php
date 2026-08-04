@@ -22,6 +22,7 @@ class DashboardController
         $user = current_user();
         $roleSlugs = array_values(array_filter(explode(',', (string) ($user['role_slugs'] ?? $user['role_slug'] ?? ''))));
         $isStudent = in_array('estudante', $roleSlugs, true);
+        $isTeacher = !$isStudent && (in_array('professor', $roleSlugs, true) || Auth::can('education.teach'));
         $canViewSensitiveDashboard = Stats::canViewSensitiveInfo($user);
         $canViewEditorialDashboard = $canViewSensitiveDashboard || Stats::canViewEditorialInfo($user);
         $canManageHomeNotice = Auth::hasRole(['master', 'admin']) || Auth::can('home_notice.manage');
@@ -35,6 +36,8 @@ class DashboardController
             'canManageHomeNotice' => $canManageHomeNotice,
             'canManageAnnouncements' => $canManageAnnouncements,
             'isStudent' => $isStudent,
+            'isTeacher' => $isTeacher,
+            'teacherCourses' => $isTeacher ? Education::coursesForManagement((int) ($user['id'] ?? 0)) : [],
             'studentCourses' => $isStudent ? Education::coursesForUser((int) ($user['id'] ?? 0)) : [],
             'studentResponses' => $isStudent ? Education::studentResponsesForDashboard((int) ($user['id'] ?? 0)) : [],
             'homeNotice' => $canManageHomeNotice ? [

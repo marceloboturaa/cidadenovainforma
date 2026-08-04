@@ -98,6 +98,35 @@
 </section>
 <?php endif; ?>
 
+<?php if (($isTeacher ?? false) && !($isStudent ?? false)): ?>
+    <?php $teacherCourses = $teacherCourses ?? []; ?>
+    <section class="panel teacher-course-panel">
+        <div class="section-heading">
+            <h2>Meus cursos como professor</h2>
+            <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/education/manage')) ?>">Gerenciar cursos</a>
+        </div>
+        <div class="admin-card-list">
+            <?php foreach ($teacherCourses as $course): ?>
+                <article class="admin-list-card teacher-course-card">
+                    <div class="admin-list-main">
+                        <a class="admin-list-title" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><?= e($course['title']) ?></a>
+                        <dl class="admin-list-meta">
+                            <div><dt>Aulas</dt><dd><?= e((string) ($course['lesson_count'] ?? 0)) ?></dd></div>
+                            <div><dt>Alunos</dt><dd><?= e((string) ($course['student_count'] ?? 0)) ?></dd></div>
+                            <div><dt>Pendentes</dt><dd><?= e((string) ($course['pending_student_count'] ?? 0)) ?></dd></div>
+                        </dl>
+                    </div>
+                    <div class="admin-list-actions">
+                        <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-collection-play" aria-hidden="true"></i>Aulas</a>
+                        <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&preview=student')) ?>"><i class="bi bi-eye" aria-hidden="true"></i>Prévia estudante</a>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+            <?php if (!$teacherCourses): ?><div class="empty-state">Nenhum curso vinculado ao seu usuário de professor.</div><?php endif; ?>
+        </div>
+    </section>
+<?php endif; ?>
+
 <?php if ($canViewEditorialDashboard ?? false): ?>
 <div class="<?= ($canViewSensitiveDashboard ?? false) ? 'dashboard-grid' : '' ?>">
     <section class="panel">
