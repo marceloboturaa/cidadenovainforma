@@ -79,82 +79,87 @@ $embed = function (?string $url): ?string {
 
 <section class="education-player-layout">
     <aside class="education-playlist-sidebar">
-        <div class="education-playlist-title">
-            <span>Playlist</span>
-            <strong><?= e($course['title'] ?? 'Curso') ?></strong>
-        </div>
-        <div class="education-progress-inline">
-            <div>
-                <strong>Progresso</strong>
-                <span><?= $isCompleted ? 'Aula concluída' : 'Aula pendente' ?></span>
-            </div>
-            <?php if (!$isLocked): ?>
-                <div class="education-progress-actions">
-                    <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="completed" value="1">
-                        <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn" data-education-complete-button <?= ($hasVideo && !$videoWatched) || !$requirementsComplete || $requiresManualAttendance ? 'disabled' : '' ?>><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
-                    </form>
-                    <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="completed" value="0">
-                        <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
-                    </form>
+        <details class="education-playlist-toggle" data-education-playlist-toggle>
+            <summary class="education-playlist-title">
+                <span>Playlist</span>
+                <strong><?= e($course['title'] ?? 'Curso') ?></strong>
+                <i class="bi bi-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="education-playlist-body">
+                <div class="education-progress-inline">
+                    <div>
+                        <strong>Progresso</strong>
+                        <span><?= $isCompleted ? 'Aula concluída' : 'Aula pendente' ?></span>
+                    </div>
+                    <?php if (!$isLocked): ?>
+                        <div class="education-progress-actions">
+                            <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>" data-education-complete-form>
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="completed" value="1">
+                                <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn" data-education-complete-button <?= ($hasVideo && !$videoWatched) || !$requirementsComplete || $requiresManualAttendance ? 'disabled' : '' ?>><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
+                            </form>
+                            <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="completed" value="0">
+                                <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
+                            </form>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <?php if (!$canManage && !$isCompleted && !$requirementsComplete): ?>
-                    <div class="education-requirements-hint" data-education-requirements-hint data-pending-assignments="<?= e((string) max(0, (int) ($completionRequirements['required_assignment_count'] ?? 0) - (int) ($completionRequirements['submitted_assignment_count'] ?? 0))) ?>">
-                        <strong>Para concluir esta aula</strong>
-                        <?php if ((int) ($completionRequirements['required_video_count'] ?? 0) > 0): ?>
-                            <span><?= e((string) ($completionRequirements['watched_video_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_video_count'] ?? 0)) ?> vídeo(s) obrigatório(s) assistido(s)</span>
-                        <?php endif; ?>
-                        <?php if ((int) ($completionRequirements['required_assignment_count'] ?? 0) > 0): ?>
-                            <span><?= e((string) ($completionRequirements['submitted_assignment_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_assignment_count'] ?? 0)) ?> tarefa(s) entregue(s)</span>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            <?php endif; ?>
-        </div>
-        <div class="education-sidebar-scroll">
-            <?php foreach ($modules as $module): ?>
-                <?php $moduleLessons = $playlistByModule[(string) $module['id']] ?? []; ?>
-                <section class="education-sidebar-module">
-                    <h2><?= e($module['title']) ?></h2>
-                    <?php foreach ($moduleLessons as $playlistLesson): ?>
-                        <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
-                            <i class="bi <?= (!empty($playlistLesson['locked']) || ((!empty($playlistLesson['sequence_locked']) || !empty($playlistLesson['schedule_locked'])) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
-                            <span><?= e($playlistLesson['title']) ?></span>
-                            <?php if (!empty($playlistLesson['assignment_count'])): ?>
-                                <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
+                        <div class="education-requirements-hint" data-education-requirements-hint data-pending-assignments="<?= e((string) max(0, (int) ($completionRequirements['required_assignment_count'] ?? 0) - (int) ($completionRequirements['submitted_assignment_count'] ?? 0))) ?>">
+                            <strong>Para concluir esta aula</strong>
+                            <?php if ((int) ($completionRequirements['required_video_count'] ?? 0) > 0): ?>
+                                <span><?= e((string) ($completionRequirements['watched_video_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_video_count'] ?? 0)) ?> vídeo(s) obrigatório(s) assistido(s)</span>
                             <?php endif; ?>
-                            <?php if (!empty($playlistLesson['certificate_count'])): ?>
-                                <small><i class="bi bi-award" aria-hidden="true"></i></small>
+                            <?php if ((int) ($completionRequirements['required_assignment_count'] ?? 0) > 0): ?>
+                                <span><?= e((string) ($completionRequirements['submitted_assignment_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_assignment_count'] ?? 0)) ?> tarefa(s) entregue(s)</span>
                             <?php endif; ?>
-                        </a>
-                    <?php endforeach; ?>
-                    <?php if (!$moduleLessons): ?>
-                        <small>Nenhuma aula neste módulo.</small>
+                        </div>
                     <?php endif; ?>
-                </section>
-            <?php endforeach; ?>
-
-            <?php if (!empty($playlistByModule['none'])): ?>
-                <section class="education-sidebar-module">
-                    <h2>Sem módulo</h2>
-                    <?php foreach ($playlistByModule['none'] as $playlistLesson): ?>
-                        <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
-                            <i class="bi <?= (!empty($playlistLesson['locked']) || ((!empty($playlistLesson['sequence_locked']) || !empty($playlistLesson['schedule_locked'])) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
-                            <span><?= e($playlistLesson['title']) ?></span>
-                            <?php if (!empty($playlistLesson['assignment_count'])): ?>
-                                <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
+                <div class="education-sidebar-scroll">
+                    <?php foreach ($modules as $module): ?>
+                        <?php $moduleLessons = $playlistByModule[(string) $module['id']] ?? []; ?>
+                        <section class="education-sidebar-module">
+                            <h2><?= e($module['title']) ?></h2>
+                            <?php foreach ($moduleLessons as $playlistLesson): ?>
+                                <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
+                                    <i class="bi <?= (!empty($playlistLesson['locked']) || ((!empty($playlistLesson['sequence_locked']) || !empty($playlistLesson['schedule_locked'])) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
+                                    <span><?= e($playlistLesson['title']) ?></span>
+                                    <?php if (!empty($playlistLesson['assignment_count'])): ?>
+                                        <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
+                                    <?php endif; ?>
+                                    <?php if (!empty($playlistLesson['certificate_count'])): ?>
+                                        <small><i class="bi bi-award" aria-hidden="true"></i></small>
+                                    <?php endif; ?>
+                                </a>
+                            <?php endforeach; ?>
+                            <?php if (!$moduleLessons): ?>
+                                <small>Nenhuma aula neste módulo.</small>
                             <?php endif; ?>
-                            <?php if (!empty($playlistLesson['certificate_count'])): ?>
-                                <small><i class="bi bi-award" aria-hidden="true"></i></small>
-                            <?php endif; ?>
-                        </a>
+                        </section>
                     <?php endforeach; ?>
-                </section>
-            <?php endif; ?>
-        </div>
+
+                    <?php if (!empty($playlistByModule['none'])): ?>
+                        <section class="education-sidebar-module">
+                            <h2>Sem módulo</h2>
+                            <?php foreach ($playlistByModule['none'] as $playlistLesson): ?>
+                                <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'])) ?>">
+                                    <i class="bi <?= (!empty($playlistLesson['locked']) || ((!empty($playlistLesson['sequence_locked']) || !empty($playlistLesson['schedule_locked'])) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
+                                    <span><?= e($playlistLesson['title']) ?></span>
+                                    <?php if (!empty($playlistLesson['assignment_count'])): ?>
+                                        <small><i class="bi bi-clipboard-check" aria-hidden="true"></i></small>
+                                    <?php endif; ?>
+                                    <?php if (!empty($playlistLesson['certificate_count'])): ?>
+                                        <small><i class="bi bi-award" aria-hidden="true"></i></small>
+                                    <?php endif; ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </section>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </details>
     </aside>
 
     <article class="education-content-stack">

@@ -14,6 +14,7 @@
     const educationSelectVisible = document.querySelector('[data-education-select-visible]');
     const educationClearVisible = document.querySelector('[data-education-clear-visible]');
     const educationVideoWatchPlayers = document.querySelectorAll('[data-education-video-watch]');
+    const educationCompleteForm = document.querySelector('[data-education-complete-form]');
     const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
@@ -971,7 +972,7 @@
                 fallback.hidden = true;
             });
             player.closest('.education-block-card')?.querySelectorAll('[data-education-watch-hint]').forEach((hint) => {
-                hint.textContent = 'Vídeo concluído. Agora você pode marcar a aula como concluída.';
+                hint.textContent = 'Vídeo concluído. Finalizando a aula automaticamente...';
                 hint.classList.add('is-complete');
             });
             refreshEducationCompletionState();
@@ -1009,7 +1010,7 @@
         const pendingAssignments = Number(requirementsHint?.dataset.pendingAssignments || 0);
 
         if (requirementsHint && pendingVideos === 0 && pendingAssignments === 0) {
-            requirementsHint.textContent = 'Itens obrigatórios concluídos. Agora você pode finalizar a aula.';
+            requirementsHint.textContent = 'Itens obrigatórios concluídos. Finalizando a aula automaticamente...';
             requirementsHint.classList.add('is-complete');
         }
 
@@ -1017,7 +1018,32 @@
             educationCompleteButtons.forEach((button) => {
                 button.disabled = false;
             });
+            autoCompleteEducationLesson();
         }
+    }
+
+    function autoCompleteEducationLesson() {
+        if (!educationCompleteForm || educationCompleteForm.dataset.autoCompleting === '1') {
+            return;
+        }
+
+        const button = educationCompleteForm.querySelector('[data-education-complete-button]');
+        if (!button || button.disabled) {
+            return;
+        }
+
+        educationCompleteForm.dataset.autoCompleting = '1';
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-check2-circle" aria-hidden="true"></i>Concluindo...';
+
+        window.setTimeout(() => {
+            if (typeof educationCompleteForm.requestSubmit === 'function') {
+                educationCompleteForm.requestSubmit();
+                return;
+            }
+
+            educationCompleteForm.submit();
+        }, 400);
     }
 
     function cpfMask(value) {
