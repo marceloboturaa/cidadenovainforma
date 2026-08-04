@@ -337,6 +337,8 @@
 }
 
 .education-video-frame {
+    width: 100%;
+    max-width: 100%;
     overflow: hidden;
     border-radius: 8px;
     background: #111827;
@@ -346,6 +348,7 @@
 .education-video-frame video {
     display: block;
     width: 100%;
+    min-width: 0;
     aspect-ratio: 16 / 9;
     border: 0;
 }
@@ -929,6 +932,7 @@
 .education-side-stack {
     display: grid;
     gap: 14px;
+    min-width: 0;
 }
 
 .education-player-layout {

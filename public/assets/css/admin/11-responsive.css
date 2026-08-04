@@ -206,6 +206,16 @@
         grid-template-columns: 1fr;
     }
 
+    .student-course-card {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .student-course-thumb,
+    .student-course-thumb-fallback {
+        width: 100%;
+    }
+
     .user-directory-card {
         grid-template-columns: 1fr;
     }
@@ -259,6 +269,10 @@
         grid-template-areas:
             "playlist"
             "content";
+    }
+
+    .education-player-layout:has(.education-playlist-toggle:not([open])) {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .education-material-form-panel {

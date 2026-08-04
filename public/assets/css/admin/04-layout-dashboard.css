@@ -393,7 +393,31 @@
 }
 
 .student-course-card {
+    grid-template-columns: 88px minmax(0, 1fr) auto;
     align-items: center;
+}
+
+.student-course-thumb,
+.student-course-thumb-fallback {
+    width: 88px;
+    aspect-ratio: 16 / 10;
+    border-radius: 8px;
+    background: #f3f4f6;
+}
+
+.student-course-thumb {
+    object-fit: cover;
+}
+
+.student-course-thumb-fallback {
+    display: inline-grid;
+    place-items: center;
+    color: var(--brand);
+    font-size: 1.5rem;
+}
+
+.student-course-thumb-fallback[hidden] {
+    display: none;
 }
 
 .student-course-card .education-progress {
