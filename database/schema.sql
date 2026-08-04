@@ -461,6 +461,8 @@ CREATE TABLE IF NOT EXISTS news (
     summary TEXT NULL,
     content LONGTEXT NOT NULL,
     cover_image VARCHAR(255) NULL,
+    cover_caption VARCHAR(255) NULL,
+    hide_cover_in_body TINYINT(1) NOT NULL DEFAULT 0,
     type ENUM('noticia','reportagem','artigo','coluna') NOT NULL DEFAULT 'noticia',
     status ENUM('draft','pending','rejected','published','archived') NOT NULL DEFAULT 'draft',
     public_visibility VARCHAR(20) NOT NULL DEFAULT 'listed',
