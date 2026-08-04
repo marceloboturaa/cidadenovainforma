@@ -112,7 +112,11 @@ $status = $newsItem['status'] ?? 'draft';
             <input class="form-control" name="cover_image_url" value="<?= !empty($newsItem['cover_image']) && preg_match('#^https?://#i', $newsItem['cover_image']) ? e($newsItem['cover_image']) : '' ?>" placeholder="https://site.com/imagem.jpg">
             <label class="form-label mt-3">Legenda da capa</label>
             <input class="form-control" name="cover_caption" value="<?= e($newsItem['cover_caption'] ?? '') ?>" maxlength="255" placeholder="Opcional; aparece abaixo da imagem de capa">
-            <p class="field-hint">A legenda so aparece na noticia quando este campo for preenchido. Imagens do corpo ficam dentro do editor.</p>
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" name="hide_cover_in_body" id="hide_cover_in_body" <?= checked((bool) ($newsItem['hide_cover_in_body'] ?? false)) ?>>
+                <label class="form-check-label" for="hide_cover_in_body">Ocultar capa dentro da notícia</label>
+            </div>
+            <p class="field-hint">Use quando a capa for a mesma imagem do vídeo. Ela continua aparecendo na home, listas, cards e compartilhamentos.</p>
             <?php if (!empty($newsItem['cover_image'])): ?>
                 <img class="cover-preview" src="<?= e(media_url($newsItem['cover_image'])) ?>" alt="" onerror="this.remove()">
             <?php endif; ?>

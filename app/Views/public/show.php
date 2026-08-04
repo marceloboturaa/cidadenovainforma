@@ -48,7 +48,8 @@
 
     <?php $publicImage = news_public_image($news); ?>
     <?php $hasCoverImage = media_available($news['cover_image'] ?? null); ?>
-    <?php if ($hasCoverImage && $publicImage): ?>
+    <?php $showCoverInBody = empty($news['hide_cover_in_body']); ?>
+    <?php if ($showCoverInBody && $hasCoverImage && $publicImage): ?>
         <figure class="article-cover-figure">
             <img class="article-cover" src="<?= e(media_url($publicImage)) ?>" alt="<?= e($news['title']) ?>" onerror="this.closest('figure').remove()">
             <?php if (!empty($news['cover_caption'])): ?>

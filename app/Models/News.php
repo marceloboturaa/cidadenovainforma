@@ -238,9 +238,9 @@ class News
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO news
-                (author_id, category_id, title, slug, summary, content, cover_image, cover_caption, type, status, public_visibility, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, published_at, created_at, updated_at)
+                (author_id, category_id, title, slug, summary, content, cover_image, cover_caption, hide_cover_in_body, type, status, public_visibility, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, published_at, created_at, updated_at)
              VALUES
-                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :cover_caption, :type, :status, :public_visibility, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :published_at, NOW(), NOW())'
+                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :cover_caption, :hide_cover_in_body, :type, :status, :public_visibility, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :published_at, NOW(), NOW())'
         );
 
         $stmt->execute(self::payload($data));
@@ -264,6 +264,7 @@ class News
                 content = :content,
                 cover_image = :cover_image,
                 cover_caption = :cover_caption,
+                hide_cover_in_body = :hide_cover_in_body,
                 type = :type,
                 status = :status,
                 public_visibility = :public_visibility,
@@ -369,6 +370,14 @@ class News
             Database::connection()->exec('ALTER TABLE news ADD COLUMN cover_caption VARCHAR(255) NULL AFTER cover_image');
         }
 
+        $hideCoverInBodyColumn = Database::connection()
+            ->query("SHOW COLUMNS FROM news LIKE 'hide_cover_in_body'")
+            ->fetch();
+
+        if (!$hideCoverInBodyColumn) {
+            Database::connection()->exec('ALTER TABLE news ADD COLUMN hide_cover_in_body TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_caption');
+        }
+
         $visibilityColumn = Database::connection()
             ->query("SHOW COLUMNS FROM news LIKE 'public_visibility'")
             ->fetch();
@@ -389,6 +398,7 @@ class News
             'content' => trim($data['content']),
             'cover_image' => $data['cover_image'] ?? null,
             'cover_caption' => trim($data['cover_caption'] ?? ''),
+            'hide_cover_in_body' => (int) !empty($data['hide_cover_in_body']),
             'type' => $data['type'] ?? 'noticia',
             'status' => $data['status'] ?? 'draft',
             'public_visibility' => in_array($data['public_visibility'] ?? '', array_keys(self::VISIBILITY_LABELS), true)
