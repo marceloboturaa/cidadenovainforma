@@ -216,6 +216,11 @@
         width: 100%;
     }
 
+    .student-course-card > .btn {
+        width: 100%;
+        justify-self: stretch;
+    }
+
     .user-directory-card {
         grid-template-columns: 1fr;
     }

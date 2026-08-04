@@ -184,16 +184,16 @@
                 $progress = $lessonCount > 0 ? min(100, (int) round(($completedCount / $lessonCount) * 100)) : 0;
                 $isPendingCourse = ($course['enrollment_status'] ?? 'approved') === 'pending';
                 ?>
-                <article class="admin-list-card student-course-card">
+                <article class="student-course-card">
                     <?php if (!empty($course['cover_image'])): ?>
                         <img class="student-course-thumb" src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" onerror="this.nextElementSibling.hidden=false;this.remove();">
                         <span class="student-course-thumb-fallback" hidden><i class="bi bi-journal-richtext" aria-hidden="true"></i></span>
                     <?php else: ?>
                         <span class="student-course-thumb-fallback"><i class="bi bi-journal-richtext" aria-hidden="true"></i></span>
                     <?php endif; ?>
-                    <div class="admin-list-main">
+                    <div class="student-course-info">
                         <span class="education-kicker"><?= e($course['teacher_name'] ?? 'Curso') ?></span>
-                        <a class="admin-list-title" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><?= e($course['title']) ?></a>
+                        <a class="student-course-title" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><?= e($course['title']) ?></a>
                         <div class="education-progress">
                             <span><?= e((string) $completedCount) ?>/<?= e((string) $lessonCount) ?> aula(s)</span>
                             <div><i style="width: <?= e((string) $progress) ?>%"></i></div>
