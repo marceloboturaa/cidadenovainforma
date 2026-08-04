@@ -76,7 +76,7 @@
                     <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>" title="Documentos"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><span>Documentos</span></a>
                 <?php endif; ?>
                 <?php if ($canAccessEducation): ?>
-                    <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>" title="Ensino"><i class="bi bi-mortarboard" aria-hidden="true"></i><span>Ensino</span></a>
+                    <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>" title="Curso"><i class="bi bi-mortarboard" aria-hidden="true"></i><span>Curso</span></a>
                 <?php endif; ?>
                 <?php if ($canAccessOwnCertificates): ?>
                     <a class="<?= ($currentPath === '/admin/education/certificates' || $currentPath === '/admin/education/certificate') ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificates')) ?>" title="Meus certificados"><i class="bi bi-award" aria-hidden="true"></i><span>Meus certificados</span></a>
@@ -86,7 +86,7 @@
                     <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-stars" aria-hidden="true"></i><span>Reconhecimentos</span></a>
                 <?php endif; ?>
                 <?php if ($canManageEducationCourses): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Cursos"><i class="bi bi-journal-richtext" aria-hidden="true"></i><span>Cursos</span></a>
+                    <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Escola"><i class="bi bi-journal-richtext" aria-hidden="true"></i><span>Escola</span></a>
                 <?php endif; ?>
                 <?php if (\App\Core\Auth::can('forum.view') || \App\Core\Auth::can('forum.create') || \App\Core\Auth::can('forum.moderate')): ?>
                     <a class="<?= str_starts_with($currentPath, '/admin/forum') ? 'active' : '' ?>" href="<?= e(url('/admin/forum')) ?>" title="Fóruns"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Fóruns</span></a>
