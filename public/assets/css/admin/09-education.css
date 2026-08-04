@@ -987,18 +987,24 @@
     text-transform: uppercase;
 }
 
+.education-playlist-label {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
 .education-playlist-title strong {
     margin-top: 4px;
     line-height: 1.25;
 }
 
-.education-playlist-title i {
+.education-playlist-caret {
     grid-column: 2;
     grid-row: 1 / span 2;
     transition: transform 0.18s ease;
 }
 
-.education-playlist-toggle[open] .education-playlist-title i {
+.education-playlist-toggle[open] .education-playlist-caret {
     transform: rotate(180deg);
 }
 
