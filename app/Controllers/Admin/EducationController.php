@@ -344,6 +344,8 @@ class EducationController
         $course = $this->courseFromQuery();
         $canManage = $this->canManageCourse($course);
         $canTakeAttendance = $this->canTakeAttendance($course);
+        $studentPreview = $canManage && $this->studentPreviewRequested();
+        $canManageView = $canManage && !$studentPreview;
 
         $enrollmentStatus = Education::enrollmentStatus((int) $course['id'], (int) $user['id']);
         $isEnrollmentPending = !$canManage && !$canTakeAttendance && $enrollmentStatus === 'pending';
@@ -355,8 +357,8 @@ class EducationController
         }
 
         $lessons = $isEnrollmentPending ? [] : Education::lessonsWithSequenceAccess(
-            Education::lessonsForCourse((int) $course['id'], (int) $user['id'], $canManage),
-            $canManage
+            Education::lessonsForCourse((int) $course['id'], (int) $user['id'], $canManageView),
+            $canManageView
         );
         $forumTopics = $isEnrollmentPending ? [] : Education::forumTopics((int) $course['id']);
         $courseForms = $isEnrollmentPending ? [] : Education::formsForCourse((int) $course['id']);
@@ -365,20 +367,22 @@ class EducationController
         View::render('admin/education/course', [
             'course' => $course,
             'lessons' => $lessons,
-            'modules' => Education::modulesForCourse((int) $course['id'], $canManage),
-            'canManage' => $canManage,
+            'modules' => Education::modulesForCourse((int) $course['id'], $canManageView),
+            'canManage' => $canManageView,
+            'canManageOriginal' => $canManage,
+            'studentPreview' => $studentPreview,
             'canAssignTeacher' => $this->canAssignTeacher(),
             'teacherOptions' => $this->teacherOptions(User::activeForAccessLists()),
             'forumAuthorOptions' => User::activeForAccessLists(),
-            'canTakeAttendance' => $canTakeAttendance,
-            'editingLesson' => $this->lessonFromQuery(false, false),
-            'editingModule' => $this->moduleFromQuery(false),
+            'canTakeAttendance' => $studentPreview ? false : $canTakeAttendance,
+            'editingLesson' => $studentPreview ? null : $this->lessonFromQuery(false, false),
+            'editingModule' => $studentPreview ? null : $this->moduleFromQuery(false),
             'forumTopics' => $forumTopics,
-            'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id'), $canManage),
+            'forumRepliesByTopic' => Education::forumRepliesForTopics(array_column($forumTopics, 'id'), $canManageView),
             'courseForms' => $courseForms,
             'certificateStatus' => $certificateStatus,
             'certificateInstitutions' => Education::certificateInstitutions(),
-            'certificateNameRequests' => $canManage ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
+            'certificateNameRequests' => $canManageView ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
             'isEnrollmentPending' => $isEnrollmentPending,
         ]);
     }
@@ -531,8 +535,10 @@ class EducationController
         $lesson = $this->lessonFromQuery();
         $course = Education::findCourse((int) $lesson['course_id']);
         $canManage = $this->canManageCourse($course);
-        $isScheduleLocked = !$canManage && !$this->lessonIsAvailable($lesson);
-        $isLocked = (!empty($lesson['locked']) || $isScheduleLocked) && !$canManage;
+        $studentPreview = $canManage && $this->studentPreviewRequested();
+        $canManageView = $canManage && !$studentPreview;
+        $isScheduleLocked = !$canManageView && !$this->lessonIsAvailable($lesson);
+        $isLocked = (!empty($lesson['locked']) || $isScheduleLocked) && !$canManageView && !$studentPreview;
 
         if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
             $this->redirectPendingEnrollment((int) $lesson['course_id']);
@@ -553,15 +559,15 @@ class EducationController
         }
 
         $playlist = Education::lessonsWithSequenceAccess(
-            Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id'], $canManage),
-            $canManage
+            Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id'], $canManageView),
+            $canManageView
         );
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
-        $videoWatched = !$hasVideo || $canManage || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
+        $videoWatched = !$hasVideo || $canManageView || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
         $lessonForumTopics = Education::forumTopics((int) $lesson['course_id'], (int) $lesson['id']);
-        $blocks = $isLocked ? [] : Education::blocksForLesson((int) $lesson['id'], $canManage, (int) $user['id']);
+        $blocks = $isLocked ? [] : Education::blocksForLesson((int) $lesson['id'], $canManageView, (int) $user['id']);
         $assignmentBlocks = array_values(array_filter($blocks, fn (array $block): bool => ($block['type'] ?? '') === 'assignment'));
-        $completionRequirements = $canManage || $isLocked
+        $completionRequirements = $canManageView || $isLocked
             ? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0]
             : Education::lessonCompletionRequirements((int) $lesson['id'], (int) $user['id']);
         $lessonForms = $isLocked ? [] : Education::formsForCourse((int) $lesson['course_id'], (int) $lesson['id']);
@@ -571,21 +577,23 @@ class EducationController
             'course' => $course,
             'videoEmbedUrl' => $isLocked ? null : $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
             'blocks' => $blocks,
-            'editingBlock' => $this->blockFromQuery(false),
-            'canManage' => $canManage,
+            'editingBlock' => $studentPreview ? null : $this->blockFromQuery(false),
+            'canManage' => $canManageView,
+            'canManageOriginal' => $canManage,
+            'studentPreview' => $studentPreview,
             'isLocked' => $isLocked,
             'isScheduleLocked' => $isScheduleLocked,
             'hasVideo' => $hasVideo,
             'videoWatched' => $videoWatched,
             'completionRequirements' => $completionRequirements,
-            'modules' => Education::modulesForCourse((int) $lesson['course_id']),
+            'modules' => Education::modulesForCourse((int) $lesson['course_id'], $canManageView),
             'playlist' => $playlist,
             'lessonForumTopics' => $lessonForumTopics,
-            'lessonForumRepliesByTopic' => Education::forumRepliesForTopics(array_column($lessonForumTopics, 'id'), $canManage),
+            'lessonForumRepliesByTopic' => Education::forumRepliesForTopics(array_column($lessonForumTopics, 'id'), $canManageView),
             'canAssignForumAuthor' => $this->canAssignTeacher(),
             'forumAuthorOptions' => User::activeForAccessLists(),
             'lessonForms' => $lessonForms,
-            'assignmentSubmissionsByBlock' => $canManage ? Education::assignmentSubmissionsForBlocks(array_column($assignmentBlocks, 'id')) : [],
+            'assignmentSubmissionsByBlock' => $canManageView ? Education::assignmentSubmissionsForBlocks(array_column($assignmentBlocks, 'id')) : [],
         ]);
     }
 
@@ -1735,6 +1743,11 @@ class EducationController
         }
 
         return $this->canTeach() && (int) ($course['teacher_user_id'] ?? 0) === (int) (current_user()['id'] ?? 0);
+    }
+
+    private function studentPreviewRequested(): bool
+    {
+        return ($_GET['preview'] ?? '') === 'student';
     }
 
     private function isEnrollmentPendingForCourse(?array $course, int $userId): bool

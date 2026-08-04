@@ -240,6 +240,31 @@
     line-height: 1.6;
 }
 
+.education-preview-banner,
+.education-preview-note {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    border-color: rgba(37, 99, 235, 0.25);
+    background: #eff6ff;
+    color: #1e3a8a;
+}
+
+.education-preview-banner strong {
+    display: block;
+    margin-top: 2px;
+    color: #1e3a8a;
+}
+
+.education-preview-note {
+    justify-content: flex-start;
+    padding: 10px 12px;
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
 .education-student-overview {
     display: grid;
     grid-template-columns: minmax(240px, 0.85fr) minmax(0, 1.15fr);

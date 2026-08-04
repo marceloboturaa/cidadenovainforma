@@ -267,7 +267,8 @@
     margin-bottom: 16px;
 }
 
-.users-panel-heading > i {
+.users-panel-heading > i,
+.users-collapsible-icons > i:first-child {
     display: grid;
     place-items: center;
     width: 42px;
@@ -276,6 +277,43 @@
     background: #fee2e2;
     color: var(--brand);
     font-size: 1.2rem;
+}
+
+.users-collapsible-panel {
+    display: block;
+}
+
+.users-collapsible-heading {
+    margin-bottom: 0;
+    cursor: pointer;
+    list-style: none;
+}
+
+.users-collapsible-heading::-webkit-details-marker {
+    display: none;
+}
+
+.users-collapsible-icons {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.users-collapsible-caret {
+    color: var(--brand);
+    transition: transform 0.18s ease;
+}
+
+.users-collapsible-panel[open] .users-collapsible-heading {
+    margin-bottom: 16px;
+}
+
+.users-collapsible-panel[open] .users-collapsible-caret {
+    transform: rotate(180deg);
+}
+
+.users-collapsible-body {
+    margin-top: 0;
 }
 
 .users-count-badge {

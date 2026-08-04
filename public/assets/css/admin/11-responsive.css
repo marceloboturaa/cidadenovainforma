@@ -280,6 +280,11 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .education-preview-banner {
+        display: grid;
+        align-items: stretch;
+    }
+
     .education-material-form-panel {
         position: static;
     }

@@ -217,15 +217,18 @@ $onlineCount = count($onlineUserIds ?? []);
             </div>
         </section>
 
-        <section class="users-panel">
-            <div class="users-panel-heading">
+        <details class="users-panel users-collapsible-panel">
+            <summary class="users-panel-heading users-collapsible-heading">
                 <div>
                     <span class="eyebrow">Documentos</span>
                     <h2>Quem pode enviar</h2>
                 </div>
-                <i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i>
-            </div>
-            <form method="post" action="<?= e(url('/admin/users/document-uploads')) ?>" class="user-stacked-form">
+                <span class="users-collapsible-icons">
+                    <i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i>
+                    <i class="bi bi-chevron-down users-collapsible-caret" aria-hidden="true"></i>
+                </span>
+            </summary>
+            <form method="post" action="<?= e(url('/admin/users/document-uploads')) ?>" class="user-stacked-form users-collapsible-body">
                 <?= csrf_field() ?>
                 <p class="field-hint">Usu&aacute;rios marcados podem enviar documentos internos. A gest&atilde;o completa continua restrita a quem gerencia documentos.</p>
                 <div class="responsibility-options">
@@ -244,7 +247,7 @@ $onlineCount = count($onlineUserIds ?? []);
                 </div>
                 <button class="btn btn-sm btn-outline-primary">Salvar permiss&otilde;es de envio</button>
             </form>
-        </section>
+        </details>
     <?php endif; ?>
 
     <section class="users-panel">

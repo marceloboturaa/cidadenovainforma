@@ -2,6 +2,8 @@
 $editingLesson = $editingLesson ?? null;
 $editingModule = $editingModule ?? null;
 $canTakeAttendance = $canTakeAttendance ?? false;
+$canManageOriginal = $canManageOriginal ?? $canManage;
+$studentPreview = $studentPreview ?? false;
 $editingCourseIntro = ($_GET['edit_course'] ?? '') === '1';
 $creatingModule = ($_GET['create_module'] ?? '') === '1';
 $modules = $modules ?? [];
@@ -47,6 +49,7 @@ foreach ($lessons as $lessonItem) {
 
 $nextLessonId = $nextLesson ? (int) $nextLesson['id'] : 0;
 $courseProgressPercent = $lessonCount > 0 ? (int) round(($completedLessonCount / $lessonCount) * 100) : 0;
+$previewSuffix = $studentPreview ? '&preview=student' : '';
 ?>
 
 <div class="page-heading">
@@ -62,19 +65,32 @@ $courseProgressPercent = $lessonCount > 0 ? (int) round(($completedLessonCount /
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forms')) ?>"><i class="bi bi-ui-checks" aria-hidden="true"></i>Formularios</a>
         <?php endif; ?>
         <?php if ($canManage): ?>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&preview=student')) ?>"><i class="bi bi-eye" aria-hidden="true"></i>Visualizar como estudante</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&edit_course=1')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar curso</a>
             <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&create_module=1')) ?>"><i class="bi bi-collection-play" aria-hidden="true"></i>Novo módulo</a>
+        <?php elseif ($studentPreview && $canManageOriginal): ?>
+            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Voltar ao modo edição</a>
         <?php endif; ?>
         <?php if ($canTakeAttendance): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Chamada</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance/report?id=' . $course['id'])) ?>"><i class="bi bi-bar-chart" aria-hidden="true"></i>Relatório</a>
         <?php endif; ?>
         <?php if ($isStudentCourseView && $nextLesson): ?>
-            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'])) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar</a>
+            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'] . $previewSuffix)) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar</a>
         <?php endif; ?>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
+
+<?php if ($studentPreview && $canManageOriginal): ?>
+    <section class="panel education-preview-banner">
+        <div>
+            <span class="eyebrow">Prévia do estudante</span>
+            <strong>Você está vendo este curso sem as ferramentas de professor.</strong>
+        </div>
+        <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar curso</a>
+    </section>
+<?php endif; ?>
 
 <?php if (!empty($course['summary'])): ?>
     <section class="panel education-course-intro">
@@ -117,7 +133,7 @@ $courseProgressPercent = $lessonCount > 0 ? (int) round(($completedLessonCount /
             <?php if ($nextLesson): ?>
                 <h2><?= e($nextLesson['title']) ?></h2>
                 <p><?= e(text_excerpt($nextLesson['description'] ?? 'Continue por esta aula.', 130)) ?></p>
-                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'])) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar aula</a>
+                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'] . $previewSuffix)) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar aula</a>
             <?php elseif ($lessonCount > 0): ?>
                 <h2>Curso concluído</h2>
                 <p>Todas as aulas disponíveis foram concluídas.</p>
@@ -546,6 +562,11 @@ $courseProgressPercent = $lessonCount > 0 ? (int) round(($completedLessonCount /
                             <button class="btn btn-sm btn-outline-danger">Remover formulario</button>
                         </form>
                     </details>
+                <?php elseif ($studentPreview): ?>
+                    <div class="education-preview-note">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                        Este formulário aparecerá para o estudante responder.
+                    </div>
                 <?php else: ?>
                     <form method="post" action="<?= e(url('/admin/education/form/submit?form_id=' . $form['id'])) ?>" class="education-form-answer">
                         <?= csrf_field() ?>
@@ -671,11 +692,18 @@ $courseProgressPercent = $lessonCount > 0 ? (int) round(($completedLessonCount /
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
-                <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
-                    <?= csrf_field() ?>
-                    <textarea class="form-control" name="body" rows="2" placeholder="Responder este tópico" required></textarea>
-                    <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
-                </form>
+                <?php if ($studentPreview): ?>
+                    <div class="education-preview-note">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                        O campo de resposta do fórum aparece para estudantes, mas fica desativado nesta prévia.
+                    </div>
+                <?php else: ?>
+                    <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
+                        <?= csrf_field() ?>
+                        <textarea class="form-control" name="body" rows="2" placeholder="Responder este tópico" required></textarea>
+                        <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
+                    </form>
+                <?php endif; ?>
             </article>
         <?php endforeach; ?>
         <?php if (!$forumTopics): ?>

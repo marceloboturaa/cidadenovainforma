@@ -8,9 +8,10 @@ $lessonAttendanceMode = (string) ($lesson['attendance_mode'] ?? 'video');
 $lessonIsComplete = !empty($lesson['completed_at']);
 $lessonIsNext = !$canManage && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
 $lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? 'Rever' : 'Assistir');
+$lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($studentPreview) ? '&preview=student' : ''));
 ?>
 <article class="education-playlist-row <?= $lessonScheduleLocked ? 'is-scheduled' : '' ?> <?= $lessonIsComplete ? 'is-complete' : '' ?> <?= $lessonIsNext ? 'is-next' : '' ?> <?= $lessonAccessLocked ? 'is-locked' : '' ?>">
-    <<?= $lessonAccessLocked ? 'div' : 'a' ?> class="education-playlist-main"<?= $lessonAccessLocked ? '' : ' href="' . e(url('/admin/education/lesson?id=' . $lesson['id'])) . '"' ?>>
+    <<?= $lessonAccessLocked ? 'div' : 'a' ?> class="education-playlist-main"<?= $lessonAccessLocked ? '' : ' href="' . e($lessonHref) . '"' ?>>
         <span class="<?= $lessonIsComplete ? 'is-complete' : '' ?>">
             <i class="bi <?= $lessonAccessLocked ? 'bi-lock-fill' : ($lessonIsComplete ? 'bi-check-circle-fill' : ($lessonIsNext ? 'bi-play-circle-fill' : 'bi-circle')) ?>" aria-hidden="true"></i>
         </span>
@@ -52,7 +53,7 @@ $lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? 'Rever' 
                 <i class="bi bi-lock-fill" aria-hidden="true"></i><?= $lessonScheduleLocked ? 'Agendada' : 'Bloqueada' ?>
             </span>
         <?php else: ?>
-            <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>">
+            <a class="btn btn-sm btn-primary icon-btn" href="<?= e($lessonHref) ?>">
                 <i class="bi <?= $lessonIsComplete ? 'bi-arrow-clockwise' : 'bi-play-circle' ?>" aria-hidden="true"></i><?= e($lessonButtonLabel) ?>
             </a>
         <?php endif; ?>

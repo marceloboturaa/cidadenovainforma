@@ -153,6 +153,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                 </div>
                 <div class="admin-list-actions">
                     <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-collection-play" aria-hidden="true"></i>Aulas</a>
+                    <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&preview=student')) ?>"><i class="bi bi-eye" aria-hidden="true"></i>Prévia estudante</a>
                     <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/manage?id=' . $course['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar</a>
                     <form class="inline-form" method="post" action="<?= e(url('/admin/education/course/delete?id=' . $course['id'])) ?>" onsubmit="return confirm('Remover este curso da lista?');">
                         <?= csrf_field() ?>
