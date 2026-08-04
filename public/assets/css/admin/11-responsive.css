@@ -255,6 +255,7 @@
     }
 
     .education-player-layout {
+        grid-template-columns: 1fr;
         grid-template-areas:
             "playlist"
             "content";

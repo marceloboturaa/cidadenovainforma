@@ -81,7 +81,7 @@ $embed = function (?string $url): ?string {
     <aside class="education-playlist-sidebar">
         <details class="education-playlist-toggle" data-education-playlist-toggle>
             <summary class="education-playlist-title">
-                <span class="education-playlist-label"><i class="bi bi-list-ul" aria-hidden="true"></i>Playlist</span>
+                <span class="education-playlist-label"><i class="bi bi-list-ul" aria-hidden="true"></i><span>Playlist</span></span>
                 <strong><?= e($course['title'] ?? 'Curso') ?></strong>
                 <i class="bi bi-chevron-down education-playlist-caret" aria-hidden="true"></i>
             </summary>

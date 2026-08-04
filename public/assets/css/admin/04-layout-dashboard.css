@@ -387,6 +387,20 @@
     gap: 16px;
 }
 
+.student-course-list {
+    display: grid;
+    gap: 10px;
+}
+
+.student-course-card {
+    align-items: center;
+}
+
+.student-course-card .education-progress {
+    margin-top: 8px;
+    max-width: 420px;
+}
+
 .student-response-grid h3 {
     margin: 0 0 10px;
     color: var(--ink);

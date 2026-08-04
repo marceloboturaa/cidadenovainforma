@@ -167,9 +167,43 @@
 <?php if ($isStudent ?? false): ?>
     <?php
     $responseStatusLabels = ['pending' => 'Aguardando correção', 'corrected' => 'Corrigido', 'redo' => 'Refazer'];
+    $studentCourses = $studentCourses ?? [];
     $studentForms = $studentResponses['forms'] ?? [];
     $studentAssignments = $studentResponses['assignments'] ?? [];
     ?>
+    <section class="panel student-course-panel">
+        <div class="section-heading">
+            <h2>Meus cursos</h2>
+            <a class="btn btn-sm btn-outline-primary" href="<?= e(url('/admin/education')) ?>">Ver todos</a>
+        </div>
+        <div class="student-course-list">
+            <?php foreach ($studentCourses as $course): ?>
+                <?php
+                $lessonCount = (int) ($course['lesson_count'] ?? 0);
+                $completedCount = (int) ($course['completed_count'] ?? 0);
+                $progress = $lessonCount > 0 ? min(100, (int) round(($completedCount / $lessonCount) * 100)) : 0;
+                $isPendingCourse = ($course['enrollment_status'] ?? 'approved') === 'pending';
+                ?>
+                <article class="admin-list-card student-course-card">
+                    <div class="admin-list-main">
+                        <span class="education-kicker"><?= e($course['teacher_name'] ?? 'Curso') ?></span>
+                        <a class="admin-list-title" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><?= e($course['title']) ?></a>
+                        <div class="education-progress">
+                            <span><?= e((string) $completedCount) ?>/<?= e((string) $lessonCount) ?> aula(s)</span>
+                            <div><i style="width: <?= e((string) $progress) ?>%"></i></div>
+                        </div>
+                    </div>
+                    <?php if ($isPendingCourse): ?>
+                        <span class="state-pill is-muted">Aguardando aprovação</span>
+                    <?php else: ?>
+                        <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Acessar</a>
+                    <?php endif; ?>
+                </article>
+            <?php endforeach; ?>
+            <?php if (!$studentCourses): ?><div class="empty-state">Nenhum curso liberado para você ainda.</div><?php endif; ?>
+        </div>
+    </section>
+
     <section class="panel student-response-panel">
         <div class="section-heading">
             <h2>Minhas respostas</h2>

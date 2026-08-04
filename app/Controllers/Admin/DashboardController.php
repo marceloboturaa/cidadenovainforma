@@ -35,6 +35,7 @@ class DashboardController
             'canManageHomeNotice' => $canManageHomeNotice,
             'canManageAnnouncements' => $canManageAnnouncements,
             'isStudent' => $isStudent,
+            'studentCourses' => $isStudent ? Education::coursesForUser((int) ($user['id'] ?? 0)) : [],
             'studentResponses' => $isStudent ? Education::studentResponsesForDashboard((int) ($user['id'] ?? 0)) : [],
             'homeNotice' => $canManageHomeNotice ? [
                 'enabled' => SiteSetting::get('home_notice_enabled', '0'),
