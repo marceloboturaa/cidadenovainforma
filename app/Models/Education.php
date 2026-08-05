@@ -116,6 +116,7 @@ class Education
                 starts_at DATE NULL,
                 ends_at DATE NULL,
                 public_enabled TINYINT(1) NOT NULL DEFAULT 0,
+                playlist_required TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_title VARCHAR(180) NULL,
                 certificate_text TEXT NULL,
@@ -492,7 +493,8 @@ class Education
         self::ensureColumn('education_courses', 'starts_at', 'DATE NULL AFTER workload_hours');
         self::ensureColumn('education_courses', 'ends_at', 'DATE NULL AFTER starts_at');
         self::ensureColumn('education_courses', 'public_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER ends_at');
-        self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled');
+        self::ensureColumn('education_courses', 'playlist_required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER public_enabled');
+        self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER playlist_required');
         self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
         self::ensureColumn('education_courses', 'certificate_font_family', 'VARCHAR(80) NULL AFTER certificate_text');
@@ -927,12 +929,12 @@ class Education
         return $stmt->fetchAll();
     }
 
-    public static function lessonsWithSequenceAccess(array $lessons, bool $canManage = false): array
+    public static function lessonsWithSequenceAccess(array $lessons, bool $canManage = false, bool $playlistRequired = true): array
     {
         $previousCompleted = true;
 
         foreach ($lessons as $index => $lesson) {
-            $lockedBySequence = !$canManage && !$previousCompleted;
+            $lockedBySequence = $playlistRequired && !$canManage && !$previousCompleted;
             $lockedBySchedule = !$canManage && !self::lessonIsAvailable($lesson);
             $lessons[$index]['sequence_locked'] = $lockedBySequence ? 1 : 0;
             $lessons[$index]['schedule_locked'] = $lockedBySchedule ? 1 : 0;
@@ -955,6 +957,10 @@ class Education
         }
         if (!self::lessonIsAvailable($lesson)) {
             return false;
+        }
+        $course = self::findCourse((int) $lesson['course_id']);
+        if ($course && empty($course['playlist_required'])) {
+            return true;
         }
 
         foreach (self::lessonsForCourse((int) $lesson['course_id'], $userId) as $courseLesson) {
@@ -1122,9 +1128,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_background, certificate_min_frequency, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, playlist_required, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_background, certificate_min_frequency, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_background, :certificate_min_frequency, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :playlist_required, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_background, :certificate_min_frequency, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -1151,6 +1157,7 @@ class Education
                  starts_at = :starts_at,
                  ends_at = :ends_at,
                  public_enabled = :public_enabled,
+                 playlist_required = :playlist_required,
                  certificate_enabled = :certificate_enabled,
                  certificate_title = :certificate_title,
                  certificate_text = :certificate_text,
@@ -2547,6 +2554,9 @@ class Education
     public static function lessonCompletionRequirements(int $lessonId, int $userId): array
     {
         self::ensureSchema();
+        $lesson = self::findLesson($lessonId);
+        $course = $lesson ? self::findCourse((int) $lesson['course_id']) : null;
+        $requireVideos = !$course || !empty($course['playlist_required']);
 
         $stmt = Database::connection()->prepare(
             'SELECT education_lesson_blocks.id,
@@ -2586,6 +2596,9 @@ class Education
         foreach ($stmt->fetchAll() as $row) {
             $title = trim((string) ($row['title'] ?? '')) ?: (($row['type'] ?? '') === 'assignment' ? 'Tarefa obrigatória' : 'Vídeo obrigatório');
             if (($row['type'] ?? '') === 'video') {
+                if (!$requireVideos) {
+                    continue;
+                }
                 $requirements['required_video_count']++;
                 if (!empty($row['block_video_completed_at'])) {
                     $requirements['watched_video_count']++;
@@ -3257,6 +3270,7 @@ class Education
             'starts_at' => self::nullableDate($data['starts_at'] ?? null),
             'ends_at' => self::nullableDate($data['ends_at'] ?? null),
             'public_enabled' => !empty($data['public_enabled']) ? 1 : 0,
+            'playlist_required' => array_key_exists('playlist_required', $data) ? (!empty($data['playlist_required']) ? 1 : 0) : 1,
             'certificate_enabled' => !empty($data['certificate_enabled']) ? 1 : 0,
             'certificate_title' => self::nullable($data['certificate_title'] ?? null),
             'certificate_text' => self::nullable($data['certificate_text'] ?? null),

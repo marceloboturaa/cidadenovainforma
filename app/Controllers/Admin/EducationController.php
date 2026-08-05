@@ -358,7 +358,8 @@ class EducationController
 
         $lessons = $isEnrollmentPending ? [] : Education::lessonsWithSequenceAccess(
             Education::lessonsForCourse((int) $course['id'], (int) $user['id'], $canManageView),
-            $canManageView
+            $canManageView,
+            !empty($course['playlist_required'])
         );
         $forumTopics = $isEnrollmentPending ? [] : Education::forumTopics((int) $course['id']);
         $courseForms = $isEnrollmentPending ? [] : Education::formsForCourse((int) $course['id']);
@@ -560,10 +561,12 @@ class EducationController
 
         $playlist = Education::lessonsWithSequenceAccess(
             Education::lessonsForCourse((int) $lesson['course_id'], (int) $user['id'], $canManageView),
-            $canManageView
+            $canManageView,
+            !empty($course['playlist_required'])
         );
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
-        $videoWatched = !$hasVideo || $canManageView || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
+        $playlistRequired = !empty($course['playlist_required']);
+        $videoWatched = !$hasVideo || !$playlistRequired || $canManageView || Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id']);
         $lessonForumTopics = Education::forumTopics((int) $lesson['course_id'], (int) $lesson['id']);
         $blocks = $isLocked ? [] : Education::blocksForLesson((int) $lesson['id'], $canManageView, (int) $user['id']);
         $assignmentBlocks = array_values(array_filter($blocks, fn (array $block): bool => ($block['type'] ?? '') === 'assignment'));
@@ -763,7 +766,8 @@ class EducationController
             Session::flash('error', 'Esta aula ao vivo precisa da validação de presença pelo professor.');
             redirect('/admin/education/lesson?id=' . $lesson['id']);
         }
-        if (($_POST['completed'] ?? '') === '1' && !$canManage && trim((string) ($lesson['video_url'] ?? '')) !== '' && !Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id'])) {
+        $playlistRequired = !empty($course['playlist_required']);
+        if (($_POST['completed'] ?? '') === '1' && !$canManage && $playlistRequired && trim((string) ($lesson['video_url'] ?? '')) !== '' && !Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id'])) {
             Session::flash('error', 'Assista ao vídeo completo antes de concluir a aula.');
             redirect('/admin/education/lesson?id=' . $lesson['id']);
         }

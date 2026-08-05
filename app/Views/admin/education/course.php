@@ -745,6 +745,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
             </header>
             <form method="post" action="<?= e(url('/admin/education/course/update?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-modal-form">
                 <?= csrf_field() ?>
+                <input type="hidden" name="public_enabled" value="<?= e((string) ($course['public_enabled'] ?? 0)) ?>">
                 <?php if ($canAssignTeacher): ?>
                     <div>
                         <label class="form-label">Professor responsável</label>
@@ -776,6 +777,14 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                     <label class="form-label">Resumo / introdução</label>
                     <textarea class="form-control" name="summary" rows="6"><?= e($course['summary'] ?? '') ?></textarea>
                 </div>
+                <input type="hidden" name="playlist_required" value="0">
+                <label class="education-public-toggle education-playlist-required-toggle">
+                    <input type="checkbox" name="playlist_required" value="1" <?= checked((string) ($course['playlist_required'] ?? '1'), '1') ?>>
+                    <span>
+                        <strong>Exigir playlist para concluir o curso</strong>
+                        <small>Quando desmarcado, o aluno pode abrir aulas fora da ordem e concluir sem assistir todos os vídeos. Tarefas obrigatórias continuam exigidas.</small>
+                    </span>
+                </label>
                 <footer class="split-actions">
                     <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar curso</button>
                     <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>

@@ -41,6 +41,14 @@ $canAssignTeacher = $canAssignTeacher ?? false;
         <?php elseif ($isEdit): ?>
             <input type="hidden" name="public_enabled" value="<?= e((string) ($editing['public_enabled'] ?? 0)) ?>">
         <?php endif; ?>
+        <input type="hidden" name="playlist_required" value="0">
+        <label class="education-public-toggle education-playlist-required-toggle">
+            <input type="checkbox" name="playlist_required" value="1" <?= checked((string) ($editing['playlist_required'] ?? '1'), '1') ?>>
+            <span>
+                <strong>Exigir playlist para concluir o curso</strong>
+                <small>Quando desmarcado, o aluno pode abrir aulas fora da ordem e concluir sem assistir todos os vídeos. Tarefas obrigatórias continuam exigidas.</small>
+            </span>
+        </label>
         <details class="education-course-advanced">
             <summary><i class="bi bi-sliders" aria-hidden="true"></i>Detalhes opcionais</summary>
             <div class="education-course-advanced-grid">
@@ -141,6 +149,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                         <?php if (!empty($course['public_enabled'])): ?>
                             <span class="state-pill is-active">Público</span>
                         <?php endif; ?>
+                        <span class="state-pill <?= !empty($course['playlist_required']) ? 'is-active' : 'is-muted' ?>"><?= !empty($course['playlist_required']) ? 'Playlist obrigatória' : 'Playlist livre' ?></span>
                     </div>
                     <dl class="admin-list-meta">
                         <div><dt>Professor</dt><dd><?= e($course['teacher_name'] ?? '-') ?></dd></div>

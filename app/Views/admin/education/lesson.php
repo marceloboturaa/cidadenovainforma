@@ -17,6 +17,7 @@ $lessonForms = $lessonForms ?? [];
 $assignmentSubmissionsByBlock = $assignmentSubmissionsByBlock ?? [];
 $completionRequirements = $completionRequirements ?? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0];
 $requirementsComplete = !empty($completionRequirements['complete']);
+$playlistRequired = !empty($course['playlist_required']);
 $playlist = $playlist ?? [];
 $modules = $modules ?? [];
 $playlistByModule = [];
@@ -334,7 +335,7 @@ $embed = function (?string $url): ?string {
             $documentDownloadUrl = $documentFilePath !== '' ? url('/admin/education/block/download?id=' . $block['id']) : '';
             ?>
             <?php $blockHidden = empty($block['active']); ?>
-            <?php $blockRequired = !empty($block['required']); ?>
+            <?php $blockRequired = !empty($block['required']) && ($type !== 'video' || $playlistRequired); ?>
             <?php $blockVideoWatched = !empty($block['block_video_completed_at']); ?>
             <section class="panel education-block-card <?= $isDocumentBlock ? 'education-document-card' : '' ?> <?= $blockHidden ? 'is-hidden-block' : '' ?>">
                 <div class="education-block-heading">
