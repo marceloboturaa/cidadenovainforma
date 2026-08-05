@@ -69,19 +69,19 @@ $statusLabels = [
                             <strong><?= e($student['name']) ?></strong>
                             <small><?= e($student['email']) ?></small>
                         </div>
-                        <span>
+                        <span class="student-report-metric metric-frequency">
                             <strong><?= e((string) ($student['frequency'] ?? 0)) ?>%</strong>
                             <small><?= e((string) ($student['present_count'] ?? 0)) ?> presenca(s), <?= e((string) ($student['absent_count'] ?? 0)) ?> falta(s), <?= e((string) ($student['justified_count'] ?? 0)) ?> justificada(s)</small>
                         </span>
-                        <span>
+                        <span class="student-report-metric metric-lessons">
                             <strong><?= e((string) ($student['completed_lessons'] ?? 0)) ?>/<?= e((string) ($student['lesson_count'] ?? 0)) ?></strong>
                             <small><?= e((string) ($student['progress_percent'] ?? 0)) ?>% concluido</small>
                         </span>
-                        <span>
+                        <span class="student-report-metric metric-activities">
                             <strong><?= e((string) $activityDone) ?>/<?= e((string) $activityTotal) ?></strong>
                             <small><?= e((string) $activityPercent) ?>% feito</small>
                         </span>
-                        <span>
+                        <span class="student-report-metric metric-correction">
                             <strong><?= e((string) ($student['activity_corrected'] ?? 0)) ?> corrigida(s)</strong>
                             <small><?= e((string) ($student['activity_pending_correction'] ?? 0)) ?> aguardando</small>
                         </span>
@@ -92,8 +92,9 @@ $statusLabels = [
                                 <?php
                                 $done = !empty($activity['done']);
                                 $status = (string) ($activity['correction_status'] ?? '');
+                                $statusClass = in_array($status, ['corrected', 'redo', 'pending'], true) ? $status : 'none';
                                 ?>
-                                <article class="<?= $done ? 'is-done' : 'is-pending' ?>">
+                                <article class="<?= $done ? 'is-done' : 'is-pending' ?> status-<?= e($statusClass) ?>">
                                     <div>
                                         <strong><?= e($activity['title']) ?></strong>
                                         <small><?= e(($activity['type'] ?? '') === 'form' ? 'Formulario' : 'Tarefa') ?><?= !empty($activity['lesson_title']) ? ' - ' . e($activity['lesson_title']) : '' ?></small>

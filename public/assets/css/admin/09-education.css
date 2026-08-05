@@ -2228,6 +2228,42 @@
     gap: 16px;
 }
 
+.education-student-report-summary div:nth-child(1) {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.education-student-report-summary div:nth-child(1) strong {
+    color: #1d4ed8;
+}
+
+.education-student-report-summary div:nth-child(2) {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.education-student-report-summary div:nth-child(2) strong {
+    color: #15803d;
+}
+
+.education-student-report-summary div:nth-child(3) {
+    border-color: #ddd6fe;
+    background: #f5f3ff;
+}
+
+.education-student-report-summary div:nth-child(3) strong {
+    color: #6d28d9;
+}
+
+.education-student-report-summary div:nth-child(4) {
+    border-color: #fed7aa;
+    background: #fff7ed;
+}
+
+.education-student-report-summary div:nth-child(4) strong {
+    color: #c2410c;
+}
+
 .education-student-report-table {
     display: grid;
     gap: 8px;
@@ -2249,7 +2285,8 @@
 }
 
 .education-student-report-head {
-    background: #f1f5f9;
+    border-color: #dbeafe;
+    background: #f8fbff;
     color: var(--muted);
     font-size: 0.78rem;
     font-weight: 900;
@@ -2264,6 +2301,11 @@
     cursor: pointer;
     padding: 12px;
     list-style: none;
+}
+
+.education-student-report-item[open] {
+    border-color: #c7d2fe;
+    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08);
 }
 
 .education-student-report-item summary::-webkit-details-marker {
@@ -2281,6 +2323,49 @@
 
 .education-student-report-row summary > span strong {
     color: var(--ink);
+}
+
+.student-report-metric {
+    min-height: 58px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+
+.student-report-metric.metric-frequency {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.student-report-metric.metric-frequency strong {
+    color: #15803d;
+}
+
+.student-report-metric.metric-lessons {
+    border-color: #c7d2fe;
+    background: #eef2ff;
+}
+
+.student-report-metric.metric-lessons strong {
+    color: #4338ca;
+}
+
+.student-report-metric.metric-activities {
+    border-color: #fed7aa;
+    background: #fff7ed;
+}
+
+.student-report-metric.metric-activities strong {
+    color: #c2410c;
+}
+
+.student-report-metric.metric-correction {
+    border-color: #fbcfe8;
+    background: #fdf2f8;
+}
+
+.student-report-metric.metric-correction strong {
+    color: #be185d;
 }
 
 .education-student-activity-list {
@@ -2306,7 +2391,24 @@
 }
 
 .education-student-activity-list article.is-pending {
+    border-color: #e5e7eb;
     border-style: dashed;
+    background: #f8fafc;
+}
+
+.education-student-activity-list article.status-corrected {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.education-student-activity-list article.status-redo {
+    border-color: #fecdd3;
+    background: #fff1f2;
+}
+
+.education-student-activity-list article.status-pending.is-done {
+    border-color: #fde68a;
+    background: #fffbeb;
 }
 
 .education-player-nav {
