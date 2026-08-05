@@ -354,15 +354,19 @@ class Education
             'CREATE TABLE IF NOT EXISTS education_forum_replies (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 topic_id BIGINT UNSIGNED NOT NULL,
+                parent_reply_id BIGINT UNSIGNED NULL,
                 user_id BIGINT UNSIGNED NOT NULL,
                 body TEXT NOT NULL,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
                 updated_at TIMESTAMP NULL,
+                INDEX idx_education_forum_replies_parent (parent_reply_id),
                 CONSTRAINT fk_education_replies_topic FOREIGN KEY (topic_id) REFERENCES education_forum_topics(id) ON DELETE CASCADE,
+                CONSTRAINT fk_education_replies_parent FOREIGN KEY (parent_reply_id) REFERENCES education_forum_replies(id) ON DELETE CASCADE,
                 CONSTRAINT fk_education_replies_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+        self::ensureColumn('education_forum_replies', 'parent_reply_id', 'BIGINT UNSIGNED NULL AFTER topic_id');
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS certificate_batches (
@@ -2726,9 +2730,12 @@ class Education
         $placeholders = implode(',', array_fill(0, count($topicIds), '?'));
         $stmt = Database::connection()->prepare(
             'SELECT education_forum_replies.*,
-                    users.name AS user_name
+                    users.name AS user_name,
+                    parent_users.name AS parent_user_name
              FROM education_forum_replies
              INNER JOIN users ON users.id = education_forum_replies.user_id
+             LEFT JOIN education_forum_replies parent_replies ON parent_replies.id = education_forum_replies.parent_reply_id
+             LEFT JOIN users parent_users ON parent_users.id = parent_replies.user_id
              WHERE education_forum_replies.topic_id IN (' . $placeholders . ')
                ' . ($includeHidden ? '' : 'AND education_forum_replies.active = 1') . '
              ORDER BY education_forum_replies.created_at ASC, education_forum_replies.id ASC'
@@ -2771,9 +2778,11 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'SELECT education_forum_replies.*, users.name AS user_name
+            'SELECT education_forum_replies.*, users.name AS user_name, parent_users.name AS parent_user_name
              FROM education_forum_replies
              INNER JOIN users ON users.id = education_forum_replies.user_id
+             LEFT JOIN education_forum_replies parent_replies ON parent_replies.id = education_forum_replies.parent_reply_id
+             LEFT JOIN users parent_users ON parent_users.id = parent_replies.user_id
              WHERE education_forum_replies.topic_id = :topic_id
                AND education_forum_replies.active = 1
              ORDER BY education_forum_replies.created_at ASC, education_forum_replies.id ASC'
@@ -2788,8 +2797,8 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO education_forum_replies (topic_id, user_id, body, active, created_at, updated_at)
-             VALUES (:topic_id, :user_id, :body, 1, NOW(), NOW())'
+            'INSERT INTO education_forum_replies (topic_id, parent_reply_id, user_id, body, active, created_at, updated_at)
+             VALUES (:topic_id, :parent_reply_id, :user_id, :body, 1, NOW(), NOW())'
         );
         $stmt->execute(self::replyPayload($data));
 
@@ -3474,6 +3483,7 @@ class Education
     {
         return [
             'topic_id' => (int) ($data['topic_id'] ?? 0),
+            'parent_reply_id' => !empty($data['parent_reply_id']) ? (int) $data['parent_reply_id'] : null,
             'user_id' => (int) ($data['user_id'] ?? 0),
             'body' => trim((string) ($data['body'] ?? '')),
         ];

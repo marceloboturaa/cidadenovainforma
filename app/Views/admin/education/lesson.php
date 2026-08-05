@@ -703,7 +703,22 @@ $embed = function (?string $url): ?string {
                                                     <?php if ($replyHidden): ?>
                                                         <span class="education-hidden-badge">Oculto para estudantes</span>
                                                     <?php endif; ?>
+                                                    <?php if (!empty($reply['parent_user_name'])): ?>
+                                                        <span class="education-reply-parent">Em resposta a <?= e($reply['parent_user_name']) ?></span>
+                                                    <?php endif; ?>
                                                 </strong>
+                                                <div class="education-forum-reply-actions">
+                                                <?php if (!$studentPreview && !$replyHidden): ?>
+                                                    <details class="education-forum-reply-interaction">
+                                                        <summary class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</summary>
+                                                        <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form is-inline-reply">
+                                                            <?= csrf_field() ?>
+                                                            <input type="hidden" name="parent_reply_id" value="<?= e((string) $reply['id']) ?>">
+                                                            <textarea class="form-control" name="body" rows="2" placeholder="Responder este comentario" required></textarea>
+                                                            <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar</button>
+                                                        </form>
+                                                    </details>
+                                                <?php endif; ?>
                                                 <?php if ($canManage): ?>
                                                     <?php if ($replyHidden): ?>
                                                         <form class="inline-form" method="post" action="<?= e(url('/admin/education/forum/reply/restore?reply_id=' . $reply['id'])) ?>">
@@ -717,6 +732,7 @@ $embed = function (?string $url): ?string {
                                                         </form>
                                                     <?php endif; ?>
                                                 <?php endif; ?>
+                                                </div>
                                             </div>
                                             <div><?= article_html($reply['body'] ?? '') ?></div>
                                         </div>

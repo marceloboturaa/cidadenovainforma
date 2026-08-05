@@ -454,6 +454,41 @@
     overflow-wrap: anywhere;
 }
 
+.education-reply-parent {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.education-forum-reply-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.education-forum-reply-interaction {
+    position: relative;
+}
+
+.education-forum-reply-interaction summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.education-forum-reply-interaction summary::-webkit-details-marker {
+    display: none;
+}
+
+.education-forum-reply-form.is-inline-reply {
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: min(620px, 78vw);
+    margin-top: 8px;
+    padding-left: 0;
+}
+
 .education-forum-reply-card.reply-tone-1 {
     border-color: #bfdbfe;
     background: #eff6ff;

@@ -1030,8 +1030,18 @@ class EducationController
             redirect('/admin/education/course?id=' . $course['id'] . '#course-forum');
         }
 
+        $parentReplyId = filter_input(INPUT_POST, 'parent_reply_id', FILTER_VALIDATE_INT) ?: null;
+        if ($parentReplyId) {
+            $parentReply = Education::findForumReply($parentReplyId);
+            if (!$parentReply || (int) $parentReply['topic_id'] !== (int) $topic['id']) {
+                Session::flash('error', 'ComentÃ¡rio original nÃ£o encontrado neste fÃ³rum.');
+                redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
+            }
+        }
+
         Education::createForumReply([
             'topic_id' => $topic['id'],
+            'parent_reply_id' => $parentReplyId,
             'user_id' => $user['id'],
             'body' => $body,
         ]);

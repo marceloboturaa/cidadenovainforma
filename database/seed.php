@@ -793,12 +793,15 @@ $pdo->exec(
     'CREATE TABLE IF NOT EXISTS education_forum_replies (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         topic_id BIGINT UNSIGNED NOT NULL,
+        parent_reply_id BIGINT UNSIGNED NULL,
         user_id BIGINT UNSIGNED NOT NULL,
         body TEXT NOT NULL,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
+        INDEX idx_education_forum_replies_parent (parent_reply_id),
         CONSTRAINT fk_education_replies_topic FOREIGN KEY (topic_id) REFERENCES education_forum_topics(id) ON DELETE CASCADE,
+        CONSTRAINT fk_education_replies_parent FOREIGN KEY (parent_reply_id) REFERENCES education_forum_replies(id) ON DELETE CASCADE,
         CONSTRAINT fk_education_replies_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB'
 );
