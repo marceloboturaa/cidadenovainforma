@@ -692,6 +692,7 @@ $embed = function (?string $url): ?string {
                                     </form>
                                 <?php endif; ?>
                             </div>
+                            <?php require __DIR__ . '/partials/forum-replies.php'; $topicReplies = []; ?>
                             <?php if ($topicReplies): ?>
                                 <div class="education-forum-replies">
                                     <?php foreach ($topicReplies as $replyIndex => $reply): ?>

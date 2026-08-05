@@ -1050,6 +1050,48 @@ class EducationController
         redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
     }
 
+    public function updateForumReply(): void
+    {
+        Middleware::auth();
+        $this->validateCsrf('/admin/education');
+        $user = current_user();
+
+        $replyId = filter_input(INPUT_GET, 'reply_id', FILTER_VALIDATE_INT);
+        $reply = $replyId ? Education::findForumReply($replyId, true) : null;
+        if (!$reply || empty($reply['course_id'])) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $course = Education::findCourse((int) $reply['course_id']);
+        $canManage = $this->canManageCourse($course);
+        if ($this->isEnrollmentPendingForCourse($course, (int) $user['id'])) {
+            $this->redirectPendingEnrollment((int) $reply['course_id']);
+        }
+        if (!$course || !Education::userCanAccessCourse((int) $course['id'], (int) $user['id'], $canManage)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+        if (!$canManage && (int) $reply['user_id'] !== (int) $user['id']) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $body = trim((string) ($_POST['body'] ?? ''));
+        if ($body === '') {
+            Session::flash('error', 'Escreva a resposta antes de salvar.');
+            redirect(!empty($reply['lesson_id']) ? '/admin/education/lesson?id=' . $reply['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $reply['course_id'] . '#course-forum');
+        }
+
+        Education::updateForumReply((int) $reply['id'], $body);
+
+        Session::flash('success', 'Resposta atualizada.');
+        redirect(!empty($reply['lesson_id']) ? '/admin/education/lesson?id=' . $reply['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $reply['course_id'] . '#course-forum');
+    }
+
     public function storeForm(): void
     {
         Middleware::auth();

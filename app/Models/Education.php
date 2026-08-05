@@ -2809,6 +2809,27 @@ class Education
         return (int) Database::connection()->lastInsertId();
     }
 
+    public static function updateForumReply(int $replyId, string $body): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('UPDATE education_forum_replies SET body = :body, updated_at = NOW() WHERE id = :id')
+            ->execute([
+                'body' => trim($body),
+                'id' => $replyId,
+            ]);
+
+        Database::connection()
+            ->prepare(
+                'UPDATE education_forum_topics
+                 INNER JOIN education_forum_replies ON education_forum_replies.topic_id = education_forum_topics.id
+                 SET education_forum_topics.updated_at = NOW()
+                 WHERE education_forum_replies.id = :id'
+            )
+            ->execute(['id' => $replyId]);
+    }
+
     public static function hideForumReply(int $replyId): void
     {
         self::setForumReplyActive($replyId, false);

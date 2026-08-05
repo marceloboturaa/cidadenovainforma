@@ -206,6 +206,7 @@ $router->get('/admin/education/lesson', [EducationController::class, 'lesson']);
 $router->post('/admin/education/forum/topic', [EducationController::class, 'storeForumTopic']);
 $router->post('/admin/education/forum/topic/update', [EducationController::class, 'updateForumTopic']);
 $router->post('/admin/education/forum/reply', [EducationController::class, 'storeForumReply']);
+$router->post('/admin/education/forum/reply/update', [EducationController::class, 'updateForumReply']);
 $router->post('/admin/education/forum/reply/delete', [EducationController::class, 'deleteForumReply']);
 $router->post('/admin/education/forum/reply/restore', [EducationController::class, 'restoreForumReply']);
 $router->post('/admin/education/forum/delete', [EducationController::class, 'deleteForumTopic']);
