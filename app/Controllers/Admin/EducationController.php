@@ -1024,6 +1024,25 @@ class EducationController
             return;
         }
 
+        $lesson = null;
+        if (!empty($topic['lesson_id'])) {
+            $lesson = Education::findLesson((int) $topic['lesson_id']);
+            if (!$lesson || (int) ($lesson['course_id'] ?? 0) !== (int) $course['id']) {
+                http_response_code(404);
+                View::render('errors/404');
+                return;
+            }
+
+            if (!$canManage && (!empty($lesson['locked']) || !$this->lessonIsAvailable($lesson))) {
+                Session::flash('error', 'Esta aula ainda nao esta liberada para responder a atividade.');
+                redirect('/admin/education/course?id=' . $course['id']);
+            }
+            if (!$canManage && !Education::userCanAccessLessonInSequence((int) $lesson['id'], (int) $user['id'], false)) {
+                Session::flash('error', 'Conclua a aula anterior antes de responder esta atividade.');
+                redirect('/admin/education/course?id=' . $course['id']);
+            }
+        }
+
         $body = trim((string) ($_POST['body'] ?? ''));
         if ($body === '') {
             Session::flash('error', 'Escreva a resposta antes de enviar.');
@@ -1046,7 +1065,13 @@ class EducationController
             'body' => $body,
         ]);
 
-        Session::flash('success', 'Resposta publicada.');
+        $completedByForum = false;
+        if ($lesson && !$canManage && ($lesson['attendance_mode'] ?? 'video') !== 'manual') {
+            Education::markLesson((int) $lesson['id'], (int) $user['id'], true);
+            $completedByForum = true;
+        }
+
+        Session::flash('success', $completedByForum ? 'Resposta publicada e atividade concluida na playlist.' : 'Resposta publicada.');
         redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
     }
 
