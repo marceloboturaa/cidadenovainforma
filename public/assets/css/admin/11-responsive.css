@@ -334,6 +334,27 @@
         text-align: center;
     }
 
+    .education-document-card {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "heading"
+            "content"
+            "footer";
+    }
+
+    .education-document-card .education-block-text img {
+        max-width: min(260px, 100%);
+    }
+
+    .education-document-footer {
+        min-height: 0;
+    }
+
+    .education-document-actions,
+    .education-document-actions .btn {
+        width: 100%;
+    }
+
     .education-player-nav > a:last-child,
     .education-player-nav > a:first-child {
         justify-self: stretch;

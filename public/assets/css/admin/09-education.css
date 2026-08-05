@@ -2493,6 +2493,84 @@
     gap: 14px;
 }
 
+.education-document-card {
+    grid-template-columns: minmax(150px, 240px) minmax(0, 1fr);
+    grid-template-areas:
+        "heading heading"
+        "content footer";
+    align-items: start;
+    gap: 16px 20px;
+    border-color: #dbeafe;
+    background:
+        linear-gradient(90deg, rgba(239, 246, 255, 0.9) 0, rgba(255, 255, 255, 0) 38%),
+        #ffffff;
+}
+
+.education-document-card .education-block-heading {
+    grid-area: heading;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.education-document-card .education-block-text {
+    grid-area: content;
+    display: grid;
+    gap: 10px;
+    max-width: 100%;
+}
+
+.education-document-card .education-block-text p {
+    margin: 0;
+}
+
+.education-document-card .education-block-text img {
+    display: block;
+    width: 100%;
+    max-width: 240px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: top center;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+}
+
+.education-document-footer {
+    grid-area: footer;
+    align-self: stretch;
+    display: grid;
+    align-content: space-between;
+    gap: 18px;
+    min-height: 180px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-document-footer strong,
+.education-document-footer span {
+    display: block;
+}
+
+.education-document-footer strong {
+    margin-bottom: 6px;
+    color: var(--ink);
+    font-size: 1rem;
+}
+
+.education-document-footer span {
+    color: #475569;
+    line-height: 1.55;
+}
+
+.education-document-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .education-block-card.is-hidden-block {
     border-style: dashed;
     background: #f8fafc;

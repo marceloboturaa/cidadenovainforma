@@ -321,11 +321,22 @@ $embed = function (?string $url): ?string {
                 default => 'Material da aula',
             };
             $media = $embed($block['media_url'] ?? '');
+            $isDocumentBlock = $type === 'file';
+            $documentFilePath = (string) ($block['file_path'] ?? '');
+            $documentMediaUrl = (string) ($block['media_url'] ?? '');
+            $documentSource = $documentFilePath !== '' ? $documentFilePath : $documentMediaUrl;
+            $documentExtension = strtolower(pathinfo(parse_url($documentSource, PHP_URL_PATH) ?: $documentSource, PATHINFO_EXTENSION));
+            $documentExtensionLabel = $documentExtension !== '' ? strtoupper($documentExtension) : 'Arquivo';
+            $documentCanPreview = $documentMediaUrl !== '' || in_array($documentExtension, ['pdf', 'gif', 'jpg', 'jpeg', 'png', 'webp', 'csv', 'txt'], true);
+            $documentViewUrl = $documentFilePath !== ''
+                ? url('/admin/education/block/download?id=' . $block['id'] . '&inline=1')
+                : ($documentMediaUrl !== '' ? media_url($documentMediaUrl) : '');
+            $documentDownloadUrl = $documentFilePath !== '' ? url('/admin/education/block/download?id=' . $block['id']) : '';
             ?>
             <?php $blockHidden = empty($block['active']); ?>
             <?php $blockRequired = !empty($block['required']); ?>
             <?php $blockVideoWatched = !empty($block['block_video_completed_at']); ?>
-            <section class="panel education-block-card <?= $blockHidden ? 'is-hidden-block' : '' ?>">
+            <section class="panel education-block-card <?= $isDocumentBlock ? 'education-document-card' : '' ?> <?= $blockHidden ? 'is-hidden-block' : '' ?>">
                 <div class="education-block-heading">
                     <span class="education-block-type">
                         <?php if ($type === 'video'): ?>
@@ -344,6 +355,9 @@ $embed = function (?string $url): ?string {
                     </span>
                     <strong><?= e($blockTitle) ?></strong>
                     <span class="education-block-flags">
+                        <?php if ($isDocumentBlock): ?>
+                            <em><?= e($documentExtensionLabel) ?></em>
+                        <?php endif; ?>
                         <?php if ($blockRequired && in_array($type, ['video', 'assignment'], true)): ?>
                             <em>Obrigatório</em>
                         <?php endif; ?>
@@ -382,12 +396,33 @@ $embed = function (?string $url): ?string {
                     <div class="education-block-text"><?= article_html($block['content']) ?></div>
                 <?php endif; ?>
 
-                <?php if (in_array($type, ['file', 'assignment', 'certificate'], true) && !empty($block['file_path'])): ?>
+                <?php if ($isDocumentBlock): ?>
+                    <div class="education-document-footer">
+                        <div>
+                            <strong>Material de leitura</strong>
+                            <span>Abra em nova aba para consultar sem sair da aula, ou baixe para estudar offline.</span>
+                        </div>
+                        <div class="education-document-actions">
+                            <?php if ($documentCanPreview && $documentViewUrl !== ''): ?>
+                                <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e($documentViewUrl) ?>" target="_blank" rel="noopener">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                    Visualizar
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($documentDownloadUrl !== ''): ?>
+                                <a class="btn btn-primary icon-btn education-download-btn" href="<?= e($documentDownloadUrl) ?>">
+                                    <i class="bi bi-download" aria-hidden="true"></i>
+                                    Baixar
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php elseif (in_array($type, ['assignment', 'certificate'], true) && !empty($block['file_path'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(url('/admin/education/block/download?id=' . $block['id'])) ?>">
                         <i class="bi bi-download" aria-hidden="true"></i>
                         Baixar documento
                     </a>
-                <?php elseif (in_array($type, ['file', 'assignment', 'certificate'], true) && !empty($block['media_url'])): ?>
+                <?php elseif (in_array($type, ['assignment', 'certificate'], true) && !empty($block['media_url'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(media_url($block['media_url'])) ?>" target="_blank" rel="noopener">
                         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                         Abrir documento

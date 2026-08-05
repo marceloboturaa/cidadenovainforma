@@ -708,10 +708,22 @@ class EducationController
             return;
         }
 
-        $downloadName = basename($path);
+        $downloadName = str_replace(['"', "\r", "\n"], '', basename($path));
+        $inline = isset($_GET['inline']);
+        $mime = mime_content_type($path) ?: 'application/octet-stream';
+        $safeInlineMimes = [
+            'application/pdf',
+            'image/gif',
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'text/csv',
+            'text/plain',
+        ];
+
         header('X-Content-Type-Options: nosniff');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . str_replace(['"', "\r", "\n"], '', $downloadName) . '"');
+        header('Content-Type: ' . ($inline && in_array($mime, $safeInlineMimes, true) ? $mime : 'application/octet-stream'));
+        header('Content-Disposition: ' . ($inline && in_array($mime, $safeInlineMimes, true) ? 'inline' : 'attachment') . '; filename="' . $downloadName . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
         exit;
