@@ -1368,6 +1368,91 @@ class EducationController
         ]);
     }
 
+    public function exportStudentReport(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->authorizeAttendance($course);
+
+        [$startDate, $endDate] = $this->attendanceRange();
+        $report = Education::studentReportForCourse((int) $course['id'], $startDate, $endDate);
+        $slug = slugify((string) ($course['title'] ?? 'curso')) ?: 'curso';
+        $statusLabels = [
+            'corrected' => 'Corrigida',
+            'redo' => 'Refazer',
+            'pending' => 'Pendente',
+        ];
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $slug . '-relatorio-alunos.csv"');
+        echo "\xEF\xBB\xBF";
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, [
+            'Curso',
+            'Periodo inicial',
+            'Periodo final',
+            'Aluno',
+            'E-mail',
+            'Frequencia (%)',
+            'Presencas',
+            'Faltas',
+            'Justificadas',
+            'Aulas concluidas',
+            'Total de aulas',
+            'Progresso (%)',
+            'Atividades feitas',
+            'Total de atividades',
+            'Atividades pendentes',
+            'Atividades corrigidas',
+            'Aguardando correcao',
+            'Tipo de atividade',
+            'Atividade',
+            'Aula da atividade',
+            'Situacao da atividade',
+            'Correcao',
+            'Nota',
+            'Atualizada em',
+        ], ';');
+
+        foreach ($report['students'] as $student) {
+            $activities = $student['activities'] ?: [null];
+            foreach ($activities as $activity) {
+                $done = !empty($activity['done']);
+                $status = (string) ($activity['correction_status'] ?? '');
+                fputcsv($output, [
+                    $course['title'] ?? '',
+                    $startDate,
+                    $endDate,
+                    $student['name'] ?? '',
+                    $student['email'] ?? '',
+                    (int) ($student['frequency'] ?? 0),
+                    (int) ($student['present_count'] ?? 0),
+                    (int) ($student['absent_count'] ?? 0),
+                    (int) ($student['justified_count'] ?? 0),
+                    (int) ($student['completed_lessons'] ?? 0),
+                    (int) ($student['lesson_count'] ?? 0),
+                    (int) ($student['progress_percent'] ?? 0),
+                    (int) ($student['activity_done'] ?? 0),
+                    (int) ($student['activity_total'] ?? 0),
+                    (int) ($student['activity_pending'] ?? 0),
+                    (int) ($student['activity_corrected'] ?? 0),
+                    (int) ($student['activity_pending_correction'] ?? 0),
+                    $activity ? (($activity['type'] ?? '') === 'form' ? 'Formulario' : 'Tarefa') : '',
+                    $activity['title'] ?? '',
+                    $activity['lesson_title'] ?? '',
+                    $activity ? ($done ? 'Feita' : 'Pendente') : '',
+                    $activity ? ($statusLabels[$status] ?? ($done ? 'Enviada' : '-')) : '',
+                    $activity['grade'] ?? '',
+                    !empty($activity['updated_at']) ? date('d/m/Y', strtotime($activity['updated_at'])) : '',
+                ], ';');
+            }
+        }
+
+        fclose($output);
+        exit;
+    }
+
     public function updateCertificate(): void
     {
         Middleware::auth();

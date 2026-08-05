@@ -15,6 +15,7 @@ $statusLabels = [
         <h1><?= e($course['title']) ?></h1>
     </div>
     <div class="heading-actions">
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/students/report/export?id=' . $course['id'] . '&start_date=' . $startDate . '&end_date=' . $endDate)) ?>"><i class="bi bi-filetype-csv" aria-hidden="true"></i>Exportar CSV</a>
         <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance/report?id=' . $course['id'] . '&start_date=' . $startDate . '&end_date=' . $endDate)) ?>"><i class="bi bi-bar-chart" aria-hidden="true"></i>Relatorio de chamada</a>
         <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Fazer chamada</a>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar ao curso</a>
