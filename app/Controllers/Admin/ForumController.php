@@ -110,8 +110,15 @@ class ForumController
             redirect('/admin/forum/topic?id=' . $topic['id']);
         }
 
+        $parentReplyId = filter_input(INPUT_POST, 'parent_reply_id', FILTER_VALIDATE_INT) ?: null;
+        if ($parentReplyId && !Forum::findReplyInTopic($parentReplyId, (int) $topic['id'])) {
+            Session::flash('error', 'ComentÃ¡rio original nÃ£o encontrado neste tÃ³pico.');
+            redirect('/admin/forum/topic?id=' . $topic['id']);
+        }
+
         $replyId = Forum::createReply([
             'topic_id' => $topic['id'],
+            'parent_reply_id' => $parentReplyId,
             'user_id' => $userId,
             'body' => $body,
         ]);

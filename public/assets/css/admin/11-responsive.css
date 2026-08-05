@@ -592,6 +592,11 @@
         gap: 9px;
     }
 
+    .forum-reply-branch.is-child-reply {
+        margin-left: 14px;
+        padding-left: 10px;
+    }
+
     .forum-avatar {
         width: 36px;
         height: 36px;

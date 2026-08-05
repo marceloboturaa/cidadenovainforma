@@ -1,3 +1,61 @@
+<?php
+$repliesByParent = [];
+foreach ($replies as $reply) {
+    $parentId = !empty($reply['parent_reply_id']) ? (int) $reply['parent_reply_id'] : 0;
+    $repliesByParent[$parentId][] = $reply;
+}
+
+$renderForumReply = function (array $reply, int $depth = 0) use (&$renderForumReply, $repliesByParent, $attachments, $topic, $canPost, $canModerate): void {
+    $replyId = (int) $reply['id'];
+    ?>
+    <div class="forum-reply-branch <?= $depth > 0 ? 'is-child-reply' : '' ?>">
+        <article class="forum-message">
+            <div class="forum-avatar"><?= e(strtoupper(substr((string) ($reply['user_name'] ?? 'U'), 0, 1))) ?></div>
+            <div class="forum-message-body">
+                <header>
+                    <div>
+                        <strong><?= e($reply['user_name']) ?></strong>
+                        <span><?= e((string) $reply['created_at']) ?></span>
+                    </div>
+                    <div class="forum-message-actions">
+                        <?php if ($canPost): ?>
+                            <button
+                                class="forum-text-button"
+                                type="button"
+                                data-modal-open="forum-reply-modal"
+                                data-reply-parent="<?= e((string) $replyId) ?>"
+                                data-reply-author="<?= e($reply['user_name']) ?>"
+                            >Responder comentÃ¡rio</button>
+                        <?php endif; ?>
+                        <?php if ($canModerate): ?>
+                            <form method="post" action="<?= e(url('/admin/forum/reply/delete?id=' . $topic['id'] . '&reply_id=' . $replyId)) ?>" onsubmit="return confirm('Remover esta resposta?');">
+                                <?= csrf_field() ?>
+                                <button class="forum-text-button">Remover</button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                </header>
+                <div class="forum-message-text"><?= article_html($reply['body']) ?></div>
+                <?php if (!empty($attachments['replies'][$replyId])): ?>
+                    <div class="forum-attachments">
+                        <?php foreach ($attachments['replies'][$replyId] as $attachment): ?>
+                            <a href="<?= e(url('/admin/forum/attachment?id=' . $attachment['id'])) ?>">
+                                <i class="bi bi-paperclip" aria-hidden="true"></i>
+                                <?= e($attachment['original_name']) ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </article>
+        <?php foreach ($repliesByParent[$replyId] ?? [] as $childReply): ?>
+            <?php $renderForumReply($childReply, $depth + 1); ?>
+        <?php endforeach; ?>
+    </div>
+    <?php
+};
+?>
+
 <div class="forum-heading">
     <div>
         <a class="forum-back-link" href="<?= e(url('/admin/forum/area?area=' . $topic['area_slug'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i> <?= e($topic['area_name']) ?></a>
@@ -16,7 +74,7 @@
             </form>
         <?php endif; ?>
         <?php if ($canPost): ?>
-            <button class="btn btn-primary icon-btn" type="button" data-modal-open="forum-reply-modal">
+            <button class="btn btn-primary icon-btn" type="button" data-modal-open="forum-reply-modal" data-reply-parent="" data-reply-author="">
                 <i class="bi bi-reply" aria-hidden="true"></i>
                 Responder
             </button>
@@ -53,35 +111,8 @@
         <span><?= e((string) count($replies)) ?> resposta(s)</span>
     </div>
 
-    <?php foreach ($replies as $reply): ?>
-        <article class="forum-message">
-            <div class="forum-avatar"><?= e(strtoupper(substr((string) ($reply['user_name'] ?? 'U'), 0, 1))) ?></div>
-            <div class="forum-message-body">
-                <header>
-                    <div>
-                        <strong><?= e($reply['user_name']) ?></strong>
-                        <span><?= e((string) $reply['created_at']) ?></span>
-                    </div>
-                    <?php if ($canModerate): ?>
-                        <form method="post" action="<?= e(url('/admin/forum/reply/delete?id=' . $topic['id'] . '&reply_id=' . $reply['id'])) ?>" onsubmit="return confirm('Remover esta resposta?');">
-                            <?= csrf_field() ?>
-                            <button class="forum-text-button">Remover</button>
-                        </form>
-                    <?php endif; ?>
-                </header>
-                <div class="forum-message-text"><?= article_html($reply['body']) ?></div>
-                <?php if (!empty($attachments['replies'][(int) $reply['id']])): ?>
-                    <div class="forum-attachments">
-                        <?php foreach ($attachments['replies'][(int) $reply['id']] as $attachment): ?>
-                            <a href="<?= e(url('/admin/forum/attachment?id=' . $attachment['id'])) ?>">
-                                <i class="bi bi-paperclip" aria-hidden="true"></i>
-                                <?= e($attachment['original_name']) ?>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </article>
+    <?php foreach ($repliesByParent[0] ?? [] as $reply): ?>
+        <?php $renderForumReply($reply); ?>
     <?php endforeach; ?>
 
     <?php if (!$replies): ?>
@@ -95,7 +126,7 @@
 
 <?php if ($canPost): ?>
     <div class="forum-reply-dock">
-        <button class="btn btn-primary icon-btn" type="button" data-modal-open="forum-reply-modal">
+        <button class="btn btn-primary icon-btn" type="button" data-modal-open="forum-reply-modal" data-reply-parent="" data-reply-author="">
             <i class="bi bi-reply" aria-hidden="true"></i>
             Responder tópico
         </button>
@@ -108,11 +139,13 @@
                 <div>
                     <span>Responder</span>
                     <h2 id="forum-reply-title"><?= e($topic['title']) ?></h2>
+                    <p class="forum-reply-context" data-reply-context hidden></p>
                 </div>
                 <button type="button" class="forum-icon-button" data-modal-close aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
             </header>
             <form method="post" action="<?= e(url('/admin/forum/reply?id=' . $topic['id'])) ?>" enctype="multipart/form-data" class="forum-compose-form">
                 <?= csrf_field() ?>
+                <input type="hidden" name="parent_reply_id" value="" data-reply-parent-input>
                 <label class="forum-compose-wide">
                     <span>Mensagem</span>
                     <textarea class="form-control" name="body" rows="7" data-tinymce required autofocus></textarea>

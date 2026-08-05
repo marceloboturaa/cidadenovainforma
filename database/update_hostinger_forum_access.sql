@@ -104,14 +104,20 @@ CREATE TABLE IF NOT EXISTS forum_topics (
 CREATE TABLE IF NOT EXISTS forum_replies (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     topic_id BIGINT UNSIGNED NOT NULL,
+    parent_reply_id BIGINT UNSIGNED NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     body TEXT NOT NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
+    INDEX idx_forum_replies_parent (parent_reply_id),
     CONSTRAINT fk_forum_replies_topic FOREIGN KEY (topic_id) REFERENCES forum_topics(id) ON DELETE CASCADE,
+    CONSTRAINT fk_forum_replies_parent FOREIGN KEY (parent_reply_id) REFERENCES forum_replies(id) ON DELETE CASCADE,
     CONSTRAINT fk_forum_replies_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+ALTER TABLE forum_replies
+    ADD COLUMN IF NOT EXISTS parent_reply_id BIGINT UNSIGNED NULL AFTER topic_id;
 
 CREATE TABLE IF NOT EXISTS forum_attachments (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

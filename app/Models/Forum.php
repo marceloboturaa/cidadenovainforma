@@ -80,15 +80,19 @@ class Forum
             'CREATE TABLE IF NOT EXISTS forum_replies (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 topic_id BIGINT UNSIGNED NOT NULL,
+                parent_reply_id BIGINT UNSIGNED NULL,
                 user_id BIGINT UNSIGNED NOT NULL,
                 body TEXT NOT NULL,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
                 updated_at TIMESTAMP NULL,
+                INDEX idx_forum_replies_parent (parent_reply_id),
                 CONSTRAINT fk_forum_replies_topic FOREIGN KEY (topic_id) REFERENCES forum_topics(id) ON DELETE CASCADE,
+                CONSTRAINT fk_forum_replies_parent FOREIGN KEY (parent_reply_id) REFERENCES forum_replies(id) ON DELETE CASCADE,
                 CONSTRAINT fk_forum_replies_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+        self::ensureColumn('forum_replies', 'parent_reply_id', 'BIGINT UNSIGNED NULL AFTER topic_id');
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS forum_attachments (
@@ -232,6 +236,22 @@ class Forum
         return $stmt->fetchAll();
     }
 
+    public static function findReplyInTopic(int $replyId, int $topicId): ?array
+    {
+        self::ensureSchema();
+        $stmt = Database::connection()->prepare(
+            'SELECT *
+             FROM forum_replies
+             WHERE id = :id
+               AND topic_id = :topic_id
+               AND active = 1
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $replyId, 'topic_id' => $topicId]);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function attachmentsForTopic(int $topicId): array
     {
         self::ensureSchema();
@@ -323,11 +343,12 @@ class Forum
     {
         self::ensureSchema();
         $stmt = Database::connection()->prepare(
-            'INSERT INTO forum_replies (topic_id, user_id, body, active, created_at, updated_at)
-             VALUES (:topic_id, :user_id, :body, 1, NOW(), NOW())'
+            'INSERT INTO forum_replies (topic_id, parent_reply_id, user_id, body, active, created_at, updated_at)
+             VALUES (:topic_id, :parent_reply_id, :user_id, :body, 1, NOW(), NOW())'
         );
         $stmt->execute([
             'topic_id' => (int) $data['topic_id'],
+            'parent_reply_id' => !empty($data['parent_reply_id']) ? (int) $data['parent_reply_id'] : null,
             'user_id' => (int) $data['user_id'],
             'body' => trim((string) $data['body']),
         ]);
@@ -376,8 +397,21 @@ class Forum
     {
         self::ensureSchema();
         Database::connection()
-            ->prepare('UPDATE forum_replies SET active = 0, updated_at = NOW() WHERE id = :id')
-            ->execute(['id' => $replyId]);
+            ->prepare('UPDATE forum_replies SET active = 0, updated_at = NOW() WHERE id = :id OR parent_reply_id = :parent_id')
+            ->execute(['id' => $replyId, 'parent_id' => $replyId]);
+    }
+
+    private static function ensureColumn(string $table, string $column, string $definition): void
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return;
+        }
+
+        $db = Database::connection();
+        $stmt = $db->query("SHOW COLUMNS FROM `{$table}` LIKE " . $db->quote($column));
+        if (!$stmt->fetch()) {
+            $db->exec("ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$definition}");
+        }
     }
 
     public static function createCategory(int $areaId, string $name): void

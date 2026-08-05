@@ -92,6 +92,7 @@
                 return;
             }
 
+            setForumReplyContext(modal, button);
             modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('modal-open');
@@ -369,6 +370,25 @@
             modal.setAttribute('aria-hidden', 'true');
         });
         document.body.classList.remove('modal-open');
+    }
+
+    function setForumReplyContext(modal, button) {
+        if (modal.id !== 'forum-reply-modal') {
+            return;
+        }
+
+        const parentInput = modal.querySelector('[data-reply-parent-input]');
+        const context = modal.querySelector('[data-reply-context]');
+        const parentId = button.dataset.replyParent || '';
+        const author = button.dataset.replyAuthor || '';
+
+        if (parentInput) {
+            parentInput.value = parentId;
+        }
+        if (context) {
+            context.hidden = parentId === '';
+            context.textContent = parentId === '' ? '' : `Respondendo comentario de ${author || 'participante'}`;
+        }
     }
 
     function closeAnnouncementPopover() {
