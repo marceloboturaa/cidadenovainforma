@@ -2223,6 +2223,92 @@
     color: var(--muted);
 }
 
+.education-student-report-panel {
+    display: grid;
+    gap: 16px;
+}
+
+.education-student-report-table {
+    display: grid;
+    gap: 8px;
+}
+
+.education-student-report-row,
+.education-student-report-row summary {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(150px, 0.55fr) minmax(120px, 0.45fr) minmax(120px, 0.45fr) minmax(140px, 0.5fr);
+    gap: 10px;
+    align-items: center;
+}
+
+.education-student-report-row {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.education-student-report-head {
+    background: #f1f5f9;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.education-student-report-item {
+    padding: 0;
+}
+
+.education-student-report-item summary {
+    cursor: pointer;
+    padding: 12px;
+    list-style: none;
+}
+
+.education-student-report-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.education-student-report-row strong,
+.education-student-report-row small {
+    display: block;
+}
+
+.education-student-report-row small {
+    color: var(--muted);
+}
+
+.education-student-report-row summary > span strong {
+    color: var(--ink);
+}
+
+.education-student-activity-list {
+    display: grid;
+    gap: 8px;
+    padding: 0 12px 12px;
+}
+
+.education-student-activity-list article {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 110px 110px 90px 95px;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-student-activity-list article.is-done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.education-student-activity-list article.is-pending {
+    border-style: dashed;
+}
+
 .education-player-nav {
     display: grid;
     grid-template-columns: 1fr auto 1fr;

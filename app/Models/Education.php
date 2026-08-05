@@ -1455,6 +1455,272 @@ class Education
         return $stmt->fetchAll();
     }
 
+    public static function studentReportForCourse(int $courseId, string $startDate, string $endDate): array
+    {
+        self::ensureSchema();
+        $db = Database::connection();
+
+        $studentsStmt = $db->prepare(
+            'SELECT users.id,
+                    users.name,
+                    users.email,
+                    education_enrollments.status,
+                    education_enrollments.created_at AS enrolled_at
+             FROM education_enrollments
+             INNER JOIN users ON users.id = education_enrollments.user_id
+             WHERE education_enrollments.course_id = :course_id
+               AND education_enrollments.status = "approved"
+               AND users.active = 1
+             ORDER BY users.name ASC'
+        );
+        $studentsStmt->execute(['course_id' => $courseId]);
+
+        $students = [];
+        foreach ($studentsStmt->fetchAll() as $student) {
+            $students[(int) $student['id']] = array_merge($student, [
+                'lesson_count' => 0,
+                'completed_lessons' => 0,
+                'progress_percent' => 0,
+                'attendance_records' => 0,
+                'present_count' => 0,
+                'absent_count' => 0,
+                'justified_count' => 0,
+                'frequency' => 0,
+                'activity_total' => 0,
+                'activity_done' => 0,
+                'activity_pending' => 0,
+                'activity_corrected' => 0,
+                'activity_pending_correction' => 0,
+                'activities' => [],
+            ]);
+        }
+
+        if (!$students) {
+            return [
+                'students' => [],
+                'activityItems' => [],
+                'summary' => [
+                    'student_count' => 0,
+                    'average_frequency' => 0,
+                    'average_progress' => 0,
+                    'activity_done_percent' => 0,
+                ],
+            ];
+        }
+
+        $lessonStatsStmt = $db->prepare(
+            'SELECT education_enrollments.user_id,
+                    COUNT(DISTINCT education_lessons.id) AS lesson_count,
+                    COUNT(DISTINCT CASE WHEN progress.completed_at IS NOT NULL THEN education_lessons.id END) AS completed_lessons
+             FROM education_enrollments
+             LEFT JOIN education_lessons
+                ON education_lessons.course_id = education_enrollments.course_id
+               AND education_lessons.active = 1
+             LEFT JOIN education_lesson_progress progress
+                ON progress.lesson_id = education_lessons.id
+               AND progress.user_id = education_enrollments.user_id
+             WHERE education_enrollments.course_id = :course_id
+               AND education_enrollments.status = "approved"
+             GROUP BY education_enrollments.user_id'
+        );
+        $lessonStatsStmt->execute(['course_id' => $courseId]);
+        foreach ($lessonStatsStmt->fetchAll() as $row) {
+            $userId = (int) $row['user_id'];
+            if (!isset($students[$userId])) {
+                continue;
+            }
+
+            $lessonCount = (int) ($row['lesson_count'] ?? 0);
+            $completed = (int) ($row['completed_lessons'] ?? 0);
+            $students[$userId]['lesson_count'] = $lessonCount;
+            $students[$userId]['completed_lessons'] = $completed;
+            $students[$userId]['progress_percent'] = $lessonCount > 0 ? (int) round(($completed / $lessonCount) * 100) : 0;
+        }
+
+        $attendanceStmt = $db->prepare(
+            'SELECT user_id,
+                    COUNT(id) AS attendance_records,
+                    SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) AS present_count,
+                    SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) AS absent_count,
+                    SUM(CASE WHEN status = "justified" THEN 1 ELSE 0 END) AS justified_count
+             FROM education_attendance
+             WHERE course_id = :course_id
+               AND attendance_date BETWEEN :start_date AND :end_date
+             GROUP BY user_id'
+        );
+        $attendanceStmt->execute([
+            'course_id' => $courseId,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+        foreach ($attendanceStmt->fetchAll() as $row) {
+            $userId = (int) $row['user_id'];
+            if (!isset($students[$userId])) {
+                continue;
+            }
+
+            $present = (int) ($row['present_count'] ?? 0);
+            $absent = (int) ($row['absent_count'] ?? 0);
+            $justified = (int) ($row['justified_count'] ?? 0);
+            $records = (int) ($row['attendance_records'] ?? 0);
+            $students[$userId]['attendance_records'] = $records;
+            $students[$userId]['present_count'] = $present;
+            $students[$userId]['absent_count'] = $absent;
+            $students[$userId]['justified_count'] = $justified;
+            $students[$userId]['frequency'] = $records > 0 ? (int) round(($present / $records) * 100) : 0;
+        }
+
+        $activityItems = [];
+        $formsStmt = $db->prepare(
+            'SELECT education_forms.id,
+                    education_forms.title,
+                    education_forms.lesson_id,
+                    education_lessons.title AS lesson_title
+             FROM education_forms
+             LEFT JOIN education_lessons ON education_lessons.id = education_forms.lesson_id
+             WHERE education_forms.course_id = :course_id
+               AND education_forms.active = 1
+             ORDER BY COALESCE(education_lessons.sort_order, 0) ASC, education_forms.created_at ASC, education_forms.id ASC'
+        );
+        $formsStmt->execute(['course_id' => $courseId]);
+        foreach ($formsStmt->fetchAll() as $form) {
+            $activityItems['form:' . (int) $form['id']] = [
+                'key' => 'form:' . (int) $form['id'],
+                'type' => 'form',
+                'title' => $form['title'],
+                'lesson_title' => $form['lesson_title'] ?? null,
+            ];
+        }
+
+        $assignmentsStmt = $db->prepare(
+            'SELECT education_lesson_blocks.id,
+                    education_lesson_blocks.title,
+                    education_lessons.title AS lesson_title
+             FROM education_lesson_blocks
+             INNER JOIN education_lessons ON education_lessons.id = education_lesson_blocks.lesson_id
+             WHERE education_lessons.course_id = :course_id
+               AND education_lessons.active = 1
+               AND education_lesson_blocks.active = 1
+               AND education_lesson_blocks.type = "assignment"
+             ORDER BY education_lessons.sort_order ASC, education_lesson_blocks.sort_order ASC, education_lesson_blocks.id ASC'
+        );
+        $assignmentsStmt->execute(['course_id' => $courseId]);
+        foreach ($assignmentsStmt->fetchAll() as $assignment) {
+            $activityItems['assignment:' . (int) $assignment['id']] = [
+                'key' => 'assignment:' . (int) $assignment['id'],
+                'type' => 'assignment',
+                'title' => $assignment['title'] ?: 'Tarefa',
+                'lesson_title' => $assignment['lesson_title'] ?? null,
+            ];
+        }
+
+        foreach ($students as &$student) {
+            foreach ($activityItems as $key => $item) {
+                $student['activities'][$key] = array_merge($item, [
+                    'done' => false,
+                    'correction_status' => null,
+                    'grade' => null,
+                    'updated_at' => null,
+                ]);
+            }
+            $student['activity_total'] = count($activityItems);
+        }
+        unset($student);
+
+        $formResponsesStmt = $db->prepare(
+            'SELECT education_form_responses.user_id,
+                    education_form_responses.form_id,
+                    education_form_responses.correction_status,
+                    education_form_responses.grade,
+                    education_form_responses.updated_at
+             FROM education_form_responses
+             INNER JOIN education_forms ON education_forms.id = education_form_responses.form_id
+             WHERE education_forms.course_id = :course_id
+               AND education_forms.active = 1'
+        );
+        $formResponsesStmt->execute(['course_id' => $courseId]);
+        foreach ($formResponsesStmt->fetchAll() as $response) {
+            $userId = (int) $response['user_id'];
+            $key = 'form:' . (int) $response['form_id'];
+            if (!isset($students[$userId]['activities'][$key])) {
+                continue;
+            }
+
+            $students[$userId]['activities'][$key]['done'] = true;
+            $students[$userId]['activities'][$key]['correction_status'] = $response['correction_status'] ?? null;
+            $students[$userId]['activities'][$key]['grade'] = $response['grade'] ?? null;
+            $students[$userId]['activities'][$key]['updated_at'] = $response['updated_at'] ?? null;
+        }
+
+        $assignmentResponsesStmt = $db->prepare(
+            'SELECT education_assignment_submissions.user_id,
+                    education_assignment_submissions.block_id,
+                    education_assignment_submissions.correction_status,
+                    education_assignment_submissions.grade,
+                    education_assignment_submissions.updated_at
+             FROM education_assignment_submissions
+             INNER JOIN education_lesson_blocks ON education_lesson_blocks.id = education_assignment_submissions.block_id
+             INNER JOIN education_lessons ON education_lessons.id = education_lesson_blocks.lesson_id
+             WHERE education_lessons.course_id = :course_id
+               AND education_lessons.active = 1
+               AND education_lesson_blocks.active = 1
+               AND education_lesson_blocks.type = "assignment"'
+        );
+        $assignmentResponsesStmt->execute(['course_id' => $courseId]);
+        foreach ($assignmentResponsesStmt->fetchAll() as $response) {
+            $userId = (int) $response['user_id'];
+            $key = 'assignment:' . (int) $response['block_id'];
+            if (!isset($students[$userId]['activities'][$key])) {
+                continue;
+            }
+
+            $students[$userId]['activities'][$key]['done'] = true;
+            $students[$userId]['activities'][$key]['correction_status'] = $response['correction_status'] ?? null;
+            $students[$userId]['activities'][$key]['grade'] = $response['grade'] ?? null;
+            $students[$userId]['activities'][$key]['updated_at'] = $response['updated_at'] ?? null;
+        }
+
+        $frequencySum = 0;
+        $progressSum = 0;
+        $activityTotal = 0;
+        $activityDone = 0;
+
+        foreach ($students as &$student) {
+            foreach ($student['activities'] as $activity) {
+                if (!$activity['done']) {
+                    continue;
+                }
+
+                $student['activity_done']++;
+                if (($activity['correction_status'] ?? '') === 'corrected') {
+                    $student['activity_corrected']++;
+                } elseif (($activity['correction_status'] ?? '') === 'pending') {
+                    $student['activity_pending_correction']++;
+                }
+            }
+
+            $student['activity_pending'] = max(0, (int) $student['activity_total'] - (int) $student['activity_done']);
+            $frequencySum += (int) $student['frequency'];
+            $progressSum += (int) $student['progress_percent'];
+            $activityTotal += (int) $student['activity_total'];
+            $activityDone += (int) $student['activity_done'];
+        }
+        unset($student);
+
+        $studentCount = count($students);
+
+        return [
+            'students' => array_values($students),
+            'activityItems' => array_values($activityItems),
+            'summary' => [
+                'student_count' => $studentCount,
+                'average_frequency' => $studentCount > 0 ? (int) round($frequencySum / $studentCount) : 0,
+                'average_progress' => $studentCount > 0 ? (int) round($progressSum / $studentCount) : 0,
+                'activity_done_percent' => $activityTotal > 0 ? (int) round(($activityDone / $activityTotal) * 100) : 0,
+            ],
+        ];
+    }
+
     public static function certificateStatusForCourseUser(int $courseId, int $userId): array
     {
         self::ensureSchema();

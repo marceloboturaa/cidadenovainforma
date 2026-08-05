@@ -20,6 +20,7 @@ $totalRecords = $totalPresent + $totalAbsent + $totalJustified;
         <h1><?= e($course['title']) ?></h1>
     </div>
     <div class="heading-actions">
+        <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/students/report?id=' . $course['id'] . '&start_date=' . $startDate . '&end_date=' . $endDate)) ?>"><i class="bi bi-people" aria-hidden="true"></i>Painel de alunos</a>
         <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Fazer chamada</a>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar ao curso</a>
     </div>

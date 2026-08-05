@@ -1349,6 +1349,25 @@ class EducationController
         ]);
     }
 
+    public function studentReport(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        $this->authorizeAttendance($course);
+
+        [$startDate, $endDate] = $this->attendanceRange();
+        $report = Education::studentReportForCourse((int) $course['id'], $startDate, $endDate);
+
+        View::render('admin/education/student-report', [
+            'course' => $course,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'students' => $report['students'],
+            'activityItems' => $report['activityItems'],
+            'summary' => $report['summary'],
+        ]);
+    }
+
     public function updateCertificate(): void
     {
         Middleware::auth();

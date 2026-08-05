@@ -260,12 +260,16 @@
     .education-report-summary,
     .education-report-row,
     .education-report-dates div,
+    .education-student-report-row,
+    .education-student-report-row summary,
+    .education-student-activity-list article,
     .education-modal-form,
     .education-modal-form footer {
         grid-template-columns: 1fr;
     }
 
-    .education-report-head {
+    .education-report-head,
+    .education-student-report-head {
         display: none;
     }
 

@@ -73,6 +73,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
         <?php endif; ?>
         <?php if ($canTakeAttendance): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'])) ?>"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Chamada</a>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/students/report?id=' . $course['id'])) ?>"><i class="bi bi-people" aria-hidden="true"></i>Painel de alunos</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance/report?id=' . $course['id'])) ?>"><i class="bi bi-bar-chart" aria-hidden="true"></i>Relatório</a>
         <?php endif; ?>
         <?php if ($isStudentCourseView && $nextLesson): ?>
