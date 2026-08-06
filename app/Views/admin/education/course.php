@@ -29,26 +29,28 @@ $certificateVerificationUrl = !empty($certificateStatus['certificate']['verifica
     : null;
 $isStudentCourseView = !$canManage && !$canTakeAttendance;
 $lessonCount = count($lessons);
+$requiredLessonCount = count(array_filter($lessons, fn (array $lessonItem): bool => (int) ($lessonItem['module_required'] ?? 1) === 1));
 $completedLessonCount = 0;
 $nextLesson = null;
 
 foreach ($lessons as $lessonItem) {
+    $lessonRequired = (int) ($lessonItem['module_required'] ?? 1) === 1;
     $lessonIsDone = !empty($lessonItem['completed_at']);
     $lessonIsLocked = !empty($lessonItem['schedule_locked'])
         || !empty($lessonItem['sequence_locked'])
         || !empty($lessonItem['locked']);
 
-    if ($lessonIsDone) {
+    if ($lessonRequired && $lessonIsDone) {
         $completedLessonCount++;
     }
 
-    if ($nextLesson === null && !$lessonIsDone && !$lessonIsLocked) {
+    if ($lessonRequired && $nextLesson === null && !$lessonIsDone && !$lessonIsLocked) {
         $nextLesson = $lessonItem;
     }
 }
 
 $nextLessonId = $nextLesson ? (int) $nextLesson['id'] : 0;
-$courseProgressPercent = $lessonCount > 0 ? (int) round(($completedLessonCount / $lessonCount) * 100) : 0;
+$courseProgressPercent = $requiredLessonCount > 0 ? (int) round(($completedLessonCount / $requiredLessonCount) * 100) : 0;
 $previewSuffix = $studentPreview ? '&preview=student' : '';
 ?>
 
@@ -122,7 +124,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
             <div>
                 <span class="eyebrow">Seu progresso</span>
                 <strong><?= e((string) $courseProgressPercent) ?>%</strong>
-                <p><?= e((string) $completedLessonCount) ?> de <?= e((string) $lessonCount) ?> aula(s) concluída(s)</p>
+                <p><?= e((string) $completedLessonCount) ?> de <?= e((string) $requiredLessonCount) ?> aula(s) obrigatória(s) concluída(s)</p>
             </div>
             <div class="education-progress">
                 <span><?= e((string) $courseProgressPercent) ?>%</span>
@@ -167,6 +169,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                     <div>
                         <span><?= $moduleHidden ? 'Módulo oculto' : 'Módulo' ?></span>
                         <h3><?= e($module['title']) ?></h3>
+                        <span class="state-pill <?= !empty($module['required']) ? 'is-active' : 'is-muted' ?>"><?= !empty($module['required']) ? 'Obrigatório' : 'Material complementar' ?></span>
                         <?php if (!empty($module['summary'])): ?>
                             <p><?= e($module['summary']) ?></p>
                         <?php endif; ?>
@@ -819,6 +822,11 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                     <label class="form-label">Resumo</label>
                     <textarea class="form-control" name="summary" rows="4"></textarea>
                 </div>
+                <input type="hidden" name="required" value="0">
+                <label class="forum-check-line">
+                    <input type="checkbox" name="required" value="1" checked>
+                    <span>Módulo obrigatório para conclusão do curso</span>
+                </label>
                 <footer class="split-actions">
                     <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-collection-play" aria-hidden="true"></i>Criar módulo</button>
                     <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>
@@ -853,6 +861,11 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                     <label class="form-label">Resumo</label>
                     <textarea class="form-control" name="summary" rows="4"><?= e($editingModule['summary'] ?? '') ?></textarea>
                 </div>
+                <input type="hidden" name="required" value="0">
+                <label class="forum-check-line">
+                    <input type="checkbox" name="required" value="1" <?= checked((string) ($editingModule['required'] ?? '1'), '1') ?>>
+                    <span>Módulo obrigatório para conclusão do curso</span>
+                </label>
                 <footer class="split-actions">
                     <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar módulo</button>
                     <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close><i class="bi bi-x-circle" aria-hidden="true"></i>Cancelar</a>

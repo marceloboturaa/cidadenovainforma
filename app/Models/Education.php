@@ -168,6 +168,7 @@ class Education
                 course_id BIGINT UNSIGNED NOT NULL,
                 title VARCHAR(180) NOT NULL,
                 summary TEXT NULL,
+                required TINYINT(1) NOT NULL DEFAULT 1,
                 sort_order INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NULL,
@@ -175,6 +176,8 @@ class Education
                 CONSTRAINT fk_education_modules_course FOREIGN KEY (course_id) REFERENCES education_courses(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+
+        self::ensureColumn('education_modules', 'required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER summary');
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_lessons (
@@ -650,12 +653,13 @@ class Education
             'SELECT education_courses.*,
                     teacher.name AS teacher_name,
                     education_enrollments.status AS enrollment_status,
-                    COUNT(DISTINCT education_lessons.id) AS lesson_count,
-                    COUNT(DISTINCT CASE WHEN education_enrollments.status = "approved" THEN completed.lesson_id END) AS completed_count
+                    COUNT(DISTINCT CASE WHEN COALESCE(education_modules.required, 1) = 1 THEN education_lessons.id END) AS lesson_count,
+                    COUNT(DISTINCT CASE WHEN education_enrollments.status = "approved" AND COALESCE(education_modules.required, 1) = 1 THEN completed.lesson_id END) AS completed_count
              FROM education_courses
              INNER JOIN education_enrollments ON education_enrollments.course_id = education_courses.id
              LEFT JOIN users teacher ON teacher.id = education_courses.teacher_user_id
              LEFT JOIN education_lessons ON education_lessons.course_id = education_courses.id AND education_lessons.active = 1
+             LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id
              LEFT JOIN education_lesson_progress completed
                 ON completed.lesson_id = education_lessons.id
                AND completed.user_id = :progress_user_id
@@ -805,8 +809,8 @@ class Education
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO education_modules (course_id, title, summary, sort_order, active, created_at, updated_at)
-             VALUES (:course_id, :title, :summary, :sort_order, 1, NOW(), NOW())'
+            'INSERT INTO education_modules (course_id, title, summary, required, sort_order, active, created_at, updated_at)
+             VALUES (:course_id, :title, :summary, :required, :sort_order, 1, NOW(), NOW())'
         );
         $stmt->execute(self::modulePayload($data));
 
@@ -824,6 +828,7 @@ class Education
              SET course_id = :course_id,
                  title = :title,
                  summary = :summary,
+                 required = :required,
                  sort_order = :sort_order,
                  updated_at = NOW()
              WHERE id = :id'
@@ -887,6 +892,7 @@ class Education
                     progress.completed_at,
                     watches.completed_at AS video_completed_at,
                     education_modules.title AS module_title,
+                    education_modules.required AS module_required,
                     (
                         SELECT COUNT(*)
                         FROM education_lesson_blocks assignment_blocks
@@ -934,12 +940,15 @@ class Education
         $previousCompleted = true;
 
         foreach ($lessons as $index => $lesson) {
-            $lockedBySequence = $playlistRequired && !$canManage && !$previousCompleted;
+            $lessonRequired = (int) ($lesson['module_required'] ?? 1) === 1;
+            $lockedBySequence = $playlistRequired && $lessonRequired && !$canManage && !$previousCompleted;
             $lockedBySchedule = !$canManage && !self::lessonIsAvailable($lesson);
             $lessons[$index]['sequence_locked'] = $lockedBySequence ? 1 : 0;
             $lessons[$index]['schedule_locked'] = $lockedBySchedule ? 1 : 0;
             $lessons[$index]['can_watch'] = !$lockedBySequence && !$lockedBySchedule && empty($lesson['locked']);
-            $previousCompleted = !empty($lesson['completed_at']);
+            if ($lessonRequired) {
+                $previousCompleted = !empty($lesson['completed_at']);
+            }
         }
 
         return $lessons;
@@ -968,7 +977,7 @@ class Education
                 return true;
             }
 
-            if (empty($courseLesson['completed_at'])) {
+            if ((int) ($courseLesson['module_required'] ?? 1) === 1 && empty($courseLesson['completed_at'])) {
                 return false;
             }
         }
@@ -1527,11 +1536,14 @@ class Education
              LEFT JOIN education_lessons
                 ON education_lessons.course_id = education_enrollments.course_id
                AND education_lessons.active = 1
+             LEFT JOIN education_modules
+                ON education_modules.id = education_lessons.module_id
              LEFT JOIN education_lesson_progress progress
                 ON progress.lesson_id = education_lessons.id
                AND progress.user_id = education_enrollments.user_id
              WHERE education_enrollments.course_id = :course_id
                AND education_enrollments.status = "approved"
+               AND COALESCE(education_modules.required, 1) = 1
              GROUP BY education_enrollments.user_id'
         );
         $lessonStatsStmt->execute(['course_id' => $courseId]);
@@ -3349,11 +3361,13 @@ class Education
             'SELECT COUNT(DISTINCT education_lessons.id) AS lesson_count,
                     COUNT(DISTINCT CASE WHEN progress.completed_at IS NOT NULL THEN education_lessons.id END) AS completed_count
              FROM education_lessons
+             LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id
              LEFT JOIN education_lesson_progress progress
                 ON progress.lesson_id = education_lessons.id
                AND progress.user_id = :user_id
              WHERE education_lessons.course_id = :course_id
-               AND education_lessons.active = 1'
+               AND education_lessons.active = 1
+               AND COALESCE(education_modules.required, 1) = 1'
         );
         $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
         $row = $stmt->fetch() ?: [];
@@ -3370,11 +3384,13 @@ class Education
             'SELECT COUNT(DISTINCT education_lessons.id) AS records,
                     COUNT(DISTINCT CASE WHEN progress.completed_at IS NOT NULL THEN education_lessons.id END) AS present_count
              FROM education_lessons
+             LEFT JOIN education_modules ON education_modules.id = education_lessons.module_id
              LEFT JOIN education_lesson_progress progress
                 ON progress.lesson_id = education_lessons.id
                AND progress.user_id = :user_id
              WHERE education_lessons.course_id = :course_id
                AND education_lessons.active = 1
+               AND COALESCE(education_modules.required, 1) = 1
                AND education_lessons.attendance_mode <> "none"'
         );
         $stmt->execute(['course_id' => $courseId, 'user_id' => $userId]);
@@ -3441,6 +3457,7 @@ class Education
             'course_id' => (int) ($data['course_id'] ?? 0),
             'title' => trim((string) ($data['title'] ?? '')),
             'summary' => self::nullable($data['summary'] ?? null),
+            'required' => array_key_exists('required', $data) ? (!empty($data['required']) ? 1 : 0) : 1,
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
     }

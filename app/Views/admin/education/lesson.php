@@ -138,7 +138,7 @@ $embed = function (?string $url): ?string {
                     <?php foreach ($modules as $module): ?>
                         <?php $moduleLessons = $playlistByModule[(string) $module['id']] ?? []; ?>
                         <section class="education-sidebar-module">
-                            <h2><?= e($module['title']) ?></h2>
+                            <h2><?= e($module['title']) ?><?= empty($module['required']) ? ' (opcional)' : '' ?></h2>
                             <?php foreach ($moduleLessons as $playlistLesson): ?>
                                 <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'] . $previewSuffix)) ?>">
                                     <i class="bi <?= (!empty($playlistLesson['locked']) || ((!empty($playlistLesson['sequence_locked']) || !empty($playlistLesson['schedule_locked'])) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>

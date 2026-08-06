@@ -622,6 +622,7 @@ CREATE TABLE IF NOT EXISTS education_modules (
     course_id BIGINT UNSIGNED NOT NULL,
     title VARCHAR(180) NOT NULL,
     summary TEXT NULL,
+    required TINYINT(1) NOT NULL DEFAULT 1,
     sort_order INT NOT NULL DEFAULT 0,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,

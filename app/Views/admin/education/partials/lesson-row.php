@@ -5,6 +5,7 @@ $lessonHardLocked = !empty($lesson['locked']) && !$canManage;
 $lessonAccessLocked = $lessonScheduleLocked || $lessonSequenceLocked || $lessonHardLocked;
 $lessonAvailableAt = !empty($lesson['available_at']) ? date('d/m/Y H:i', strtotime((string) $lesson['available_at'])) : '';
 $lessonAttendanceMode = (string) ($lesson['attendance_mode'] ?? 'video');
+$lessonModuleRequired = (int) ($lesson['module_required'] ?? 1) === 1;
 $lessonIsComplete = !empty($lesson['completed_at']);
 $lessonIsNext = !$canManage && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
 $lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? 'Rever' : 'Assistir');
@@ -20,8 +21,11 @@ $lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($stude
                 <em class="education-current-lesson-label">Próxima aula</em>
             <?php endif; ?>
             <strong><?= e($lesson['title']) ?></strong>
-            <?php if ($lessonAccessLocked || $lessonAttendanceMode === 'manual' || $lessonAttendanceMode === 'none' || !empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
+            <?php if (!$lessonModuleRequired || $lessonAccessLocked || $lessonAttendanceMode === 'manual' || $lessonAttendanceMode === 'none' || !empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
                 <span class="education-playlist-badges">
+                    <?php if (!$lessonModuleRequired): ?>
+                        <em><i class="bi bi-journal-bookmark" aria-hidden="true"></i>opcional</em>
+                    <?php endif; ?>
                     <?php if ($lessonScheduleLocked): ?>
                         <em><i class="bi bi-calendar-event" aria-hidden="true"></i><?= e($lessonAvailableAt) ?></em>
                     <?php endif; ?>
