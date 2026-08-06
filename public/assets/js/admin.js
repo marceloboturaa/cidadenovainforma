@@ -1028,13 +1028,14 @@
         const pendingVideos = document.querySelectorAll('[data-education-video-watch]:not([data-watch-saved="1"])').length;
         const requirementsHint = document.querySelector('[data-education-requirements-hint]');
         const pendingAssignments = Number(requirementsHint?.dataset.pendingAssignments || 0);
+        const pendingForums = Number(requirementsHint?.dataset.pendingForums || 0);
 
-        if (requirementsHint && pendingVideos === 0 && pendingAssignments === 0) {
+        if (requirementsHint && pendingVideos === 0 && pendingAssignments === 0 && pendingForums === 0) {
             requirementsHint.textContent = 'Itens obrigatórios concluídos. Finalizando a aula automaticamente...';
             requirementsHint.classList.add('is-complete');
         }
 
-        if (pendingVideos === 0 && pendingAssignments === 0) {
+        if (pendingVideos === 0 && pendingAssignments === 0 && pendingForums === 0) {
             educationCompleteButtons.forEach((button) => {
                 button.disabled = false;
             });

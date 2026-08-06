@@ -571,7 +571,7 @@ class EducationController
         $blocks = $isLocked ? [] : Education::blocksForLesson((int) $lesson['id'], $canManageView, (int) $user['id']);
         $assignmentBlocks = array_values(array_filter($blocks, fn (array $block): bool => ($block['type'] ?? '') === 'assignment'));
         $completionRequirements = $canManageView || $isLocked
-            ? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0]
+            ? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0, 'required_forum_count' => 0, 'replied_forum_count' => 0]
             : Education::lessonCompletionRequirements((int) $lesson['id'], (int) $user['id']);
         $lessonForms = $isLocked ? [] : Education::formsForCourse((int) $lesson['course_id'], (int) $lesson['id']);
 
@@ -1083,6 +1083,14 @@ class EducationController
 
         $completedByForum = false;
         if ($lesson && !$canManage && ($lesson['attendance_mode'] ?? 'video') !== 'manual') {
+            $lessonCourse = Education::findCourse((int) $lesson['course_id']);
+            $requiresVideo = !empty($lessonCourse['playlist_required']) && trim((string) ($lesson['video_url'] ?? '')) !== '';
+            $requirements = Education::lessonCompletionRequirements((int) $lesson['id'], (int) $user['id']);
+            if ($requiresVideo && !Education::userWatchedLessonVideo((int) $lesson['id'], (int) $user['id'])) {
+                $requirements['complete'] = false;
+            }
+        }
+        if ($lesson && !$canManage && ($lesson['attendance_mode'] ?? 'video') !== 'manual' && !empty($requirements['complete'])) {
             Education::markLesson((int) $lesson['id'], (int) $user['id'], true);
             $completedByForum = true;
         }

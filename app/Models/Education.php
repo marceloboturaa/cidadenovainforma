@@ -2602,6 +2602,8 @@ class Education
             'watched_video_count' => 0,
             'required_assignment_count' => 0,
             'submitted_assignment_count' => 0,
+            'required_forum_count' => 0,
+            'replied_forum_count' => 0,
             'pending' => [],
         ];
 
@@ -2628,6 +2630,35 @@ class Education
                 }
                 $requirements['pending'][] = ['type' => 'assignment', 'title' => $title];
             }
+        }
+
+        $forumStmt = Database::connection()->prepare(
+            'SELECT education_forum_topics.id,
+                    education_forum_topics.title,
+                    student_replies.id AS reply_id
+             FROM education_forum_topics
+             LEFT JOIN education_forum_replies AS student_replies
+                ON student_replies.topic_id = education_forum_topics.id
+               AND student_replies.user_id = :user_id
+               AND student_replies.active = 1
+             WHERE education_forum_topics.lesson_id = :lesson_id
+               AND education_forum_topics.status <> "hidden"
+             ORDER BY education_forum_topics.created_at ASC, education_forum_topics.id ASC'
+        );
+        $forumStmt->execute([
+            'lesson_id' => $lessonId,
+            'user_id' => $userId,
+        ]);
+
+        foreach ($forumStmt->fetchAll() as $topic) {
+            $requirements['required_forum_count']++;
+            if (!empty($topic['reply_id'])) {
+                $requirements['replied_forum_count']++;
+                continue;
+            }
+
+            $title = trim((string) ($topic['title'] ?? '')) ?: 'Fórum da aula';
+            $requirements['pending'][] = ['type' => 'forum', 'title' => 'Responder fórum: ' . $title];
         }
 
         $requirements['complete'] = empty($requirements['pending']);

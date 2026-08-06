@@ -15,7 +15,7 @@ $canAssignForumAuthor = $canAssignForumAuthor ?? false;
 $forumAuthorOptions = $forumAuthorOptions ?? [];
 $lessonForms = $lessonForms ?? [];
 $assignmentSubmissionsByBlock = $assignmentSubmissionsByBlock ?? [];
-$completionRequirements = $completionRequirements ?? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0];
+$completionRequirements = $completionRequirements ?? ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0, 'required_forum_count' => 0, 'replied_forum_count' => 0];
 $requirementsComplete = !empty($completionRequirements['complete']);
 $playlistRequired = !empty($course['playlist_required']);
 $playlist = $playlist ?? [];
@@ -124,13 +124,16 @@ $embed = function (?string $url): ?string {
                     <?php endif; ?>
                 </div>
                 <?php if (!$studentPreview && !$canManage && !$isCompleted && !$requirementsComplete): ?>
-                        <div class="education-requirements-hint" data-education-requirements-hint data-pending-assignments="<?= e((string) max(0, (int) ($completionRequirements['required_assignment_count'] ?? 0) - (int) ($completionRequirements['submitted_assignment_count'] ?? 0))) ?>">
+                        <div class="education-requirements-hint" data-education-requirements-hint data-pending-assignments="<?= e((string) max(0, (int) ($completionRequirements['required_assignment_count'] ?? 0) - (int) ($completionRequirements['submitted_assignment_count'] ?? 0))) ?>" data-pending-forums="<?= e((string) max(0, (int) ($completionRequirements['required_forum_count'] ?? 0) - (int) ($completionRequirements['replied_forum_count'] ?? 0))) ?>">
                             <strong>Para concluir esta aula</strong>
                             <?php if ((int) ($completionRequirements['required_video_count'] ?? 0) > 0): ?>
                                 <span><?= e((string) ($completionRequirements['watched_video_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_video_count'] ?? 0)) ?> vídeo(s) obrigatório(s) assistido(s)</span>
                             <?php endif; ?>
                             <?php if ((int) ($completionRequirements['required_assignment_count'] ?? 0) > 0): ?>
                                 <span><?= e((string) ($completionRequirements['submitted_assignment_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_assignment_count'] ?? 0)) ?> tarefa(s) entregue(s)</span>
+                            <?php endif; ?>
+                            <?php if ((int) ($completionRequirements['required_forum_count'] ?? 0) > 0): ?>
+                                <span><?= e((string) ($completionRequirements['replied_forum_count'] ?? 0)) ?>/<?= e((string) ($completionRequirements['required_forum_count'] ?? 0)) ?> fórum(ns) respondido(s)</span>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
