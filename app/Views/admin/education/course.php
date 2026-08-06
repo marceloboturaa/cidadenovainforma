@@ -504,6 +504,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                     </div>
                     <span class="state-pill is-active"><?= e((string) ($form['response_count'] ?? 0)) ?> resposta(s)</span>
                 </header>
+                <?php if ($canManage): ?>
                 <div class="education-form-question-preview">
                     <strong>Perguntas</strong>
                     <ol>
@@ -512,6 +513,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                         <?php endforeach; ?>
                     </ol>
                 </div>
+                <?php endif; ?>
                 <?php if ($canManage): ?>
                     <details>
                         <summary>Editar e ver respostas</summary>
@@ -575,7 +577,10 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                     <form method="post" action="<?= e(url('/admin/education/form/submit?form_id=' . $form['id'])) ?>" class="education-form-answer">
                         <?= csrf_field() ?>
                         <?php foreach ($questions as $question): ?>
-                            <label class="form-label"><?= e($question['question']) ?><textarea class="form-control" name="answers[<?= e((string) $question['id']) ?>]" rows="3" required><?= e($answers[(int) $question['id']] ?? '') ?></textarea></label>
+                            <label class="form-label education-form-answer-question">
+                                <strong><?= e($question['question']) ?></strong>
+                                <textarea class="form-control" name="answers[<?= e((string) $question['id']) ?>]" rows="3" required><?= e($answers[(int) $question['id']] ?? '') ?></textarea>
+                            </label>
                         <?php endforeach; ?>
                         <?php if ($response && (($response['correction_status'] ?? 'pending') !== 'pending' || !empty($response['grade']) || !empty($response['feedback']))): ?>
                             <div class="education-correction-note">

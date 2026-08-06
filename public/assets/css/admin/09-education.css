@@ -2759,6 +2759,15 @@
     color: var(--ink);
 }
 
+.education-form-answer-question strong {
+    font-size: 0.95rem;
+    line-height: 1.35;
+}
+
+.education-form-answer-question textarea {
+    min-height: 96px;
+}
+
 .education-form-card summary,
 .education-assignment-submissions summary {
     cursor: pointer;
