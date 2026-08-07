@@ -1017,6 +1017,16 @@
     background: #fbfdfb;
 }
 
+.education-playlist-row.is-complementary:not(.is-next):not(.is-locked):not(.is-scheduled) {
+    border-top-color: #99f6e4;
+    background: #f0fdfa;
+}
+
+.education-playlist-row.is-complementary:not(.is-next):not(.is-locked):not(.is-scheduled) .education-playlist-main > span:first-child {
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
 .education-playlist-row.is-locked:not(.is-next) {
     color: #64748b;
     background: #f8fafc;

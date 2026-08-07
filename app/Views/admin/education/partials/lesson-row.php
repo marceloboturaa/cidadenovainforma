@@ -11,7 +11,7 @@ $lessonIsNext = !$canManage && !$lessonAccessLocked && !$lessonIsComplete && !em
 $lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? 'Rever' : 'Assistir');
 $lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($studentPreview) ? '&preview=student' : ''));
 ?>
-<article class="education-playlist-row <?= $lessonScheduleLocked ? 'is-scheduled' : '' ?> <?= $lessonIsComplete ? 'is-complete' : '' ?> <?= $lessonIsNext ? 'is-next' : '' ?> <?= $lessonAccessLocked ? 'is-locked' : '' ?>">
+<article class="education-playlist-row <?= !$lessonModuleRequired ? 'is-complementary' : '' ?> <?= $lessonScheduleLocked ? 'is-scheduled' : '' ?> <?= $lessonIsComplete ? 'is-complete' : '' ?> <?= $lessonIsNext ? 'is-next' : '' ?> <?= $lessonAccessLocked ? 'is-locked' : '' ?>">
     <<?= $lessonAccessLocked ? 'div' : 'a' ?> class="education-playlist-main"<?= $lessonAccessLocked ? '' : ' href="' . e($lessonHref) . '"' ?>>
         <span class="<?= $lessonIsComplete ? 'is-complete' : '' ?>">
             <i class="bi <?= $lessonAccessLocked ? 'bi-lock-fill' : ($lessonIsComplete ? 'bi-check-circle-fill' : ($lessonIsNext ? 'bi-play-circle-fill' : 'bi-circle')) ?>" aria-hidden="true"></i>
