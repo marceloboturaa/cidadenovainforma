@@ -77,8 +77,11 @@ $isAudioSource = function (?string $url): bool {
 $renderLessonDescription = function () use ($lesson): void {
     ?>
     <section class="panel education-lesson-description" id="lesson-description">
-        <h2>Descrição da aula</h2>
-        <div class="education-block-text"><?= article_html($lesson['description']) ?></div>
+        <div class="education-lesson-description-head">
+            <span><i class="bi bi-card-text" aria-hidden="true"></i></span>
+            <h2>Descrição da aula</h2>
+        </div>
+        <div class="education-block-text education-lesson-description-text"><?= article_html($lesson['description']) ?></div>
     </section>
     <?php
 };
