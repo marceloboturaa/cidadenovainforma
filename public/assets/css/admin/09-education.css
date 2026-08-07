@@ -3090,6 +3090,151 @@
 }
 
 @media (max-width: 900px) {
+    .education-lesson-heading,
+    .education-preview-banner {
+        max-width: 100%;
+    }
+
+    .education-lesson-heading {
+        align-items: stretch;
+    }
+
+    .education-lesson-heading .heading-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .education-lesson-heading .heading-actions .btn {
+        justify-content: center;
+        width: 100%;
+        min-height: 42px;
+        white-space: normal;
+    }
+
+    .education-preview-banner {
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .education-preview-banner .btn {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .education-player-layout,
+    .education-player-layout:has(.education-playlist-toggle:not([open])),
+    .education-player-layout.is-student-view,
+    .education-player-layout.is-student-view:has(.education-playlist-toggle:not([open])) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "content"
+            "playlist";
+        gap: 14px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .education-playlist-sidebar,
+    .education-player-layout.is-student-view .education-playlist-sidebar {
+        position: static;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .education-playlist-title {
+        padding: 13px 14px;
+    }
+
+    .education-playlist-toggle:not([open]) .education-playlist-title {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        justify-content: initial;
+    }
+
+    .education-playlist-toggle:not([open]) .education-playlist-label span,
+    .education-playlist-toggle:not([open]) .education-playlist-title strong,
+    .education-playlist-toggle:not([open]) .education-playlist-caret {
+        display: block;
+    }
+
+    .education-playlist-toggle:not([open]) .education-playlist-caret {
+        display: inline-block;
+    }
+
+    .education-playlist-title strong {
+        font-size: 0.92rem;
+    }
+
+    .education-player-layout.is-student-view .education-sidebar-scroll,
+    .education-sidebar-scroll {
+        max-height: 260px;
+        padding: 10px;
+    }
+
+    .education-content-stack {
+        min-width: 0;
+        gap: 14px;
+    }
+
+    .education-player-layout.is-student-view .education-block-card,
+    .education-player-layout.is-student-view .education-lesson-description,
+    .education-player-layout.is-student-view .education-course-forum,
+    .education-player-layout.is-student-view .education-form-board {
+        padding: 14px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .education-player-layout.is-student-view .education-lesson-description {
+        padding: 16px;
+        border-left-width: 4px;
+    }
+
+    .education-block-heading {
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .education-block-heading,
+    .education-block-flags {
+        flex-wrap: wrap;
+    }
+
+    .education-block-heading strong {
+        width: 100%;
+        min-width: 0;
+        line-height: 1.25;
+    }
+
+    .education-block-image,
+    .education-block-image-size-35,
+    .education-block-image-size-50,
+    .education-block-image-size-70,
+    .education-block-image-size-100,
+    .education-player-layout.is-student-view .education-lesson-main-image {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .education-lesson-main-image,
+    .education-player-layout.is-student-view .education-lesson-main-image {
+        max-height: 240px;
+        object-fit: contain;
+    }
+
+    .education-video-frame {
+        border-radius: 8px;
+    }
+
+    .education-video-preview-placeholder {
+        min-height: 180px;
+        padding: 18px;
+    }
+
+    .education-podcast-frame {
+        min-height: 150px;
+    }
+
     .education-lesson-inline-form,
     .education-material-fieldset,
     .education-sequence-extra-grid,
