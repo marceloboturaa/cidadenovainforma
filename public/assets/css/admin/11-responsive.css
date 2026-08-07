@@ -1,6 +1,6 @@
 /* Admin responsive rules */
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     .auth-shell {
         grid-template-columns: 1fr;
         min-height: auto;
@@ -286,12 +286,25 @@
     .education-player-layout {
         grid-template-columns: 1fr;
         grid-template-areas:
-            "playlist"
-            "content";
+            "content"
+            "playlist";
+        width: 100%;
+        max-width: 100%;
+        gap: 14px;
     }
 
     .education-player-layout:has(.education-playlist-toggle:not([open])) {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .education-player-layout.is-student-view,
+    .education-player-layout.is-student-view:has(.education-playlist-toggle:not([open])) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "content"
+            "playlist";
+        width: 100%;
+        max-width: 100%;
     }
 
     .education-preview-banner {
@@ -305,10 +318,13 @@
 
     .education-playlist-sidebar {
         position: static;
+        width: 100%;
+        min-width: 0;
     }
 
     .education-sidebar-scroll {
-        max-height: 360px;
+        max-height: 260px;
+        padding: 10px;
     }
 
     .education-playlist-row {
@@ -1361,6 +1377,123 @@
     .education-forum-reply-children {
         margin-left: 8px;
         padding-left: 10px;
+    }
+}
+
+@media (max-width: 640px) {
+    html,
+    body {
+        overflow-x: hidden;
+    }
+
+    .admin-layout,
+    .main-panel,
+    .content {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .content {
+        padding: 10px 8px;
+    }
+
+    .topbar {
+        min-height: auto;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .topbar .btn,
+    .admin-menu-toggle {
+        min-height: 34px;
+        padding: 6px 8px;
+        font-size: 0.78rem;
+    }
+
+    .education-lesson-heading {
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .education-lesson-heading h1 {
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .education-lesson-heading p,
+    .education-block-type,
+    .education-playlist-title span {
+        font-size: 0.68rem;
+    }
+
+    .education-lesson-heading .heading-actions {
+        gap: 7px;
+    }
+
+    .education-player-layout {
+        gap: 10px;
+    }
+
+    .education-block-card,
+    .education-lesson-description,
+    .education-course-forum,
+    .education-form-board,
+    .education-player-layout.is-student-view .education-block-card,
+    .education-player-layout.is-student-view .education-lesson-description,
+    .education-player-layout.is-student-view .education-course-forum,
+    .education-player-layout.is-student-view .education-form-board {
+        padding: 10px;
+        border-radius: 7px;
+    }
+
+    .education-block-heading strong,
+    .education-lesson-description h2,
+    .education-player-layout.is-student-view .education-lesson-description h2 {
+        font-size: 0.9rem;
+    }
+
+    .education-block-text {
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    .education-video-frame iframe,
+    .education-video-frame video {
+        aspect-ratio: 16 / 9;
+        min-height: 0;
+    }
+
+    .education-lesson-main-image,
+    .education-player-layout.is-student-view .education-lesson-main-image {
+        max-height: 190px;
+    }
+
+    .education-sidebar-scroll {
+        max-height: 240px;
+    }
+
+    .education-sidebar-module a {
+        grid-template-columns: 18px minmax(0, 1fr) auto;
+        gap: 6px;
+        padding: 7px;
+        font-size: 0.78rem;
+    }
+
+    .education-sidebar-module a small {
+        display: none;
+    }
+
+    .education-player-nav {
+        display: grid;
+        gap: 8px;
+    }
+
+    .education-player-nav .btn,
+    .education-player-nav a {
+        justify-content: center;
+        width: 100%;
+        max-width: 100%;
     }
 }
 
