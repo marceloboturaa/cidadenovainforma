@@ -285,6 +285,7 @@ CREATE TABLE IF NOT EXISTS education_lessons (
     module_id BIGINT UNSIGNED NULL,
     title VARCHAR(180) NOT NULL,
     description TEXT NULL,
+    description_position VARCHAR(20) NOT NULL DEFAULT 'after_media',
     video_url VARCHAR(255) NULL,
     image_url VARCHAR(255) NULL,
     locked TINYINT(1) NOT NULL DEFAULT 0,
@@ -306,12 +307,14 @@ CREATE TABLE IF NOT EXISTS education_lesson_blocks (
     content LONGTEXT NULL,
     media_url VARCHAR(255) NULL,
     file_path VARCHAR(255) NULL,
+    settings_json LONGTEXT NULL,
     sort_order INT NOT NULL DEFAULT 0,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     CONSTRAINT fk_education_blocks_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+ALTER TABLE education_lesson_blocks ADD COLUMN IF NOT EXISTS settings_json LONGTEXT NULL AFTER file_path;
 
 CREATE TABLE IF NOT EXISTS education_enrollments (
     course_id BIGINT UNSIGNED NOT NULL,
@@ -629,6 +632,7 @@ ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NU
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS available_at DATETIME NULL AFTER locked;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS attendance_mode VARCHAR(20) NOT NULL DEFAULT 'video' AFTER available_at;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS description_position VARCHAR(20) NOT NULL DEFAULT 'after_media' AFTER description;
 
 ALTER TABLE education_attendance ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER user_id;
 

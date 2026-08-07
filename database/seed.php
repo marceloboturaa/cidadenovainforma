@@ -573,6 +573,9 @@ if (!in_array('available_at', $lessonColumns, true)) {
 if (!in_array('attendance_mode', $lessonColumns, true)) {
     $pdo->exec('ALTER TABLE education_lessons ADD COLUMN attendance_mode VARCHAR(20) NOT NULL DEFAULT "video" AFTER available_at');
 }
+if (!in_array('description_position', $lessonColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lessons ADD COLUMN description_position VARCHAR(20) NOT NULL DEFAULT "after_media" AFTER description');
+}
 
 $pdo->exec(
     'CREATE TABLE IF NOT EXISTS education_lesson_blocks (
@@ -583,6 +586,7 @@ $pdo->exec(
         content LONGTEXT NULL,
         media_url VARCHAR(255) NULL,
         file_path VARCHAR(255) NULL,
+        settings_json LONGTEXT NULL,
         sort_order INT NOT NULL DEFAULT 0,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NULL,
@@ -590,6 +594,10 @@ $pdo->exec(
         CONSTRAINT fk_education_blocks_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE
     ) ENGINE=InnoDB'
 );
+$blockColumns = $pdo->query('SHOW COLUMNS FROM education_lesson_blocks')->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array('settings_json', $blockColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lesson_blocks ADD COLUMN settings_json LONGTEXT NULL AFTER file_path');
+}
 
 $pdo->exec(
     'CREATE TABLE IF NOT EXISTS education_enrollments (

@@ -623,7 +623,7 @@ class EducationController
 
         Education::createLessonBlock(array_merge($_POST, [
             'lesson_id' => $lesson['id'],
-            'type' => $filePath && !in_array($type, ['image', 'assignment', 'certificate'], true) ? 'file' : $type,
+            'type' => $filePath && !in_array($type, ['image', 'assignment', 'certificate', 'podcast', 'audio'], true) ? 'file' : $type,
             'file_path' => $filePath,
         ]));
 

@@ -42,6 +42,14 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
 $blockAction = $editingBlock
     ? url('/admin/education/block/update?id=' . $editingBlock['id'])
     : url('/admin/education/block?id=' . $lesson['id']);
+$editingBlockSettings = [];
+if ($editingBlock && !empty($editingBlock['settings_json'])) {
+    $decodedSettings = json_decode((string) $editingBlock['settings_json'], true);
+    $editingBlockSettings = is_array($decodedSettings) ? $decodedSettings : [];
+}
+$lessonDescriptionPosition = (string) ($lesson['description_position'] ?? 'after_media');
+$lessonDescriptionPosition = in_array($lessonDescriptionPosition, ['top', 'after_media', 'hidden'], true) ? $lessonDescriptionPosition : 'after_media';
+$showLessonDescription = !empty($lesson['description']) && $lessonDescriptionPosition !== 'hidden';
 
 $embed = function (?string $url): ?string {
     $url = trim((string) $url);
@@ -53,7 +61,25 @@ $embed = function (?string $url): ?string {
         return 'https://www.youtube.com/embed/' . $match[1] . '?enablejsapi=1';
     }
 
+    if (preg_match('#open\.spotify\.com/(episode|show)/([A-Za-z0-9]+)#', $url, $match)) {
+        return 'https://open.spotify.com/embed/' . $match[1] . '/' . $match[2];
+    }
+
     return $url;
+};
+
+$isAudioSource = function (?string $url): bool {
+    $path = parse_url((string) $url, PHP_URL_PATH) ?: (string) $url;
+    return (bool) preg_match('/\.(mp3|m4a|aac|wav|ogg|oga|opus)(\?.*)?$/i', $path);
+};
+
+$renderLessonDescription = function () use ($lesson): void {
+    ?>
+    <section class="panel education-lesson-description" id="lesson-description">
+        <h2>Descrição da aula</h2>
+        <div class="education-block-text"><?= article_html($lesson['description']) ?></div>
+    </section>
+    <?php
 };
 ?>
 
@@ -63,7 +89,7 @@ $embed = function (?string $url): ?string {
         <h1><?= e($lesson['title']) ?></h1>
     </div>
     <div class="heading-actions">
-        <?php if (!empty($lesson['description'])): ?>
+        <?php if ($showLessonDescription): ?>
             <a class="btn btn-outline-primary icon-btn" href="#lesson-description"><i class="bi bi-card-text" aria-hidden="true"></i>Descrição</a>
         <?php endif; ?>
         <?php if ($canManage): ?>
@@ -200,6 +226,7 @@ $embed = function (?string $url): ?string {
                         <select class="form-select" name="type">
                             <option value="text" <?= selected((string) ($editingBlock['type'] ?? 'text'), 'text') ?>>Texto</option>
                             <option value="video" <?= selected((string) ($editingBlock['type'] ?? ''), 'video') ?>>Vídeo</option>
+                            <option value="podcast" <?= selected((string) ($editingBlock['type'] ?? ''), 'podcast') ?>>Podcast / áudio</option>
                             <option value="assignment" <?= selected((string) ($editingBlock['type'] ?? ''), 'assignment') ?>>Tarefa</option>
                             <option value="certificate" <?= selected((string) ($editingBlock['type'] ?? ''), 'certificate') ?>>Certificado</option>
                             <option value="image" <?= selected((string) ($editingBlock['type'] ?? ''), 'image') ?>>Imagem</option>
@@ -232,11 +259,34 @@ $embed = function (?string $url): ?string {
                         <textarea class="form-control education-large-textarea" name="content" rows="10" data-tinymce placeholder="Escreva aqui o conteúdo que aparece depois ou antes do vídeo"><?= e($editingBlock['content'] ?? '') ?></textarea>
                     </div>
                     <details class="education-sequence-extra">
-                        <summary><i class="bi bi-link-45deg" aria-hidden="true"></i>Link, vídeo ou arquivo</summary>
+                        <summary><i class="bi bi-sliders" aria-hidden="true"></i>Link, visual e tamanho</summary>
                         <div class="education-sequence-extra-grid">
                             <div>
                                 <label class="form-label">Link externo</label>
-                                <input class="form-control" name="media_url" value="<?= e($editingBlock['media_url'] ?? '') ?>" placeholder="YouTube, Vimeo, imagem ou arquivo externo">
+                                <input class="form-control" name="media_url" value="<?= e($editingBlock['media_url'] ?? '') ?>" placeholder="YouTube, Spotify, áudio, imagem ou arquivo externo">
+                            </div>
+                            <div>
+                                <label class="form-label">Tamanho da imagem</label>
+                                <select class="form-select" name="image_width">
+                                    <?php foreach ([100 => 'Grande', 70 => 'Médio', 50 => 'Pequeno', 35 => 'Mini'] as $widthValue => $widthLabel): ?>
+                                        <option value="<?= e((string) $widthValue) ?>" <?= selected((string) ($editingBlockSettings['image_width'] ?? '100'), (string) $widthValue) ?>><?= e($widthLabel) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Texto do material</label>
+                                <select class="form-select" name="content_position">
+                                    <option value="after_media" <?= selected((string) ($editingBlockSettings['content_position'] ?? 'after_media'), 'after_media') ?>>Depois da mídia</option>
+                                    <option value="before_media" <?= selected((string) ($editingBlockSettings['content_position'] ?? ''), 'before_media') ?>>Antes da mídia</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Estilo do texto</label>
+                                <select class="form-select" name="text_style">
+                                    <option value="default" <?= selected((string) ($editingBlockSettings['text_style'] ?? 'default'), 'default') ?>>Padrão</option>
+                                    <option value="highlight" <?= selected((string) ($editingBlockSettings['text_style'] ?? ''), 'highlight') ?>>Destaque suave</option>
+                                    <option value="note" <?= selected((string) ($editingBlockSettings['text_style'] ?? ''), 'note') ?>>Nota</option>
+                                </select>
                             </div>
                         </div>
                     </details>
@@ -253,6 +303,10 @@ $embed = function (?string $url): ?string {
                     </div>
                 </form>
             </section>
+        <?php endif; ?>
+
+        <?php if ($showLessonDescription && $lessonDescriptionPosition === 'top'): ?>
+            <?php $renderLessonDescription(); ?>
         <?php endif; ?>
 
         <?php if (!empty($lesson['image_url'])): ?>
@@ -306,11 +360,8 @@ $embed = function (?string $url): ?string {
             </section>
         <?php endif; ?>
 
-        <?php if (!empty($lesson['description'])): ?>
-            <section class="panel education-lesson-description" id="lesson-description">
-                <h2>Descrição da aula</h2>
-                <div class="education-block-text"><?= article_html($lesson['description']) ?></div>
-            </section>
+        <?php if ($showLessonDescription && $lessonDescriptionPosition === 'after_media'): ?>
+            <?php $renderLessonDescription(); ?>
         <?php endif; ?>
 
         <?php foreach ($blocks as $block): ?>
@@ -318,6 +369,7 @@ $embed = function (?string $url): ?string {
             $type = (string) ($block['type'] ?? 'text');
             $blockTitle = $block['title'] ?: match ($type) {
                 'video' => 'Vídeo da aula',
+                'podcast', 'audio' => 'Podcast da aula',
                 'image' => 'Imagem da aula',
                 'file' => 'Documento para baixar',
                 'assignment' => 'Tarefa da aula',
@@ -325,6 +377,18 @@ $embed = function (?string $url): ?string {
                 default => 'Material da aula',
             };
             $media = $embed($block['media_url'] ?? '');
+            $blockSettings = [];
+            if (!empty($block['settings_json'])) {
+                $decodedBlockSettings = json_decode((string) $block['settings_json'], true);
+                $blockSettings = is_array($decodedBlockSettings) ? $decodedBlockSettings : [];
+            }
+            $imageWidth = (int) ($blockSettings['image_width'] ?? 100);
+            $imageWidth = in_array($imageWidth, [35, 50, 70, 100], true) ? $imageWidth : 100;
+            $contentPosition = (string) ($blockSettings['content_position'] ?? 'after_media');
+            $contentPosition = in_array($contentPosition, ['before_media', 'after_media'], true) ? $contentPosition : 'after_media';
+            $textStyle = (string) ($blockSettings['text_style'] ?? 'default');
+            $textStyle = in_array($textStyle, ['default', 'highlight', 'note'], true) ? $textStyle : 'default';
+            $blockTextClass = 'education-block-text' . ($textStyle !== 'default' ? ' is-' . $textStyle : '');
             $isDocumentBlock = $type === 'file';
             $documentFilePath = (string) ($block['file_path'] ?? '');
             $documentMediaUrl = (string) ($block['media_url'] ?? '');
@@ -345,6 +409,8 @@ $embed = function (?string $url): ?string {
                     <span class="education-block-type">
                         <?php if ($type === 'video'): ?>
                             <i class="bi bi-play-circle" aria-hidden="true"></i> Vídeo
+                        <?php elseif (in_array($type, ['podcast', 'audio'], true)): ?>
+                            <i class="bi bi-broadcast" aria-hidden="true"></i> Podcast
                         <?php elseif ($type === 'image'): ?>
                             <i class="bi bi-image" aria-hidden="true"></i> Imagem
                         <?php elseif ($type === 'file'): ?>
@@ -371,6 +437,10 @@ $embed = function (?string $url): ?string {
                     </span>
                 </div>
 
+                <?php if (!empty($block['content']) && $contentPosition === 'before_media'): ?>
+                    <div class="<?= e($blockTextClass) ?>"><?= article_html($block['content']) ?></div>
+                <?php endif; ?>
+
                 <?php if ($type === 'video' && $media): ?>
                     <?php if (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched): ?>
                         <p class="education-video-watch-hint" data-education-watch-hint>Assista este vídeo obrigatório até o final para liberar a conclusão da aula.</p>
@@ -392,12 +462,23 @@ $embed = function (?string $url): ?string {
                             <button class="btn btn-sm btn-outline-success icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Marcar vídeo como concluído</button>
                         </form>
                     <?php endif; ?>
+                <?php elseif (in_array($type, ['podcast', 'audio'], true) && (!empty($block['file_path']) || $media)): ?>
+                    <?php $audioSource = (string) ($block['file_path'] ?: $media); ?>
+                    <?php if ($isAudioSource($audioSource)): ?>
+                        <audio class="education-audio-player" src="<?= e(media_url($audioSource)) ?>" controls></audio>
+                    <?php elseif ($media && str_contains($media, 'open.spotify.com/embed/')): ?>
+                        <iframe class="education-podcast-frame" src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                    <?php else: ?>
+                        <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(media_url($audioSource)) ?>" target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Abrir podcast
+                        </a>
+                    <?php endif; ?>
                 <?php elseif ($type === 'image' && (!empty($block['file_path']) || $media)): ?>
-                    <img class="education-block-image" src="<?= e(media_url($block['file_path'] ?: $media)) ?>" alt="<?= e($blockTitle) ?>" onerror="this.remove()">
+                    <img class="education-block-image education-block-image-size-<?= e((string) $imageWidth) ?>" src="<?= e(media_url($block['file_path'] ?: $media)) ?>" alt="<?= e($blockTitle) ?>" onerror="this.remove()">
                 <?php endif; ?>
 
-                <?php if (!empty($block['content'])): ?>
-                    <div class="education-block-text"><?= article_html($block['content']) ?></div>
+                <?php if (!empty($block['content']) && $contentPosition === 'after_media'): ?>
+                    <div class="<?= e($blockTextClass) ?>"><?= article_html($block['content']) ?></div>
                 <?php endif; ?>
 
                 <?php if ($isDocumentBlock): ?>

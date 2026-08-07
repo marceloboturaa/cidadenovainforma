@@ -186,6 +186,7 @@ class Education
                 module_id BIGINT UNSIGNED NULL,
                 title VARCHAR(180) NOT NULL,
                 description TEXT NULL,
+                description_position VARCHAR(20) NOT NULL DEFAULT "after_media",
                 video_url VARCHAR(255) NULL,
                 image_url VARCHAR(255) NULL,
                 locked TINYINT(1) NOT NULL DEFAULT 0,
@@ -202,6 +203,7 @@ class Education
 
         self::ensureColumn('education_lessons', 'module_id', 'BIGINT UNSIGNED NULL AFTER course_id');
         self::ensureColumn('education_lessons', 'description', 'TEXT NULL AFTER title');
+        self::ensureColumn('education_lessons', 'description_position', 'VARCHAR(20) NOT NULL DEFAULT "after_media" AFTER description');
         self::ensureColumn('education_lessons', 'video_url', 'VARCHAR(255) NULL AFTER description');
         self::ensureColumn('education_lessons', 'image_url', 'VARCHAR(255) NULL AFTER video_url');
         self::ensureColumn('education_lessons', 'locked', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
@@ -221,6 +223,7 @@ class Education
                 content LONGTEXT NULL,
                 media_url VARCHAR(255) NULL,
                 file_path VARCHAR(255) NULL,
+                settings_json LONGTEXT NULL,
                 required TINYINT(1) NOT NULL DEFAULT 1,
                 sort_order INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
@@ -229,6 +232,7 @@ class Education
                 CONSTRAINT fk_education_blocks_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+        self::ensureColumn('education_lesson_blocks', 'settings_json', 'LONGTEXT NULL AFTER file_path');
         self::ensureColumn('education_lesson_blocks', 'required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER file_path');
         self::ensureColumn('education_lesson_blocks', 'active', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER sort_order');
 
@@ -1082,9 +1086,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lesson_blocks
-                (lesson_id, type, title, content, media_url, file_path, required, sort_order, active, created_at, updated_at)
+                (lesson_id, type, title, content, media_url, file_path, settings_json, required, sort_order, active, created_at, updated_at)
              VALUES
-                (:lesson_id, :type, :title, :content, :media_url, :file_path, :required, :sort_order, :active, NOW(), NOW())'
+                (:lesson_id, :type, :title, :content, :media_url, :file_path, :settings_json, :required, :sort_order, :active, NOW(), NOW())'
         );
         $stmt->execute(self::blockPayload($data));
 
@@ -1105,6 +1109,7 @@ class Education
                  content = :content,
                  media_url = :media_url,
                  file_path = :file_path,
+                 settings_json = :settings_json,
                  required = :required,
                  sort_order = :sort_order,
                  active = :active,
@@ -1227,9 +1232,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lessons
-                (course_id, module_id, title, description, video_url, image_url, locked, available_at, attendance_mode, sort_order, active, created_at, updated_at)
+                (course_id, module_id, title, description, description_position, video_url, image_url, locked, available_at, attendance_mode, sort_order, active, created_at, updated_at)
              VALUES
-                (:course_id, :module_id, :title, :description, :video_url, :image_url, :locked, :available_at, :attendance_mode, :sort_order, 1, NOW(), NOW())'
+                (:course_id, :module_id, :title, :description, :description_position, :video_url, :image_url, :locked, :available_at, :attendance_mode, :sort_order, 1, NOW(), NOW())'
         );
         $stmt->execute(self::lessonPayload($data));
 
@@ -1248,6 +1253,7 @@ class Education
                  module_id = :module_id,
                  title = :title,
                  description = :description,
+                 description_position = :description_position,
                  video_url = :video_url,
                  image_url = :image_url,
                  locked = :locked,
@@ -3511,6 +3517,7 @@ class Education
             'module_id' => !empty($data['module_id']) ? (int) $data['module_id'] : null,
             'title' => trim((string) ($data['title'] ?? '')),
             'description' => self::nullable($data['description'] ?? null),
+            'description_position' => self::descriptionPosition($data['description_position'] ?? 'after_media'),
             'video_url' => self::nullable($data['video_url'] ?? null),
             'image_url' => self::nullable($data['image_url'] ?? null),
             'locked' => !empty($data['locked']) ? 1 : 0,
@@ -3532,6 +3539,12 @@ class Education
         return in_array($mode, ['video', 'manual', 'none'], true) ? $mode : 'video';
     }
 
+    private static function descriptionPosition(mixed $position): string
+    {
+        $position = strtolower(trim((string) $position));
+        return in_array($position, ['top', 'after_media', 'hidden'], true) ? $position : 'after_media';
+    }
+
     private static function datetimeOrNull(mixed $value): ?string
     {
         $value = trim((string) $value);
@@ -3545,7 +3558,7 @@ class Education
 
     private static function blockPayload(array $data): array
     {
-        $allowedTypes = ['video', 'text', 'image', 'article', 'file', 'embed', 'quiz', 'assignment', 'certificate'];
+        $allowedTypes = ['video', 'text', 'image', 'article', 'file', 'embed', 'quiz', 'assignment', 'certificate', 'podcast', 'audio'];
         $type = strtolower(trim((string) ($data['type'] ?? 'text')));
 
         return [
@@ -3555,10 +3568,35 @@ class Education
             'content' => self::nullable($data['content'] ?? null),
             'media_url' => self::nullable($data['media_url'] ?? null),
             'file_path' => self::nullable($data['file_path'] ?? null),
+            'settings_json' => self::blockSettingsJson($data),
             'required' => array_key_exists('required', $data) ? (!empty($data['required']) ? 1 : 0) : 1,
             'sort_order' => (int) ($data['sort_order'] ?? 0),
             'active' => array_key_exists('active', $data) ? (!empty($data['active']) ? 1 : 0) : 1,
         ];
+    }
+
+    private static function blockSettingsJson(array $data): ?string
+    {
+        $imageWidth = (int) ($data['image_width'] ?? 100);
+        if (!in_array($imageWidth, [35, 50, 70, 100], true)) {
+            $imageWidth = 100;
+        }
+
+        $contentPosition = strtolower(trim((string) ($data['content_position'] ?? 'after_media')));
+        if (!in_array($contentPosition, ['before_media', 'after_media'], true)) {
+            $contentPosition = 'after_media';
+        }
+
+        $textStyle = strtolower(trim((string) ($data['text_style'] ?? 'default')));
+        if (!in_array($textStyle, ['default', 'highlight', 'note'], true)) {
+            $textStyle = 'default';
+        }
+
+        return json_encode([
+            'image_width' => $imageWidth,
+            'content_position' => $contentPosition,
+            'text_style' => $textStyle,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     private static function topicPayload(array $data): array

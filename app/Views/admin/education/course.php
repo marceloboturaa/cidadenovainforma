@@ -270,6 +270,14 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                                 </select>
                             </div>
                             <div>
+                                <label class="form-label">Posição da descrição</label>
+                                <select class="form-select" name="description_position">
+                                    <option value="after_media">Padrão: depois da imagem/vídeo</option>
+                                    <option value="top">No topo da aula</option>
+                                    <option value="hidden">Não exibir</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="form-label">Imagem principal opcional</label>
                                 <input class="form-control" name="lesson_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
                             </div>
@@ -1059,6 +1067,14 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                 <div class="lesson-description-field grid-span-2">
                     <label class="form-label">Descrição da aula</label>
                     <textarea class="form-control" name="description" rows="7" data-tinymce><?= e($editingLesson['description'] ?? '') ?></textarea>
+                </div>
+                <div class="grid-span-2">
+                    <label class="form-label">Posição da descrição</label>
+                    <select class="form-select" name="description_position">
+                        <option value="after_media" <?= selected((string) ($editingLesson['description_position'] ?? 'after_media'), 'after_media') ?>>Padrão: depois da imagem/vídeo</option>
+                        <option value="top" <?= selected((string) ($editingLesson['description_position'] ?? ''), 'top') ?>>No topo da aula</option>
+                        <option value="hidden" <?= selected((string) ($editingLesson['description_position'] ?? ''), 'hidden') ?>>Não exibir</option>
+                    </select>
                 </div>
                 <div class="form-action-cell split-actions">
                     <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar aula</button>
