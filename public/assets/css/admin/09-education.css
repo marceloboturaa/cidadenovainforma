@@ -748,6 +748,19 @@
     align-items: start;
 }
 
+.education-forum-notify-check {
+    grid-column: 1;
+    width: max-content;
+    max-width: 100%;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+}
+
+.education-forum-notify-check input {
+    width: 15px;
+    height: 15px;
+}
+
 .education-course-forum .forum-topic-item {
     grid-template-columns: minmax(0, 1fr) minmax(210px, 0.35fr);
 }

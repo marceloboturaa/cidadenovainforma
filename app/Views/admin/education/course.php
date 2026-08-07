@@ -790,6 +790,11 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="parent_reply_id" value="<?= e((string) $reply['id']) ?>">
                                                 <textarea class="form-control" name="body" rows="2" placeholder="Responder <?= e($reply['user_name'] ?? 'este comentÃ¡rio') ?>" required></textarea>
+                                                <input type="hidden" name="notify_author" value="0">
+                                                <label class="forum-check-line education-forum-notify-check">
+                                                    <input type="checkbox" name="notify_author" value="1" checked>
+                                                    <span>Notificar por e-mail</span>
+                                                </label>
                                                 <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar</button>
                                             </form>
                                         </details>
@@ -823,6 +828,11 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                     <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
                         <?= csrf_field() ?>
                         <textarea class="form-control" name="body" rows="2" placeholder="Responder este tópico" required></textarea>
+                        <input type="hidden" name="notify_author" value="0">
+                        <label class="forum-check-line education-forum-notify-check">
+                            <input type="checkbox" name="notify_author" value="1" checked>
+                            <span>Notificar por e-mail</span>
+                        </label>
                         <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
                     </form>
                 <?php endif; ?>

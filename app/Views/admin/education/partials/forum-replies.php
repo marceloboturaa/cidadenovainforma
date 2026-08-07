@@ -52,6 +52,11 @@ $renderForumReplies = function (int $parentId = 0, int $depth = 0) use (&$render
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="parent_reply_id" value="<?= e((string) $reply['id']) ?>">
                                 <textarea class="form-control" name="body" rows="2" placeholder="Responder <?= e($reply['user_name'] ?? 'este comentario') ?>" required></textarea>
+                                <input type="hidden" name="notify_author" value="0">
+                                <label class="forum-check-line education-forum-notify-check">
+                                    <input type="checkbox" name="notify_author" value="1" checked>
+                                    <span>Notificar por e-mail</span>
+                                </label>
                                 <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar</button>
                             </form>
                         </details>

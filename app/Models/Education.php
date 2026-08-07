@@ -2771,7 +2771,8 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'SELECT education_forum_topics.*,
-                    users.name AS user_name
+                    users.name AS user_name,
+                    users.email AS user_email
              FROM education_forum_topics
              INNER JOIN users ON users.id = education_forum_topics.user_id
              WHERE education_forum_topics.id = :id
@@ -2824,7 +2825,8 @@ class Education
                     education_forum_topics.course_id,
                     education_forum_topics.lesson_id,
                     education_forum_topics.central_topic_id,
-                    users.name AS user_name
+                    users.name AS user_name,
+                    users.email AS user_email
              FROM education_forum_replies
              INNER JOIN education_forum_topics ON education_forum_topics.id = education_forum_replies.topic_id
              INNER JOIN users ON users.id = education_forum_replies.user_id

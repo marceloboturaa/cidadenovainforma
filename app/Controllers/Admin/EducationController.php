@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Logger;
+use App\Core\Mailer;
 use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
@@ -1065,6 +1066,7 @@ class EducationController
             redirect('/admin/education/course?id=' . $course['id'] . '#course-forum');
         }
 
+        $parentReply = null;
         $parentReplyId = filter_input(INPUT_POST, 'parent_reply_id', FILTER_VALIDATE_INT) ?: null;
         if ($parentReplyId) {
             $parentReply = Education::findForumReply($parentReplyId);
@@ -1074,12 +1076,16 @@ class EducationController
             }
         }
 
-        Education::createForumReply([
+        $replyId = Education::createForumReply([
             'topic_id' => $topic['id'],
             'parent_reply_id' => $parentReplyId,
             'user_id' => $user['id'],
             'body' => $body,
         ]);
+
+        if (($_POST['notify_author'] ?? '1') === '1') {
+            $this->notifyEducationForumReply($course, $lesson, $topic, $parentReply, (int) $replyId, $user, $body);
+        }
 
         $completedByForum = false;
         if ($lesson && !$canManage && ($lesson['attendance_mode'] ?? 'video') !== 'manual') {
@@ -2036,6 +2042,83 @@ class EducationController
             Session::flash('error', 'Sessão expirada. Tente novamente.');
             redirect($redirectTo);
         }
+    }
+
+    private function notifyEducationForumReply(array $course, ?array $lesson, array $topic, ?array $parentReply, int $replyId, array $sender, string $body): void
+    {
+        $recipients = $this->educationForumReplyRecipients($topic, $parentReply, (int) ($sender['id'] ?? 0));
+        if (!$recipients) {
+            return;
+        }
+
+        $forumUrl = $this->educationForumUrl($course, $lesson);
+        $senderName = (string) ($sender['name'] ?? 'Alguém');
+        $courseTitle = (string) ($course['title'] ?? 'Curso');
+        $topicTitle = (string) ($topic['title'] ?? 'Fórum');
+        $excerpt = text_excerpt(trim(strip_tags($body)), 220);
+        $subject = 'Nova resposta no fórum - ' . $courseTitle;
+
+        foreach ($recipients as $recipient) {
+            $html = '<p>Olá, ' . e($recipient['name']) . '.</p>'
+                . '<p><strong>' . e($senderName) . '</strong> respondeu no fórum <strong>' . e($topicTitle) . '</strong>.</p>'
+                . '<p><strong>Curso:</strong> ' . e($courseTitle) . '</p>'
+                . ($lesson ? '<p><strong>Aula:</strong> ' . e($lesson['title'] ?? '') . '</p>' : '')
+                . '<p>' . e($excerpt) . '</p>'
+                . '<p><a href="' . e($forumUrl) . '">Abrir fórum</a></p>';
+            $text = "Olá, {$recipient['name']}.\n\n"
+                . "{$senderName} respondeu no fórum \"{$topicTitle}\".\n"
+                . "Curso: {$courseTitle}\n"
+                . ($lesson ? 'Aula: ' . (string) ($lesson['title'] ?? '') . "\n" : '')
+                . "\n{$excerpt}\n\nAbrir fórum: {$forumUrl}";
+
+            try {
+                Mailer::send((string) $recipient['email'], $subject, $html, $text);
+            } catch (\Throwable $exception) {
+                Logger::info('education.forum_reply_email_failed', 'Falha ao notificar resposta do fórum #' . $replyId . ': ' . $exception->getMessage(), (int) ($sender['id'] ?? 0));
+            }
+        }
+    }
+
+    private function educationForumReplyRecipients(array $topic, ?array $parentReply, int $senderId): array
+    {
+        $recipients = [];
+        foreach ([$topic, $parentReply] as $source) {
+            if (!$source) {
+                continue;
+            }
+
+            $userId = (int) ($source['user_id'] ?? 0);
+            $email = trim((string) ($source['user_email'] ?? ''));
+            if ($userId <= 0 || $userId === $senderId || !filter_var($email, FILTER_VALIDATE_EMAIL) || isset($recipients[$email])) {
+                continue;
+            }
+
+            $recipients[$email] = [
+                'name' => (string) ($source['user_name'] ?? 'usuário'),
+                'email' => $email,
+            ];
+        }
+
+        return array_values($recipients);
+    }
+
+    private function educationForumUrl(array $course, ?array $lesson): string
+    {
+        $path = $lesson
+            ? '/admin/education/lesson?id=' . (int) ($lesson['id'] ?? 0) . '#lesson-forum'
+            : '/admin/education/course?id=' . (int) ($course['id'] ?? 0) . '#course-forum';
+        $link = url($path);
+        if (preg_match('#^https?://#i', $link)) {
+            return $link;
+        }
+
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        if ($host === '') {
+            return $link;
+        }
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        return $scheme . '://' . $host . $link;
     }
 
     private function attendanceDate(): string
