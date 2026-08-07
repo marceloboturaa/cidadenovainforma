@@ -840,6 +840,15 @@ class Education
         self::setModuleVisibility($id, false);
     }
 
+    public static function deleteModule(int $id): void
+    {
+        self::ensureSchema();
+
+        Database::connection()
+            ->prepare('DELETE FROM education_modules WHERE id = :id')
+            ->execute(['id' => $id]);
+    }
+
     public static function setModuleVisibility(int $id, bool $active): void
     {
         self::ensureSchema();

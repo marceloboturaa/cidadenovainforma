@@ -436,8 +436,8 @@ class EducationController
         $course = Education::findCourse((int) $module['course_id']);
         $this->authorizeCourseManage($course);
 
-        Education::deactivateModule((int) $module['id']);
-        Session::flash('success', 'Módulo ocultado.');
+        Education::deleteModule((int) $module['id']);
+        Session::flash('success', 'Módulo excluído. As aulas vinculadas foram movidas para Sem módulo.');
         redirect('/admin/education/course?id=' . $module['course_id']);
     }
 

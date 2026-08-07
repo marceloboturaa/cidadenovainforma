@@ -180,13 +180,18 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                         <?php endif; ?>
                         <strong><?= e((string) count($moduleLessons)) ?> aula(s)</strong>
                         <?php if ($canManage): ?>
-                            <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>">Editar módulo</a>
+                            <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar nome</a>
                             <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/visibility?module_id=' . $module['id'])) ?>">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="active" value="<?= $moduleHidden ? '1' : '0' ?>">
-                                <button class="btn btn-sm <?= $moduleHidden ? 'btn-outline-primary' : 'btn-outline-danger' ?>">
+                                <button class="btn btn-sm icon-btn <?= $moduleHidden ? 'btn-outline-primary' : 'btn-outline-danger' ?>">
+                                    <i class="bi <?= $moduleHidden ? 'bi-eye' : 'bi-eye-slash' ?>" aria-hidden="true"></i>
                                     <?= $moduleHidden ? 'Mostrar' : 'Ocultar' ?>
                                 </button>
+                            </form>
+                            <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/delete?module_id=' . $module['id'])) ?>" onsubmit="return confirm('Excluir este módulo? As aulas vinculadas não serão apagadas; elas serão movidas para Sem módulo.');">
+                                <?= csrf_field() ?>
+                                <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Excluir</button>
                             </form>
                         <?php endif; ?>
                     </div>
