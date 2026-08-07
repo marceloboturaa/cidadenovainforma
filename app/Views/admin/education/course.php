@@ -222,7 +222,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
                         <?php endif; ?>
                         <strong><?= e((string) count($moduleLessons)) ?> aula(s)</strong>
                         <?php if ($canManage): ?>
-                            <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar nome</a>
+                            <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar título</a>
                             <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/visibility?module_id=' . $module['id'])) ?>">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="active" value="<?= $moduleHidden ? '1' : '0' ?>">
@@ -949,15 +949,15 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
             <header>
                 <div>
                     <span>Edição separada</span>
-                    <h2 id="education-module-edit-title">Editar módulo</h2>
+                    <h2 id="education-module-edit-title">Editar título do módulo</h2>
                 </div>
                 <a class="forum-icon-button" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>" data-modal-close aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
             </header>
             <form method="post" action="<?= e(url('/admin/education/module/update?module_id=' . $editingModule['id'])) ?>" class="education-modal-form">
                 <?= csrf_field() ?>
                 <div>
-                    <label class="form-label">Título do módulo</label>
-                    <input class="form-control" name="title" maxlength="180" value="<?= e($editingModule['title'] ?? '') ?>" required autofocus>
+                    <label class="form-label">Título / nome do módulo</label>
+                    <input class="form-control" name="title" maxlength="180" value="<?= e($editingModule['title'] ?? '') ?>" placeholder="Digite o novo título do módulo" required autofocus>
                 </div>
                 <div>
                     <label class="form-label">Ordem</label>

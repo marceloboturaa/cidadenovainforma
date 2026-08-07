@@ -789,12 +789,21 @@
 }
 
 .education-module-card.is-hidden-module {
-    border-style: dashed;
-    background: #f8fafc;
+    border-color: #fde68a;
+    border-left: 5px solid #f59e0b;
+    background: #fffbeb;
 }
 
 .education-module-card.is-hidden-module > header span {
-    color: #64748b;
+    color: #92400e;
+}
+
+.education-module-card.is-hidden-module h3 {
+    color: #78350f;
+}
+
+.education-module-card.is-hidden-module p {
+    color: #854d0e;
 }
 
 .education-module-card > header {
