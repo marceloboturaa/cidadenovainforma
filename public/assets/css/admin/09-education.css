@@ -1131,23 +1131,26 @@
     border-color: rgba(22, 163, 74, 0.25);
 }
 
+.education-sequence-form-panel.is-editing-material {
+    border-color: #bfdbfe;
+    background: #f8fbff;
+}
+
+.education-lesson-settings-panel {
+    border-color: #e2e8f0;
+}
+
+.education-lesson-inline-form {
+    grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 0.8fr) minmax(120px, 0.5fr);
+    align-items: start;
+}
+
 .education-sequence-form {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 170px 120px;
+    grid-template-columns: 1fr;
     gap: 14px;
-    align-items: end;
-}
-
-.education-sequence-form .sequence-title-field,
-.education-sequence-form .grid-span-2,
-.education-sequence-form .education-sequence-extra,
-.education-sequence-form .form-action-cell {
-    grid-column: 1 / -1;
-}
-
-.education-sequence-form .sequence-type-field,
-.education-sequence-form .sequence-order-field {
-    grid-row: 2;
+    padding: 16px;
+    align-items: start;
 }
 
 .education-sequence-extra {
@@ -1168,10 +1171,42 @@
 
 .education-sequence-extra-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.6fr);
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
     gap: 12px;
     align-items: end;
     margin-top: 12px;
+}
+
+.education-material-fieldset {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(160px, 0.45fr) minmax(110px, 0.28fr);
+    gap: 12px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.education-material-fieldset legend {
+    padding: 0 6px;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.education-material-fieldset .grid-span-2,
+.education-material-fieldset .education-sequence-extra-grid,
+.education-material-fieldset .education-block-document-field {
+    grid-column: 1 / -1;
+}
+
+.education-material-toggles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    gap: 10px;
 }
 
 .education-large-textarea {
@@ -2743,6 +2778,11 @@
     background: #f8fafc;
 }
 
+.education-block-card.is-being-edited {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.28);
+}
+
 .education-block-heading {
     display: flex;
     flex-wrap: wrap;
@@ -2884,6 +2924,15 @@
     min-height: 180px;
     border: 0;
     border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+    .education-lesson-inline-form,
+    .education-material-fieldset,
+    .education-sequence-extra-grid,
+    .education-material-toggles {
+        grid-template-columns: 1fr;
+    }
 }
 
 .education-block-actions {

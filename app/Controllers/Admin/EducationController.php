@@ -509,10 +509,18 @@ class EducationController
         } catch (\Throwable $exception) {
             error_log('education.lesson_update_failed: ' . $exception->getMessage());
             Session::flash('error', 'Não foi possível salvar a aula agora. Verifique os campos e tente novamente.');
+            $returnTo = trim((string) ($_POST['return_to'] ?? ''));
+            if ($returnTo !== '' && str_starts_with($returnTo, '/admin/education/')) {
+                redirect($returnTo);
+            }
             redirect('/admin/education/course?id=' . $lesson['course_id'] . '&lesson_id=' . $lesson['id']);
         }
 
         Session::flash('success', 'Aula atualizada.');
+        $returnTo = trim((string) ($_POST['return_to'] ?? ''));
+        if ($returnTo !== '' && str_starts_with($returnTo, '/admin/education/')) {
+            redirect($returnTo);
+        }
         redirect('/admin/education/course?id=' . $lesson['course_id']);
     }
 

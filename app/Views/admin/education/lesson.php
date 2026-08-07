@@ -50,6 +50,7 @@ if ($editingBlock && !empty($editingBlock['settings_json'])) {
 $lessonDescriptionPosition = (string) ($lesson['description_position'] ?? 'after_media');
 $lessonDescriptionPosition = in_array($lessonDescriptionPosition, ['top', 'after_media', 'hidden'], true) ? $lessonDescriptionPosition : 'after_media';
 $showLessonDescription = !empty($lesson['description']) && $lessonDescriptionPosition !== 'hidden';
+$editingLessonInline = ($_GET['edit_lesson'] ?? '') === '1';
 
 $embed = function (?string $url): ?string {
     $url = trim((string) $url);
@@ -93,7 +94,7 @@ $renderLessonDescription = function () use ($lesson): void {
             <a class="btn btn-outline-primary icon-btn" href="#lesson-description"><i class="bi bi-card-text" aria-hidden="true"></i>Descrição</a>
         <?php endif; ?>
         <?php if ($canManage): ?>
-            <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'] . '&lesson_id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar aula</a>
+            <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&edit_lesson=1#lesson-settings')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar aula</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&preview=student')) ?>"><i class="bi bi-eye" aria-hidden="true"></i>Visualizar como estudante</a>
         <?php elseif ($studentPreview && $canManageOriginal): ?>
             <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Voltar ao modo edição</a>
@@ -210,56 +211,148 @@ $renderLessonDescription = function () use ($lesson): void {
 
     <article class="education-content-stack">
         <?php if ($canManage): ?>
-            <section class="panel education-sequence-form-panel">
-                <div class="section-heading">
-                    <h2><?= $editingBlock ? 'Editar item' : 'Adicionar à aula' ?></h2>
-                    <span>Escolha o tipo, escreva o conteúdo e salve.</span>
-                </div>
+            <details class="panel education-admin-details education-lesson-settings-panel" id="lesson-settings" <?= $editingLessonInline ? 'open' : '' ?>>
+                <summary class="education-admin-details-summary">
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                    <span>
+                        <strong>Dados da aula</strong>
+                        <small>Título, descrição, imagem principal, vídeo principal e liberação.</small>
+                    </span>
+                    <em>Editar aula</em>
+                </summary>
+                <form method="post" action="<?= e(url('/admin/education/lesson/update?id=' . $lesson['id'])) ?>" enctype="multipart/form-data" class="education-lesson-form education-lesson-inline-form education-admin-details-body">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="return_to" value="<?= e('/admin/education/lesson?id=' . $lesson['id'] . '&edit_lesson=1#lesson-settings') ?>">
+                    <div class="lesson-title-field">
+                        <label class="form-label">Título da aula</label>
+                        <input class="form-control" name="title" maxlength="180" value="<?= e($lesson['title'] ?? '') ?>" required>
+                    </div>
+                    <div class="lesson-module-field">
+                        <label class="form-label">Módulo</label>
+                        <select class="form-select" name="module_id">
+                            <option value="">Sem módulo</option>
+                            <?php foreach ($modules as $module): ?>
+                                <option value="<?= e((string) $module['id']) ?>" <?= selected((string) $module['id'], (string) ($lesson['module_id'] ?? '')) ?>>
+                                    <?= e($module['title']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="lesson-order-field">
+                        <label class="form-label">Ordem</label>
+                        <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($lesson['sort_order'] ?? 0)) ?>">
+                    </div>
+                    <div>
+                        <label class="form-label">Liberar em</label>
+                        <input class="form-control" name="available_at" type="datetime-local" value="<?= !empty($lesson['available_at']) ? e(date('Y-m-d\TH:i', strtotime((string) $lesson['available_at']))) : '' ?>">
+                    </div>
+                    <div>
+                        <label class="form-label">Frequência</label>
+                        <select class="form-select" name="attendance_mode">
+                            <option value="video" <?= selected((string) ($lesson['attendance_mode'] ?? 'video'), 'video') ?>>Aluno conclui assistindo o vídeo</option>
+                            <option value="manual" <?= selected((string) ($lesson['attendance_mode'] ?? 'video'), 'manual') ?>>Ao vivo: professor valida presença</option>
+                            <option value="none" <?= selected((string) ($lesson['attendance_mode'] ?? 'video'), 'none') ?>>Não contar para frequência</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Posição da descrição</label>
+                        <select class="form-select" name="description_position">
+                            <option value="after_media" <?= selected((string) ($lesson['description_position'] ?? 'after_media'), 'after_media') ?>>Padrão: depois da imagem/vídeo</option>
+                            <option value="top" <?= selected((string) ($lesson['description_position'] ?? ''), 'top') ?>>No topo da aula</option>
+                            <option value="hidden" <?= selected((string) ($lesson['description_position'] ?? ''), 'hidden') ?>>Não exibir</option>
+                        </select>
+                    </div>
+                    <details class="education-sequence-extra grid-span-2" open>
+                        <summary><i class="bi bi-play-circle" aria-hidden="true"></i>Vídeo e imagem principal</summary>
+                        <div class="education-sequence-extra-grid">
+                            <div>
+                                <label class="form-label">Vídeo principal</label>
+                                <input class="form-control" name="video_url" value="<?= e($lesson['video_url'] ?? '') ?>" placeholder="YouTube, Vimeo ou vídeo direto">
+                            </div>
+                            <div>
+                                <label class="form-label">Enviar imagem principal</label>
+                                <input class="form-control" name="lesson_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                            </div>
+                            <div class="grid-span-2">
+                                <label class="form-label">Ou URL da imagem</label>
+                                <input class="form-control" name="image_url" value="<?= e($lesson['image_url'] ?? '') ?>" placeholder="URL da imagem principal">
+                            </div>
+                        </div>
+                    </details>
+                    <input type="hidden" name="locked" value="0">
+                    <label class="forum-check-line grid-span-2">
+                        <input type="checkbox" name="locked" value="1" <?= checked(!empty($lesson['locked'])) ?>>
+                        <span>Bloquear reprodução e materiais para alunos</span>
+                    </label>
+                    <div class="lesson-description-field grid-span-2">
+                        <label class="form-label">Descrição da aula</label>
+                        <textarea class="form-control" name="description" rows="7" data-tinymce><?= e($lesson['description'] ?? '') ?></textarea>
+                    </div>
+                    <div class="form-action-cell split-actions">
+                        <button class="btn btn-primary icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Salvar aula</button>
+                        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'])) ?>"><i class="bi bi-diagram-3" aria-hidden="true"></i>Organizar curso</a>
+                    </div>
+                </form>
+            </details>
+
+            <details class="panel education-admin-details education-sequence-form-panel <?= $editingBlock ? 'is-editing-material' : '' ?>" id="material-form" <?= $editingBlock ? 'open' : '' ?>>
+                <summary class="education-admin-details-summary">
+                    <i class="bi <?= $editingBlock ? 'bi-pencil-square' : 'bi-plus-circle' ?>" aria-hidden="true"></i>
+                    <span>
+                        <strong><?= $editingBlock ? 'Editar material' : 'Adicionar material' ?></strong>
+                        <small><?= $editingBlock ? 'Você está alterando um item já cadastrado nesta aula.' : 'Crie textos, imagens, vídeos, podcasts, arquivos, tarefas ou certificados.' ?></small>
+                    </span>
+                    <em><?= $editingBlock ? 'Editando' : 'Novo item' ?></em>
+                </summary>
                 <form method="post" action="<?= e($blockAction) ?>" enctype="multipart/form-data" class="education-sequence-form">
                     <?= csrf_field() ?>
-                    <div class="sequence-title-field">
-                        <label class="form-label">Título</label>
-                        <input class="form-control" name="title" maxlength="180" value="<?= e($editingBlock['title'] ?? '') ?>" placeholder="Ex.: Vídeo 1, Leitura, Material de apoio">
-                    </div>
-                    <div class="sequence-type-field">
-                        <label class="form-label">Tipo</label>
-                        <select class="form-select" name="type">
-                            <option value="text" <?= selected((string) ($editingBlock['type'] ?? 'text'), 'text') ?>>Texto</option>
-                            <option value="video" <?= selected((string) ($editingBlock['type'] ?? ''), 'video') ?>>Vídeo</option>
-                            <option value="podcast" <?= selected((string) ($editingBlock['type'] ?? ''), 'podcast') ?>>Podcast / áudio</option>
-                            <option value="assignment" <?= selected((string) ($editingBlock['type'] ?? ''), 'assignment') ?>>Tarefa</option>
-                            <option value="certificate" <?= selected((string) ($editingBlock['type'] ?? ''), 'certificate') ?>>Certificado</option>
-                            <option value="image" <?= selected((string) ($editingBlock['type'] ?? ''), 'image') ?>>Imagem</option>
-                            <option value="file" <?= selected((string) ($editingBlock['type'] ?? ''), 'file') ?>>Documento para baixar</option>
-                        </select>
-                        <small class="form-text">Use Documento para baixar quando o aluno precisar receber PDF, DOC ou outro material da aula.</small>
-                    </div>
-                    <div class="sequence-order-field">
-                        <label class="form-label">Ordem</label>
-                        <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingBlock['sort_order'] ?? ((count($blocks) + 1) * 10))) ?>">
-                    </div>
+                    <fieldset class="education-material-fieldset">
+                        <legend>Identificação</legend>
+                        <div class="sequence-title-field">
+                            <label class="form-label">Título</label>
+                            <input class="form-control" name="title" maxlength="180" value="<?= e($editingBlock['title'] ?? '') ?>" placeholder="Ex.: Vídeo 1, Leitura, Material de apoio">
+                        </div>
+                        <div class="sequence-type-field">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" name="type">
+                                <option value="text" <?= selected((string) ($editingBlock['type'] ?? 'text'), 'text') ?>>Texto</option>
+                                <option value="video" <?= selected((string) ($editingBlock['type'] ?? ''), 'video') ?>>Vídeo</option>
+                                <option value="podcast" <?= selected((string) ($editingBlock['type'] ?? ''), 'podcast') ?>>Podcast / áudio</option>
+                                <option value="image" <?= selected((string) ($editingBlock['type'] ?? ''), 'image') ?>>Imagem</option>
+                                <option value="file" <?= selected((string) ($editingBlock['type'] ?? ''), 'file') ?>>Documento para baixar</option>
+                                <option value="assignment" <?= selected((string) ($editingBlock['type'] ?? ''), 'assignment') ?>>Tarefa</option>
+                                <option value="certificate" <?= selected((string) ($editingBlock['type'] ?? ''), 'certificate') ?>>Certificado</option>
+                            </select>
+                        </div>
+                        <div class="sequence-order-field">
+                            <label class="form-label">Ordem</label>
+                            <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingBlock['sort_order'] ?? ((count($blocks) + 1) * 10))) ?>">
+                        </div>
+                    </fieldset>
                     <input type="hidden" name="required" value="0">
                     <input type="hidden" name="active" value="0">
-                    <label class="forum-check-line">
-                        <input type="checkbox" name="required" value="1" <?= checked((string) ($editingBlock['required'] ?? '1'), '1') ?>>
-                        <span>Obrigatório para concluir a aula</span>
-                    </label>
-                    <label class="forum-check-line">
-                        <input type="checkbox" name="active" value="1" <?= checked((string) ($editingBlock['active'] ?? '1'), '1') ?>>
-                        <span>Visível para alunos</span>
-                    </label>
+                    <div class="education-material-toggles">
+                        <label class="forum-check-line">
+                            <input type="checkbox" name="required" value="1" <?= checked((string) ($editingBlock['required'] ?? '1'), '1') ?>>
+                            <span>Obrigatório para concluir a aula</span>
+                        </label>
+                        <label class="forum-check-line">
+                            <input type="checkbox" name="active" value="1" <?= checked((string) ($editingBlock['active'] ?? '1'), '1') ?>>
+                            <span>Visível para alunos</span>
+                        </label>
+                    </div>
                     <?php if ($editingBlock && !empty($editingBlock['file_path'])): ?>
                         <div class="education-current-file">
                             <i class="bi bi-paperclip" aria-hidden="true"></i>
                             Arquivo atual mantido se nenhum novo for enviado.
                         </div>
                     <?php endif; ?>
-                    <div class="grid-span-2">
-                        <label class="form-label">Texto, explicação ou instruções</label>
-                        <textarea class="form-control education-large-textarea" name="content" rows="10" data-tinymce placeholder="Escreva aqui o conteúdo que aparece depois ou antes do vídeo"><?= e($editingBlock['content'] ?? '') ?></textarea>
-                    </div>
-                    <details class="education-sequence-extra">
-                        <summary><i class="bi bi-sliders" aria-hidden="true"></i>Link, visual e tamanho</summary>
+                    <fieldset class="education-material-fieldset">
+                        <legend>Conteúdo</legend>
+                        <div class="grid-span-2">
+                            <label class="form-label">Texto, explicação ou instruções</label>
+                            <textarea class="form-control education-large-textarea" name="content" rows="10" data-tinymce placeholder="Texto que aparece junto com este material"><?= e($editingBlock['content'] ?? '') ?></textarea>
+                        </div>
                         <div class="education-sequence-extra-grid">
                             <div>
                                 <label class="form-label">Link externo</label>
@@ -289,12 +382,15 @@ $renderLessonDescription = function () use ($lesson): void {
                                 </select>
                             </div>
                         </div>
-                    </details>
-                    <div class="grid-span-2 education-block-document-field">
-                        <label class="form-label">Enviar imagem, documento ou arquivo da aula</label>
-                        <input class="form-control" name="block_file" type="file">
-                        <small class="form-text">Com o tipo Documento para baixar, este arquivo fica disponivel para o aluno baixar na aula.</small>
-                    </div>
+                    </fieldset>
+                    <fieldset class="education-material-fieldset">
+                        <legend>Arquivo</legend>
+                        <div class="grid-span-2 education-block-document-field">
+                            <label class="form-label">Enviar imagem, áudio, documento ou arquivo</label>
+                            <input class="form-control" name="block_file" type="file">
+                            <small class="form-text">Para podcast, envie áudio ou cole um link. Para documento, o arquivo fica disponível para baixar.</small>
+                        </div>
+                    </fieldset>
                     <div class="form-action-cell split-actions">
                         <button class="btn btn-primary icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i><?= $editingBlock ? 'Atualizar item' : 'Adicionar à sequência' ?></button>
                         <?php if ($editingBlock): ?>
@@ -302,7 +398,7 @@ $renderLessonDescription = function () use ($lesson): void {
                         <?php endif; ?>
                     </div>
                 </form>
-            </section>
+            </details>
         <?php endif; ?>
 
         <?php if ($showLessonDescription && $lessonDescriptionPosition === 'top'): ?>
@@ -404,7 +500,7 @@ $renderLessonDescription = function () use ($lesson): void {
             <?php $blockHidden = empty($block['active']); ?>
             <?php $blockRequired = !empty($block['required']) && ($type !== 'video' || $playlistRequired); ?>
             <?php $blockVideoWatched = !empty($block['block_video_completed_at']); ?>
-            <section class="panel education-block-card <?= $isDocumentBlock ? 'education-document-card' : '' ?> <?= $blockHidden ? 'is-hidden-block' : '' ?>">
+            <section id="material-<?= e((string) $block['id']) ?>" class="panel education-block-card <?= $isDocumentBlock ? 'education-document-card' : '' ?> <?= $blockHidden ? 'is-hidden-block' : '' ?> <?= $editingBlock && (int) ($editingBlock['id'] ?? 0) === (int) $block['id'] ? 'is-being-edited' : '' ?>">
                 <div class="education-block-heading">
                     <span class="education-block-type">
                         <?php if ($type === 'video'): ?>
@@ -590,15 +686,15 @@ $renderLessonDescription = function () use ($lesson): void {
 
                 <?php if ($canManage): ?>
                     <div class="education-block-actions">
-                        <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&block_id=' . $block['id'])) ?>">Editar</a>
+                        <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&block_id=' . $block['id'] . '#material-form')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar material</a>
                         <form class="inline-form" method="post" action="<?= e(url('/admin/education/block/visibility?id=' . $block['id'])) ?>">
                             <?= csrf_field() ?>
                             <input type="hidden" name="active" value="<?= $blockHidden ? '1' : '0' ?>">
-                            <button class="btn btn-sm <?= $blockHidden ? 'btn-outline-primary' : 'btn-outline-danger' ?>"><?= $blockHidden ? 'Mostrar' : 'Ocultar' ?></button>
+                            <button class="btn btn-sm <?= $blockHidden ? 'btn-outline-primary' : 'btn-outline-danger' ?> icon-btn"><i class="bi <?= $blockHidden ? 'bi-eye' : 'bi-eye-slash' ?>" aria-hidden="true"></i><?= $blockHidden ? 'Mostrar' : 'Ocultar' ?></button>
                         </form>
                         <form class="inline-form" method="post" action="<?= e(url('/admin/education/block/delete?id=' . $block['id'])) ?>" onsubmit="return confirm('Excluir este item definitivamente? Esta ação remove o item da aula.');">
                             <?= csrf_field() ?>
-                            <button class="btn btn-sm btn-danger">Excluir</button>
+                            <button class="btn btn-sm btn-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Excluir</button>
                         </form>
                     </div>
                 <?php endif; ?>
