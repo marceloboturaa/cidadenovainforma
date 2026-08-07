@@ -385,6 +385,17 @@
     color: #1e3a8a;
 }
 
+.education-lesson-heading,
+.education-preview-banner {
+    max-width: 1180px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.education-preview-banner {
+    padding: 12px 14px;
+}
+
 .education-preview-banner strong {
     display: block;
     margin-top: 2px;
@@ -1230,8 +1241,21 @@
     align-items: start;
 }
 
+.education-player-layout.is-student-view {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "content"
+        "playlist";
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
 .education-player-layout:has(.education-playlist-toggle:not([open])) {
     grid-template-columns: 58px minmax(0, 1fr);
+}
+
+.education-player-layout.is-student-view:has(.education-playlist-toggle:not([open])) {
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .education-playlist-sidebar {
@@ -2887,6 +2911,32 @@
     border: 1px solid var(--line);
 }
 
+.education-player-layout.is-student-view .education-playlist-sidebar {
+    position: static;
+    border-color: #e2e8f0;
+    background: #ffffff;
+}
+
+.education-player-layout.is-student-view .education-playlist-title {
+    background: #991b1b;
+}
+
+.education-player-layout.is-student-view .education-sidebar-scroll {
+    max-height: 320px;
+}
+
+.education-player-layout.is-student-view .education-sidebar-module {
+    padding-bottom: 8px;
+}
+
+.education-player-layout.is-student-view .education-sidebar-module a {
+    background: #f8fafc;
+}
+
+.education-player-layout.is-student-view .education-sidebar-module a.active {
+    background: #fff1f2;
+}
+
 .education-block-image-size-35 {
     width: min(35%, 360px);
 }
@@ -2907,10 +2957,76 @@
     grid-area: content;
 }
 
+.education-player-layout.is-student-view .education-content-stack {
+    gap: 18px;
+}
+
+.education-player-layout.is-student-view .education-block-card,
+.education-player-layout.is-student-view .education-lesson-description,
+.education-player-layout.is-student-view .education-course-forum,
+.education-player-layout.is-student-view .education-form-board {
+    border-color: #e5e7eb;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.education-player-layout.is-student-view .education-lesson-description {
+    margin-top: 0;
+    padding: 22px;
+    border-left: 5px solid #b91c1c;
+}
+
+.education-player-layout.is-student-view .education-lesson-description h2 {
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+}
+
 .education-lesson-main-image {
     width: 100%;
     max-height: 520px;
     object-fit: cover;
+}
+
+.education-player-layout.is-student-view .education-lesson-main-media-card {
+    gap: 10px;
+}
+
+.education-player-layout.is-student-view .education-lesson-main-image {
+    max-height: 360px;
+    border-radius: 8px;
+    object-fit: contain;
+    background: #f8fafc;
+}
+
+.education-video-frame.is-preview-frame {
+    background: #f8fafc;
+}
+
+.education-video-preview-placeholder {
+    display: grid;
+    place-items: center;
+    gap: 10px;
+    min-height: 280px;
+    padding: 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    color: #475569;
+    text-align: center;
+}
+
+.education-video-preview-placeholder > i {
+    color: #b91c1c;
+    font-size: 2.4rem;
+}
+
+.education-video-preview-placeholder strong {
+    color: #111827;
+    font-size: 1.1rem;
+}
+
+.education-video-preview-placeholder span {
+    max-width: 520px;
+    line-height: 1.45;
 }
 
 .education-audio-player {

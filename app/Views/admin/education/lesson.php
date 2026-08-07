@@ -121,9 +121,9 @@ $renderLessonDescription = function () use ($lesson): void {
     </section>
 <?php endif; ?>
 
-<section class="education-player-layout">
+<section class="education-player-layout <?= (!$canManage || $studentPreview) ? 'is-student-view' : '' ?>">
     <aside class="education-playlist-sidebar">
-        <details class="education-playlist-toggle" data-education-playlist-toggle>
+        <details class="education-playlist-toggle" data-education-playlist-toggle <?= (!$canManage || $studentPreview) ? 'open' : '' ?>>
             <summary class="education-playlist-title">
                 <span class="education-playlist-label"><i class="bi bi-list-ul" aria-hidden="true"></i><span>Playlist</span></span>
                 <strong><?= e($course['title'] ?? 'Curso') ?></strong>
@@ -406,7 +406,7 @@ $renderLessonDescription = function () use ($lesson): void {
         <?php endif; ?>
 
         <?php if (!empty($lesson['image_url'])): ?>
-            <section class="panel education-block-card">
+            <section class="panel education-block-card education-lesson-main-media-card">
                 <div class="education-block-heading">
                     <span class="education-block-type"><i class="bi bi-image" aria-hidden="true"></i> Imagem principal</span>
                     <strong><?= e($lesson['title']) ?></strong>
@@ -446,12 +446,19 @@ $renderLessonDescription = function () use ($lesson): void {
                 <?php elseif ($studentPreview && $hasVideo): ?>
                     <p class="education-video-watch-hint is-complete">Prévia do vídeo principal. A reprodução aqui não altera progresso.</p>
                 <?php endif; ?>
-                <div class="education-video-frame">
-                    <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $videoEmbedUrl)): ?>
-                        <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></video>
-                    <?php else: ?>
-                        <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></iframe>
-                    <?php endif; ?>
+                    <div class="education-video-frame <?= $studentPreview ? 'is-preview-frame' : '' ?>">
+                        <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $videoEmbedUrl)): ?>
+                            <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></video>
+                        <?php elseif ($studentPreview): ?>
+                            <div class="education-video-preview-placeholder">
+                                <i class="bi bi-play-circle" aria-hidden="true"></i>
+                                <strong>Vídeo principal</strong>
+                                <span>Na prévia do estudante, a reprodução pode ser limitada pelo navegador ou pela plataforma do vídeo.</span>
+                                <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(media_url((string) ($lesson['video_url'] ?? ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Abrir vídeo</a>
+                            </div>
+                        <?php else: ?>
+                            <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></iframe>
+                        <?php endif; ?>
                 </div>
             </section>
         <?php endif; ?>
@@ -545,9 +552,16 @@ $renderLessonDescription = function () use ($lesson): void {
                     <?php elseif (!$canManage && $blockRequired): ?>
                         <p class="education-video-watch-hint is-complete">Vídeo obrigatório assistido.</p>
                     <?php endif; ?>
-                    <div class="education-video-frame">
+                    <div class="education-video-frame <?= $studentPreview ? 'is-preview-frame' : '' ?>">
                         <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $media)): ?>
                             <video src="<?= e(media_url($media)) ?>" controls <?= (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></video>
+                        <?php elseif ($studentPreview): ?>
+                            <div class="education-video-preview-placeholder">
+                                <i class="bi bi-play-circle" aria-hidden="true"></i>
+                                <strong><?= e($blockTitle) ?></strong>
+                                <span>Na prévia do estudante, a reprodução pode ser limitada pelo navegador ou pela plataforma do vídeo.</span>
+                                <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(media_url((string) ($block['media_url'] ?? ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Abrir vídeo</a>
+                            </div>
                         <?php else: ?>
                             <iframe src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allowfullscreen <?= (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></iframe>
                         <?php endif; ?>
