@@ -3086,7 +3086,8 @@
 }
 
 .education-player-layout.is-student-view .education-lesson-main-media-card {
-    gap: 10px;
+    gap: 0;
+    padding: 10px;
 }
 
 .education-player-layout.is-student-view .education-lesson-main-image {

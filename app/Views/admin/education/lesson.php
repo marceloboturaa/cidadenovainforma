@@ -398,10 +398,12 @@ $renderLessonDescription = function () use ($lesson): void {
 
         <?php if (!empty($lesson['image_url'])): ?>
             <section class="panel education-block-card education-lesson-main-media-card">
-                <div class="education-block-heading">
-                    <span class="education-block-type"><i class="bi bi-image" aria-hidden="true"></i> Imagem principal</span>
-                    <strong><?= e($lesson['title']) ?></strong>
-                </div>
+                <?php if ($canManage): ?>
+                    <div class="education-block-heading">
+                        <span class="education-block-type"><i class="bi bi-image" aria-hidden="true"></i> Imagem principal</span>
+                        <strong><?= e($lesson['title']) ?></strong>
+                    </div>
+                <?php endif; ?>
                 <img class="education-block-image education-lesson-main-image" src="<?= e(media_url($lesson['image_url'])) ?>" alt="<?= e($lesson['title']) ?>" onerror="this.remove()">
             </section>
         <?php endif; ?>

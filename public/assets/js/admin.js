@@ -16,6 +16,7 @@
     const educationVideoWatchPlayers = document.querySelectorAll('[data-education-video-watch]');
     const educationCompleteForm = document.querySelector('[data-education-complete-form]');
     const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
+    const educationPlaylistToggle = document.querySelector('[data-education-playlist-toggle]');
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
     const pendingUsersList = document.querySelector('[data-pending-users-list]');
@@ -191,6 +192,10 @@
 
     if (educationVideoWatchPlayers.length) {
         educationVideoWatchPlayers.forEach(bindEducationVideoWatch);
+    }
+
+    if (educationPlaylistToggle) {
+        bindEducationPlaylistActiveScroll(educationPlaylistToggle);
     }
 
     if (usersDirectory && usersSearch) {
@@ -937,6 +942,33 @@
             maxWatched = Math.max(maxWatched, currentTime);
             lastTime = currentTime;
         }, 1000);
+    }
+
+    function bindEducationPlaylistActiveScroll(toggleDetails) {
+        const scrollBox = toggleDetails.querySelector('.education-sidebar-scroll');
+        const activeLesson = scrollBox?.querySelector('a.active');
+
+        if (!scrollBox || !activeLesson) {
+            return;
+        }
+
+        const scrollToActiveLesson = () => {
+            const boxRect = scrollBox.getBoundingClientRect();
+            const activeRect = activeLesson.getBoundingClientRect();
+            const activeTop = activeRect.top - boxRect.top + scrollBox.scrollTop;
+            const targetTop = activeTop - (scrollBox.clientHeight / 2) + (activeRect.height / 2);
+            scrollBox.scrollTop = Math.max(0, targetTop);
+        };
+
+        if (toggleDetails.open) {
+            window.requestAnimationFrame(scrollToActiveLesson);
+        }
+
+        toggleDetails.addEventListener('toggle', () => {
+            if (toggleDetails.open) {
+                window.requestAnimationFrame(scrollToActiveLesson);
+            }
+        });
     }
 
     function loadYouTubeApi(callback) {
