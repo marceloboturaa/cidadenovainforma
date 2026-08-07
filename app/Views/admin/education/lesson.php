@@ -96,8 +96,6 @@ $renderLessonDescription = function () use ($lesson): void {
         <?php if ($canManage): ?>
             <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&edit_lesson=1#lesson-settings')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar aula</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&preview=student')) ?>"><i class="bi bi-eye" aria-hidden="true"></i>Visualizar como estudante</a>
-        <?php elseif ($studentPreview && $canManageOriginal): ?>
-            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Voltar ao modo edição</a>
         <?php endif; ?>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'] . ($studentPreview ? '&preview=student' : ''))) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Curso</a>
         <?php if ($previousLesson): ?>
@@ -110,16 +108,6 @@ $renderLessonDescription = function () use ($lesson): void {
         <?php endif; ?>
     </div>
 </div>
-
-<?php if ($studentPreview && $canManageOriginal): ?>
-    <section class="panel education-preview-banner">
-        <div>
-            <span class="eyebrow">Prévia do estudante</span>
-            <strong>Você está vendo esta aula sem as ferramentas de professor. Ações de aluno ficam desativadas nesta prévia.</strong>
-        </div>
-        <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar aula</a>
-    </section>
-<?php endif; ?>
 
 <section class="education-player-layout <?= (!$canManage || $studentPreview) ? 'is-student-view' : '' ?>">
     <aside class="education-playlist-sidebar">
@@ -443,19 +431,10 @@ $renderLessonDescription = function () use ($lesson): void {
                 </div>
                 <?php if (!$studentPreview && $hasVideo && !$videoWatched && !$canManage): ?>
                     <p class="education-video-watch-hint" data-education-watch-hint>Assista ao vídeo até o final para liberar o botão Concluir e a próxima aula.</p>
-                <?php elseif ($studentPreview && $hasVideo): ?>
-                    <p class="education-video-watch-hint is-complete">Prévia do vídeo principal. A reprodução aqui não altera progresso.</p>
                 <?php endif; ?>
                     <div class="education-video-frame <?= $studentPreview ? 'is-preview-frame' : '' ?>">
                         <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $videoEmbedUrl)): ?>
                             <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></video>
-                        <?php elseif ($studentPreview): ?>
-                            <div class="education-video-preview-placeholder">
-                                <i class="bi bi-play-circle" aria-hidden="true"></i>
-                                <strong>Vídeo principal</strong>
-                                <span>Na prévia do estudante, a reprodução pode ser limitada pelo navegador ou pela plataforma do vídeo.</span>
-                                <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(media_url((string) ($lesson['video_url'] ?? ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Abrir vídeo</a>
-                            </div>
                         <?php else: ?>
                             <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></iframe>
                         <?php endif; ?>
@@ -547,21 +526,12 @@ $renderLessonDescription = function () use ($lesson): void {
                 <?php if ($type === 'video' && $media): ?>
                     <?php if (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched): ?>
                         <p class="education-video-watch-hint" data-education-watch-hint>Assista este vídeo obrigatório até o final para liberar a conclusão da aula.</p>
-                    <?php elseif ($studentPreview && $blockRequired): ?>
-                        <p class="education-video-watch-hint is-complete">Prévia de vídeo obrigatório. A reprodução aqui não altera progresso.</p>
                     <?php elseif (!$canManage && $blockRequired): ?>
                         <p class="education-video-watch-hint is-complete">Vídeo obrigatório assistido.</p>
                     <?php endif; ?>
                     <div class="education-video-frame <?= $studentPreview ? 'is-preview-frame' : '' ?>">
                         <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $media)): ?>
                             <video src="<?= e(media_url($media)) ?>" controls <?= (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></video>
-                        <?php elseif ($studentPreview): ?>
-                            <div class="education-video-preview-placeholder">
-                                <i class="bi bi-play-circle" aria-hidden="true"></i>
-                                <strong><?= e($blockTitle) ?></strong>
-                                <span>Na prévia do estudante, a reprodução pode ser limitada pelo navegador ou pela plataforma do vídeo.</span>
-                                <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(media_url((string) ($block['media_url'] ?? ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Abrir vídeo</a>
-                            </div>
                         <?php else: ?>
                             <iframe src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allowfullscreen <?= (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></iframe>
                         <?php endif; ?>
@@ -629,7 +599,7 @@ $renderLessonDescription = function () use ($lesson): void {
                     $mySubmission = \App\Models\Education::assignmentSubmission((int) $block['id'], (int) (current_user()['id'] ?? 0));
                     $blockSubmissions = $assignmentSubmissionsByBlock[(int) $block['id']] ?? [];
                     ?>
-                    <?php if (!$canManage && !$studentPreview): ?>
+                    <?php if (!$canManage): ?>
                         <form method="post" action="<?= e(url('/admin/education/assignment/submit?id=' . $block['id'])) ?>" enctype="multipart/form-data" class="education-assignment-form">
                             <?= csrf_field() ?>
                             <label class="form-label">
@@ -651,13 +621,8 @@ $renderLessonDescription = function () use ($lesson): void {
                                     <?php if (!empty($mySubmission['feedback'])): ?><p><?= e($mySubmission['feedback']) ?></p><?php endif; ?>
                                 </div>
                             <?php endif; ?>
-                            <button class="btn btn-sm btn-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i><?= $mySubmission ? 'Atualizar entrega' : 'Enviar tarefa' ?></button>
+                            <button type="<?= $studentPreview ? 'button' : 'submit' ?>" class="btn btn-sm btn-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i><?= $mySubmission ? 'Atualizar entrega' : 'Enviar tarefa' ?></button>
                         </form>
-                    <?php elseif ($studentPreview): ?>
-                        <div class="education-preview-note">
-                            <i class="bi bi-eye" aria-hidden="true"></i>
-                            Na prévia, o campo de envio da tarefa fica oculto para não registrar entrega do professor.
-                        </div>
                     <?php else: ?>
                         <details class="education-assignment-submissions">
                             <summary><?= e((string) count($blockSubmissions)) ?> entrega(s) recebida(s)</summary>
@@ -825,11 +790,6 @@ $renderLessonDescription = function () use ($lesson): void {
                                     <button class="btn btn-sm btn-outline-danger">Remover formulario</button>
                                 </form>
                             </details>
-                        <?php elseif ($studentPreview): ?>
-                            <div class="education-preview-note">
-                                <i class="bi bi-eye" aria-hidden="true"></i>
-                                Este formulário aparecerá para o estudante responder.
-                            </div>
                         <?php else: ?>
                             <form method="post" action="<?= e(url('/admin/education/form/submit?form_id=' . $form['id'])) ?>" class="education-form-answer">
                                 <?= csrf_field() ?>
@@ -847,7 +807,7 @@ $renderLessonDescription = function () use ($lesson): void {
                                         <?php if (!empty($response['feedback'])): ?><p><?= e($response['feedback']) ?></p><?php endif; ?>
                                     </div>
                                 <?php endif; ?>
-                                <button class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
+                                <button type="<?= $studentPreview ? 'button' : 'submit' ?>" class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
                             </form>
                         <?php endif; ?>
                     </article>
@@ -944,7 +904,7 @@ $renderLessonDescription = function () use ($lesson): void {
                                                     <?php endif; ?>
                                                 </strong>
                                                 <div class="education-forum-reply-actions">
-                                                <?php if (!$studentPreview && !$replyHidden): ?>
+                                                <?php if (!$replyHidden): ?>
                                                     <details class="education-forum-reply-interaction">
                                                         <summary class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</summary>
                                                         <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form is-inline-reply">
@@ -956,7 +916,7 @@ $renderLessonDescription = function () use ($lesson): void {
                                                                 <input type="checkbox" name="notify_author" value="1" checked>
                                                                 <span>Notificar por e-mail</span>
                                                             </label>
-                                                            <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar</button>
+                                                            <button type="<?= $studentPreview ? 'button' : 'submit' ?>" class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-send" aria-hidden="true"></i>Enviar</button>
                                                         </form>
                                                     </details>
                                                 <?php endif; ?>
@@ -980,23 +940,16 @@ $renderLessonDescription = function () use ($lesson): void {
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
-                            <?php if ($studentPreview): ?>
-                                <div class="education-preview-note">
-                                    <i class="bi bi-eye" aria-hidden="true"></i>
-                                    O campo de resposta do fórum aparece para estudantes, mas fica desativado nesta prévia.
-                                </div>
-                            <?php else: ?>
-                                <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
-                                    <?= csrf_field() ?>
-                                    <textarea class="form-control" name="body" rows="2" placeholder="Responder este tema" required></textarea>
-                                    <input type="hidden" name="notify_author" value="0">
-                                    <label class="forum-check-line education-forum-notify-check">
-                                        <input type="checkbox" name="notify_author" value="1" checked>
-                                        <span>Notificar por e-mail</span>
-                                    </label>
-                                    <button class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
-                                </form>
-                            <?php endif; ?>
+                            <form method="post" action="<?= e(url('/admin/education/forum/reply?topic_id=' . $topic['id'])) ?>" class="education-forum-reply-form">
+                                <?= csrf_field() ?>
+                                <textarea class="form-control" name="body" rows="2" placeholder="Responder este tema" required></textarea>
+                                <input type="hidden" name="notify_author" value="0">
+                                <label class="forum-check-line education-forum-notify-check">
+                                    <input type="checkbox" name="notify_author" value="1" checked>
+                                    <span>Notificar por e-mail</span>
+                                </label>
+                                <button type="<?= $studentPreview ? 'button' : 'submit' ?>" class="btn btn-sm btn-outline-primary icon-btn"><i class="bi bi-reply" aria-hidden="true"></i>Responder</button>
+                            </form>
                         </article>
                     <?php endforeach; ?>
                     <?php if (!$lessonForumTopics && $canManage): ?>
