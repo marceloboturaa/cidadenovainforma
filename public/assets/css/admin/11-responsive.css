@@ -238,6 +238,7 @@
     .education-module-form,
     .education-user-picker,
     .education-course-intro,
+    .education-admin-nav,
     .education-student-overview,
     .education-lesson-row,
     .education-watch-layout,
@@ -266,6 +267,15 @@
     .education-modal-form,
     .education-modal-form footer {
         grid-template-columns: 1fr;
+    }
+
+    .education-admin-details-summary {
+        grid-template-columns: 42px minmax(0, 1fr);
+    }
+
+    .education-admin-details-summary em {
+        grid-column: 2;
+        justify-self: start;
     }
 
     .education-report-head,

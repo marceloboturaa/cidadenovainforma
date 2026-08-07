@@ -60,10 +60,10 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
         <h1><?= e($course['title']) ?></h1>
     </div>
     <div class="heading-actions">
-        <?php if ($forumTopics): ?>
+        <?php if (!$canManage && $forumTopics): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forum')) ?>"><i class="bi bi-chat-dots" aria-hidden="true"></i>Fórum do curso</a>
         <?php endif; ?>
-        <?php if ($courseForms): ?>
+        <?php if (!$canManage && $courseForms): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forms')) ?>"><i class="bi bi-ui-checks" aria-hidden="true"></i>Formularios</a>
         <?php endif; ?>
         <?php if ($canManage): ?>
@@ -101,6 +101,48 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
             <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" onerror="this.remove()">
         <?php endif; ?>
         <p><?= e($course['summary']) ?></p>
+    </section>
+<?php endif; ?>
+
+<?php if ($canManage && !$isEnrollmentPending): ?>
+    <section class="panel education-admin-workspace">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Painel do professor</span>
+                <h2>Gerenciar este curso</h2>
+            </div>
+            <span>Áreas separadas por tarefa</span>
+        </div>
+        <nav class="education-admin-nav" aria-label="Áreas de gerenciamento do curso">
+            <a href="#course-lessons">
+                <i class="bi bi-collection-play" aria-hidden="true"></i>
+                <span>
+                    <strong>Aulas e módulos</strong>
+                    <small><?= e((string) $lessonCount) ?> aula(s) em <?= e((string) count($modules)) ?> módulo(s)</small>
+                </span>
+            </a>
+            <a href="#course-certificate">
+                <i class="bi bi-award" aria-hidden="true"></i>
+                <span>
+                    <strong>Certificado</strong>
+                    <small><?= !empty($course['certificate_enabled']) ? 'Emissão liberada' : 'Configuração opcional' ?></small>
+                </span>
+            </a>
+            <a href="#course-forms">
+                <i class="bi bi-ui-checks" aria-hidden="true"></i>
+                <span>
+                    <strong>Formulários</strong>
+                    <small><?= e((string) count($courseForms)) ?> formulário(s)</small>
+                </span>
+            </a>
+            <a href="#course-forum">
+                <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                <span>
+                    <strong>Fórum</strong>
+                    <small><?= e((string) count($forumTopics)) ?> tópico(s)</small>
+                </span>
+            </a>
+        </nav>
     </section>
 <?php endif; ?>
 
@@ -151,7 +193,7 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
     </section>
 <?php endif; ?>
 
-<section class="panel education-playlist-panel <?= $isStudentCourseView ? 'is-student-playlist' : '' ?>">
+<section class="panel education-playlist-panel <?= $isStudentCourseView ? 'is-student-playlist' : '' ?>" id="course-lessons">
     <div class="section-heading">
         <div>
             <span class="eyebrow"><?= $isStudentCourseView ? 'Trilha do curso' : 'Organização do curso' ?></span>
@@ -285,11 +327,24 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
 
 <?php if (!$isEnrollmentPending): ?>
 <?php if ($canManage || !empty($course['certificate_enabled'])): ?>
+<?php if ($canManage): ?>
+<details class="panel education-admin-details education-certificate-panel" id="course-certificate">
+    <summary class="education-admin-details-summary">
+        <i class="bi bi-award" aria-hidden="true"></i>
+        <span>
+            <strong>Certificado do curso</strong>
+            <small><?= !empty($course['certificate_enabled']) ? 'Emissão liberada por solicitação do aluno' : 'Configure o modelo antes de liberar' ?></small>
+        </span>
+        <em><?= !empty($course['certificate_enabled']) ? 'Ativo' : 'Opcional' ?></em>
+    </summary>
+    <div class="education-admin-details-body">
+<?php else: ?>
 <section class="panel education-certificate-panel" id="course-certificate">
     <div class="section-heading">
         <h2>Certificado do curso</h2>
         <span><?= !empty($course['certificate_enabled']) ? 'Emissão liberada por solicitação do aluno' : 'Configure o modelo antes de liberar' ?></span>
     </div>
+<?php endif; ?>
 
     <?php if ($canManage): ?>
         <form method="post" action="<?= e(url('/admin/education/certificate/settings?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-certificate-settings">
@@ -462,15 +517,33 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
             <?php endif; ?>
         </div>
     <?php endif; ?>
+<?php if ($canManage): ?>
+    </div>
+</details>
+<?php else: ?>
 </section>
+<?php endif; ?>
 <?php endif; ?>
 
 <?php if ($canManage || $courseForms): ?>
+<?php if ($canManage): ?>
+<details class="panel education-admin-details education-course-forum education-form-board" id="course-forms">
+    <summary class="education-admin-details-summary">
+        <i class="bi bi-ui-checks" aria-hidden="true"></i>
+        <span>
+            <strong>Formulários do curso</strong>
+            <small><?= e((string) count($courseForms)) ?> formulário(s)</small>
+        </span>
+        <em>Atividades</em>
+    </summary>
+    <div class="education-admin-details-body">
+<?php else: ?>
 <section class="panel education-course-forum education-form-board" id="course-forms">
     <div class="section-heading">
         <h2>Formularios do curso</h2>
         <span><?= e((string) count($courseForms)) ?> formulario(s)</span>
     </div>
+<?php endif; ?>
     <?php if ($canManage): ?>
         <form method="post" action="<?= e(url('/admin/education/form?id=' . $course['id'])) ?>" class="education-sequence-form">
             <?= csrf_field() ?>
@@ -602,15 +675,33 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
         <?php endforeach; ?>
         <?php if (!$courseForms): ?><div class="empty-state">Nenhum formulario criado para este curso.</div><?php endif; ?>
     </div>
+<?php if ($canManage): ?>
+    </div>
+</details>
+<?php else: ?>
 </section>
+<?php endif; ?>
 <?php endif; ?>
 
 <?php if ($canManage || $forumTopics): ?>
+<?php if ($canManage): ?>
+<details class="panel education-admin-details education-course-forum" id="course-forum">
+    <summary class="education-admin-details-summary">
+        <i class="bi bi-chat-dots" aria-hidden="true"></i>
+        <span>
+            <strong>Fórum do curso</strong>
+            <small><?= e((string) count($forumTopics)) ?> tópico(s)</small>
+        </span>
+        <em>Comunicação</em>
+    </summary>
+    <div class="education-admin-details-body">
+<?php else: ?>
 <section class="panel education-course-forum" id="course-forum">
     <div class="section-heading">
         <h2>Fórum do curso</h2>
         <span><?= e((string) count($forumTopics)) ?> tópico(s)</span>
     </div>
+<?php endif; ?>
     <?php if ($canManage): ?>
         <form method="post" action="<?= e(url('/admin/education/forum/topic?id=' . $course['id'])) ?>" class="education-sequence-form">
             <?= csrf_field() ?>
@@ -741,7 +832,12 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
             <div class="empty-state">Nenhum tópico no fórum deste curso ainda.</div>
         <?php endif; ?>
     </div>
+<?php if ($canManage): ?>
+    </div>
+</details>
+<?php else: ?>
 </section>
+<?php endif; ?>
 <?php endif; ?>
 <?php endif; ?>
 
