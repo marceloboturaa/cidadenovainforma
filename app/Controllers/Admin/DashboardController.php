@@ -40,6 +40,7 @@ class DashboardController
             'teacherCourses' => $isTeacher ? Education::coursesForManagement((int) ($user['id'] ?? 0)) : [],
             'studentCourses' => $isStudent ? Education::coursesForUser((int) ($user['id'] ?? 0)) : [],
             'studentResponses' => $isStudent ? Education::studentResponsesForDashboard((int) ($user['id'] ?? 0)) : [],
+            'studentAnnouncements' => $isStudent ? Announcement::unreadForUser((int) ($user['id'] ?? 0), 8) : [],
             'homeNotice' => $canManageHomeNotice ? [
                 'enabled' => SiteSetting::get('home_notice_enabled', '0'),
                 'title' => SiteSetting::get('home_notice_title', ''),

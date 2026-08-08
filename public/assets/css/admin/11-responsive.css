@@ -1565,3 +1565,13 @@
         --certificate-mobile-scale: 0.288;
     }
 }
+@media (max-width: 768px) {
+    .student-announcement-card {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .student-announcement-card footer {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}

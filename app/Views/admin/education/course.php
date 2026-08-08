@@ -52,6 +52,23 @@ foreach ($lessons as $lessonItem) {
 $nextLessonId = $nextLesson ? (int) $nextLesson['id'] : 0;
 $courseProgressPercent = $requiredLessonCount > 0 ? (int) round(($completedLessonCount / $requiredLessonCount) * 100) : 0;
 $previewSuffix = $studentPreview ? '&preview=student' : '';
+$courseAnnouncements = [];
+if ($isStudentCourseView && function_exists('current_user')) {
+    $currentUser = current_user();
+    $lessonIds = array_map(static fn (array $lessonItem): string => (string) $lessonItem['id'], $lessons);
+    foreach (\App\Models\Announcement::unreadForUser((int) ($currentUser['id'] ?? 0), 8) as $announcement) {
+        $announcementUrl = (string) ($announcement['url'] ?? '');
+        $matchesCourse = str_contains($announcementUrl, '/admin/education/course?id=' . (int) $course['id']);
+        $matchesLesson = false;
+        if (preg_match('/\/admin\/education\/lesson\?id=(\d+)/', $announcementUrl, $matches)) {
+            $matchesLesson = in_array((string) ($matches[1] ?? ''), $lessonIds, true);
+        }
+
+        if ($matchesCourse || $matchesLesson) {
+            $courseAnnouncements[] = $announcement;
+        }
+    }
+}
 ?>
 
 <div class="page-heading">
@@ -101,6 +118,44 @@ $previewSuffix = $studentPreview ? '&preview=student' : '';
             <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" onerror="this.remove()">
         <?php endif; ?>
         <p><?= e($course['summary']) ?></p>
+    </section>
+<?php endif; ?>
+
+<?php if ($courseAnnouncements): ?>
+    <section class="panel education-course-alerts">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Avisos</span>
+                <h2><i class="bi bi-bell" aria-hidden="true"></i> Lembretes deste curso</h2>
+            </div>
+            <span><?= e((string) count($courseAnnouncements)) ?> novo(s)</span>
+        </div>
+        <div class="student-announcement-list">
+            <?php foreach ($courseAnnouncements as $announcement): ?>
+                <?php
+                $announcementUrl = (string) ($announcement['url'] ?? '');
+                $announcementHref = $announcementUrl !== '' && preg_match('#^https?://#i', $announcementUrl) ? $announcementUrl : url($announcementUrl);
+                ?>
+                <article class="student-announcement-card">
+                    <i class="bi bi-bell-fill" aria-hidden="true"></i>
+                    <div>
+                        <strong><?= e($announcement['title']) ?></strong>
+                        <p><?= nl2br(e($announcement['body'])) ?></p>
+                    </div>
+                    <footer>
+                        <?php if ($announcementUrl !== ''): ?>
+                            <a class="btn btn-sm btn-primary icon-btn" href="<?= e($announcementHref) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><?= e($announcement['button_label'] ?: 'Abrir') ?></a>
+                        <?php endif; ?>
+                        <form method="post" action="<?= e(url('/admin/announcement/read')) ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="announcement_id" value="<?= e((string) $announcement['id']) ?>">
+                            <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/admin/education/course?id=' . $course['id']) ?>">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Marcar como lido</button>
+                        </form>
+                    </footer>
+                </article>
+            <?php endforeach; ?>
+        </div>
     </section>
 <?php endif; ?>
 

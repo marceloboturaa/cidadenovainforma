@@ -197,9 +197,49 @@
     <?php
     $responseStatusLabels = ['pending' => 'Aguardando correção', 'corrected' => 'Corrigido', 'redo' => 'Refazer'];
     $studentCourses = $studentCourses ?? [];
+    $studentAnnouncements = $studentAnnouncements ?? [];
     $studentForms = $studentResponses['forms'] ?? [];
     $studentAssignments = $studentResponses['assignments'] ?? [];
     ?>
+    <section class="panel student-announcement-panel">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Avisos</span>
+                <h2><i class="bi bi-bell" aria-hidden="true"></i> Lembretes do curso</h2>
+            </div>
+            <span><?= e((string) count($studentAnnouncements)) ?> novo(s)</span>
+        </div>
+        <div class="student-announcement-list">
+            <?php foreach ($studentAnnouncements as $announcement): ?>
+                <?php
+                $announcementUrl = (string) ($announcement['url'] ?? '');
+                $announcementHref = $announcementUrl !== '' && preg_match('#^https?://#i', $announcementUrl) ? $announcementUrl : url($announcementUrl);
+                ?>
+                <article class="student-announcement-card">
+                    <i class="bi bi-bell-fill" aria-hidden="true"></i>
+                    <div>
+                        <strong><?= e($announcement['title']) ?></strong>
+                        <p><?= nl2br(e($announcement['body'])) ?></p>
+                    </div>
+                    <footer>
+                        <?php if ($announcementUrl !== ''): ?>
+                            <a class="btn btn-sm btn-primary icon-btn" href="<?= e($announcementHref) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><?= e($announcement['button_label'] ?: 'Abrir') ?></a>
+                        <?php endif; ?>
+                        <form method="post" action="<?= e(url('/admin/announcement/read')) ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="announcement_id" value="<?= e((string) $announcement['id']) ?>">
+                            <input type="hidden" name="return_to" value="<?= e($_SERVER['REQUEST_URI'] ?? '/admin') ?>">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Marcar como lido</button>
+                        </form>
+                    </footer>
+                </article>
+            <?php endforeach; ?>
+            <?php if (!$studentAnnouncements): ?>
+                <div class="empty-state">Nenhum aviso novo no momento.</div>
+            <?php endif; ?>
+        </div>
+    </section>
+
     <section class="panel student-course-panel">
         <div class="section-heading">
             <h2>Meus cursos</h2>
