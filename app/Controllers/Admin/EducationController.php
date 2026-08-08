@@ -2431,7 +2431,7 @@ class EducationController
             return null;
         }
 
-        if (preg_match('#(?:youtube\.com/watch\?v=|youtube\.com/embed/|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
+        if (preg_match('#(?:youtube\.com/(?:watch\?v=|embed/|live/)|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
             return 'https://www.youtube.com/embed/' . $match[1] . '?enablejsapi=1';
         }
 

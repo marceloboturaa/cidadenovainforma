@@ -750,7 +750,8 @@
             const host = parsed.hostname.replace(/^www\./, '');
 
             if (host === 'youtube.com' || host === 'm.youtube.com') {
-                const id = parsed.searchParams.get('v');
+                const parts = parsed.pathname.split('/').filter(Boolean);
+                const id = parsed.searchParams.get('v') || (['embed', 'live'].includes(parts[0]) ? parts[1] : '');
                 return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}` : '';
             }
 
