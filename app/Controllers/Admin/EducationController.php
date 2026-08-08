@@ -9,6 +9,7 @@ use App\Core\Mailer;
 use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Communication;
 use App\Models\Education;
 use App\Models\Forum;
 use App\Models\User;
@@ -521,6 +522,28 @@ class EducationController
         if ($returnTo !== '' && str_starts_with($returnTo, '/admin/education/')) {
             redirect($returnTo);
         }
+        redirect('/admin/education/course?id=' . $lesson['course_id']);
+    }
+
+    public function notifyLesson(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $lesson = $this->lessonFromQuery();
+        $course = Education::findCourse((int) $lesson['course_id']);
+        $this->authorizeCourseManage($course);
+        $this->validateCsrf('/admin/education/course?id=' . $lesson['course_id']);
+
+        $user = current_user();
+        $sent = $this->sendLessonNotification($course, $lesson, $user ?: []);
+
+        if ($sent > 0) {
+            Logger::info('education.lesson_notified', 'Aviso de aula enviado: ' . $lesson['title'] . '. Destinatarios: ' . $sent . '.', (int) ($user['id'] ?? 0) ?: null);
+            Session::flash('success', 'Aviso enviado para ' . $sent . ' aluno(s) na comunicação do curso. E-mails válidos também foram processados.');
+        } else {
+            Session::flash('error', 'Nenhum aluno aprovado foi encontrado para receber o aviso.');
+        }
+
         redirect('/admin/education/course?id=' . $lesson['course_id']);
     }
 
@@ -1881,6 +1904,108 @@ class EducationController
     private function assignmentSubmissionById(int $id): ?array
     {
         return Education::findAssignmentSubmission($id);
+    }
+
+    private function sendLessonNotification(?array $course, array $lesson, array $sender): int
+    {
+        if (!$course || empty($sender['id'])) {
+            return 0;
+        }
+
+        $students = Education::enrolledStudentsForCourse((int) $course['id']);
+        if (!$students) {
+            return 0;
+        }
+
+        $message = $this->lessonNotificationMessage($course, $lesson);
+        $sent = 0;
+
+        foreach ($students as $student) {
+            $conversationId = Communication::startEducationConversation((int) $course['id'], $sender, (int) $student['id']);
+            if ($conversationId > 0 && Communication::addEducationMessage($conversationId, (int) $sender['id'], $message)) {
+                $sent++;
+            }
+
+            $this->sendLessonNotificationEmail($course, $lesson, $student, $sender);
+        }
+
+        return $sent;
+    }
+
+    private function sendLessonNotificationEmail(array $course, array $lesson, array $student, array $sender): void
+    {
+        $email = trim((string) ($student['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        $isLive = ($lesson['attendance_mode'] ?? '') === 'manual';
+        $availableAt = trim((string) ($lesson['available_at'] ?? ''));
+        $scheduledAt = $availableAt !== '' ? date('d/m/Y H:i', strtotime($availableAt)) : '';
+        $subject = ($isLive ? 'Aula ao vivo' : 'Nova aula') . ' - ' . (string) ($course['title'] ?? 'Curso');
+        $lessonUrl = $this->educationLessonUrl($lesson);
+
+        $html = '<p>Olá, ' . e($student['name'] ?? 'aluno') . '.</p>'
+            . '<p>O professor avisou sobre ' . ($isLive ? 'uma aula ao vivo' : 'uma nova aula') . ' no curso <strong>' . e($course['title'] ?? '') . '</strong>.</p>'
+            . '<p><strong>Aula:</strong> ' . e($lesson['title'] ?? '') . '</p>'
+            . ($scheduledAt !== '' ? '<p><strong>Data e horário:</strong> ' . e($scheduledAt) . '</p>' : '')
+            . '<p><a href="' . e($lessonUrl) . '">Abrir aula</a></p>';
+        $text = "Olá, " . (string) ($student['name'] ?? 'aluno') . ".\n\n"
+            . "O professor avisou sobre " . ($isLive ? 'uma aula ao vivo' : 'uma nova aula') . " no curso " . (string) ($course['title'] ?? '') . ".\n"
+            . "Aula: " . (string) ($lesson['title'] ?? '') . "\n"
+            . ($scheduledAt !== '' ? "Data e horário: {$scheduledAt}\n" : '')
+            . "\nAbrir aula: {$lessonUrl}";
+
+        try {
+            Mailer::send($email, $subject, $html, $text);
+        } catch (\Throwable $exception) {
+            Logger::info('education.lesson_notification_email_failed', 'Falha ao enviar aviso da aula #' . (int) ($lesson['id'] ?? 0) . ': ' . $exception->getMessage(), (int) ($sender['id'] ?? 0));
+        }
+    }
+
+    private function lessonNotificationMessage(array $course, array $lesson): string
+    {
+        $isLive = ($lesson['attendance_mode'] ?? '') === 'manual';
+        $availableAt = trim((string) ($lesson['available_at'] ?? ''));
+        $scheduledAt = $availableAt !== '' ? date('d/m/Y H:i', strtotime($availableAt)) : '';
+        $heading = $isLive
+            ? ($scheduledAt !== '' ? 'Aula ao vivo programada' : 'Nova aula ao vivo')
+            : 'Nova aula disponível';
+
+        $lines = [
+            $heading,
+            '',
+            'Curso: ' . (string) ($course['title'] ?? ''),
+            'Aula: ' . (string) ($lesson['title'] ?? ''),
+        ];
+
+        if ($scheduledAt !== '') {
+            $lines[] = 'Data e horário: ' . $scheduledAt;
+        }
+
+        if ($isLive) {
+            $lines[] = 'Tipo: aula ao vivo com presença validada pelo professor.';
+        }
+
+        $lines[] = 'Acesse: ' . $this->educationLessonUrl($lesson);
+
+        return implode("\n", $lines);
+    }
+
+    private function educationLessonUrl(array $lesson): string
+    {
+        $link = url('/admin/education/lesson?id=' . (int) ($lesson['id'] ?? 0));
+        if (preg_match('#^https?://#i', $link)) {
+            return $link;
+        }
+
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        if ($host === '') {
+            return $link;
+        }
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        return $scheme . '://' . $host . $link;
     }
 
     private function lessonFromQuery(bool $required = true, bool $allowIdParam = true): ?array

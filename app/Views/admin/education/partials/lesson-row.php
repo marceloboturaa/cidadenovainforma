@@ -65,6 +65,10 @@ $lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($stude
             <?php if ($lessonAttendanceMode === 'manual'): ?>
                 <a class="btn btn-sm btn-outline-success icon-btn" href="<?= e(url('/admin/education/attendance?id=' . $course['id'] . '&lesson_id=' . $lesson['id'])) ?>"><i class="bi bi-person-check" aria-hidden="true"></i>Validar presença</a>
             <?php endif; ?>
+            <form class="inline-form" method="post" action="<?= e(url('/admin/education/lesson/notify?lesson_id=' . $lesson['id'])) ?>" onsubmit="return confirm('Enviar aviso desta aula para todos os alunos aprovados neste curso?');">
+                <?= csrf_field() ?>
+                <button class="btn btn-sm btn-outline-warning icon-btn"><i class="bi bi-bell" aria-hidden="true"></i>Avisar alunos</button>
+            </form>
             <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'])) ?>"><i class="bi bi-layers" aria-hidden="true"></i>Materiais</a>
             <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&lesson_id=' . $lesson['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar</a>
             <form class="inline-form" method="post" action="<?= e(url('/admin/education/lesson/delete?id=' . $lesson['id'])) ?>" onsubmit="return confirm('Remover esta aula?');">

@@ -201,6 +201,7 @@ $router->post('/admin/education/module/visibility', [EducationController::class,
 $router->post('/admin/education/module/delete', [EducationController::class, 'deleteModule']);
 $router->post('/admin/education/lesson', [EducationController::class, 'storeLesson']);
 $router->post('/admin/education/lesson/update', [EducationController::class, 'updateLesson']);
+$router->post('/admin/education/lesson/notify', [EducationController::class, 'notifyLesson']);
 $router->post('/admin/education/lesson/delete', [EducationController::class, 'deleteLesson']);
 $router->get('/admin/education/lesson', [EducationController::class, 'lesson']);
 $router->post('/admin/education/forum/topic', [EducationController::class, 'storeForumTopic']);
