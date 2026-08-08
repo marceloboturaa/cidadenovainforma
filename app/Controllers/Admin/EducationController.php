@@ -638,6 +638,7 @@ class EducationController
     {
         Middleware::auth();
         $this->authorizeManage();
+        $this->guardPostSizeLimit();
         $this->validateCsrf('/admin/education');
         $lesson = $this->lessonFromQuery();
         $course = Education::findCourse((int) $lesson['course_id']);
@@ -668,6 +669,7 @@ class EducationController
     {
         Middleware::auth();
         $this->authorizeManage();
+        $this->guardPostSizeLimit();
         $this->validateCsrf('/admin/education');
         $block = $this->blockFromQuery();
         $lesson = Education::findLesson((int) $block['lesson_id']);
@@ -2485,12 +2487,19 @@ class EducationController
 
     private function storeBlockFile(): ?string
     {
-        if (empty($_FILES['block_file']['name']) || ($_FILES['block_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        $error = (int) ($_FILES['block_file']['error'] ?? UPLOAD_ERR_NO_FILE);
+        if (empty($_FILES['block_file']['name']) || $error === UPLOAD_ERR_NO_FILE) {
             return null;
         }
 
-        if ((int) $_FILES['block_file']['size'] > self::MAX_BLOCK_FILE_SIZE) {
-            Session::flash('error', 'O arquivo deve ter no máximo 50MB.');
+        if ($error !== UPLOAD_ERR_OK) {
+            Session::flash('error', $this->uploadErrorMessage($error, 'arquivo'));
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+
+        $maxSize = min(self::MAX_BLOCK_FILE_SIZE, $this->phpUploadLimitBytes());
+        if ((int) $_FILES['block_file']['size'] > $maxSize) {
+            Session::flash('error', 'O arquivo deve ter no máximo ' . $this->formatBytes($maxSize) . '.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
         }
 
@@ -2515,6 +2524,75 @@ class EducationController
         }
 
         return '/storage/documents/education/' . $filename;
+    }
+
+    private function uploadErrorMessage(int $error, string $label): string
+    {
+        return match ($error) {
+            UPLOAD_ERR_INI_SIZE,
+            UPLOAD_ERR_FORM_SIZE => 'O ' . $label . ' enviado é maior que o limite permitido pelo servidor (' . $this->formatBytes($this->phpUploadLimitBytes()) . ').',
+            UPLOAD_ERR_PARTIAL => 'O ' . $label . ' foi enviado parcialmente. Tente novamente.',
+            UPLOAD_ERR_NO_TMP_DIR => 'A pasta temporária de upload não foi encontrada no servidor.',
+            UPLOAD_ERR_CANT_WRITE => 'Não foi possível gravar o ' . $label . ' no servidor.',
+            UPLOAD_ERR_EXTENSION => 'Uma extensão do PHP bloqueou o upload do ' . $label . '.',
+            default => 'Não foi possível enviar o ' . $label . '. Tente novamente.',
+        };
+    }
+
+    private function phpUploadLimitBytes(): int
+    {
+        $limits = array_filter([
+            $this->iniSizeToBytes((string) ini_get('upload_max_filesize')),
+            $this->iniSizeToBytes((string) ini_get('post_max_size')),
+        ]);
+
+        return $limits ? min($limits) : self::MAX_BLOCK_FILE_SIZE;
+    }
+
+    private function guardPostSizeLimit(): void
+    {
+        $postLimit = $this->iniSizeToBytes((string) ini_get('post_max_size'));
+        $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
+
+        if ($postLimit > 0 && $contentLength > $postLimit) {
+            Session::flash('error', 'O envio é maior que o limite permitido pelo servidor (' . $this->formatBytes($postLimit) . '). Reduza o arquivo ou use um link externo do vídeo.');
+            redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
+        }
+    }
+
+    private function iniSizeToBytes(string $value): int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($value, -1));
+        $number = (float) $value;
+
+        return (int) match ($unit) {
+            'g' => $number * 1024 * 1024 * 1024,
+            'm' => $number * 1024 * 1024,
+            'k' => $number * 1024,
+            default => $number,
+        };
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        if ($bytes >= 1024 * 1024 * 1024) {
+            return rtrim(rtrim(number_format($bytes / 1024 / 1024 / 1024, 1, ',', ''), '0'), ',') . 'GB';
+        }
+
+        if ($bytes >= 1024 * 1024) {
+            return rtrim(rtrim(number_format($bytes / 1024 / 1024, 1, ',', ''), '0'), ',') . 'MB';
+        }
+
+        if ($bytes >= 1024) {
+            return rtrim(rtrim(number_format($bytes / 1024, 1, ',', ''), '0'), ',') . 'KB';
+        }
+
+        return $bytes . ' bytes';
     }
 
     private function lessonImageFromRequest(): ?string
