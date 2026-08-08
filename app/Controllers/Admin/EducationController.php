@@ -1137,7 +1137,7 @@ class EducationController
         }
 
         Session::flash('success', $completedByForum ? 'Resposta publicada e atividade concluida na playlist.' : 'Resposta publicada.');
-        redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $course['id'] . '#course-forum');
+        redirect(!empty($topic['lesson_id']) ? '/admin/education/lesson?id=' . $topic['lesson_id'] . '#forum-reply-' . $replyId : '/admin/education/course?id=' . $course['id'] . '#course-forum');
     }
 
     public function updateForumReply(): void
@@ -1179,7 +1179,7 @@ class EducationController
         Education::updateForumReply((int) $reply['id'], $body);
 
         Session::flash('success', 'Resposta atualizada.');
-        redirect(!empty($reply['lesson_id']) ? '/admin/education/lesson?id=' . $reply['lesson_id'] . '#lesson-forum' : '/admin/education/course?id=' . $reply['course_id'] . '#course-forum');
+        redirect(!empty($reply['lesson_id']) ? '/admin/education/lesson?id=' . $reply['lesson_id'] . '#forum-reply-' . $reply['id'] : '/admin/education/course?id=' . $reply['course_id'] . '#course-forum');
     }
 
     public function storeForm(): void

@@ -833,7 +833,7 @@ $renderLessonDescription = function () use ($lesson): void {
         <?php endif; ?>
 
         <?php if ($canManage || $lessonForumTopics): ?>
-            <details class="panel education-admin-details education-course-forum" id="lesson-forum">
+            <details class="panel education-admin-details education-course-forum" id="lesson-forum" <?= !$canManage ? 'open' : '' ?>>
                 <summary class="education-admin-details-summary">
                     <i class="bi bi-chat-dots" aria-hidden="true"></i>
                     <span>
@@ -861,7 +861,17 @@ $renderLessonDescription = function () use ($lesson): void {
                 <?php endif; ?>
                 <div class="forum-topic-list mt-3">
                     <?php foreach ($lessonForumTopics as $topic): ?>
-                        <?php $topicReplies = $lessonForumRepliesByTopic[(int) $topic['id']] ?? []; ?>
+                        <?php
+                        $topicReplies = $lessonForumRepliesByTopic[(int) $topic['id']] ?? [];
+                        $currentUserId = (int) (current_user()['id'] ?? 0);
+                        $myForumReplyId = 0;
+                        foreach ($topicReplies as $reply) {
+                            if (!empty($reply['active']) && (int) ($reply['user_id'] ?? 0) === $currentUserId) {
+                                $myForumReplyId = (int) ($reply['id'] ?? 0);
+                                break;
+                            }
+                        }
+                        ?>
                         <article class="forum-topic-item education-forum-topic-starter">
                             <div class="forum-topic-main">
                                 <span class="forum-topic-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
@@ -878,6 +888,9 @@ $renderLessonDescription = function () use ($lesson): void {
                             <div class="education-forum-topic-actions">
                                 <?php if (!empty($topic['central_topic_id'])): ?>
                                     <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/forum/topic?id=' . $topic['central_topic_id'])) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Central de fóruns</a>
+                                <?php endif; ?>
+                                <?php if (!$canManage && $myForumReplyId > 0): ?>
+                                    <a class="btn btn-sm btn-outline-primary icon-btn" href="#forum-reply-<?= e((string) $myForumReplyId) ?>"><i class="bi bi-person-check" aria-hidden="true"></i>Minha resposta</a>
                                 <?php endif; ?>
                                 <?php if ($canManage): ?>
                                     <details class="education-forum-edit">

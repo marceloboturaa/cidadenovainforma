@@ -29,8 +29,9 @@ $renderForumReplies = function (int $parentId = 0, int $depth = 0) use (&$render
         $canEditReply = !$studentPreview && !$replyHidden && ($canManage || (int) ($reply['user_id'] ?? 0) === $currentUserId);
         $isCourseTeacherReply = $courseTeacherUserId > 0 && (int) ($reply['user_id'] ?? 0) === $courseTeacherUserId;
         ?>
+        <?php $isCurrentUserReply = (int) ($reply['user_id'] ?? 0) === $currentUserId; ?>
         <div class="education-forum-reply-thread <?= $depth > 0 ? 'is-child-reply' : '' ?>">
-            <div class="education-forum-reply-card reply-tone-<?= e((string) ((((int) $replyCounter - 1) % 6) + 1)) ?> <?= $replyHidden ? 'is-hidden-reply' : '' ?>">
+            <div id="forum-reply-<?= e((string) ($reply['id'] ?? 0)) ?>" class="education-forum-reply-card reply-tone-<?= e((string) ((((int) $replyCounter - 1) % 6) + 1)) ?> <?= $replyHidden ? 'is-hidden-reply' : '' ?> <?= $isCurrentUserReply ? 'is-current-user-reply' : '' ?>">
                 <div class="education-forum-reply-head">
                     <strong>
                         <?= e($reply['user_name'] ?? 'Usuario') ?>
