@@ -690,11 +690,16 @@ $renderLessonDescription = function () use ($lesson): void {
         <?php endif; ?>
 
         <?php if ($canManage || $lessonForms): ?>
-        <section class="panel education-course-forum education-form-board" id="lesson-forms">
-            <div class="section-heading">
-                <h2>Formularios desta aula</h2>
-                <span><?= e((string) count($lessonForms)) ?> formulario(s)</span>
-            </div>
+        <details class="panel education-admin-details education-course-forum education-form-board" id="lesson-forms">
+            <summary class="education-admin-details-summary">
+                <i class="bi bi-ui-checks" aria-hidden="true"></i>
+                <span>
+                    <strong>Formularios desta aula</strong>
+                    <small>Crie e acompanhe questionarios vinculados a esta aula.</small>
+                </span>
+                <em><?= e((string) count($lessonForms)) ?> formulario(s)</em>
+            </summary>
+            <div class="education-admin-details-body">
             <?php if ($canManage): ?>
                 <form method="post" action="<?= e(url('/admin/education/form?lesson_id=' . $lesson['id'])) ?>" class="education-sequence-form">
                     <?= csrf_field() ?>
@@ -819,15 +824,20 @@ $renderLessonDescription = function () use ($lesson): void {
                 <?php endforeach; ?>
                 <?php if (!$lessonForms && !$canManage): ?><div class="empty-state">Nenhum formulario criado para esta aula.</div><?php endif; ?>
             </div>
-        </section>
+        </details>
         <?php endif; ?>
 
         <?php if ($canManage || $lessonForumTopics): ?>
-            <section class="panel education-course-forum" id="lesson-forum">
-                <div class="section-heading">
-                    <h2>Fórum deste tema</h2>
-                    <span><?= e((string) count($lessonForumTopics)) ?> tópico(s)</span>
-                </div>
+            <details class="panel education-admin-details education-course-forum" id="lesson-forum">
+                <summary class="education-admin-details-summary">
+                    <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                    <span>
+                        <strong>Fórum deste tema</strong>
+                        <small>Abra discussoes e respostas relacionadas a esta aula.</small>
+                    </span>
+                    <em><?= e((string) count($lessonForumTopics)) ?> tópico(s)</em>
+                </summary>
+                <div class="education-admin-details-body">
                 <?php if ($canManage && !$lessonForumTopics): ?>
                     <form method="post" action="<?= e(url('/admin/education/forum/topic?lesson_id=' . $lesson['id'])) ?>" class="education-sequence-form">
                         <?= csrf_field() ?>
@@ -961,7 +971,8 @@ $renderLessonDescription = function () use ($lesson): void {
                         <div class="empty-state">Crie um fórum para discutir o tema desta aula.</div>
                     <?php endif; ?>
                 </div>
-            </section>
+                </div>
+            </details>
         <?php endif; ?>
 
         <nav class="education-player-nav" aria-label="Navegação da playlist">

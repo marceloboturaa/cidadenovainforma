@@ -1452,6 +1452,13 @@
         border-radius: 7px;
     }
 
+    .education-course-forum.education-admin-details,
+    .education-form-board.education-admin-details,
+    .education-player-layout.is-student-view .education-course-forum.education-admin-details,
+    .education-player-layout.is-student-view .education-form-board.education-admin-details {
+        padding: 0;
+    }
+
     .education-lesson-description,
     .education-player-layout.is-student-view .education-lesson-description {
         gap: 10px;

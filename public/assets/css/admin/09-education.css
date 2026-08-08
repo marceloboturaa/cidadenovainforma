@@ -3263,6 +3263,11 @@
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
     }
 
+    .education-player-layout.is-student-view .education-course-forum.education-admin-details,
+    .education-player-layout.is-student-view .education-form-board.education-admin-details {
+        padding: 0;
+    }
+
     .education-player-layout.is-student-view .education-lesson-description {
         padding: 16px;
         border-left-width: 4px;
