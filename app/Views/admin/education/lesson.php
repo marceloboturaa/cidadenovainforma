@@ -800,6 +800,11 @@ $renderLessonDescription = function () use ($lesson): void {
                                     <button class="btn btn-sm btn-outline-danger">Remover formulario</button>
                                 </form>
                             </details>
+                        <?php elseif ($studentPreview): ?>
+                            <div class="education-preview-note">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                Este formulário aparecerá para o estudante responder.
+                            </div>
                         <?php else: ?>
                             <form method="post" action="<?= e(url('/admin/education/form/submit?form_id=' . $form['id'])) ?>" class="education-form-answer">
                                 <?= csrf_field() ?>
@@ -817,7 +822,7 @@ $renderLessonDescription = function () use ($lesson): void {
                                         <?php if (!empty($response['feedback'])): ?><p><?= e($response['feedback']) ?></p><?php endif; ?>
                                     </div>
                                 <?php endif; ?>
-                                <button type="<?= $studentPreview ? 'button' : 'submit' ?>" class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
+                                <button class="btn btn-sm btn-primary"><?= $response ? 'Atualizar resposta' : 'Enviar resposta' ?></button>
                             </form>
                         <?php endif; ?>
                     </article>
