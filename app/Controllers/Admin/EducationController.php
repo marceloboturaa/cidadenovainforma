@@ -9,6 +9,7 @@ use App\Core\Mailer;
 use App\Core\Middleware;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Announcement;
 use App\Models\Communication;
 use App\Models\Education;
 use App\Models\Forum;
@@ -535,11 +536,11 @@ class EducationController
         $this->validateCsrf('/admin/education/course?id=' . $lesson['course_id']);
 
         $user = current_user();
-        $sent = $this->sendLessonNotification($course, $lesson, $user ?: []);
+        $result = $this->sendLessonNotification($course, $lesson, $user ?: []);
 
-        if ($sent > 0) {
-            Logger::info('education.lesson_notified', 'Aviso de aula enviado: ' . $lesson['title'] . '. Destinatarios: ' . $sent . '.', (int) ($user['id'] ?? 0) ?: null);
-            Session::flash('success', 'Aviso enviado para ' . $sent . ' aluno(s) na comunicação do curso. E-mails válidos também foram processados.');
+        if ($result['announcements'] > 0) {
+            Logger::info('education.lesson_notified', 'Aviso de aula enviado: ' . $lesson['title'] . '. Avisos: ' . $result['announcements'] . '. Mensagens: ' . $result['messages'] . '. Emails: ' . $result['emails'] . '.', (int) ($user['id'] ?? 0) ?: null);
+            Session::flash('success', 'Aviso enviado: ' . $result['announcements'] . ' aviso(s) no sino do painel, ' . $result['messages'] . ' mensagem(ns) na Comunicação e ' . $result['emails'] . ' e-mail(s).');
         } else {
             Session::flash('error', 'Nenhum aluno aprovado foi encontrado para receber o aviso.');
         }
@@ -1906,37 +1907,47 @@ class EducationController
         return Education::findAssignmentSubmission($id);
     }
 
-    private function sendLessonNotification(?array $course, array $lesson, array $sender): int
+    private function sendLessonNotification(?array $course, array $lesson, array $sender): array
     {
         if (!$course || empty($sender['id'])) {
-            return 0;
+            return ['announcements' => 0, 'messages' => 0, 'emails' => 0];
         }
 
         $students = Education::enrolledStudentsForCourse((int) $course['id']);
         if (!$students) {
-            return 0;
+            return ['announcements' => 0, 'messages' => 0, 'emails' => 0];
         }
 
         $message = $this->lessonNotificationMessage($course, $lesson);
-        $sent = 0;
+        $announcementId = Announcement::createForUsers([
+            'title' => $this->lessonNotificationTitle($lesson),
+            'body' => $this->lessonNotificationBody($course, $lesson),
+            'url' => '/admin/education/lesson?id=' . (int) $lesson['id'],
+            'button_label' => 'Abrir aula',
+            'created_by' => (int) $sender['id'],
+        ], array_column($students, 'id'));
+        $messages = 0;
+        $emails = 0;
 
         foreach ($students as $student) {
             $conversationId = Communication::startEducationConversation((int) $course['id'], $sender, (int) $student['id']);
             if ($conversationId > 0 && Communication::addEducationMessage($conversationId, (int) $sender['id'], $message)) {
-                $sent++;
+                $messages++;
             }
 
-            $this->sendLessonNotificationEmail($course, $lesson, $student, $sender);
+            if ($this->sendLessonNotificationEmail($course, $lesson, $student, $sender)) {
+                $emails++;
+            }
         }
 
-        return $sent;
+        return ['announcements' => $announcementId > 0 ? count($students) : 0, 'messages' => $messages, 'emails' => $emails];
     }
 
-    private function sendLessonNotificationEmail(array $course, array $lesson, array $student, array $sender): void
+    private function sendLessonNotificationEmail(array $course, array $lesson, array $student, array $sender): bool
     {
         $email = trim((string) ($student['email'] ?? ''));
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return;
+            return false;
         }
 
         $isLive = ($lesson['attendance_mode'] ?? '') === 'manual';
@@ -1957,27 +1968,25 @@ class EducationController
             . "\nAbrir aula: {$lessonUrl}";
 
         try {
-            Mailer::send($email, $subject, $html, $text);
+            return Mailer::send($email, $subject, $html, $text);
         } catch (\Throwable $exception) {
             Logger::info('education.lesson_notification_email_failed', 'Falha ao enviar aviso da aula #' . (int) ($lesson['id'] ?? 0) . ': ' . $exception->getMessage(), (int) ($sender['id'] ?? 0));
         }
+
+        return false;
     }
 
     private function lessonNotificationMessage(array $course, array $lesson): string
     {
+        $lines = [
+            $this->lessonNotificationTitle($lesson),
+            '',
+            $this->lessonNotificationBody($course, $lesson),
+        ];
+
         $isLive = ($lesson['attendance_mode'] ?? '') === 'manual';
         $availableAt = trim((string) ($lesson['available_at'] ?? ''));
         $scheduledAt = $availableAt !== '' ? date('d/m/Y H:i', strtotime($availableAt)) : '';
-        $heading = $isLive
-            ? ($scheduledAt !== '' ? 'Aula ao vivo programada' : 'Nova aula ao vivo')
-            : 'Nova aula disponível';
-
-        $lines = [
-            $heading,
-            '',
-            'Curso: ' . (string) ($course['title'] ?? ''),
-            'Aula: ' . (string) ($lesson['title'] ?? ''),
-        ];
 
         if ($scheduledAt !== '') {
             $lines[] = 'Data e horário: ' . $scheduledAt;
@@ -1990,6 +1999,24 @@ class EducationController
         $lines[] = 'Acesse: ' . $this->educationLessonUrl($lesson);
 
         return implode("\n", $lines);
+    }
+
+    private function lessonNotificationTitle(array $lesson): string
+    {
+        $isLive = ($lesson['attendance_mode'] ?? '') === 'manual';
+        $availableAt = trim((string) ($lesson['available_at'] ?? ''));
+
+        if ($isLive && $availableAt !== '') {
+            return 'Aula ao vivo programada';
+        }
+
+        return $isLive ? 'Nova aula ao vivo' : 'Nova aula disponível';
+    }
+
+    private function lessonNotificationBody(array $course, array $lesson): string
+    {
+        return 'Curso: ' . (string) ($course['title'] ?? '') . "\n"
+            . 'Aula: ' . (string) ($lesson['title'] ?? '');
     }
 
     private function educationLessonUrl(array $lesson): string

@@ -36,6 +36,18 @@ class Announcement
                 CONSTRAINT fk_announcement_reads_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB'
         );
+
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS announcement_recipients (
+                announcement_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                created_at TIMESTAMP NULL,
+                PRIMARY KEY (announcement_id, user_id),
+                INDEX idx_announcement_recipients_user (user_id),
+                CONSTRAINT fk_announcement_recipients_announcement FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+                CONSTRAINT fk_announcement_recipients_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB'
+        );
     }
 
     public static function create(array $data): int
@@ -55,6 +67,51 @@ class Announcement
         ]);
 
         return (int) Database::connection()->lastInsertId();
+    }
+
+    public static function createForUsers(array $data, array $userIds): int
+    {
+        self::ensureSchema();
+
+        $userIds = array_values(array_unique(array_filter(array_map('intval', $userIds))));
+        if (!$userIds) {
+            return 0;
+        }
+
+        $db = Database::connection();
+        $db->beginTransaction();
+
+        try {
+            $insert = $db->prepare(
+                'INSERT INTO announcements (title, body, url, button_label, active, created_by, created_at, updated_at)
+                 VALUES (:title, :body, :url, :button_label, 1, :created_by, NOW(), NOW())'
+            );
+            $insert->execute([
+                'title' => self::limit((string) ($data['title'] ?? ''), 160),
+                'body' => trim((string) ($data['body'] ?? '')),
+                'url' => self::nullableLimit($data['url'] ?? null, 255),
+                'button_label' => self::nullableLimit($data['button_label'] ?? null, 80),
+                'created_by' => $data['created_by'] ?? null,
+            ]);
+            $announcementId = (int) $db->lastInsertId();
+            $stmt = $db->prepare(
+                'INSERT IGNORE INTO announcement_recipients (announcement_id, user_id, created_at)
+                 VALUES (:announcement_id, :user_id, NOW())'
+            );
+
+            foreach ($userIds as $userId) {
+                $stmt->execute([
+                    'announcement_id' => $announcementId,
+                    'user_id' => $userId,
+                ]);
+            }
+
+            $db->commit();
+            return $announcementId;
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
     }
 
     public static function whatsappRecipients(): array
@@ -118,10 +175,24 @@ class Announcement
                AND announcement_reads.user_id = :user_id
              WHERE announcements.active = 1
                AND announcement_reads.announcement_id IS NULL
+               AND (
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM announcement_recipients global_check
+                        WHERE global_check.announcement_id = announcements.id
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM announcement_recipients user_check
+                        WHERE user_check.announcement_id = announcements.id
+                          AND user_check.user_id = :recipient_user_id
+                    )
+               )
              ORDER BY announcements.created_at DESC, announcements.id DESC
              LIMIT :limit'
         );
         $stmt->bindValue('user_id', $userId, \PDO::PARAM_INT);
+        $stmt->bindValue('recipient_user_id', $userId, \PDO::PARAM_INT);
         $stmt->bindValue('limit', max(1, min(10, $limit)), \PDO::PARAM_INT);
         $stmt->execute();
 

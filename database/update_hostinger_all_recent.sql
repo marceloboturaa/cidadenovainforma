@@ -607,6 +607,16 @@ ALTER TABLE news ADD COLUMN IF NOT EXISTS archive_note TEXT NULL AFTER original_
 ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS is_public TINYINT(1) NOT NULL DEFAULT 0 AFTER size_bytes;
 ALTER TABLE team_documents ADD COLUMN IF NOT EXISTS allow_download TINYINT(1) NOT NULL DEFAULT 1 AFTER is_public;
 
+CREATE TABLE IF NOT EXISTS announcement_recipients (
+    announcement_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    PRIMARY KEY (announcement_id, user_id),
+    INDEX idx_announcement_recipients_user (user_id),
+    CONSTRAINT fk_announcement_recipients_announcement FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+    CONSTRAINT fk_announcement_recipients_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS team_document_annotations (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     document_id BIGINT UNSIGNED NOT NULL,
