@@ -1205,8 +1205,29 @@
 }
 
 .education-lesson-inline-form {
-    grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 0.8fr) minmax(120px, 0.5fr);
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     align-items: start;
+}
+
+.education-lesson-inline-form > * {
+    min-width: 0;
+}
+
+.education-lesson-inline-form > .lesson-title-field,
+.education-lesson-inline-form > .lesson-module-field {
+    grid-column: span 6;
+}
+
+.education-lesson-inline-form > .lesson-order-field,
+.education-lesson-inline-form > div:not(.lesson-title-field):not(.lesson-module-field):not(.lesson-description-field):not(.form-action-cell) {
+    grid-column: span 4;
+}
+
+.education-lesson-inline-form > .grid-span-2,
+.education-lesson-inline-form > .education-sequence-extra,
+.education-lesson-inline-form > .lesson-description-field,
+.education-lesson-inline-form > .form-action-cell {
+    grid-column: 1 / -1;
 }
 
 .education-sequence-form {
@@ -1235,10 +1256,14 @@
 
 .education-sequence-extra-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     align-items: end;
     margin-top: 12px;
+}
+
+.education-sequence-extra-grid > .grid-span-2 {
+    grid-column: 1 / -1;
 }
 
 .education-material-fieldset {

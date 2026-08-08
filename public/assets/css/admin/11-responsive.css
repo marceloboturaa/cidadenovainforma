@@ -250,6 +250,7 @@
     .education-playlist-row,
     .education-module-card > header,
     .education-quick-lesson-form,
+    .education-lesson-inline-form,
     .education-sequence-form,
     .education-sequence-extra-grid,
     .education-attendance-date,
@@ -276,6 +277,10 @@
     .education-admin-details-summary em {
         grid-column: 2;
         justify-self: start;
+    }
+
+    .education-lesson-inline-form > * {
+        grid-column: 1 / -1;
     }
 
     .education-report-head,
