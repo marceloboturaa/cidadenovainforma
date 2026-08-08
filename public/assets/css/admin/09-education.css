@@ -1559,6 +1559,30 @@
     color: var(--muted);
 }
 
+.education-presence-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    margin-top: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 900;
+}
+
+.education-presence-pill.is-online {
+    border: 1px solid #86efac;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.education-presence-pill.is-offline {
+    border: 1px solid #e5e7eb;
+    background: #f1f5f9;
+    color: #64748b;
+}
+
 .education-attendance-status {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

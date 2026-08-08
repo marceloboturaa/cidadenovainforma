@@ -13,6 +13,7 @@ use App\Models\Announcement;
 use App\Models\Education;
 use App\Models\SiteSetting;
 use App\Models\Stats;
+use App\Models\UserPresence;
 
 class DashboardController
 {
@@ -149,6 +150,18 @@ class DashboardController
         }
 
         redirect($returnTo);
+    }
+
+    public function presencePing(): void
+    {
+        Middleware::auth();
+        $user = current_user();
+        if ($user) {
+            UserPresence::touch((int) $user['id']);
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
     }
 
     private function sendAnnouncementToWhatsApp(string $title, string $body, string $url, ?array $user): array

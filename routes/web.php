@@ -70,6 +70,7 @@ $router->post('/admin/communication/message/delete', [CommunicationController::c
 $router->post('/admin/home-notice', [DashboardController::class, 'homeNotice']);
 $router->post('/admin/announcement', [DashboardController::class, 'announcement']);
 $router->post('/admin/announcement/read', [DashboardController::class, 'readAnnouncement']);
+$router->post('/admin/presence/ping', [DashboardController::class, 'presencePing']);
 $router->post('/admin/media/tinymce', [MediaController::class, 'tinyMceUpload']);
 $router->post('/admin/latex/compile', [LatexController::class, 'compile']);
 $router->get('/admin/password', [UserController::class, 'password']);

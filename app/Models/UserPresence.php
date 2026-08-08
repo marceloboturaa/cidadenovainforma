@@ -57,6 +57,36 @@ class UserPresence
         );
     }
 
+    public static function presenceForUserIds(array $userIds): array
+    {
+        self::ensureTable();
+
+        $userIds = array_values(array_unique(array_filter(array_map('intval', $userIds))));
+        if (!$userIds) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+        $stmt = Database::connection()->prepare(
+            'SELECT user_id,
+                    last_seen_at,
+                    last_seen_at >= DATE_SUB(NOW(), INTERVAL ' . self::ONLINE_MINUTES . ' MINUTE) AS is_online
+             FROM user_presence
+             WHERE user_id IN (' . $placeholders . ')'
+        );
+        $stmt->execute($userIds);
+
+        $presence = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $presence[(int) $row['user_id']] = [
+                'last_seen_at' => $row['last_seen_at'] ?? null,
+                'is_online' => !empty($row['is_online']),
+            ];
+        }
+
+        return $presence;
+    }
+
     public static function onlineWindowMinutes(): int
     {
         return self::ONLINE_MINUTES;

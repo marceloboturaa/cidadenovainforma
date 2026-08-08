@@ -14,6 +14,7 @@ use App\Models\Communication;
 use App\Models\Education;
 use App\Models\Forum;
 use App\Models\User;
+use App\Models\UserPresence;
 
 class EducationController
 {
@@ -1436,11 +1437,14 @@ class EducationController
         if ($lesson && !empty($lesson['available_at'])) {
             $date = substr((string) $lesson['available_at'], 0, 10);
         }
+        $students = Education::enrolledStudentsForCourse((int) $course['id']);
         View::render('admin/education/attendance', [
             'course' => $course,
             'lesson' => $lesson,
             'date' => $date,
-            'students' => Education::enrolledStudentsForCourse((int) $course['id']),
+            'students' => $students,
+            'studentPresence' => UserPresence::presenceForUserIds(array_column($students, 'id')),
+            'onlineWindowMinutes' => UserPresence::onlineWindowMinutes(),
             'records' => Education::attendanceForCourseDate((int) $course['id'], $date, $lesson ? (int) $lesson['id'] : 0),
             'lessons' => Education::lessonsForCourse((int) $course['id']),
         ]);

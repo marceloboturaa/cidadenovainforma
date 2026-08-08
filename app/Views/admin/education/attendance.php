@@ -3,6 +3,8 @@ $students = $students ?? [];
 $records = $records ?? [];
 $lesson = $lesson ?? null;
 $lessons = $lessons ?? [];
+$studentPresence = $studentPresence ?? [];
+$onlineWindowMinutes = $onlineWindowMinutes ?? 5;
 $statusLabels = [
     'present' => 'Presente',
     'absent' => 'Falta',
@@ -56,17 +58,29 @@ $statusLabels = [
             <?php if ($lesson): ?>
                 <div class="education-attendance-live-note">
                     <i class="bi bi-person-check" aria-hidden="true"></i>
-                    <span>Marcar como presente também conclui esta aula para o aluno. Falta ou justificada remove a conclusão desta aula.</span>
+                    <span>Marcar como presente também conclui esta aula para o aluno. O status online considera atividade nos últimos <?= e((string) $onlineWindowMinutes) ?> minutos.</span>
                 </div>
             <?php endif; ?>
             <div class="education-attendance-list">
                 <?php foreach ($students as $student): ?>
                     <?php $record = $records[(int) $student['id']] ?? []; ?>
                     <?php $currentStatus = (string) ($record['status'] ?? 'present'); ?>
+                    <?php $presence = $studentPresence[(int) $student['id']] ?? []; ?>
+                    <?php $isOnline = !empty($presence['is_online']); ?>
+                    <?php $lastSeenAt = !empty($presence['last_seen_at']) ? date('d/m/Y H:i:s', strtotime((string) $presence['last_seen_at'])) : ''; ?>
                     <article class="education-attendance-row">
                         <div>
                             <strong><?= e($student['name']) ?></strong>
                             <small><?= e($student['email']) ?></small>
+                            <span class="education-presence-pill <?= $isOnline ? 'is-online' : 'is-offline' ?>">
+                                <i class="bi <?= $isOnline ? 'bi-broadcast' : 'bi-clock-history' ?>" aria-hidden="true"></i>
+                                <?= $isOnline ? 'Online agora' : 'Offline' ?>
+                            </span>
+                            <?php if ($lastSeenAt !== ''): ?>
+                                <small>Visto em <?= e($lastSeenAt) ?></small>
+                            <?php else: ?>
+                                <small>Sem atividade registrada</small>
+                            <?php endif; ?>
                         </div>
                         <div class="education-attendance-status">
                             <?php foreach ($statusLabels as $status => $label): ?>

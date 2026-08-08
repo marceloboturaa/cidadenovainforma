@@ -86,6 +86,8 @@
         });
     }
 
+    bindPresenceHeartbeat();
+
     modalOpeners.forEach((button) => {
         button.addEventListener('click', () => {
             const modal = document.getElementById(button.dataset.modalOpen || '');
@@ -401,6 +403,35 @@
             announcementToggle.setAttribute('aria-expanded', 'false');
             announcementPopover.hidden = true;
         }
+    }
+
+    function bindPresenceHeartbeat() {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const ping = () => {
+            fetch(`${window.location.origin}${basePath()}/admin/presence/ping`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `_token=${encodeURIComponent(token)}`,
+                credentials: 'same-origin',
+                keepalive: true,
+            }).catch(() => {});
+        };
+
+        ping();
+        window.setInterval(ping, 60000);
+    }
+
+    function basePath() {
+        const script = document.querySelector('script[src*="/public/assets/js/admin.js"]');
+        if (!script) {
+            return '';
+        }
+
+        const scriptUrl = new URL(script.src, window.location.href);
+        return scriptUrl.pathname.split('/public/assets/js/admin.js')[0] || '';
     }
 
     function clearEducationEditParams() {
