@@ -1539,7 +1539,7 @@ class EducationController
             'Periodo final',
             'Aluno',
             'E-mail',
-            'Situação geral',
+            'Status geral',
             'Progresso do aluno',
             'Professor precisa verificar',
             'Pontos de atenção',

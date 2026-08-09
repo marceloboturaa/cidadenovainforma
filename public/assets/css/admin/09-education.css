@@ -2778,6 +2778,11 @@
     border-color: #bfdbfe;
 }
 
+.education-student-report-item.is-search-match {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 12px 26px rgba(15, 23, 42, 0.08);
+}
+
 .education-student-report-item summary::-webkit-details-marker {
     display: none;
 }

@@ -559,17 +559,21 @@
         const rows = Array.from(list.querySelectorAll('[data-student-report-row]'));
         const empty = list.querySelector('[data-student-report-empty]');
         const count = document.querySelector('[data-student-report-visible-count]');
+        let lastFocusedRow = null;
 
         const applyFilter = () => {
             const term = normalizeSearch(searchInput.value);
             let visible = 0;
+            let firstMatch = null;
 
             rows.forEach((row) => {
                 const haystack = normalizeSearch(row.dataset.studentReportSearchText || row.textContent || '');
                 const matches = term === '' || haystack.includes(term);
                 row.classList.toggle('is-hidden', !matches);
+                row.classList.toggle('is-search-match', false);
                 if (matches) {
                     visible += 1;
+                    firstMatch = firstMatch || row;
                 }
             });
 
@@ -578,6 +582,15 @@
             }
             if (empty) {
                 empty.hidden = visible > 0;
+            }
+            if (term !== '' && firstMatch && firstMatch !== lastFocusedRow) {
+                firstMatch.open = true;
+                firstMatch.classList.add('is-search-match');
+                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                lastFocusedRow = firstMatch;
+            }
+            if (term === '') {
+                lastFocusedRow = null;
             }
         };
 

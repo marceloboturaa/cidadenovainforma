@@ -9,8 +9,8 @@ $statusLabels = [
 ];
 $attentionLabels = [
     'ok' => 'Em dia',
-    'notice' => 'Acompanhar',
-    'warning' => 'Requer ação',
+    'notice' => 'Observar',
+    'warning' => 'Precisa de ação',
 ];
 ?>
 
@@ -60,7 +60,7 @@ $attentionLabels = [
         <div class="education-student-report-tools">
             <label>
                 <span>Pesquisar aluno</span>
-                <input class="form-control" type="search" placeholder="Digite nome, e-mail, situação ou pendência" data-student-report-search>
+                <input class="form-control" type="search" placeholder="Digite nome, e-mail, status ou pendência" data-student-report-search>
             </label>
             <strong><span data-student-report-visible-count><?= e((string) count($students)) ?></span> aluno(s) encontrado(s)</strong>
         </div>
@@ -68,7 +68,7 @@ $attentionLabels = [
         <div class="education-student-report-table" data-student-report-list>
             <div class="education-student-report-row education-student-report-head">
                 <span>Aluno</span>
-                <span>Situação</span>
+                <span>Status</span>
                 <span>Frequência</span>
                 <span>Aulas</span>
                 <span>Atividades</span>
@@ -81,13 +81,40 @@ $attentionLabels = [
                 $activityPercent = $activityTotal > 0 ? (int) round(($activityDone / $activityTotal) * 100) : 0;
                 $attentionLevel = (string) ($student['attention_level'] ?? 'ok');
                 $attentionClass = in_array($attentionLevel, ['ok', 'notice', 'warning'], true) ? $attentionLevel : 'ok';
+                $statusLabel = $attentionLabels[$attentionClass] ?? 'Em dia';
+                $statusDetail = $student['progress_label'] ?? 'Sem progresso';
+                if ((int) ($student['activity_pending_correction'] ?? 0) > 0) {
+                    $statusLabel = 'Corrigir entrega';
+                    $statusDetail = (int) $student['activity_pending_correction'] . ' correção(ões) pendente(s)';
+                } elseif ((int) ($student['activity_redo'] ?? 0) > 0) {
+                    $statusLabel = 'Aguardando refazer';
+                    $statusDetail = (int) $student['activity_redo'] . ' atividade(s) devolvida(s)';
+                } elseif ((int) ($student['attendance_records'] ?? 0) === 0) {
+                    $statusLabel = 'Sem chamada';
+                    $statusDetail = 'Sem registro no período';
+                } elseif ((int) ($student['attendance_records'] ?? 0) > 0 && (int) ($student['frequency'] ?? 0) < 75) {
+                    $statusLabel = 'Frequência baixa';
+                    $statusDetail = (int) ($student['frequency'] ?? 0) . '% no período';
+                } elseif ((int) ($student['lesson_count'] ?? 0) > 0 && (int) ($student['progress_percent'] ?? 0) === 0) {
+                    $statusLabel = 'Sem progresso';
+                    $statusDetail = 'Nenhuma aula concluída';
+                } elseif ((int) ($student['lesson_count'] ?? 0) > 0 && (int) ($student['progress_percent'] ?? 0) < 35) {
+                    $statusLabel = 'Progresso baixo';
+                    $statusDetail = (int) ($student['progress_percent'] ?? 0) . '% concluído';
+                } elseif ((int) ($student['activity_pending'] ?? 0) > 0) {
+                    $statusLabel = 'Atividade pendente';
+                    $statusDetail = (int) $student['activity_pending'] . ' entrega(s) faltando';
+                }
                 $searchText = implode(' ', array_filter([
                     $student['name'] ?? '',
                     $student['email'] ?? '',
-                    $attentionLabels[$attentionClass] ?? '',
+                    $statusLabel,
+                    $statusDetail,
                     $student['progress_label'] ?? '',
                     implode(' ', $student['teacher_actions'] ?? []),
                     implode(' ', $student['attention_reasons'] ?? []),
+                    implode(' ', array_column($student['activities'] ?? [], 'title')),
+                    implode(' ', array_column($student['activities'] ?? [], 'lesson_title')),
                 ]));
                 ?>
                 <details class="education-student-report-row education-student-report-item is-<?= e($attentionClass) ?>" data-student-report-row data-student-report-search-text="<?= e($searchText) ?>">
@@ -97,8 +124,8 @@ $attentionLabels = [
                             <small><?= e($student['email']) ?></small>
                         </div>
                         <span class="student-report-metric metric-status">
-                            <strong><?= e($attentionLabels[$attentionClass] ?? 'Em dia') ?></strong>
-                            <small><?= e($student['progress_label'] ?? 'Sem progresso') ?></small>
+                            <strong><?= e($statusLabel) ?></strong>
+                            <small><?= e($statusDetail) ?></small>
                         </span>
                         <span class="student-report-metric metric-frequency">
                             <strong><?= e((string) ($student['frequency'] ?? 0)) ?>%</strong>
