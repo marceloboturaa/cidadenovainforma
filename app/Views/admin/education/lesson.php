@@ -690,7 +690,7 @@ $renderLessonDescription = function () use ($lesson): void {
         <?php endif; ?>
 
         <?php if ($canManage || $lessonForms): ?>
-        <details class="panel education-admin-details education-course-forum education-form-board" id="lesson-forms">
+        <details class="panel education-admin-details education-course-forum education-form-board" id="lesson-forms" <?= !$canManage ? 'open' : '' ?>>
             <summary class="education-admin-details-summary">
                 <i class="bi bi-ui-checks" aria-hidden="true"></i>
                 <span>
