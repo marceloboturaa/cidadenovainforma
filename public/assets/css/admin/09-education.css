@@ -2683,6 +2683,48 @@
     color: #b45309;
 }
 
+.education-student-report-summary div:nth-child(7) {
+    border-color: #fecdd3;
+    background: #fff1f2;
+}
+
+.education-student-report-summary div:nth-child(7) strong {
+    color: #be123c;
+}
+
+.education-student-report-tools {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-student-report-tools label {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+}
+
+.education-student-report-tools span {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.education-student-report-tools strong {
+    padding: 10px 12px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    white-space: nowrap;
+}
+
 .education-student-report-table {
     display: grid;
     gap: 8px;
@@ -2852,6 +2894,38 @@
 .education-student-progress-title span {
     font-weight: 900;
     color: #4338ca;
+}
+
+.education-student-progress-card dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+}
+
+.education-student-progress-card dl div {
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-student-progress-card dt,
+.education-student-progress-card dd {
+    margin: 0;
+}
+
+.education-student-progress-card dt {
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.education-student-progress-card dd {
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 900;
 }
 
 .education-student-action-card ul {

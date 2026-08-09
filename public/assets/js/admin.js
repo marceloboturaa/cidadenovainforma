@@ -17,6 +17,8 @@
     const educationCompleteForm = document.querySelector('[data-education-complete-form]');
     const educationCompleteButtons = document.querySelectorAll('[data-education-complete-button]');
     const educationPlaylistToggle = document.querySelector('[data-education-playlist-toggle]');
+    const studentReportList = document.querySelector('[data-student-report-list]');
+    const studentReportSearch = document.querySelector('[data-student-report-search]');
     const usersDirectory = document.querySelector('[data-users-directory]');
     const usersSearch = document.querySelector('[data-users-search]');
     const pendingUsersList = document.querySelector('[data-pending-users-list]');
@@ -198,6 +200,10 @@
 
     if (educationPlaylistToggle) {
         bindEducationPlaylistActiveScroll(educationPlaylistToggle);
+    }
+
+    if (studentReportList && studentReportSearch) {
+        bindStudentReportSearch(studentReportList, studentReportSearch);
     }
 
     if (usersDirectory && usersSearch) {
@@ -547,6 +553,36 @@
             .replace(/[\u0300-\u036f]/g, '')
             .toLowerCase()
             .trim();
+    }
+
+    function bindStudentReportSearch(list, searchInput) {
+        const rows = Array.from(list.querySelectorAll('[data-student-report-row]'));
+        const empty = list.querySelector('[data-student-report-empty]');
+        const count = document.querySelector('[data-student-report-visible-count]');
+
+        const applyFilter = () => {
+            const term = normalizeSearch(searchInput.value);
+            let visible = 0;
+
+            rows.forEach((row) => {
+                const haystack = normalizeSearch(row.dataset.studentReportSearchText || row.textContent || '');
+                const matches = term === '' || haystack.includes(term);
+                row.classList.toggle('is-hidden', !matches);
+                if (matches) {
+                    visible += 1;
+                }
+            });
+
+            if (count) {
+                count.textContent = String(visible);
+            }
+            if (empty) {
+                empty.hidden = visible > 0;
+            }
+        };
+
+        searchInput.addEventListener('input', applyFilter);
+        applyFilter();
     }
 
     function bindEventsAdminFilter(list) {

@@ -1797,11 +1797,11 @@ class Education
         }
 
         if ($progressPercent >= 100) {
-            return 'Curso concluido';
+            return 'Curso concluído';
         }
 
         if ($progressPercent >= 70) {
-            return 'Avancado';
+            return 'Avançado';
         }
 
         if ($progressPercent >= 35) {
@@ -1809,7 +1809,7 @@ class Education
         }
 
         if ($progressPercent > 0) {
-            return 'Inicio do curso';
+            return 'Início do curso';
         }
 
         return 'Sem progresso';
@@ -1820,19 +1820,19 @@ class Education
         $reasons = [];
 
         if ((int) ($student['lesson_count'] ?? 0) > 0 && (int) ($student['progress_percent'] ?? 0) === 0) {
-            $reasons[] = 'Aluno ainda nao concluiu nenhuma aula.';
+            $reasons[] = 'Aluno ainda não concluiu nenhuma aula.';
         } elseif ((int) ($student['lesson_count'] ?? 0) > 0 && (int) ($student['progress_percent'] ?? 0) < 35) {
             $reasons[] = 'Progresso baixo para acompanhamento.';
         }
 
         if ((int) ($student['attendance_records'] ?? 0) === 0) {
-            $reasons[] = 'Sem chamada registrada no periodo filtrado.';
+            $reasons[] = 'Sem chamada registrada no período filtrado.';
         } elseif ((int) ($student['frequency'] ?? 0) < 75) {
-            $reasons[] = 'Frequencia abaixo de 75% no periodo.';
+            $reasons[] = 'Frequência abaixo de 75% no período.';
         }
 
         if ((int) ($student['activity_pending'] ?? 0) > 0) {
-            $reasons[] = (int) $student['activity_pending'] . ' atividade(s) ainda nao entregue(s).';
+            $reasons[] = (int) $student['activity_pending'] . ' atividade(s) ainda não entregue(s).';
         }
 
         if ((int) ($student['activity_redo'] ?? 0) > 0) {
@@ -1859,7 +1859,7 @@ class Education
         }
 
         if ((int) ($student['attendance_records'] ?? 0) === 0) {
-            $actions[] = 'Registrar ou revisar chamada do periodo.';
+            $actions[] = 'Registrar ou revisar chamada do período.';
         }
 
         return $actions;
