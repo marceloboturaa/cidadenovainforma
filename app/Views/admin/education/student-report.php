@@ -7,6 +7,11 @@ $statusLabels = [
     'redo' => 'Refazer',
     'pending' => 'Pendente',
 ];
+$attentionLabels = [
+    'ok' => 'Em dia',
+    'notice' => 'Acompanhar',
+    'warning' => 'Requer acao',
+];
 ?>
 
 <div class="page-heading">
@@ -46,12 +51,15 @@ $statusLabels = [
         <div><span>Frequencia media</span><strong><?= e((string) ($summary['average_frequency'] ?? 0)) ?>%</strong></div>
         <div><span>Progresso medio</span><strong><?= e((string) ($summary['average_progress'] ?? 0)) ?>%</strong></div>
         <div><span>Atividades feitas</span><strong><?= e((string) ($summary['activity_done_percent'] ?? 0)) ?>%</strong></div>
+        <div><span>Precisam de atencao</span><strong><?= e((string) ($summary['students_need_attention'] ?? 0)) ?></strong></div>
+        <div><span>Aguardando correcao</span><strong><?= e((string) ($summary['pending_corrections'] ?? 0)) ?></strong></div>
     </div>
 
     <?php if ($students): ?>
         <div class="education-student-report-table">
             <div class="education-student-report-row education-student-report-head">
                 <span>Aluno</span>
+                <span>Situacao</span>
                 <span>Frequencia</span>
                 <span>Aulas</span>
                 <span>Atividades</span>
@@ -62,13 +70,19 @@ $statusLabels = [
                 $activityTotal = (int) ($student['activity_total'] ?? 0);
                 $activityDone = (int) ($student['activity_done'] ?? 0);
                 $activityPercent = $activityTotal > 0 ? (int) round(($activityDone / $activityTotal) * 100) : 0;
+                $attentionLevel = (string) ($student['attention_level'] ?? 'ok');
+                $attentionClass = in_array($attentionLevel, ['ok', 'notice', 'warning'], true) ? $attentionLevel : 'ok';
                 ?>
-                <details class="education-student-report-row education-student-report-item">
+                <details class="education-student-report-row education-student-report-item is-<?= e($attentionClass) ?>">
                     <summary>
                         <div>
                             <strong><?= e($student['name']) ?></strong>
                             <small><?= e($student['email']) ?></small>
                         </div>
+                        <span class="student-report-metric metric-status">
+                            <strong><?= e($attentionLabels[$attentionClass] ?? 'Em dia') ?></strong>
+                            <small><?= e($student['progress_label'] ?? 'Sem progresso') ?></small>
+                        </span>
                         <span class="student-report-metric metric-frequency">
                             <strong><?= e((string) ($student['frequency'] ?? 0)) ?>%</strong>
                             <small><?= e((string) ($student['present_count'] ?? 0)) ?> presenca(s), <?= e((string) ($student['absent_count'] ?? 0)) ?> falta(s), <?= e((string) ($student['justified_count'] ?? 0)) ?> justificada(s)</small>
@@ -86,8 +100,39 @@ $statusLabels = [
                             <small><?= e((string) ($student['activity_pending_correction'] ?? 0)) ?> aguardando</small>
                         </span>
                     </summary>
+                    <div class="education-student-progress-detail">
+                        <div class="education-student-progress-card">
+                            <div class="education-student-progress-title">
+                                <strong>Progresso do aluno</strong>
+                                <span><?= e((string) ($student['progress_percent'] ?? 0)) ?>%</span>
+                            </div>
+                            <div class="education-progress" aria-hidden="true">
+                                <div><i style="width: <?= e((string) min(100, max(0, (int) ($student['progress_percent'] ?? 0)))) ?>%"></i></div>
+                            </div>
+                            <small><?= e((string) ($student['completed_lessons'] ?? 0)) ?> de <?= e((string) ($student['lesson_count'] ?? 0)) ?> aula(s) obrigatoria(s) concluidas.</small>
+                        </div>
+                        <div class="education-student-action-card">
+                            <strong>O que o professor precisa verificar</strong>
+                            <?php if (!empty($student['teacher_actions']) || !empty($student['attention_reasons'])): ?>
+                                <ul>
+                                    <?php foreach (array_merge($student['teacher_actions'] ?? [], $student['attention_reasons'] ?? []) as $action): ?>
+                                        <li><?= e($action) ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php else: ?>
+                                <small>Nenhuma correcao ou pendencia critica encontrada neste periodo.</small>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                     <div class="education-student-activity-list">
                         <?php if ($activityItems): ?>
+                            <div class="education-student-activity-head">
+                                <span>Atividade</span>
+                                <span>Entrega</span>
+                                <span>Correcao</span>
+                                <span>Nota</span>
+                                <span>Atualizacao</span>
+                            </div>
                             <?php foreach ($student['activities'] as $activity): ?>
                                 <?php
                                 $done = !empty($activity['done']);

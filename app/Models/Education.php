@@ -1526,6 +1526,12 @@ class Education
                 'activity_pending' => 0,
                 'activity_corrected' => 0,
                 'activity_pending_correction' => 0,
+                'activity_redo' => 0,
+                'needs_attention' => false,
+                'attention_level' => 'ok',
+                'progress_label' => 'Sem aulas registradas',
+                'attention_reasons' => [],
+                'teacher_actions' => [],
                 'activities' => [],
             ]);
         }
@@ -1539,6 +1545,9 @@ class Education
                     'average_frequency' => 0,
                     'average_progress' => 0,
                     'activity_done_percent' => 0,
+                    'students_need_attention' => 0,
+                    'pending_corrections' => 0,
+                    'redo_requests' => 0,
                 ],
             ];
         }
@@ -1734,10 +1743,19 @@ class Education
                     $student['activity_corrected']++;
                 } elseif (($activity['correction_status'] ?? '') === 'pending') {
                     $student['activity_pending_correction']++;
+                } elseif (($activity['correction_status'] ?? '') === 'redo') {
+                    $student['activity_redo']++;
                 }
             }
 
             $student['activity_pending'] = max(0, (int) $student['activity_total'] - (int) $student['activity_done']);
+            $student['progress_label'] = self::studentProgressLabel((int) $student['progress_percent'], (int) $student['lesson_count']);
+            $student['attention_reasons'] = self::studentAttentionReasons($student);
+            $student['teacher_actions'] = self::studentTeacherActions($student);
+            $student['needs_attention'] = !empty($student['attention_reasons']) || !empty($student['teacher_actions']);
+            $student['attention_level'] = ((int) $student['activity_pending_correction'] > 0 || (int) $student['activity_redo'] > 0 || (int) $student['absent_count'] > 0)
+                ? 'warning'
+                : ($student['needs_attention'] ? 'notice' : 'ok');
             $frequencySum += (int) $student['frequency'];
             $progressSum += (int) $student['progress_percent'];
             $activityTotal += (int) $student['activity_total'];
@@ -1746,6 +1764,16 @@ class Education
         unset($student);
 
         $studentCount = count($students);
+        $studentsNeedAttention = 0;
+        $pendingCorrections = 0;
+        $redoRequests = 0;
+        foreach ($students as $student) {
+            if (!empty($student['needs_attention'])) {
+                $studentsNeedAttention++;
+            }
+            $pendingCorrections += (int) ($student['activity_pending_correction'] ?? 0);
+            $redoRequests += (int) ($student['activity_redo'] ?? 0);
+        }
 
         return [
             'students' => array_values($students),
@@ -1755,8 +1783,86 @@ class Education
                 'average_frequency' => $studentCount > 0 ? (int) round($frequencySum / $studentCount) : 0,
                 'average_progress' => $studentCount > 0 ? (int) round($progressSum / $studentCount) : 0,
                 'activity_done_percent' => $activityTotal > 0 ? (int) round(($activityDone / $activityTotal) * 100) : 0,
+                'students_need_attention' => $studentsNeedAttention,
+                'pending_corrections' => $pendingCorrections,
+                'redo_requests' => $redoRequests,
             ],
         ];
+    }
+
+    private static function studentProgressLabel(int $progressPercent, int $lessonCount): string
+    {
+        if ($lessonCount <= 0) {
+            return 'Sem aulas registradas';
+        }
+
+        if ($progressPercent >= 100) {
+            return 'Curso concluido';
+        }
+
+        if ($progressPercent >= 70) {
+            return 'Avancado';
+        }
+
+        if ($progressPercent >= 35) {
+            return 'Em andamento';
+        }
+
+        if ($progressPercent > 0) {
+            return 'Inicio do curso';
+        }
+
+        return 'Sem progresso';
+    }
+
+    private static function studentAttentionReasons(array $student): array
+    {
+        $reasons = [];
+
+        if ((int) ($student['lesson_count'] ?? 0) > 0 && (int) ($student['progress_percent'] ?? 0) === 0) {
+            $reasons[] = 'Aluno ainda nao concluiu nenhuma aula.';
+        } elseif ((int) ($student['lesson_count'] ?? 0) > 0 && (int) ($student['progress_percent'] ?? 0) < 35) {
+            $reasons[] = 'Progresso baixo para acompanhamento.';
+        }
+
+        if ((int) ($student['attendance_records'] ?? 0) === 0) {
+            $reasons[] = 'Sem chamada registrada no periodo filtrado.';
+        } elseif ((int) ($student['frequency'] ?? 0) < 75) {
+            $reasons[] = 'Frequencia abaixo de 75% no periodo.';
+        }
+
+        if ((int) ($student['activity_pending'] ?? 0) > 0) {
+            $reasons[] = (int) $student['activity_pending'] . ' atividade(s) ainda nao entregue(s).';
+        }
+
+        if ((int) ($student['activity_redo'] ?? 0) > 0) {
+            $reasons[] = (int) $student['activity_redo'] . ' atividade(s) marcada(s) para refazer.';
+        }
+
+        return $reasons;
+    }
+
+    private static function studentTeacherActions(array $student): array
+    {
+        $actions = [];
+
+        if ((int) ($student['activity_pending_correction'] ?? 0) > 0) {
+            $actions[] = 'Corrigir ' . (int) $student['activity_pending_correction'] . ' atividade(s) enviada(s).';
+        }
+
+        if ((int) ($student['activity_redo'] ?? 0) > 0) {
+            $actions[] = 'Conferir devolutiva de atividade(s) para refazer.';
+        }
+
+        if ((int) ($student['absent_count'] ?? 0) > 0) {
+            $actions[] = 'Verificar faltas e justificativas da chamada.';
+        }
+
+        if ((int) ($student['attendance_records'] ?? 0) === 0) {
+            $actions[] = 'Registrar ou revisar chamada do periodo.';
+        }
+
+        return $actions;
     }
 
     public static function certificateStatusForCourseUser(int $courseId, int $userId): array

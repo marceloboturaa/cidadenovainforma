@@ -264,6 +264,8 @@
     .education-report-dates div,
     .education-student-report-row,
     .education-student-report-row summary,
+    .education-student-progress-detail,
+    .education-student-activity-head,
     .education-student-activity-list article,
     .education-modal-form,
     .education-modal-form footer {
@@ -284,7 +286,8 @@
     }
 
     .education-report-head,
-    .education-student-report-head {
+    .education-student-report-head,
+    .education-student-activity-head {
         display: none;
     }
 
