@@ -52,6 +52,9 @@ foreach ($lessons as $lessonItem) {
 $nextLessonId = $nextLesson ? (int) $nextLesson['id'] : 0;
 $courseProgressPercent = $requiredLessonCount > 0 ? (int) round(($completedLessonCount / $requiredLessonCount) * 100) : 0;
 $coursePresentationSummary = trim((string) ($course['summary'] ?? ''));
+$coursePresentationFallback = $isStudentCourseView
+    ? 'Acompanhe a apresentação do curso e siga pelas aulas disponíveis na sequência.'
+    : 'Organize a abertura do curso com uma descrição clara para orientar os estudantes antes dos módulos e das aulas.';
 $previewSuffix = $studentPreview ? '&preview=student' : '';
 $courseAnnouncements = [];
 if ($isStudentCourseView && function_exists('current_user')) {
@@ -251,11 +254,13 @@ if ($isStudentCourseView && function_exists('current_user')) {
     <div class="education-course-presentation-body">
         <span class="eyebrow">Apresentação do curso</span>
         <h2><?= e($course['title']) ?></h2>
-        <p><?= e(text_excerpt($coursePresentationSummary !== '' ? $coursePresentationSummary : 'Organize a abertura do curso com uma descrição clara para orientar os estudantes antes dos módulos e das aulas.', 280)) ?></p>
+        <p><?= e(text_excerpt($coursePresentationSummary !== '' ? $coursePresentationSummary : $coursePresentationFallback, 280)) ?></p>
         <div class="education-course-presentation-stats">
-            <span><strong><?= e((string) count($modules)) ?></strong> módulo(s)</span>
             <span><strong><?= e((string) $lessonCount) ?></strong> aula(s)</span>
             <span><strong><?= e((string) $requiredLessonCount) ?></strong> obrigatória(s)</span>
+            <?php if ($canManage): ?>
+                <span><strong><?= e((string) count($modules)) ?></strong> módulo(s)</span>
+            <?php endif; ?>
         </div>
     </div>
     <?php if ($canManage): ?>
@@ -267,9 +272,13 @@ if ($isStudentCourseView && function_exists('current_user')) {
     <div class="section-heading">
         <div>
             <span class="eyebrow"><?= $isStudentCourseView ? 'Trilha do curso' : 'Organização do curso' ?></span>
-            <h2>Módulos e aulas</h2>
+            <h2><?= $isStudentCourseView ? 'Aulas do curso' : 'Módulos e aulas' ?></h2>
         </div>
-        <span><?= e((string) $lessonCount) ?> aula(s) em <?= e((string) count($modules)) ?> módulo(s)</span>
+        <span>
+            <?= $isStudentCourseView
+                ? e((string) $lessonCount) . ' aula(s)'
+                : e((string) $lessonCount) . ' aula(s) em ' . e((string) count($modules)) . ' módulo(s)' ?>
+        </span>
     </div>
 
     <div class="education-module-list">
@@ -280,19 +289,23 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <article class="education-module-card <?= e($moduleTone) ?> <?= $moduleHidden ? 'is-hidden-module' : '' ?>">
                 <header>
                     <div>
-                        <span><?= $moduleHidden ? 'Módulo oculto' : 'Módulo ' . e((string) ($moduleIndex + 1)) ?></span>
+                        <?php if ($canManage): ?>
+                            <span><?= $moduleHidden ? 'Módulo oculto' : 'Módulo ' . e((string) ($moduleIndex + 1)) ?></span>
+                        <?php endif; ?>
                         <h3><?= e($module['title']) ?></h3>
-                        <span class="state-pill <?= !empty($module['required']) ? 'is-active' : 'is-muted' ?>"><?= !empty($module['required']) ? 'Obrigatório' : 'Material complementar' ?></span>
-                        <?php if (!empty($module['summary'])): ?>
+                        <?php if ($canManage): ?>
+                            <span class="state-pill <?= !empty($module['required']) ? 'is-active' : 'is-muted' ?>"><?= !empty($module['required']) ? 'Obrigatório' : 'Material complementar' ?></span>
+                        <?php endif; ?>
+                        <?php if ($canManage && !empty($module['summary'])): ?>
                             <p><?= e($module['summary']) ?></p>
                         <?php endif; ?>
                     </div>
-                    <div class="education-module-actions">
-                        <?php if ($moduleHidden): ?>
-                            <em>Oculto para alunos</em>
-                        <?php endif; ?>
-                        <strong><?= e((string) count($moduleLessons)) ?> aula(s)</strong>
-                        <?php if ($canManage): ?>
+                    <?php if ($canManage): ?>
+                        <div class="education-module-actions">
+                            <?php if ($moduleHidden): ?>
+                                <em>Oculto para alunos</em>
+                            <?php endif; ?>
+                            <strong><?= e((string) count($moduleLessons)) ?> aula(s)</strong>
                             <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&module_id=' . $module['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar título</a>
                             <form class="inline-form" method="post" action="<?= e(url('/admin/education/module/visibility?module_id=' . $module['id'])) ?>">
                                 <?= csrf_field() ?>
@@ -306,8 +319,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
                                 <?= csrf_field() ?>
                                 <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash3" aria-hidden="true"></i>Excluir</button>
                             </form>
-                        <?php endif; ?>
-                    </div>
+                        </div>
+                    <?php endif; ?>
                 </header>
 
                 <?php if ($canManage): ?>
@@ -381,7 +394,9 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <article class="education-module-card">
                 <header>
                     <div>
-                        <span>Sem módulo</span>
+                        <?php if ($canManage): ?>
+                            <span>Sem módulo</span>
+                        <?php endif; ?>
                         <h3>Aulas ainda não organizadas</h3>
                     </div>
                 </header>
