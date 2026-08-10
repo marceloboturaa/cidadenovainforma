@@ -572,6 +572,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     starts_at DATE NULL,
     ends_at DATE NULL,
     public_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    public_access_enabled TINYINT(1) NOT NULL DEFAULT 0,
     playlist_required TINYINT(1) NOT NULL DEFAULT 1,
     certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
     certificate_title VARCHAR(180) NULL,

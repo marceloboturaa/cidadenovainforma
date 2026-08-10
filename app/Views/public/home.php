@@ -107,6 +107,12 @@ $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl
 
     <section class="public-courses-grid">
         <?php foreach ($publicCourses as $course): ?>
+            <?php
+            $courseHref = !empty($course['public_access_enabled'])
+                ? url('/curso/' . $course['id'])
+                : url('/admin/education/course?id=' . $course['id']);
+            $courseActionLabel = !empty($course['public_access_enabled']) ? 'Acessar sem login' : 'Entrar para acessar';
+            ?>
             <article class="public-course-card">
                 <?php if (!empty($course['cover_image'])): ?>
                     <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" loading="lazy" onerror="this.remove()">
@@ -118,7 +124,7 @@ $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl
                     <?php if (!empty($course['teacher_name'])): ?>
                         <small>Professor: <?= e($course['teacher_name']) ?></small>
                     <?php endif; ?>
-                    <a class="public-course-more" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">Acessar curso</a>
+                    <a class="public-course-more" href="<?= e($courseHref) ?>"><?= e($courseActionLabel) ?></a>
                 </div>
             </article>
         <?php endforeach; ?>

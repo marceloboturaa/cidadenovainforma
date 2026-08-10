@@ -34,12 +34,20 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             <label class="education-public-toggle">
                 <input type="checkbox" name="public_enabled" value="1" <?= checked(!empty($editing['public_enabled'])) ?>>
                 <span>
-                    <strong>Abrir curso ao público sem login</strong>
+                    <strong>Mostrar curso no site</strong>
+                    <small>Quando marcado, o curso aparece na área pública/vitrine. O acesso às aulas ainda pode exigir login.</small>
+                </span>
+            </label>
+            <label class="education-public-toggle">
+                <input type="checkbox" name="public_access_enabled" value="1" <?= checked(!empty($editing['public_access_enabled'])) ?>>
+                <span>
+                    <strong>Permitir aulas liberadas sem login</strong>
                     <small>Visitantes acessam aulas e vídeos liberados. Aulas, módulos e materiais ocultos ou bloqueados continuam restritos; para continuar, o visitante solicita inscrição.</small>
                 </span>
             </label>
         <?php elseif ($isEdit): ?>
             <input type="hidden" name="public_enabled" value="<?= e((string) ($editing['public_enabled'] ?? 0)) ?>">
+            <input type="hidden" name="public_access_enabled" value="<?= e((string) ($editing['public_access_enabled'] ?? 0)) ?>">
         <?php endif; ?>
         <input type="hidden" name="playlist_required" value="0">
         <label class="education-public-toggle education-playlist-required-toggle">
@@ -147,7 +155,10 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                         <strong class="admin-list-title"><?= e($course['title']) ?></strong>
                         <span class="state-pill is-active"><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
                         <?php if (!empty($course['public_enabled'])): ?>
-                            <span class="state-pill is-active">Público</span>
+                            <span class="state-pill is-active">No site</span>
+                        <?php endif; ?>
+                        <?php if (!empty($course['public_access_enabled'])): ?>
+                            <span class="state-pill is-active">Sem login</span>
                         <?php endif; ?>
                         <span class="state-pill <?= !empty($course['playlist_required']) ? 'is-active' : 'is-muted' ?>"><?= !empty($course['playlist_required']) ? 'Playlist obrigatória' : 'Playlist livre' ?></span>
                     </div>

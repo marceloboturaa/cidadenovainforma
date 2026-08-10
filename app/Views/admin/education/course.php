@@ -984,6 +984,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <form method="post" action="<?= e(url('/admin/education/course/update?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-modal-form">
                 <?= csrf_field() ?>
                 <input type="hidden" name="public_enabled" value="<?= e((string) ($course['public_enabled'] ?? 0)) ?>">
+                <input type="hidden" name="public_access_enabled" value="<?= e((string) ($course['public_access_enabled'] ?? 0)) ?>">
                 <?php if ($canAssignTeacher): ?>
                     <div>
                         <label class="form-label">Professor responsável</label>

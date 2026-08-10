@@ -247,6 +247,8 @@ CREATE TABLE IF NOT EXISTS education_courses (
     title VARCHAR(180) NOT NULL,
     summary TEXT NULL,
     cover_image VARCHAR(255) NULL,
+    public_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    public_access_enabled TINYINT(1) NOT NULL DEFAULT 0,
     teacher_user_id BIGINT UNSIGNED NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_by BIGINT UNSIGNED NULL,
@@ -643,6 +645,8 @@ ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS locked TINYINT(1) NOT NUL
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS available_at DATETIME NULL AFTER locked;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS attendance_mode VARCHAR(20) NOT NULL DEFAULT 'video' AFTER available_at;
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS description_position VARCHAR(20) NOT NULL DEFAULT 'after_media' AFTER description;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled;
 
 ALTER TABLE education_attendance ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER user_id;
 

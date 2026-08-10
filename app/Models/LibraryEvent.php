@@ -218,6 +218,7 @@ class LibraryEvent
                        education_courses.title AS course_title,
                        education_courses.summary AS course_summary,
                        education_courses.cover_image AS course_cover_image,
+                       education_courses.public_access_enabled AS course_public_access_enabled,
                        COALESCE(participant_counts.total, 0) AS participant_count
                 FROM library_events
                 LEFT JOIN users responsible ON responsible.id = library_events.responsible_user_id
@@ -249,7 +250,7 @@ class LibraryEvent
         self::ensureSchema();
 
         $stmt = Database::connection()->prepare(
-            "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status,
+            "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, education_courses.public_access_enabled AS course_public_access_enabled, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status,
                     COALESCE(participant_counts.total, 0) AS participant_count
              FROM library_events
              LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -278,7 +279,7 @@ class LibraryEvent
 
         $events = Database::connection()
             ->query(
-                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, education_courses.public_access_enabled AS course_public_access_enabled, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -304,7 +305,7 @@ class LibraryEvent
 
         $events = Database::connection()
             ->query(
-                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, education_courses.public_access_enabled AS course_public_access_enabled, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -333,7 +334,7 @@ class LibraryEvent
 
         $events = Database::connection()
             ->query(
-                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
+                "SELECT library_events.id, library_events.title, library_events.description, library_events.starts_at, library_events.ends_at, library_events.location, library_events.event_cep, library_events.event_address, library_events.cover_image, library_events.registration_question_label, library_events.registration_question_type, library_events.registration_question_options, library_events.registration_question_required, library_events.event_course_id, education_courses.title AS course_title, education_courses.summary AS course_summary, education_courses.cover_image AS course_cover_image, education_courses.public_access_enabled AS course_public_access_enabled, library_events.capacity, library_events.registration_enabled, library_events.public_show_location, library_events.public_show_address, library_events.public_show_capacity, library_events.public_show_responsible, library_events.status, library_events.created_at, library_events.updated_at,
                         COALESCE(participant_counts.total, 0) AS participant_count
                  FROM library_events
                  LEFT JOIN education_courses ON education_courses.id = library_events.event_course_id
@@ -362,6 +363,7 @@ class LibraryEvent
                     education_courses.title AS course_title,
                     education_courses.summary AS course_summary,
                     education_courses.cover_image AS course_cover_image,
+                    education_courses.public_access_enabled AS course_public_access_enabled,
                     COALESCE(participant_counts.total, 0) AS participant_count
              FROM library_events
              LEFT JOIN users responsible ON responsible.id = library_events.responsible_user_id
@@ -995,7 +997,8 @@ class LibraryEvent
                     education_courses.id,
                     education_courses.title,
                     education_courses.summary,
-                    education_courses.cover_image
+                    education_courses.cover_image,
+                    education_courses.public_access_enabled
              FROM library_event_courses
              INNER JOIN education_courses ON education_courses.id = library_event_courses.course_id
              WHERE library_event_courses.event_id IN ({$placeholders})
@@ -1020,6 +1023,7 @@ class LibraryEvent
                 'title' => $event['course_title'],
                 'summary' => $event['course_summary'] ?? null,
                 'cover_image' => $event['course_cover_image'] ?? null,
+                'public_access_enabled' => $event['course_public_access_enabled'] ?? 0,
             ];
         }
 

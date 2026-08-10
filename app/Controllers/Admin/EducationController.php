@@ -285,6 +285,7 @@ class EducationController
         $id = Education::createCourse(array_merge($_POST, [
             'cover_image' => $this->courseCoverFromRequest(null),
             'public_enabled' => $this->canManageAll() && !empty($_POST['public_enabled']) ? 1 : 0,
+            'public_access_enabled' => $this->canManageAll() && !empty($_POST['public_access_enabled']) ? 1 : 0,
             'teacher_user_id' => $teacherUserId,
             'created_by' => $userId ?: null,
             'updated_by' => $userId ?: null,
@@ -315,6 +316,7 @@ class EducationController
         Education::updateCourse((int) $course['id'], array_merge($this->certificateFieldsFromCourse($course), $_POST, [
             'cover_image' => $this->courseCoverFromRequest($course['cover_image'] ?? null),
             'public_enabled' => $this->canManageAll() ? (!empty($_POST['public_enabled']) ? 1 : 0) : ($course['public_enabled'] ?? 0),
+            'public_access_enabled' => $this->canManageAll() ? (!empty($_POST['public_access_enabled']) ? 1 : 0) : ($course['public_access_enabled'] ?? 0),
             'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
         ]));
@@ -396,7 +398,7 @@ class EducationController
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         $course = $id ? Education::findCourse($id) : null;
-        if (empty($course['public_enabled'])) {
+        if (!$this->courseAllowsPublicAccess($course)) {
             http_response_code(404);
             View::render('errors/404', [], 'education-public');
             return;
@@ -439,7 +441,7 @@ class EducationController
         }
 
         $course = Education::findCourse((int) $lesson['course_id']);
-        if (!$course || empty($course['public_enabled']) || !$this->publicLessonIsOpen($lesson)) {
+        if (!$course || !$this->courseAllowsPublicAccess($course) || !$this->publicLessonIsOpen($lesson)) {
             http_response_code(404);
             View::render('errors/404', [], 'education-public');
             return;
@@ -2457,6 +2459,11 @@ class EducationController
         }
 
         return $lessons;
+    }
+
+    private function courseAllowsPublicAccess(?array $course): bool
+    {
+        return !empty($course['public_enabled']) && !empty($course['public_access_enabled']);
     }
 
     private function publicLessonIsOpen(array $lesson): bool

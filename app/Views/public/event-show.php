@@ -104,6 +104,12 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                     <h2><?= count($event['linked_courses']) > 1 ? 'Cursos deste evento' : 'Curso deste evento' ?></h2>
                     <div>
                         <?php foreach ($event['linked_courses'] as $course): ?>
+                            <?php
+                            $courseHref = !empty($course['public_access_enabled'])
+                                ? url('/curso/' . $course['id'])
+                                : url('/admin/education/course?id=' . $course['id']);
+                            $courseActionLabel = !empty($course['public_access_enabled']) ? 'Acessar sem login' : 'Entrar para acessar';
+                            ?>
                             <article class="event-linked-course">
                                 <div>
                                     <h3><?= e($course['title']) ?></h3>
@@ -114,7 +120,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                                 <?php if (!empty($course['cover_image'])): ?>
                                     <img src="<?= e(media_url($course['cover_image'])) ?>" alt="" loading="lazy" onerror="this.remove()">
                                 <?php endif; ?>
-                                <a class="events-card-link" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>">Acessar curso online</a>
+                                <a class="events-card-link" href="<?= e($courseHref) ?>"><?= e($courseActionLabel) ?></a>
                             </article>
                         <?php endforeach; ?>
                     </div>
