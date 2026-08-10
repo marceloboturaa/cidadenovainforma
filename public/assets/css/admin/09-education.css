@@ -316,6 +316,79 @@
     color: #0f172a;
 }
 
+.education-public-page {
+    min-height: 100vh;
+    background: #f4f6f8;
+}
+
+.education-public-topbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    padding: 12px clamp(14px, 4vw, 36px);
+    background: var(--brand);
+    color: #ffffff;
+}
+
+.education-public-topbar a {
+    color: inherit;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.education-public-topbar nav {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.education-public-content {
+    width: min(1120px, calc(100% - 24px));
+    margin: 0 auto;
+    padding: 24px 0 40px;
+}
+
+.education-public-access-panel {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    border-color: #dbeafe;
+    background: #f8fbff;
+}
+
+.education-public-access-panel h2 {
+    margin: 0 0 6px;
+    font-size: 1.15rem;
+}
+
+.education-public-access-panel p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.55;
+}
+
+.education-public-sidebar-note {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    background: #f8fbff;
+}
+
+.education-public-sidebar-note strong,
+.education-public-sidebar-note span {
+    display: block;
+}
+
+.education-public-sidebar-note span {
+    color: #475569;
+    font-size: 0.86rem;
+    line-height: 1.4;
+}
+
 .education-admin-workspace {
     display: grid;
     gap: 14px;
@@ -3716,6 +3789,17 @@
 
     .education-course-presentation > .btn {
         justify-self: start;
+    }
+
+    .education-public-access-panel,
+    .education-public-topbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .education-public-access-panel .btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .education-player-layout.is-student-view .education-lesson-description {

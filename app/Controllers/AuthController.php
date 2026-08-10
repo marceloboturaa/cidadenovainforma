@@ -47,8 +47,12 @@ class AuthController
             redirect('/admin');
         }
 
+        $courseId = filter_input(INPUT_GET, 'course_id', FILTER_VALIDATE_INT) ?: 0;
+        $course = $courseId ? \App\Models\Education::findCourse($courseId) : null;
+
         View::render('auth/register', [
             'registrationEnabled' => SiteSetting::registrationEnabled(),
+            'course' => ($course && !empty($course['public_enabled'])) ? $course : null,
         ], 'auth');
     }
 
@@ -68,15 +72,18 @@ class AuthController
         $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
         $password = $_POST['password'] ?? '';
         $confirmation = $_POST['password_confirmation'] ?? '';
+        $courseId = filter_input(INPUT_POST, 'course_id', FILTER_VALIDATE_INT) ?: 0;
+        $course = $courseId ? \App\Models\Education::findCourse($courseId) : null;
+        $courseId = ($course && !empty($course['public_enabled'])) ? (int) $course['id'] : 0;
 
         if ($name === '' || !$email || strlen($password) < 8 || $password !== $confirmation) {
             Session::flash('error', 'Preencha nome, e-mail e senha com confirmação igual.');
-            redirect('/register');
+            redirect('/register' . ($courseId ? '?course_id=' . $courseId : ''));
         }
 
         if (User::findByEmail($email)) {
             Session::flash('error', 'Este e-mail já possui cadastro.');
-            redirect('/register');
+            redirect('/register' . ($courseId ? '?course_id=' . $courseId : ''));
         }
 
         $role = Role::findBySlug('jornalista');
@@ -91,11 +98,12 @@ class AuthController
             'password' => $password,
             'role_id' => $role['id'],
             'active' => 0,
-            'registration_origin' => 'login',
+            'registration_origin' => $courseId ? 'course' : 'login',
+            'registration_course_id' => $courseId ?: null,
         ]);
 
         Logger::info('users.registration_requested', 'Novo cadastro aguardando aprovação: ' . $email, $userId);
-        Session::flash('success', 'Obrigado pelo cadastro. Sua solicitação está sendo averiguada e em breve retornaremos.');
+        Session::flash('success', $courseId ? 'Obrigado pelo cadastro. Sua inscrição no curso foi enviada para análise.' : 'Obrigado pelo cadastro. Sua solicitação está sendo averiguada e em breve retornaremos.');
         redirect('/login');
     }
 

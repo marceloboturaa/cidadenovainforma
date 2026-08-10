@@ -10,6 +10,7 @@ $modules = $modules ?? [];
 $canAssignTeacher = $canAssignTeacher ?? false;
 $teacherOptions = $teacherOptions ?? [];
 $forumAuthorOptions = $forumAuthorOptions ?? [];
+$publicCourseView = $publicCourseView ?? false;
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
 
@@ -19,6 +20,11 @@ foreach ($lessons as $lessonItem) {
 }
 
 $moduleAction = url('/admin/education/module?id=' . $course['id']);
+$courseUrl = $publicCourseView ? url('/curso/' . $course['id']) : url('/admin/education/course?id=' . $course['id'] . ($studentPreview ? '&preview=student' : ''));
+$lessonUrl = fn (array $lessonItem): string => $publicCourseView
+    ? url('/curso/aula/' . $lessonItem['id'])
+    : url('/admin/education/lesson?id=' . $lessonItem['id'] . ($studentPreview ? '&preview=student' : ''));
+$courseRegistrationUrl = url('/register?course_id=' . $course['id']);
 $forumTopics = $forumTopics ?? [];
 $forumRepliesByTopic = $forumRepliesByTopic ?? [];
 $courseForms = $courseForms ?? [];
@@ -81,10 +87,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
         <h1><?= e($course['title']) ?></h1>
     </div>
     <div class="heading-actions">
-        <?php if (!$canManage && $forumTopics): ?>
+        <?php if ($publicCourseView): ?>
+            <a class="btn btn-primary icon-btn" href="<?= e($courseRegistrationUrl) ?>"><i class="bi bi-person-plus" aria-hidden="true"></i>Inscrever-se</a>
+            <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/login')) ?>"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Entrar</a>
+        <?php endif; ?>
+        <?php if (!$publicCourseView && !$canManage && $forumTopics): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forum')) ?>"><i class="bi bi-chat-dots" aria-hidden="true"></i>Fórum do curso</a>
         <?php endif; ?>
-        <?php if (!$canManage && $courseForms): ?>
+        <?php if (!$publicCourseView && !$canManage && $courseForms): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forms')) ?>"><i class="bi bi-ui-checks" aria-hidden="true"></i>Formularios</a>
         <?php endif; ?>
         <?php if ($canManage): ?>
@@ -100,9 +110,9 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/attendance/report?id=' . $course['id'])) ?>"><i class="bi bi-bar-chart" aria-hidden="true"></i>Relatório</a>
         <?php endif; ?>
         <?php if ($isStudentCourseView && $nextLesson): ?>
-            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'] . $previewSuffix)) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar</a>
+            <a class="btn btn-primary icon-btn" href="<?= e($lessonUrl($nextLesson)) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar</a>
         <?php endif; ?>
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e($publicCourseView ? url('/') : url('/admin/education')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
 
@@ -210,7 +220,20 @@ if ($isStudentCourseView && function_exists('current_user')) {
 <?php endif; ?>
 
 <?php if (!$isEnrollmentPending): ?>
-<?php if ($isStudentCourseView): ?>
+<?php if ($publicCourseView): ?>
+    <section class="panel education-public-access-panel">
+        <div>
+            <span class="eyebrow">Curso aberto</span>
+            <h2>Acesse os conteúdos liberados sem login</h2>
+            <p>Algumas aulas e atividades podem estar reservadas para estudantes inscritos. Para continuar quando encontrar um bloqueio, solicite sua inscrição no curso.</p>
+        </div>
+        <form method="post" action="<?= e(url('/curso/' . $course['id'] . '/inscricao')) ?>">
+            <?= csrf_field() ?>
+            <button class="btn btn-primary icon-btn"><i class="bi bi-person-plus" aria-hidden="true"></i>Solicitar inscrição</button>
+        </form>
+    </section>
+<?php endif; ?>
+<?php if ($isStudentCourseView && !$publicCourseView): ?>
     <section class="panel education-student-overview">
         <div class="education-student-progress-card">
             <div>
@@ -228,7 +251,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <?php if ($nextLesson): ?>
                 <h2><?= e($nextLesson['title']) ?></h2>
                 <p><?= e(text_excerpt($nextLesson['description'] ?? 'Continue por esta aula.', 130)) ?></p>
-                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'] . $previewSuffix)) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar aula</a>
+                <a class="btn btn-primary icon-btn" href="<?= e($lessonUrl($nextLesson)) ?>"><i class="bi bi-play-circle" aria-hidden="true"></i>Continuar aula</a>
             <?php elseif ($lessonCount > 0): ?>
                 <h2>Curso concluído</h2>
                 <p>Todas as aulas disponíveis foram concluídas.</p>
@@ -421,7 +444,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
 </section>
 <?php endif; ?>
 
-<?php if (!$isEnrollmentPending): ?>
+<?php if (!$isEnrollmentPending && !$publicCourseView): ?>
 <?php if ($canManage || !empty($course['certificate_enabled'])): ?>
 <?php if ($canManage): ?>
 <details class="panel education-admin-details education-certificate-panel" id="course-certificate">

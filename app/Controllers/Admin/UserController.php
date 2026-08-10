@@ -595,11 +595,13 @@ class UserController
 
     private function approveEventCourseEnrollmentsForUser(array $user): int
     {
-        if (empty($user['registration_event_id'])) {
+        if (empty($user['registration_event_id']) && empty($user['registration_course_id'])) {
             return 0;
         }
 
-        $courseIds = LibraryEvent::courseIds((int) $user['registration_event_id']);
+        $courseIds = !empty($user['registration_event_id'])
+            ? LibraryEvent::courseIds((int) $user['registration_event_id'])
+            : [];
         if (!$courseIds && !empty($user['registration_course_id'])) {
             $courseIds[] = (int) $user['registration_course_id'];
         }

@@ -12,7 +12,9 @@ $lessonHasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
 $lessonContentLabel = $lessonHasVideo ? 'Vídeo' : ($lessonAttendanceMode === 'manual' ? 'Encontro' : 'Material');
 $lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? ($lessonHasVideo ? 'Rever' : 'Revisar') : ($lessonHasVideo ? 'Assistir' : 'Estudar'));
 $lessonButtonIcon = $lessonHasVideo ? ($lessonIsComplete ? 'bi-arrow-clockwise' : 'bi-play-circle') : 'bi-journal-text';
-$lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($studentPreview) ? '&preview=student' : ''));
+$lessonHref = isset($lessonUrl) && is_callable($lessonUrl)
+    ? $lessonUrl($lesson)
+    : url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($studentPreview) ? '&preview=student' : ''));
 ?>
 <article class="education-playlist-row <?= !$lessonModuleRequired ? 'is-complementary' : '' ?> <?= $lessonScheduleLocked ? 'is-scheduled' : '' ?> <?= $lessonIsComplete ? 'is-complete' : '' ?> <?= $lessonIsNext ? 'is-next' : '' ?> <?= $lessonAccessLocked ? 'is-locked' : '' ?> <?= !$lessonHasVideo ? 'is-non-video' : 'is-video' ?>">
     <<?= $lessonAccessLocked ? 'div' : 'a' ?> class="education-playlist-main"<?= $lessonAccessLocked ? '' : ' href="' . e($lessonHref) . '"' ?>>
@@ -61,9 +63,15 @@ $lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($stude
     </<?= $lessonAccessLocked ? 'div' : 'a' ?>>
     <div class="education-lesson-actions">
         <?php if ($lessonAccessLocked): ?>
-            <span class="btn btn-sm btn-outline-secondary icon-btn disabled" aria-disabled="true">
-                <i class="bi bi-lock-fill" aria-hidden="true"></i><?= $lessonScheduleLocked ? 'Agendada' : 'Bloqueada' ?>
-            </span>
+            <?php if (!empty($publicCourseView)): ?>
+                <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e($courseRegistrationUrl ?? url('/register?course_id=' . $course['id'])) ?>">
+                    <i class="bi bi-lock-fill" aria-hidden="true"></i>Inscrever-se
+                </a>
+            <?php else: ?>
+                <span class="btn btn-sm btn-outline-secondary icon-btn disabled" aria-disabled="true">
+                    <i class="bi bi-lock-fill" aria-hidden="true"></i><?= $lessonScheduleLocked ? 'Agendada' : 'Bloqueada' ?>
+                </span>
+            <?php endif; ?>
         <?php else: ?>
             <a class="btn btn-sm btn-primary icon-btn" href="<?= e($lessonHref) ?>">
                 <i class="bi <?= e($lessonButtonIcon) ?>" aria-hidden="true"></i><?= e($lessonButtonLabel) ?>

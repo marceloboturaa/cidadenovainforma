@@ -392,6 +392,124 @@ class EducationController
         ]);
     }
 
+    public function publicCourse(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $course = $id ? Education::findCourse($id) : null;
+        if (empty($course['public_enabled'])) {
+            http_response_code(404);
+            View::render('errors/404', [], 'education-public');
+            return;
+        }
+
+        $lessons = $this->publicLessonsForCourse((int) $course['id']);
+
+        View::render('admin/education/course', [
+            'course' => $course,
+            'lessons' => $lessons,
+            'modules' => Education::modulesForCourse((int) $course['id'], false),
+            'canManage' => false,
+            'canManageOriginal' => false,
+            'studentPreview' => false,
+            'canAssignTeacher' => false,
+            'teacherOptions' => [],
+            'forumAuthorOptions' => [],
+            'canTakeAttendance' => false,
+            'editingLesson' => null,
+            'editingModule' => null,
+            'forumTopics' => [],
+            'forumRepliesByTopic' => [],
+            'courseForms' => [],
+            'certificateStatus' => [],
+            'certificateInstitutions' => [],
+            'certificateNameRequests' => [],
+            'isEnrollmentPending' => false,
+            'publicCourseView' => true,
+        ], 'education-public');
+    }
+
+    public function publicLesson(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $lesson = $id ? Education::findLesson($id) : null;
+        if (!$lesson) {
+            http_response_code(404);
+            View::render('errors/404', [], 'education-public');
+            return;
+        }
+
+        $course = Education::findCourse((int) $lesson['course_id']);
+        if (!$course || empty($course['public_enabled']) || !$this->publicLessonIsOpen($lesson)) {
+            http_response_code(404);
+            View::render('errors/404', [], 'education-public');
+            return;
+        }
+
+        $playlist = $this->publicLessonsForCourse((int) $lesson['course_id']);
+        $lessonIds = array_map(static fn (array $item): int => (int) $item['id'], $playlist);
+        if (!in_array((int) $lesson['id'], $lessonIds, true)) {
+            http_response_code(404);
+            View::render('errors/404', [], 'education-public');
+            return;
+        }
+
+        $blocks = array_values(array_filter(
+            Education::blocksForLesson((int) $lesson['id'], false, 0),
+            fn (array $block): bool => $this->publicBlockIsOpen($block)
+        ));
+        $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
+
+        View::render('admin/education/lesson', [
+            'lesson' => $lesson,
+            'course' => $course,
+            'videoEmbedUrl' => $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
+            'blocks' => $blocks,
+            'editingBlock' => null,
+            'canManage' => false,
+            'canManageOriginal' => false,
+            'studentPreview' => false,
+            'isLocked' => false,
+            'isScheduleLocked' => false,
+            'hasVideo' => $hasVideo,
+            'videoWatched' => true,
+            'completionRequirements' => ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0, 'required_forum_count' => 0, 'replied_forum_count' => 0],
+            'modules' => Education::modulesForCourse((int) $lesson['course_id'], false),
+            'playlist' => $playlist,
+            'lessonForumTopics' => [],
+            'lessonForumRepliesByTopic' => [],
+            'canAssignForumAuthor' => false,
+            'forumAuthorOptions' => [],
+            'lessonForms' => [],
+            'assignmentSubmissionsByBlock' => [],
+            'publicCourseView' => true,
+        ], 'education-public');
+    }
+
+    public function publicEnrollment(): void
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $course = $id ? Education::findCourse($id) : null;
+        if (empty($course['public_enabled'])) {
+            http_response_code(404);
+            View::render('errors/404', [], 'education-public');
+            return;
+        }
+
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::flash('error', 'Sessão expirada. Tente novamente.');
+            redirect('/curso/' . $course['id']);
+        }
+
+        $user = current_user();
+        if (!$user) {
+            redirect('/register?course_id=' . $course['id']);
+        }
+
+        Education::enrollUserInCourses((int) $user['id'], [(int) $course['id']], 'pending');
+        Session::flash('success', 'Sua inscrição foi enviada. O professor ou a coordenação precisa liberar o acesso completo.');
+        redirect('/curso/' . $course['id']);
+    }
+
     public function storeModule(): void
     {
         Middleware::auth();
@@ -2325,6 +2443,43 @@ class EducationController
     {
         $availableAt = trim((string) ($lesson['available_at'] ?? ''));
         return $availableAt === '' || strtotime($availableAt) <= time();
+    }
+
+    private function publicLessonsForCourse(int $courseId): array
+    {
+        $lessons = Education::lessonsForCourse($courseId, 0, false);
+
+        foreach ($lessons as $index => $lesson) {
+            $locked = !$this->publicLessonIsOpen($lesson);
+            $lessons[$index]['sequence_locked'] = $locked && !empty($lesson['locked']) ? 1 : 0;
+            $lessons[$index]['schedule_locked'] = !$this->lessonIsAvailable($lesson) ? 1 : 0;
+            $lessons[$index]['can_watch'] = !$locked;
+        }
+
+        return $lessons;
+    }
+
+    private function publicLessonIsOpen(array $lesson): bool
+    {
+        if (!empty($lesson['locked']) || !$this->lessonIsAvailable($lesson)) {
+            return false;
+        }
+
+        if (!empty($lesson['module_id']) && empty($lesson['module_active'])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function publicBlockIsOpen(array $block): bool
+    {
+        if (empty($block['active'])) {
+            return false;
+        }
+
+        $type = (string) ($block['type'] ?? 'text');
+        return in_array($type, ['video', 'text', 'image', 'article', 'embed', 'podcast', 'audio'], true);
     }
 
     private function certificateFieldsFromCourse(array $course): array

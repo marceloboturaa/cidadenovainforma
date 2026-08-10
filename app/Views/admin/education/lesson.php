@@ -4,6 +4,7 @@ $editingBlock = $editingBlock ?? null;
 $canManage = $canManage ?? false;
 $canManageOriginal = $canManageOriginal ?? $canManage;
 $studentPreview = $studentPreview ?? false;
+$publicCourseView = $publicCourseView ?? false;
 $isLocked = $isLocked ?? false;
 $isScheduleLocked = $isScheduleLocked ?? false;
 $hasVideo = $hasVideo ?? false;
@@ -39,6 +40,10 @@ $previousLesson = $currentIndex !== null && isset($playlist[$currentIndex - 1]) 
 $nextLesson = $currentIndex !== null && isset($playlist[$currentIndex + 1]) ? $playlist[$currentIndex + 1] : null;
 $isCompleted = !empty($currentPlaylistLesson['completed_at']);
 $previewSuffix = $studentPreview ? '&preview=student' : '';
+$courseHref = $publicCourseView ? url('/curso/' . $lesson['course_id']) : url('/admin/education/course?id=' . $lesson['course_id'] . ($studentPreview ? '&preview=student' : ''));
+$lessonHref = fn (array $lessonItem): string => $publicCourseView
+    ? url('/curso/aula/' . $lessonItem['id'])
+    : url('/admin/education/lesson?id=' . $lessonItem['id'] . $previewSuffix);
 $blockAction = $editingBlock
     ? url('/admin/education/block/update?id=' . $editingBlock['id'])
     : url('/admin/education/block?id=' . $lesson['id']);
@@ -104,12 +109,12 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
             <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&edit_lesson=1#lesson-settings')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar aula</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&preview=student')) ?>"><i class="bi bi-eye" aria-hidden="true"></i>Visualizar como estudante</a>
         <?php endif; ?>
-        <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'] . ($studentPreview ? '&preview=student' : ''))) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Curso</a>
+        <a class="btn btn-outline-secondary icon-btn" href="<?= e($courseHref) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Curso</a>
         <?php if ($previousLesson): ?>
-            <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $previousLesson['id'] . $previewSuffix)) ?>"><i class="bi bi-chevron-left" aria-hidden="true"></i>Aula anterior</a>
+            <a class="btn btn-outline-primary icon-btn" href="<?= e($lessonHref($previousLesson)) ?>"><i class="bi bi-chevron-left" aria-hidden="true"></i>Aula anterior</a>
         <?php endif; ?>
         <?php if ($nextLesson && ((empty($nextLesson['sequence_locked']) && empty($nextLesson['schedule_locked'])) || $canManage)): ?>
-            <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'] . $previewSuffix)) ?>">Próxima aula<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+            <a class="btn btn-primary icon-btn" href="<?= e($lessonHref($nextLesson)) ?>">Próxima aula<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
         <?php elseif ($nextLesson): ?>
             <span class="btn btn-outline-secondary icon-btn disabled" aria-disabled="true"><i class="bi bi-lock-fill" aria-hidden="true"></i>Próxima bloqueada</span>
         <?php endif; ?>
@@ -125,27 +130,34 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
                 <i class="bi bi-chevron-down education-playlist-caret" aria-hidden="true"></i>
             </summary>
             <div class="education-playlist-body">
-                <div class="education-progress-inline">
-                    <div>
-                        <strong>Progresso</strong>
-                        <span><?= $isCompleted ? 'Aula concluída' : 'Aula pendente' ?></span>
-                    </div>
-                    <?php if (!$isLocked && !$studentPreview): ?>
-                        <div class="education-progress-actions">
-                            <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>" data-education-complete-form>
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="completed" value="1">
-                                <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn" data-education-complete-button <?= ($hasVideo && !$videoWatched) || !$requirementsComplete || $requiresManualAttendance ? 'disabled' : '' ?>><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
-                            </form>
-                            <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="completed" value="0">
-                                <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
-                            </form>
+                <?php if (!$publicCourseView): ?>
+                    <div class="education-progress-inline">
+                        <div>
+                            <strong>Progresso</strong>
+                            <span><?= $isCompleted ? 'Aula concluída' : 'Aula pendente' ?></span>
                         </div>
-                    <?php endif; ?>
-                </div>
-                <?php if (!$studentPreview && !$canManage && !$isCompleted && !$requirementsComplete): ?>
+                        <?php if (!$isLocked && !$studentPreview): ?>
+                            <div class="education-progress-actions">
+                                <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>" data-education-complete-form>
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="completed" value="1">
+                                    <button class="btn btn-sm <?= $isCompleted ? 'btn-success' : 'btn-outline-success' ?> icon-btn" data-education-complete-button <?= ($hasVideo && !$videoWatched) || !$requirementsComplete || $requiresManualAttendance ? 'disabled' : '' ?>><i class="bi bi-check2-circle" aria-hidden="true"></i>Concluir</button>
+                                </form>
+                                <form method="post" action="<?= e(url('/admin/education/progress?id=' . $lesson['id'])) ?>">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="completed" value="0">
+                                    <button class="btn btn-sm btn-outline-secondary icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Pendente</button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="education-public-sidebar-note">
+                        <strong>Aula aberta</strong>
+                        <span>Para salvar progresso e acessar áreas restritas, solicite inscrição.</span>
+                    </div>
+                <?php endif; ?>
+                <?php if (!$publicCourseView && !$studentPreview && !$canManage && !$isCompleted && !$requirementsComplete): ?>
                         <div class="education-requirements-hint" data-education-requirements-hint data-pending-assignments="<?= e((string) max(0, (int) ($completionRequirements['required_assignment_count'] ?? 0) - (int) ($completionRequirements['submitted_assignment_count'] ?? 0))) ?>" data-pending-forums="<?= e((string) max(0, (int) ($completionRequirements['required_forum_count'] ?? 0) - (int) ($completionRequirements['replied_forum_count'] ?? 0))) ?>">
                             <strong>Para concluir esta aula</strong>
                             <?php if ((int) ($completionRequirements['required_video_count'] ?? 0) > 0): ?>
@@ -165,7 +177,7 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
                         <section class="education-sidebar-module">
                             <h2><?= e($module['title']) ?><?= empty($module['required']) ? ' (opcional)' : '' ?></h2>
                             <?php foreach ($moduleLessons as $playlistLesson): ?>
-                                <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'] . $previewSuffix)) ?>">
+                                <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e($lessonHref($playlistLesson)) ?>">
                                     <i class="bi <?= (!empty($playlistLesson['locked']) || ((!empty($playlistLesson['sequence_locked']) || !empty($playlistLesson['schedule_locked'])) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
                                     <span><?= e($playlistLesson['title']) ?></span>
                                     <?php if (!empty($playlistLesson['assignment_count'])): ?>
@@ -186,7 +198,7 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
                         <section class="education-sidebar-module">
                             <h2>Sem módulo</h2>
                             <?php foreach ($playlistByModule['none'] as $playlistLesson): ?>
-                                <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e(url('/admin/education/lesson?id=' . $playlistLesson['id'] . $previewSuffix)) ?>">
+                                <a class="<?= (int) $playlistLesson['id'] === (int) $lesson['id'] ? 'active' : '' ?>" href="<?= e($lessonHref($playlistLesson)) ?>">
                                     <i class="bi <?= (!empty($playlistLesson['locked']) || ((!empty($playlistLesson['sequence_locked']) || !empty($playlistLesson['schedule_locked'])) && !$canManage)) ? 'bi-lock-fill' : (!empty($playlistLesson['completed_at']) ? 'bi-check-circle-fill' : 'bi-circle') ?>" aria-hidden="true"></i>
                                     <span><?= e($playlistLesson['title']) ?></span>
                                     <?php if (!empty($playlistLesson['assignment_count'])): ?>
@@ -443,9 +455,9 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
                 <?php endif; ?>
                     <div class="education-video-frame <?= $studentPreview ? 'is-preview-frame' : '' ?>">
                         <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $videoEmbedUrl)): ?>
-                            <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></video>
+                            <video src="<?= e(media_url($videoEmbedUrl)) ?>" controls <?= (!$publicCourseView && !$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></video>
                         <?php else: ?>
-                            <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen <?= (!$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></iframe>
+                            <iframe src="<?= e($videoEmbedUrl) ?>" title="<?= e($lesson['title']) ?>" allowfullscreen <?= (!$publicCourseView && !$studentPreview && !$canManage && $hasVideo && !$videoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'])) . '"' : '' ?>></iframe>
                         <?php endif; ?>
                 </div>
             </section>
@@ -540,9 +552,9 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
                     <?php endif; ?>
                     <div class="education-video-frame <?= $studentPreview ? 'is-preview-frame' : '' ?>">
                         <?php if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $media)): ?>
-                            <video src="<?= e(media_url($media)) ?>" controls <?= (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></video>
+                            <video src="<?= e(media_url($media)) ?>" controls <?= (!$publicCourseView && !$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></video>
                         <?php else: ?>
-                            <iframe src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allowfullscreen <?= (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></iframe>
+                            <iframe src="<?= e($media) ?>" title="<?= e($blockTitle) ?>" allowfullscreen <?= (!$publicCourseView && !$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched) ? 'data-education-video-watch data-watch-url="' . e(url('/admin/education/watch?id=' . $lesson['id'] . '&block_id=' . $block['id'])) . '"' : '' ?>></iframe>
                         <?php endif; ?>
                     </div>
                     <?php if (!$studentPreview && !$canManage && $blockRequired && !$blockVideoWatched): ?>
@@ -999,13 +1011,13 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
 
         <nav class="education-player-nav" aria-label="Navegação da playlist">
             <?php if ($previousLesson): ?>
-                <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $previousLesson['id'] . $previewSuffix)) ?>"><i class="bi bi-chevron-left" aria-hidden="true"></i>Aula anterior</a>
+                <a class="btn btn-outline-primary icon-btn" href="<?= e($lessonHref($previousLesson)) ?>"><i class="bi bi-chevron-left" aria-hidden="true"></i>Aula anterior</a>
             <?php else: ?>
                 <span></span>
             <?php endif; ?>
-            <a href="<?= e(url('/admin/education/course?id=' . $lesson['course_id'] . ($studentPreview ? '&preview=student' : ''))) ?>">Voltar para o curso</a>
+            <a href="<?= e($courseHref) ?>">Voltar para o curso</a>
             <?php if ($nextLesson && ((empty($nextLesson['sequence_locked']) && empty($nextLesson['schedule_locked'])) || $canManage)): ?>
-                <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $nextLesson['id'] . $previewSuffix)) ?>">Próxima aula<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+                <a class="btn btn-primary icon-btn" href="<?= e($lessonHref($nextLesson)) ?>">Próxima aula<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
             <?php elseif ($nextLesson): ?>
                 <span class="btn btn-outline-secondary icon-btn disabled" aria-disabled="true"><i class="bi bi-lock-fill" aria-hidden="true"></i>Próxima bloqueada</span>
             <?php else: ?>

@@ -34,8 +34,8 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             <label class="education-public-toggle">
                 <input type="checkbox" name="public_enabled" value="1" <?= checked(!empty($editing['public_enabled'])) ?>>
                 <span>
-                    <strong>Mostrar curso na vitrine pública</strong>
-                    <small>Quando marcado, o curso aparece na seção Cursos públicos. O aviso do topo do site é configurado no painel inicial.</small>
+                    <strong>Abrir curso ao público sem login</strong>
+                    <small>Visitantes acessam aulas e vídeos liberados. Aulas, módulos e materiais ocultos ou bloqueados continuam restritos; para continuar, o visitante solicita inscrição.</small>
                 </span>
             </label>
         <?php elseif ($isEdit): ?>

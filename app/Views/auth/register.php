@@ -13,8 +13,14 @@
     <?php endif; ?>
 
     <?php if ($registrationEnabled ?? true): ?>
+        <?php if (!empty($course)): ?>
+            <div class="alert alert-info">Seu cadastro será vinculado ao curso: <strong><?= e($course['title']) ?></strong>.</div>
+        <?php endif; ?>
         <form method="post" action="<?= e(url('/register')) ?>" class="stack-form">
             <?= csrf_field() ?>
+            <?php if (!empty($course)): ?>
+                <input type="hidden" name="course_id" value="<?= e((string) $course['id']) ?>">
+            <?php endif; ?>
             <label>
                 Nome
                 <input class="form-control" name="name" required autocomplete="name">

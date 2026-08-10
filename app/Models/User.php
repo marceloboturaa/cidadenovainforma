@@ -502,7 +502,7 @@ class User
     private static function registrationOrigin(mixed $origin): string
     {
         $origin = strtolower(trim((string) $origin));
-        return in_array($origin, ['manual', 'login', 'event'], true) ? $origin : 'manual';
+        return in_array($origin, ['manual', 'login', 'event', 'course'], true) ? $origin : 'manual';
     }
 
     public static function deletePending(int $id): bool

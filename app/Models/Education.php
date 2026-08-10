@@ -906,6 +906,7 @@ class Education
                     watches.completed_at AS video_completed_at,
                     education_modules.title AS module_title,
                     education_modules.required AS module_required,
+                    education_modules.active AS module_active,
                     (
                         SELECT COUNT(*)
                         FROM education_lesson_blocks assignment_blocks
