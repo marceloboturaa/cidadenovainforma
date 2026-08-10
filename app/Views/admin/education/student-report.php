@@ -60,8 +60,15 @@ $attentionLabels = [
         <div class="education-student-report-tools">
             <label>
                 <span>Pesquisar aluno</span>
-                <input class="form-control" type="search" placeholder="Digite nome, e-mail, status ou pendência" data-student-report-search>
+                <input class="form-control" type="search" placeholder="Digite ou escolha um aluno" list="student-report-options" data-student-report-search>
             </label>
+            <datalist id="student-report-options">
+                <?php foreach ($students as $studentOption): ?>
+                    <option value="<?= e($studentOption['name'] ?? '') ?>"><?= e($studentOption['email'] ?? '') ?></option>
+                <?php endforeach; ?>
+            </datalist>
+            <button class="btn btn-outline-primary icon-btn" type="button" data-student-report-find><i class="bi bi-search" aria-hidden="true"></i>Localizar</button>
+            <button class="btn btn-outline-secondary icon-btn" type="button" data-student-report-clear><i class="bi bi-x-circle" aria-hidden="true"></i>Limpar</button>
             <strong><span data-student-report-visible-count><?= e((string) count($students)) ?></span> aluno(s) encontrado(s)</strong>
         </div>
 
@@ -117,7 +124,7 @@ $attentionLabels = [
                     implode(' ', array_column($student['activities'] ?? [], 'lesson_title')),
                 ]));
                 ?>
-                <details class="education-student-report-row education-student-report-item is-<?= e($attentionClass) ?>" data-student-report-row data-student-report-search-text="<?= e($searchText) ?>">
+                <details class="education-student-report-row education-student-report-item is-<?= e($attentionClass) ?>" data-student-report-row data-student-report-name="<?= e($student['name'] ?? '') ?>" data-student-report-email="<?= e($student['email'] ?? '') ?>" data-student-report-search-text="<?= e($searchText) ?>">
                     <summary>
                         <div>
                             <strong><?= e($student['name']) ?></strong>

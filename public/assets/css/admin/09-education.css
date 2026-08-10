@@ -2694,7 +2694,7 @@
 
 .education-student-report-tools {
     display: grid;
-    grid-template-columns: minmax(260px, 1fr) auto;
+    grid-template-columns: minmax(260px, 1fr) auto auto auto;
     gap: 12px;
     align-items: end;
     padding: 12px;
@@ -2723,6 +2723,10 @@
     background: #eff6ff;
     color: #1d4ed8;
     white-space: nowrap;
+}
+
+.education-student-report-tools .btn {
+    min-height: 42px;
 }
 
 .education-student-report-table {

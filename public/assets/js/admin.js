@@ -559,42 +559,90 @@
         const rows = Array.from(list.querySelectorAll('[data-student-report-row]'));
         const empty = list.querySelector('[data-student-report-empty]');
         const count = document.querySelector('[data-student-report-visible-count]');
-        let lastFocusedRow = null;
+        const findButton = document.querySelector('[data-student-report-find]');
+        const clearButton = document.querySelector('[data-student-report-clear]');
+
+        const matchingRows = () => {
+            const term = normalizeSearch(searchInput.value);
+            return rows.filter((row) => {
+                const haystack = normalizeSearch(row.dataset.studentReportSearchText || row.textContent || '');
+                return term === '' || haystack.includes(term);
+            });
+        };
 
         const applyFilter = () => {
-            const term = normalizeSearch(searchInput.value);
-            let visible = 0;
-            let firstMatch = null;
+            const matches = matchingRows();
 
             rows.forEach((row) => {
-                const haystack = normalizeSearch(row.dataset.studentReportSearchText || row.textContent || '');
-                const matches = term === '' || haystack.includes(term);
-                row.classList.toggle('is-hidden', !matches);
+                const matchesRow = matches.includes(row);
+                row.classList.toggle('is-hidden', !matchesRow);
                 row.classList.toggle('is-search-match', false);
-                if (matches) {
-                    visible += 1;
-                    firstMatch = firstMatch || row;
-                }
             });
 
             if (count) {
-                count.textContent = String(visible);
+                count.textContent = String(matches.length);
             }
             if (empty) {
-                empty.hidden = visible > 0;
-            }
-            if (term !== '' && firstMatch && firstMatch !== lastFocusedRow) {
-                firstMatch.open = true;
-                firstMatch.classList.add('is-search-match');
-                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                lastFocusedRow = firstMatch;
-            }
-            if (term === '') {
-                lastFocusedRow = null;
+                empty.hidden = matches.length > 0;
             }
         };
 
+        const locateStudent = () => {
+            const term = normalizeSearch(searchInput.value);
+            const matches = matchingRows();
+            if (!term || !matches.length) {
+                applyFilter();
+                return;
+            }
+
+            const exactMatch = matches.find((row) => {
+                return normalizeSearch(row.dataset.studentReportName || '') === term
+                    || normalizeSearch(row.dataset.studentReportEmail || '') === term;
+            });
+            const target = exactMatch || matches[0];
+
+            rows.forEach((row) => {
+                const matches = row === target;
+                row.classList.toggle('is-hidden', !matches);
+                row.classList.toggle('is-search-match', false);
+            });
+
+            if (count) {
+                count.textContent = '1';
+            }
+            if (empty) {
+                empty.hidden = true;
+            }
+            target.open = true;
+            target.classList.add('is-search-match');
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+
         searchInput.addEventListener('input', applyFilter);
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                locateStudent();
+            }
+        });
+        if (findButton) {
+            findButton.addEventListener('click', locateStudent);
+        }
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                searchInput.value = '';
+                rows.forEach((row) => {
+                    row.classList.remove('is-hidden', 'is-search-match');
+                });
+                if (count) {
+                    count.textContent = String(rows.length);
+                }
+                if (empty) {
+                    empty.hidden = true;
+                }
+                searchInput.focus();
+            });
+        }
         applyFilter();
     }
 
