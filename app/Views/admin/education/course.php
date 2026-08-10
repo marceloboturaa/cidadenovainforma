@@ -114,8 +114,13 @@ if ($isStudentCourseView && function_exists('current_user')) {
     </div>
     <div class="heading-actions">
         <?php if ($publicCourseView): ?>
-            <a class="btn btn-primary icon-btn" href="<?= e($courseRegistrationUrl) ?>"><i class="bi bi-person-plus" aria-hidden="true"></i>Inscrever-se</a>
-            <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/login')) ?>"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Entrar</a>
+            <?php if (!empty($course['public_access_enabled'])): ?>
+                <a class="btn btn-primary icon-btn" href="<?= e($courseRegistrationUrl) ?>"><i class="bi bi-person-plus" aria-hidden="true"></i>Inscrever-se</a>
+                <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/login')) ?>"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Entrar</a>
+            <?php else: ?>
+                <a class="btn btn-primary icon-btn" href="<?= e(url('/login')) ?>"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Entrar para acessar</a>
+                <a class="btn btn-outline-secondary icon-btn" href="<?= e($courseRegistrationUrl) ?>"><i class="bi bi-person-plus" aria-hidden="true"></i>Criar cadastro</a>
+            <?php endif; ?>
         <?php endif; ?>
         <?php if (!$publicCourseView && !$canManage && $forumTopics): ?>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '#course-forum')) ?>"><i class="bi bi-chat-dots" aria-hidden="true"></i>Fórum do curso</a>
@@ -263,10 +268,17 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <p>O professor deixou a apresentação do curso visível no site, mas as aulas estão liberadas somente para usuários com login.</p>
             <?php endif; ?>
         </div>
-        <form method="post" action="<?= e(url('/curso/' . $course['id'] . '/inscricao')) ?>">
-            <?= csrf_field() ?>
-            <button class="btn btn-primary icon-btn"><i class="bi bi-person-plus" aria-hidden="true"></i>Solicitar inscrição</button>
-        </form>
+        <?php if (!empty($course['public_access_enabled'])): ?>
+            <form method="post" action="<?= e(url('/curso/' . $course['id'] . '/inscricao')) ?>">
+                <?= csrf_field() ?>
+                <button class="btn btn-primary icon-btn"><i class="bi bi-person-plus" aria-hidden="true"></i>Solicitar inscrição</button>
+            </form>
+        <?php else: ?>
+            <div class="heading-actions">
+                <a class="btn btn-primary icon-btn" href="<?= e(url('/login')) ?>"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Entrar para acessar</a>
+                <a class="btn btn-outline-primary icon-btn" href="<?= e($courseRegistrationUrl) ?>"><i class="bi bi-person-plus" aria-hidden="true"></i>Criar cadastro</a>
+            </div>
+        <?php endif; ?>
     </section>
 <?php endif; ?>
 <?php if ($isStudentCourseView && !$publicCourseView): ?>
