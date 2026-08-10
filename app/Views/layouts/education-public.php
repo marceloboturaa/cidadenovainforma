@@ -3,6 +3,7 @@
 <?php $adminCssFiles = $assets['css']['admin'] ?? ['/public/assets/css/admin.css']; ?>
 <?php $adminJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/admin.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/admin.js') : time(); ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/favicon-education.svg'); ?>
+<?php $isPublicFreeCourseLayout = !empty($publicCourseView) && !empty($course['public_access_enabled']); ?>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -17,10 +18,19 @@
         <link href="<?= e(versioned_asset_url($cssFile)) ?>" rel="stylesheet">
     <?php endforeach; ?>
 </head>
-<body class="education-public-page">
+<body class="education-public-page <?= $isPublicFreeCourseLayout ? 'is-free-course-layout' : '' ?>">
     <header class="education-public-topbar">
-        <a href="<?= e(url('/')) ?>"><?= e($app['name']) ?></a>
+        <a class="education-public-brand" href="<?= e(url('/')) ?>">
+            <?php if ($isPublicFreeCourseLayout): ?>
+                <img src="<?= e(url('/public/assets/img/logo-cidade-nova-informa.svg')) ?>" alt="" aria-hidden="true">
+            <?php endif; ?>
+            <span><?= e($app['name']) ?></span>
+        </a>
         <nav>
+            <?php if ($isPublicFreeCourseLayout): ?>
+                <a href="<?= e(url('/')) ?>"><i class="bi bi-house-door" aria-hidden="true"></i>Início</a>
+                <a href="<?= e(url('/admin/education')) ?>"><i class="bi bi-book" aria-hidden="true"></i>Meus cursos</a>
+            <?php endif; ?>
             <a href="<?= e(url('/login')) ?>">Entrar</a>
             <a class="btn btn-sm btn-outline-light" href="<?= e(url('/register')) ?>">Criar cadastro</a>
         </nav>

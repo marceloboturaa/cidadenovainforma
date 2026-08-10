@@ -11,6 +11,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
 $teacherOptions = $teacherOptions ?? [];
 $forumAuthorOptions = $forumAuthorOptions ?? [];
 $publicCourseView = $publicCourseView ?? false;
+$isPublicFreeCourse = $publicCourseView && !empty($course['public_access_enabled']);
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
 
@@ -62,6 +63,10 @@ $coursePresentationSummary = trim((string) ($course['summary'] ?? ''));
 $coursePresentationFallback = $isStudentCourseView
     ? 'Acompanhe a apresentação do curso e siga pelas aulas disponíveis na sequência.'
     : 'Organize a abertura do curso com uma descrição clara para orientar os estudantes antes dos módulos e das aulas.';
+$coursePresentationText = $coursePresentationSummary !== '' ? $coursePresentationSummary : $coursePresentationFallback;
+$courseCoverUrl = !empty($course['cover_image']) ? media_url($course['cover_image']) : '';
+$courseModality = trim((string) ($course['certificate_modality'] ?? '')) ?: 'Online';
+$courseWorkload = !empty($course['workload_hours']) ? rtrim(rtrim(number_format((float) $course['workload_hours'], 1, ',', ''), '0'), ',') . 'h' : ((string) $lessonCount . ' aula(s)');
 $previewSuffix = $studentPreview ? '&preview=student' : '';
 $courseAnnouncements = [];
 if ($isStudentCourseView && function_exists('current_user')) {
@@ -82,6 +87,26 @@ if ($isStudentCourseView && function_exists('current_user')) {
 }
 ?>
 
+<div class="<?= $isPublicFreeCourse ? 'education-free-course-page' : 'education-course-page' ?>">
+<?php if ($isPublicFreeCourse): ?>
+    <section class="education-free-hero <?= $courseCoverUrl === '' ? 'is-empty-cover' : '' ?>" <?= $courseCoverUrl !== '' ? 'style="--course-cover: url(\'' . e($courseCoverUrl) . '\')"' : '' ?>>
+        <div class="education-free-hero-content">
+            <span class="education-free-teacher"><?= e($course['teacher_name'] ?? 'Cidade Nova Informa') ?></span>
+            <h1><?= e($course['title']) ?></h1>
+            <p><?= e(text_excerpt($coursePresentationText, 180)) ?></p>
+            <div class="education-free-hero-meta">
+                <span><i class="bi bi-play-btn" aria-hidden="true"></i>Curso aberto</span>
+                <span><i class="bi bi-clock" aria-hidden="true"></i>Seu ritmo</span>
+                <span><i class="bi bi-sliders" aria-hidden="true"></i>Nível: Iniciante</span>
+            </div>
+            <div class="education-free-hero-actions">
+                <a class="btn btn-primary icon-btn" href="<?= e($courseRegistrationUrl) ?>"><i class="bi bi-person-plus" aria-hidden="true"></i>Inscrever-se</a>
+                <a class="btn btn-outline-light icon-btn" href="<?= e(url('/login')) ?>"><i class="bi bi-unlock" aria-hidden="true"></i>Entrar</a>
+                <a class="btn btn-outline-light icon-btn" href="<?= e(url('/')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
+            </div>
+        </div>
+    </section>
+<?php else: ?>
 <div class="page-heading">
     <div>
         <p><?= e($course['teacher_name'] ?? 'Plataforma de ensino') ?></p>
@@ -116,6 +141,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
         <a class="btn btn-outline-secondary icon-btn" href="<?= e($publicCourseView ? url('/') : url('/admin/education')) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
+<?php endif; ?>
 
 <?php if ($studentPreview && $canManageOriginal): ?>
     <section class="panel education-preview-banner">
@@ -223,6 +249,9 @@ if ($isStudentCourseView && function_exists('current_user')) {
 <?php if (!$isEnrollmentPending): ?>
 <?php if ($publicCourseView): ?>
     <section class="panel education-public-access-panel">
+        <?php if ($isPublicFreeCourse): ?>
+            <i class="bi bi-unlock" aria-hidden="true"></i>
+        <?php endif; ?>
         <div>
             <?php if (!empty($course['public_access_enabled'])): ?>
                 <span class="eyebrow">Curso aberto</span>
@@ -273,7 +302,11 @@ if ($isStudentCourseView && function_exists('current_user')) {
     </section>
 <?php endif; ?>
 
-<section class="panel education-course-presentation">
+<?php if ($isPublicFreeCourse): ?>
+    <div class="education-free-content-grid">
+<?php endif; ?>
+
+<section class="panel education-course-presentation <?= $isPublicFreeCourse ? 'is-free-course-presentation' : '' ?>">
     <div class="education-course-presentation-media">
         <?php if (!empty($course['cover_image'])): ?>
             <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" onerror="this.closest('.education-course-presentation-media').classList.add('is-empty'); this.remove()">
@@ -284,7 +317,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
     <div class="education-course-presentation-body">
         <span class="eyebrow">Apresentação do curso</span>
         <h2><?= e($course['title']) ?></h2>
-        <p><?= e(text_excerpt($coursePresentationSummary !== '' ? $coursePresentationSummary : $coursePresentationFallback, 280)) ?></p>
+        <p><?= e(text_excerpt($coursePresentationText, 280)) ?></p>
         <div class="education-course-presentation-stats">
             <span><strong><?= e((string) $lessonCount) ?></strong> aula(s)</span>
             <span><strong><?= e((string) $requiredLessonCount) ?></strong> obrigatória(s)</span>
@@ -298,7 +331,28 @@ if ($isStudentCourseView && function_exists('current_user')) {
     <?php endif; ?>
 </section>
 
-<section class="panel education-playlist-panel <?= $isStudentCourseView ? 'is-student-playlist' : '' ?>" id="course-lessons">
+<?php if ($isPublicFreeCourse): ?>
+    <aside class="education-free-sidebar">
+        <section class="panel education-free-info-card">
+            <h2><i class="bi bi-file-earmark-text" aria-hidden="true"></i>Sobre o curso</h2>
+            <dl>
+                <div><dt><i class="bi bi-calendar3" aria-hidden="true"></i>Categoria</dt><dd><?= e($course['certificate_course_nature'] ?? 'Formação livre') ?></dd></div>
+                <div><dt><i class="bi bi-clock" aria-hidden="true"></i>Duração</dt><dd><?= e($courseWorkload) ?></dd></div>
+                <div><dt><i class="bi bi-bar-chart" aria-hidden="true"></i>Nível</dt><dd>Iniciante</dd></div>
+                <div><dt><i class="bi bi-display" aria-hidden="true"></i>Modalidade</dt><dd><?= e($courseModality) ?></dd></div>
+                <div><dt><i class="bi bi-award" aria-hidden="true"></i>Certificado</dt><dd><?= !empty($course['certificate_enabled']) ? 'Sim' : 'Não' ?></dd></div>
+            </dl>
+        </section>
+        <section class="panel education-free-info-card education-free-alert-card">
+            <h2><i class="bi bi-bell" aria-hidden="true"></i>Fique por dentro</h2>
+            <p>Inscreva-se para receber avisos sobre novos cursos e conteúdos.</p>
+            <a class="btn btn-primary icon-btn" href="<?= e($courseRegistrationUrl) ?>"><i class="bi bi-person-plus" aria-hidden="true"></i>Quero me inscrever</a>
+        </section>
+    </aside>
+    </div>
+<?php endif; ?>
+
+<section class="panel education-playlist-panel <?= $isStudentCourseView ? 'is-student-playlist' : '' ?> <?= $isPublicFreeCourse ? 'is-free-course-playlist' : '' ?>" id="course-lessons">
     <div class="section-heading">
         <div>
             <span class="eyebrow"><?= $isStudentCourseView ? 'Trilha do curso' : 'Organização do curso' ?></span>
@@ -976,6 +1030,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
 <?php endif; ?>
 <?php endif; ?>
 <?php endif; ?>
+
+</div>
 
 <?php if ($canManage && $editingCourseIntro): ?>
     <div class="forum-modal is-open education-edit-modal" id="education-course-edit-modal" aria-hidden="false">
