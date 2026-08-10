@@ -30,7 +30,6 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             <label class="form-label">Resumo</label>
             <textarea class="form-control" name="summary" rows="3" placeholder="Descrição curta para os alunos."><?= e($editing['summary'] ?? '') ?></textarea>
         </div>
-        <?php if ($canManageAll): ?>
             <label class="education-public-toggle">
                 <input type="checkbox" name="public_enabled" value="1" <?= checked(!empty($editing['public_enabled'])) ?>>
                 <span>
@@ -45,10 +44,6 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                     <small>Visitantes acessam aulas e vídeos liberados. Aulas, módulos e materiais ocultos ou bloqueados continuam restritos; para continuar, o visitante solicita inscrição.</small>
                 </span>
             </label>
-        <?php elseif ($isEdit): ?>
-            <input type="hidden" name="public_enabled" value="<?= e((string) ($editing['public_enabled'] ?? 0)) ?>">
-            <input type="hidden" name="public_access_enabled" value="<?= e((string) ($editing['public_access_enabled'] ?? 0)) ?>">
-        <?php endif; ?>
         <input type="hidden" name="playlist_required" value="0">
         <label class="education-public-toggle education-playlist-required-toggle">
             <input type="checkbox" name="playlist_required" value="1" <?= checked((string) ($editing['playlist_required'] ?? '1'), '1') ?>>

@@ -284,8 +284,8 @@ class EducationController
             : ($this->canTeach() ? $userId : null);
         $id = Education::createCourse(array_merge($_POST, [
             'cover_image' => $this->courseCoverFromRequest(null),
-            'public_enabled' => $this->canManageAll() && !empty($_POST['public_enabled']) ? 1 : 0,
-            'public_access_enabled' => $this->canManageAll() && !empty($_POST['public_access_enabled']) ? 1 : 0,
+            'public_enabled' => !empty($_POST['public_enabled']) ? 1 : 0,
+            'public_access_enabled' => !empty($_POST['public_access_enabled']) ? 1 : 0,
             'teacher_user_id' => $teacherUserId,
             'created_by' => $userId ?: null,
             'updated_by' => $userId ?: null,
@@ -315,8 +315,8 @@ class EducationController
         $teacherUserId = $this->canAssignTeacher() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? null);
         Education::updateCourse((int) $course['id'], array_merge($this->certificateFieldsFromCourse($course), $_POST, [
             'cover_image' => $this->courseCoverFromRequest($course['cover_image'] ?? null),
-            'public_enabled' => $this->canManageAll() ? (!empty($_POST['public_enabled']) ? 1 : 0) : ($course['public_enabled'] ?? 0),
-            'public_access_enabled' => $this->canManageAll() ? (!empty($_POST['public_access_enabled']) ? 1 : 0) : ($course['public_access_enabled'] ?? 0),
+            'public_enabled' => !empty($_POST['public_enabled']) ? 1 : 0,
+            'public_access_enabled' => !empty($_POST['public_access_enabled']) ? 1 : 0,
             'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
         ]));

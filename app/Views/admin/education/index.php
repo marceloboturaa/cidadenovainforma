@@ -30,7 +30,7 @@
                 </div>
                 <?php if (($course['enrollment_status'] ?? 'approved') === 'pending'): ?>
                     <p class="field-hint mb-0">Sua inscrição neste curso está em modo de espera. Um professor ou coordenador precisa liberar o acesso às aulas.</p>
-                    <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Ver status</a>
+                    <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Acessar curso</a>
                 <?php else: ?>
                     <div class="education-progress">
                         <span><?= e((string) $completedCount) ?>/<?= e((string) $lessonCount) ?> aula(s)</span>

@@ -10,7 +10,7 @@ $lessonIsComplete = !empty($lesson['completed_at']);
 $lessonIsNext = !$canManage && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
 $lessonHasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
 $lessonContentLabel = $lessonHasVideo ? 'Vídeo' : ($lessonAttendanceMode === 'manual' ? 'Encontro' : 'Material');
-$lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? ($lessonHasVideo ? 'Rever' : 'Revisar') : ($lessonHasVideo ? 'Assistir' : 'Estudar'));
+$lessonButtonLabel = 'Acessar';
 $lessonButtonIcon = $lessonHasVideo ? ($lessonIsComplete ? 'bi-arrow-clockwise' : 'bi-play-circle') : 'bi-journal-text';
 $lessonHref = isset($lessonUrl) && is_callable($lessonUrl)
     ? $lessonUrl($lesson)
