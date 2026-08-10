@@ -43,63 +43,109 @@
                 </button>
             </div>
             <nav>
-                <a class="<?= $currentPath === '/admin' ? 'active' : '' ?>" href="<?= e(url('/admin')) ?>" title="Dashboard"><i class="bi bi-speedometer2" aria-hidden="true"></i><span>Dashboard</span></a>
-                <?php if (\App\Core\Auth::can('users.manage')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/users') ? 'active' : '' ?>" href="<?= e(url('/admin/users')) ?>" title="Usuários"><i class="bi bi-people" aria-hidden="true"></i><span>Usuários</span></a>
+                <div class="sidebar-group">
+                    <span class="sidebar-group-title">Geral</span>
+                    <a class="<?= $currentPath === '/admin' ? 'active' : '' ?>" href="<?= e(url('/admin')) ?>" title="Dashboard"><i class="bi bi-speedometer2" aria-hidden="true"></i><span>Dashboard</span></a>
+                </div>
+
+                <?php if (\App\Core\Auth::can('users.manage') || \App\Core\Auth::hasRole('master')): ?>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-title">Usuários e acessos</span>
+                        <?php if (\App\Core\Auth::can('users.manage')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/users') ? 'active' : '' ?>" href="<?= e(url('/admin/users')) ?>" title="Usuários"><i class="bi bi-people" aria-hidden="true"></i><span>Usuários</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::hasRole('master')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/authorizations') ? 'active' : '' ?>" href="<?= e(url('/admin/authorizations')) ?>" title="Autorizações"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Autorizações</span></a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::hasRole('master')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/authorizations') ? 'active' : '' ?>" href="<?= e(url('/admin/authorizations')) ?>" title="Autorizações"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Autorizações</span></a>
+
+                <?php if ($canUseNews || \App\Core\Auth::can('categories.manage') || \App\Core\Auth::can('tags.manage')): ?>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-title">Conteúdo</span>
+                        <?php if ($canUseNews): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/news') ? 'active' : '' ?>" href="<?= e(url('/admin/news')) ?>" title="Notícias"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Notícias</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::can('categories.manage')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/categories') ? 'active' : '' ?>" href="<?= e(url('/admin/categories')) ?>" title="Categorias"><i class="bi bi-folder2-open" aria-hidden="true"></i><span>Categorias</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::can('tags.manage')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/tags') ? 'active' : '' ?>" href="<?= e(url('/admin/tags')) ?>" title="Tags"><i class="bi bi-tags" aria-hidden="true"></i><span>Tags</span></a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
-                <?php if ($canUseNews): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/news') ? 'active' : '' ?>" href="<?= e(url('/admin/news')) ?>" title="Notícias"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Notícias</span></a>
+
+                <?php if ($institutionPageAccess || $canManageInstitutionLanding || \App\Core\Auth::can('people.manage') || \App\Core\Auth::can('events.manage') || \App\Core\Auth::can('event_participants.manage') || \App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && (\App\Models\Document::userCanUpload((int) $user['id']) || \App\Models\Document::userHasAnyAccess((int) $user['id'])))): ?>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-title">Institucional</span>
+                        <?php if ($institutionPageAccess || $canManageInstitutionLanding): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/institution-pages') ? 'active' : '' ?>" href="<?= e(url('/admin/institution-pages')) ?>" title="Instituição"><i class="bi bi-building" aria-hidden="true"></i><span>Instituição</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::can('people.manage')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/people') ? 'active' : '' ?>" href="<?= e(url('/admin/people')) ?>" title="Pessoas"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Pessoas</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::can('events.manage')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/library-events') ? 'active' : '' ?>" href="<?= e(url('/admin/library-events')) ?>" title="Eventos"><i class="bi bi-calendar-event" aria-hidden="true"></i><span>Eventos</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::can('event_participants.manage')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/registrations') ? 'active' : '' ?>" href="<?= e(url('/admin/registrations')) ?>" title="Inscrições"><i class="bi bi-clipboard-check" aria-hidden="true"></i><span>Inscrições</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && (\App\Models\Document::userCanUpload((int) $user['id']) || \App\Models\Document::userHasAnyAccess((int) $user['id'])))): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>" title="Documentos"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><span>Documentos</span></a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('categories.manage')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/categories') ? 'active' : '' ?>" href="<?= e(url('/admin/categories')) ?>" title="Categorias"><i class="bi bi-folder2-open" aria-hidden="true"></i><span>Categorias</span></a>
+
+                <?php if ($canAccessEducation || $canAccessOwnCertificates || $canAccessCertificateCenter || $canManageEducationCourses): ?>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-title">Cursos e certificados</span>
+                        <?php if ($canAccessEducation): ?>
+                            <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>" title="Curso"><i class="bi bi-mortarboard" aria-hidden="true"></i><span>Curso</span></a>
+                        <?php endif; ?>
+                        <?php if ($canAccessOwnCertificates): ?>
+                            <a class="<?= ($currentPath === '/admin/education/certificates' || $currentPath === '/admin/education/certificate') ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificates')) ?>" title="Meus certificados"><i class="bi bi-award" aria-hidden="true"></i><span>Meus certificados</span></a>
+                        <?php endif; ?>
+                        <?php if ($canAccessCertificateCenter): ?>
+                            <a class="<?= $currentPath === '/admin/education/certificate-center' ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificate-center')) ?>" title="Central de certificados"><i class="bi bi-patch-check" aria-hidden="true"></i><span>Certificados</span></a>
+                            <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-stars" aria-hidden="true"></i><span>Reconhecimentos</span></a>
+                        <?php endif; ?>
+                        <?php if ($canManageEducationCourses): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Escola"><i class="bi bi-journal-richtext" aria-hidden="true"></i><span>Escola</span></a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('tags.manage')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/tags') ? 'active' : '' ?>" href="<?= e(url('/admin/tags')) ?>" title="Tags"><i class="bi bi-tags" aria-hidden="true"></i><span>Tags</span></a>
-                <?php endif; ?>
-                <?php if ($institutionPageAccess || $canManageInstitutionLanding): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/institution-pages') ? 'active' : '' ?>" href="<?= e(url('/admin/institution-pages')) ?>" title="Instituição"><i class="bi bi-building" aria-hidden="true"></i><span>Instituição</span></a>
-                <?php endif; ?>
-                <?php if (\App\Core\Auth::can('people.manage')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/people') ? 'active' : '' ?>" href="<?= e(url('/admin/people')) ?>" title="Pessoas"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Pessoas</span></a>
-                <?php endif; ?>
-                <?php if (\App\Core\Auth::can('events.manage')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/library-events') ? 'active' : '' ?>" href="<?= e(url('/admin/library-events')) ?>" title="Eventos"><i class="bi bi-calendar-event" aria-hidden="true"></i><span>Eventos</span></a>
-                <?php endif; ?>
-                <?php if (\App\Core\Auth::can('event_participants.manage')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/registrations') ? 'active' : '' ?>" href="<?= e(url('/admin/registrations')) ?>" title="Inscrições"><i class="bi bi-clipboard-check" aria-hidden="true"></i><span>Inscrições</span></a>
-                <?php endif; ?>
-                <a class="<?= str_starts_with($currentPath, '/admin/communication') ? 'active' : '' ?>" href="<?= e(url('/admin/communication')) ?>" title="Comunicacao"><i class="bi bi-chat-dots" aria-hidden="true"></i><span>Comunicacao</span></a>
-                <?php if (\App\Core\Auth::can('documents.view') || (\App\Core\Auth::can('documents.manage') && !in_array('diretor', $roleSlugs, true)) || ($user && (\App\Models\Document::userCanUpload((int) $user['id']) || \App\Models\Document::userHasAnyAccess((int) $user['id'])))): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/documents') ? 'active' : '' ?>" href="<?= e(url('/admin/documents')) ?>" title="Documentos"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><span>Documentos</span></a>
-                <?php endif; ?>
-                <?php if ($canAccessEducation): ?>
-                    <a class="<?= ($currentPath === '/admin/education' || str_starts_with($currentPath, '/admin/education/course') || str_starts_with($currentPath, '/admin/education/lesson')) ? 'active' : '' ?>" href="<?= e(url('/admin/education')) ?>" title="Curso"><i class="bi bi-mortarboard" aria-hidden="true"></i><span>Curso</span></a>
-                <?php endif; ?>
-                <?php if ($canAccessOwnCertificates): ?>
-                    <a class="<?= ($currentPath === '/admin/education/certificates' || $currentPath === '/admin/education/certificate') ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificates')) ?>" title="Meus certificados"><i class="bi bi-award" aria-hidden="true"></i><span>Meus certificados</span></a>
-                <?php endif; ?>
-                <?php if ($canAccessCertificateCenter): ?>
-                    <a class="<?= $currentPath === '/admin/education/certificate-center' ? 'active' : '' ?>" href="<?= e(url('/admin/education/certificate-center')) ?>" title="Central de certificados"><i class="bi bi-patch-check" aria-hidden="true"></i><span>Certificados</span></a>
-                    <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-stars" aria-hidden="true"></i><span>Reconhecimentos</span></a>
-                <?php endif; ?>
-                <?php if ($canManageEducationCourses): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Escola"><i class="bi bi-journal-richtext" aria-hidden="true"></i><span>Escola</span></a>
-                <?php endif; ?>
+
                 <?php if (\App\Core\Auth::can('forum.view') || \App\Core\Auth::can('forum.create') || \App\Core\Auth::can('forum.moderate')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/forum') ? 'active' : '' ?>" href="<?= e(url('/admin/forum')) ?>" title="Fóruns"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Fóruns</span></a>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-title">Comunicação</span>
+                        <a class="<?= str_starts_with($currentPath, '/admin/communication') ? 'active' : '' ?>" href="<?= e(url('/admin/communication')) ?>" title="Comunicacao"><i class="bi bi-chat-dots" aria-hidden="true"></i><span>Comunicacao</span></a>
+                        <a class="<?= str_starts_with($currentPath, '/admin/forum') ? 'active' : '' ?>" href="<?= e(url('/admin/forum')) ?>" title="Fóruns"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Fóruns</span></a>
+                    </div>
+                <?php else: ?>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-title">Comunicação</span>
+                        <a class="<?= str_starts_with($currentPath, '/admin/communication') ? 'active' : '' ?>" href="<?= e(url('/admin/communication')) ?>" title="Comunicacao"><i class="bi bi-chat-dots" aria-hidden="true"></i><span>Comunicacao</span></a>
+                    </div>
                 <?php endif; ?>
-                <?php if (($user['role_slug'] ?? '') === 'master'): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/menu') ? 'active' : '' ?>" href="<?= e(url('/admin/menu')) ?>" title="Menu"><i class="bi bi-list-ul" aria-hidden="true"></i><span>Menu</span></a>
-                    <a class="<?= str_starts_with($currentPath, '/admin/backups') ? 'active' : '' ?>" href="<?= e(url('/admin/backups')) ?>" title="Backups"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i><span>Backups</span></a>
+
+                <?php if (($user['role_slug'] ?? '') === 'master' || \App\Core\Auth::can('consent.view')): ?>
+                    <div class="sidebar-group">
+                        <span class="sidebar-group-title">Gestão do site</span>
+                        <?php if (($user['role_slug'] ?? '') === 'master'): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/menu') ? 'active' : '' ?>" href="<?= e(url('/admin/menu')) ?>" title="Menu"><i class="bi bi-list-ul" aria-hidden="true"></i><span>Menu</span></a>
+                            <a class="<?= str_starts_with($currentPath, '/admin/backups') ? 'active' : '' ?>" href="<?= e(url('/admin/backups')) ?>" title="Backups"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i><span>Backups</span></a>
+                        <?php endif; ?>
+                        <?php if (\App\Core\Auth::can('consent.view')): ?>
+                            <a class="<?= str_starts_with($currentPath, '/admin/consent') ? 'active' : '' ?>" href="<?= e(url('/admin/consent')) ?>" title="LGPD Cookies"><i class="bi bi-shield-check" aria-hidden="true"></i><span>LGPD Cookies</span></a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
-                <?php if (\App\Core\Auth::can('consent.view')): ?>
-                    <a class="<?= str_starts_with($currentPath, '/admin/consent') ? 'active' : '' ?>" href="<?= e(url('/admin/consent')) ?>" title="LGPD Cookies"><i class="bi bi-shield-check" aria-hidden="true"></i><span>LGPD Cookies</span></a>
-                <?php endif; ?>
-                <a class="<?= $currentPath === '/admin/profile' ? 'active' : '' ?>" href="<?= e(url('/admin/profile')) ?>" title="Meu cadastro"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Meu cadastro</span></a>
-                <a class="<?= $currentPath === '/admin/password' ? 'active' : '' ?>" href="<?= e(url('/admin/password')) ?>" title="Minha senha"><i class="bi bi-key" aria-hidden="true"></i><span>Minha senha</span></a>
+
+                <div class="sidebar-group">
+                    <span class="sidebar-group-title">Minha conta</span>
+                    <a class="<?= $currentPath === '/admin/profile' ? 'active' : '' ?>" href="<?= e(url('/admin/profile')) ?>" title="Meu cadastro"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Meu cadastro</span></a>
+                    <a class="<?= $currentPath === '/admin/password' ? 'active' : '' ?>" href="<?= e(url('/admin/password')) ?>" title="Minha senha"><i class="bi bi-key" aria-hidden="true"></i><span>Minha senha</span></a>
+                </div>
             </nav>
         </aside>
         <div class="main-panel">
