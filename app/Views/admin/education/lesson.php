@@ -74,13 +74,15 @@ $isAudioSource = function (?string $url): bool {
     return (bool) preg_match('/\.(mp3|m4a|aac|wav|ogg|oga|opus)(\?.*)?$/i', $path);
 };
 
-$renderLessonDescription = function () use ($lesson): void {
+$renderLessonDescription = function () use ($lesson, $canManage): void {
     ?>
-    <section class="panel education-lesson-description" id="lesson-description">
-        <div class="education-lesson-description-head">
-            <span><i class="bi bi-card-text" aria-hidden="true"></i></span>
-            <h2>Descrição da aula</h2>
-        </div>
+    <section class="panel education-lesson-description <?= !$canManage ? 'is-student-description' : '' ?>" id="lesson-description">
+        <?php if ($canManage): ?>
+            <div class="education-lesson-description-head">
+                <span><i class="bi bi-card-text" aria-hidden="true"></i></span>
+                <h2>Descrição da aula</h2>
+            </div>
+        <?php endif; ?>
         <div class="education-block-text education-lesson-description-text"><?= article_html($lesson['description']) ?></div>
     </section>
     <?php
@@ -93,8 +95,10 @@ $renderLessonDescription = function () use ($lesson): void {
         <h1><?= e($lesson['title']) ?></h1>
     </div>
     <div class="heading-actions">
-        <?php if ($showLessonDescription): ?>
-            <a class="btn btn-outline-primary icon-btn" href="#lesson-description"><i class="bi bi-card-text" aria-hidden="true"></i>Descrição</a>
+        <?php if ($showLessonDescription && ($canManage || $lessonDescriptionPosition !== 'top')): ?>
+            <a class="btn btn-outline-primary <?= $canManage ? 'icon-btn' : '' ?>" href="#lesson-description">
+                <?php if ($canManage): ?><i class="bi bi-card-text" aria-hidden="true"></i><?php endif; ?>Descrição
+            </a>
         <?php endif; ?>
         <?php if ($canManage): ?>
             <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/lesson?id=' . $lesson['id'] . '&edit_lesson=1#lesson-settings')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar aula</a>

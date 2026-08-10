@@ -705,6 +705,14 @@
     margin-top: 10px;
 }
 
+.education-lesson-description.is-student-description {
+    gap: 0;
+}
+
+.education-lesson-description.is-student-description::before {
+    display: none;
+}
+
 .education-lesson-locked {
     border-color: rgba(220, 38, 38, 0.22);
     background: #fff7f7;
@@ -3531,6 +3539,7 @@
     margin-top: 0;
     padding: 22px 24px;
     border-left: 0;
+    background: #ffffff;
 }
 
 .education-player-layout.is-student-view .education-lesson-description h2 {
@@ -3711,7 +3720,6 @@
 
     .education-player-layout.is-student-view .education-lesson-description {
         padding: 16px;
-        border-left-width: 4px;
     }
 
     .education-block-heading {
