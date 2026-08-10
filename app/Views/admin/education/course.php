@@ -51,6 +51,7 @@ foreach ($lessons as $lessonItem) {
 
 $nextLessonId = $nextLesson ? (int) $nextLesson['id'] : 0;
 $courseProgressPercent = $requiredLessonCount > 0 ? (int) round(($completedLessonCount / $requiredLessonCount) * 100) : 0;
+$coursePresentationSummary = trim((string) ($course['summary'] ?? ''));
 $previewSuffix = $studentPreview ? '&preview=student' : '';
 $courseAnnouncements = [];
 if ($isStudentCourseView && function_exists('current_user')) {
@@ -109,15 +110,6 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <strong>Você está vendo este curso sem as ferramentas de professor.</strong>
         </div>
         <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'])) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar curso</a>
-    </section>
-<?php endif; ?>
-
-<?php if (!empty($course['summary'])): ?>
-    <section class="panel education-course-intro">
-        <?php if (!empty($course['cover_image'])): ?>
-            <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" onerror="this.remove()">
-        <?php endif; ?>
-        <p><?= e($course['summary']) ?></p>
     </section>
 <?php endif; ?>
 
@@ -248,6 +240,29 @@ if ($isStudentCourseView && function_exists('current_user')) {
     </section>
 <?php endif; ?>
 
+<section class="panel education-course-presentation">
+    <div class="education-course-presentation-media">
+        <?php if (!empty($course['cover_image'])): ?>
+            <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" onerror="this.closest('.education-course-presentation-media').classList.add('is-empty'); this.remove()">
+        <?php else: ?>
+            <i class="bi bi-easel2" aria-hidden="true"></i>
+        <?php endif; ?>
+    </div>
+    <div class="education-course-presentation-body">
+        <span class="eyebrow">Apresentação do curso</span>
+        <h2><?= e($course['title']) ?></h2>
+        <p><?= e(text_excerpt($coursePresentationSummary !== '' ? $coursePresentationSummary : 'Organize a abertura do curso com uma descrição clara para orientar os estudantes antes dos módulos e das aulas.', 280)) ?></p>
+        <div class="education-course-presentation-stats">
+            <span><strong><?= e((string) count($modules)) ?></strong> módulo(s)</span>
+            <span><strong><?= e((string) $lessonCount) ?></strong> aula(s)</span>
+            <span><strong><?= e((string) $requiredLessonCount) ?></strong> obrigatória(s)</span>
+        </div>
+    </div>
+    <?php if ($canManage): ?>
+        <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/admin/education/course?id=' . $course['id'] . '&edit_course=1')) ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i>Editar apresentação</a>
+    <?php endif; ?>
+</section>
+
 <section class="panel education-playlist-panel <?= $isStudentCourseView ? 'is-student-playlist' : '' ?>" id="course-lessons">
     <div class="section-heading">
         <div>
@@ -258,13 +273,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
     </div>
 
     <div class="education-module-list">
-        <?php foreach ($modules as $module): ?>
+        <?php foreach ($modules as $moduleIndex => $module): ?>
             <?php $moduleLessons = $lessonsByModule[(string) $module['id']] ?? []; ?>
             <?php $moduleHidden = empty($module['active']); ?>
-            <article class="education-module-card <?= $moduleHidden ? 'is-hidden-module' : '' ?>">
+            <?php $moduleTone = 'tone-' . ((int) ($moduleIndex % 5) + 1); ?>
+            <article class="education-module-card <?= e($moduleTone) ?> <?= $moduleHidden ? 'is-hidden-module' : '' ?>">
                 <header>
                     <div>
-                        <span><?= $moduleHidden ? 'Módulo oculto' : 'Módulo' ?></span>
+                        <span><?= $moduleHidden ? 'Módulo oculto' : 'Módulo ' . e((string) ($moduleIndex + 1)) ?></span>
                         <h3><?= e($module['title']) ?></h3>
                         <span class="state-pill <?= !empty($module['required']) ? 'is-active' : 'is-muted' ?>"><?= !empty($module['required']) ? 'Obrigatório' : 'Material complementar' ?></span>
                         <?php if (!empty($module['summary'])): ?>
@@ -350,7 +366,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <?php endif; ?>
 
                 <div class="education-playlist-lessons">
-                    <?php foreach ($moduleLessons as $lesson): ?>
+                    <?php foreach ($moduleLessons as $lessonIndex => $lesson): ?>
+                        <?php $lessonPosition = $lessonIndex + 1; ?>
                         <?php require __DIR__ . '/partials/lesson-row.php'; ?>
                     <?php endforeach; ?>
                     <?php if (!$moduleLessons): ?>
@@ -369,7 +386,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     </div>
                 </header>
                 <div class="education-playlist-lessons">
-                    <?php foreach ($lessonsByModule['none'] as $lesson): ?>
+                    <?php foreach ($lessonsByModule['none'] as $lessonIndex => $lesson): ?>
+                        <?php $lessonPosition = $lessonIndex + 1; ?>
                         <?php require __DIR__ . '/partials/lesson-row.php'; ?>
                     <?php endforeach; ?>
                 </div>

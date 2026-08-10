@@ -8,18 +8,26 @@ $lessonAttendanceMode = (string) ($lesson['attendance_mode'] ?? 'video');
 $lessonModuleRequired = (int) ($lesson['module_required'] ?? 1) === 1;
 $lessonIsComplete = !empty($lesson['completed_at']);
 $lessonIsNext = !$canManage && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
-$lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? 'Rever' : 'Assistir');
+$lessonHasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
+$lessonContentLabel = $lessonHasVideo ? 'Vídeo' : ($lessonAttendanceMode === 'manual' ? 'Encontro' : 'Material');
+$lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? ($lessonHasVideo ? 'Rever' : 'Revisar') : ($lessonHasVideo ? 'Assistir' : 'Estudar'));
+$lessonButtonIcon = $lessonHasVideo ? ($lessonIsComplete ? 'bi-arrow-clockwise' : 'bi-play-circle') : 'bi-journal-text';
 $lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($studentPreview) ? '&preview=student' : ''));
 ?>
-<article class="education-playlist-row <?= !$lessonModuleRequired ? 'is-complementary' : '' ?> <?= $lessonScheduleLocked ? 'is-scheduled' : '' ?> <?= $lessonIsComplete ? 'is-complete' : '' ?> <?= $lessonIsNext ? 'is-next' : '' ?> <?= $lessonAccessLocked ? 'is-locked' : '' ?>">
+<article class="education-playlist-row <?= !$lessonModuleRequired ? 'is-complementary' : '' ?> <?= $lessonScheduleLocked ? 'is-scheduled' : '' ?> <?= $lessonIsComplete ? 'is-complete' : '' ?> <?= $lessonIsNext ? 'is-next' : '' ?> <?= $lessonAccessLocked ? 'is-locked' : '' ?> <?= !$lessonHasVideo ? 'is-non-video' : 'is-video' ?>">
     <<?= $lessonAccessLocked ? 'div' : 'a' ?> class="education-playlist-main"<?= $lessonAccessLocked ? '' : ' href="' . e($lessonHref) . '"' ?>>
         <span class="<?= $lessonIsComplete ? 'is-complete' : '' ?>">
-            <i class="bi <?= $lessonAccessLocked ? 'bi-lock-fill' : ($lessonIsComplete ? 'bi-check-circle-fill' : ($lessonIsNext ? 'bi-play-circle-fill' : 'bi-circle')) ?>" aria-hidden="true"></i>
+            <?php if (isset($lessonPosition)): ?>
+                <strong><?= e(str_pad((string) $lessonPosition, 2, '0', STR_PAD_LEFT)) ?></strong>
+            <?php else: ?>
+                <i class="bi <?= $lessonAccessLocked ? 'bi-lock-fill' : ($lessonIsComplete ? 'bi-check-circle-fill' : ($lessonIsNext ? 'bi-play-circle-fill' : 'bi-circle')) ?>" aria-hidden="true"></i>
+            <?php endif; ?>
         </span>
         <span>
             <?php if ($lessonIsNext): ?>
                 <em class="education-current-lesson-label">Próxima aula</em>
             <?php endif; ?>
+            <em class="education-lesson-kind <?= !$lessonHasVideo ? 'is-non-video' : '' ?>"><?= e($lessonContentLabel) ?></em>
             <strong><?= e($lesson['title']) ?></strong>
             <?php if (!$lessonModuleRequired || $lessonAccessLocked || $lessonAttendanceMode === 'manual' || $lessonAttendanceMode === 'none' || !empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
                 <span class="education-playlist-badges">
@@ -58,7 +66,7 @@ $lessonHref = url('/admin/education/lesson?id=' . $lesson['id'] . (!empty($stude
             </span>
         <?php else: ?>
             <a class="btn btn-sm btn-primary icon-btn" href="<?= e($lessonHref) ?>">
-                <i class="bi <?= $lessonIsComplete ? 'bi-arrow-clockwise' : 'bi-play-circle' ?>" aria-hidden="true"></i><?= e($lessonButtonLabel) ?>
+                <i class="bi <?= e($lessonButtonIcon) ?>" aria-hidden="true"></i><?= e($lessonButtonLabel) ?>
             </a>
         <?php endif; ?>
         <?php if ($canManage): ?>

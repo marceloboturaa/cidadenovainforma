@@ -576,13 +576,13 @@ $renderLessonDescription = function () use ($lesson): void {
                             <?php if ($documentCanPreview && $documentViewUrl !== ''): ?>
                                 <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e($documentViewUrl) ?>" target="_blank" rel="noopener">
                                     <i class="bi bi-eye" aria-hidden="true"></i>
-                                    Visualizar
+                                    Abrir leitura
                                 </a>
                             <?php endif; ?>
                             <?php if ($documentDownloadUrl !== ''): ?>
                                 <a class="btn btn-primary icon-btn education-download-btn" href="<?= e($documentDownloadUrl) ?>">
                                     <i class="bi bi-download" aria-hidden="true"></i>
-                                    Baixar
+                                    Baixar material
                                 </a>
                             <?php endif; ?>
                         </div>
@@ -590,12 +590,12 @@ $renderLessonDescription = function () use ($lesson): void {
                 <?php elseif (in_array($type, ['assignment', 'certificate'], true) && !empty($block['file_path'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(url('/admin/education/block/download?id=' . $block['id'])) ?>">
                         <i class="bi bi-download" aria-hidden="true"></i>
-                        Baixar documento
+                        <?= $type === 'assignment' ? 'Baixar tarefa' : 'Baixar certificado' ?>
                     </a>
                 <?php elseif (in_array($type, ['assignment', 'certificate'], true) && !empty($block['media_url'])): ?>
                     <a class="btn btn-outline-primary icon-btn education-download-btn" href="<?= e(media_url($block['media_url'])) ?>" target="_blank" rel="noopener">
                         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-                        Abrir documento
+                        <?= $type === 'assignment' ? 'Abrir tarefa' : 'Abrir certificado' ?>
                     </a>
                 <?php endif; ?>
 
