@@ -396,7 +396,7 @@ class EducationController
 
     public function publicCourse(): void
     {
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
         $course = $id ? Education::findCourse($id) : null;
         if (!$this->courseIsPublic($course)) {
             http_response_code(404);
@@ -432,7 +432,7 @@ class EducationController
 
     public function publicLesson(): void
     {
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
         $lesson = $id ? Education::findLesson($id) : null;
         if (!$lesson) {
             http_response_code(404);
@@ -500,7 +500,7 @@ class EducationController
 
     public function publicEnrollment(): void
     {
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
         $course = $id ? Education::findCourse($id) : null;
         if (empty($course['public_enabled'])) {
             http_response_code(404);
