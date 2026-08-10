@@ -92,7 +92,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             $enrollmentRows = $isEdit ? \App\Models\Education::enrollmentUsers((int) $editing['id']) : [];
             $pendingEnrollmentRows = array_values(array_filter($enrollmentRows, fn (array $row): bool => ($row['status'] ?? 'approved') === 'pending'));
             ?>
-            <summary><i class="bi bi-people" aria-hidden="true"></i>Estudantes matriculados <span><?= e((string) count($enrolledUserIds)) ?> selecionado(s)</span></summary>
+            <summary><i class="bi bi-people" aria-hidden="true"></i>Estudantes matriculados <span><?= e((string) count($enrolledUserIds)) ?> selecionado(s)<?= !empty($editing['public_access_enabled']) ? ' + acesso livre' : '' ?></span></summary>
             <?php if ($isEdit): ?>
                 <?php if ($pendingEnrollmentRows): ?>
                     <div class="empty-state">
@@ -105,6 +105,12 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                     <button class="btn btn-sm btn-outline-secondary icon-btn" type="button" data-education-clear-visible><i class="bi bi-square" aria-hidden="true"></i>Limpar visíveis</button>
                 </div>
                 <div class="education-user-picker" data-education-student-list>
+                    <?php if (!empty($editing['public_access_enabled'])): ?>
+                        <label class="education-free-access-user" data-student-label="usuario livre sem login acesso livre publico">
+                            <input type="checkbox" checked disabled>
+                            <span>Usuário livre sem login<small>Liberado pelo professor para acessar as aulas públicas deste curso sem cadastro.</small></span>
+                        </label>
+                    <?php endif; ?>
                     <?php foreach ($studentOptions as $item): ?>
                         <?php
                         $pendingEnrollment = false;

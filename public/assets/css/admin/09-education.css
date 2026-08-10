@@ -210,6 +210,25 @@
     background: #ffffff;
 }
 
+.education-user-picker .education-free-access-user {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.education-user-picker .education-free-access-user input {
+    accent-color: #16a34a;
+}
+
+.education-user-picker .education-free-access-user span {
+    color: #166534;
+    font-weight: 900;
+}
+
+.education-user-picker .education-free-access-user small {
+    color: #15803d;
+    font-weight: 600;
+}
+
 .education-user-picker label.is-hidden {
     display: none;
 }
