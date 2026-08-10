@@ -105,10 +105,8 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                     <div>
                         <?php foreach ($event['linked_courses'] as $course): ?>
                             <?php
-                            $courseHref = !empty($course['public_access_enabled'])
-                                ? url('/curso/' . $course['id'])
-                                : url('/admin/education/course?id=' . $course['id']);
-                            $courseActionLabel = !empty($course['public_access_enabled']) ? 'Acessar sem login' : 'Entrar para acessar';
+                            $courseHref = url('/curso/' . $course['id']);
+                            $courseActionLabel = 'Acessar curso';
                             ?>
                             <article class="event-linked-course">
                                 <div>

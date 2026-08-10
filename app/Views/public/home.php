@@ -108,10 +108,8 @@ $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl
     <section class="public-courses-grid">
         <?php foreach ($publicCourses as $course): ?>
             <?php
-            $courseHref = !empty($course['public_access_enabled'])
-                ? url('/curso/' . $course['id'])
-                : url('/admin/education/course?id=' . $course['id']);
-            $courseActionLabel = !empty($course['public_access_enabled']) ? 'Acessar sem login' : 'Entrar para acessar';
+            $courseHref = url('/curso/' . $course['id']);
+            $courseActionLabel = 'Acessar curso';
             ?>
             <article class="public-course-card">
                 <?php if (!empty($course['cover_image'])): ?>

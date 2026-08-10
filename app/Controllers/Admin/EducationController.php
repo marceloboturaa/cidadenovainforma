@@ -398,13 +398,13 @@ class EducationController
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         $course = $id ? Education::findCourse($id) : null;
-        if (!$this->courseAllowsPublicAccess($course)) {
+        if (!$this->courseIsPublic($course)) {
             http_response_code(404);
             View::render('errors/404', [], 'education-public');
             return;
         }
 
-        $lessons = $this->publicLessonsForCourse((int) $course['id']);
+        $lessons = $this->publicLessonsForCourse((int) $course['id'], !empty($course['public_access_enabled']));
 
         View::render('admin/education/course', [
             'course' => $course,
@@ -441,13 +441,24 @@ class EducationController
         }
 
         $course = Education::findCourse((int) $lesson['course_id']);
-        if (!$course || !$this->courseAllowsPublicAccess($course) || !$this->publicLessonIsOpen($lesson)) {
+        if (!$this->courseIsPublic($course)) {
             http_response_code(404);
             View::render('errors/404', [], 'education-public');
             return;
         }
 
-        $playlist = $this->publicLessonsForCourse((int) $lesson['course_id']);
+        if (empty($course['public_access_enabled'])) {
+            Session::flash('error', 'Entre para acessar as aulas deste curso.');
+            redirect('/login');
+        }
+
+        if (!$this->publicLessonIsOpen($lesson)) {
+            http_response_code(404);
+            View::render('errors/404', [], 'education-public');
+            return;
+        }
+
+        $playlist = $this->publicLessonsForCourse((int) $lesson['course_id'], true);
         $lessonIds = array_map(static fn (array $item): int => (int) $item['id'], $playlist);
         if (!in_array((int) $lesson['id'], $lessonIds, true)) {
             http_response_code(404);
@@ -2447,12 +2458,13 @@ class EducationController
         return $availableAt === '' || strtotime($availableAt) <= time();
     }
 
-    private function publicLessonsForCourse(int $courseId): array
+    private function publicLessonsForCourse(int $courseId, bool $allowGuestAccess = true): array
     {
         $lessons = Education::lessonsForCourse($courseId, 0, false);
 
         foreach ($lessons as $index => $lesson) {
-            $locked = !$this->publicLessonIsOpen($lesson);
+            $locked = !$allowGuestAccess || !$this->publicLessonIsOpen($lesson);
+            $lessons[$index]['public_login_required'] = !$allowGuestAccess ? 1 : 0;
             $lessons[$index]['sequence_locked'] = $locked && !empty($lesson['locked']) ? 1 : 0;
             $lessons[$index]['schedule_locked'] = !$this->lessonIsAvailable($lesson) ? 1 : 0;
             $lessons[$index]['can_watch'] = !$locked;
@@ -2463,7 +2475,12 @@ class EducationController
 
     private function courseAllowsPublicAccess(?array $course): bool
     {
-        return !empty($course['public_enabled']) && !empty($course['public_access_enabled']);
+        return $this->courseIsPublic($course) && !empty($course['public_access_enabled']);
+    }
+
+    private function courseIsPublic(?array $course): bool
+    {
+        return !empty($course['public_enabled']);
     }
 
     private function publicLessonIsOpen(array $lesson): bool

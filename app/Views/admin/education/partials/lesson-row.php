@@ -2,7 +2,8 @@
 $lessonScheduleLocked = !empty($lesson['schedule_locked']) && !$canManage;
 $lessonSequenceLocked = !empty($lesson['sequence_locked']) && !$canManage;
 $lessonHardLocked = !empty($lesson['locked']) && !$canManage;
-$lessonAccessLocked = $lessonScheduleLocked || $lessonSequenceLocked || $lessonHardLocked;
+$lessonLoginRequired = !empty($lesson['public_login_required']) && !$canManage;
+$lessonAccessLocked = $lessonScheduleLocked || $lessonSequenceLocked || $lessonHardLocked || $lessonLoginRequired;
 $lessonAvailableAt = !empty($lesson['available_at']) ? date('d/m/Y H:i', strtotime((string) $lesson['available_at'])) : '';
 $lessonAttendanceMode = (string) ($lesson['attendance_mode'] ?? 'video');
 $lessonModuleRequired = (int) ($lesson['module_required'] ?? 1) === 1;
@@ -10,7 +11,7 @@ $lessonIsComplete = !empty($lesson['completed_at']);
 $lessonIsNext = !$canManage && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
 $lessonHasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
 $lessonContentLabel = $lessonHasVideo ? 'Vídeo' : ($lessonAttendanceMode === 'manual' ? 'Encontro' : 'Material');
-$lessonButtonLabel = 'Acessar';
+$lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? ($lessonHasVideo ? 'Rever' : 'Revisar') : ($lessonHasVideo ? 'Assistir' : 'Estudar'));
 $lessonButtonIcon = $lessonHasVideo ? ($lessonIsComplete ? 'bi-arrow-clockwise' : 'bi-play-circle') : 'bi-journal-text';
 $lessonHref = isset($lessonUrl) && is_callable($lessonUrl)
     ? $lessonUrl($lesson)
@@ -45,6 +46,9 @@ $lessonHref = isset($lessonUrl) && is_callable($lessonUrl)
                     <?php if ($lessonHardLocked): ?>
                         <em><i class="bi bi-lock-fill" aria-hidden="true"></i>bloqueada</em>
                     <?php endif; ?>
+                    <?php if ($lessonLoginRequired): ?>
+                        <em><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>login necessário</em>
+                    <?php endif; ?>
                     <?php if ($lessonAttendanceMode === 'manual'): ?>
                         <em><i class="bi bi-person-check" aria-hidden="true"></i>presença ao vivo</em>
                     <?php elseif ($lessonAttendanceMode === 'none'): ?>
@@ -64,9 +68,15 @@ $lessonHref = isset($lessonUrl) && is_callable($lessonUrl)
     <div class="education-lesson-actions">
         <?php if ($lessonAccessLocked): ?>
             <?php if (!empty($publicCourseView)): ?>
-                <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e($courseRegistrationUrl ?? url('/register?course_id=' . $course['id'])) ?>">
-                    <i class="bi bi-lock-fill" aria-hidden="true"></i>Inscrever-se
-                </a>
+                <?php if ($lessonScheduleLocked): ?>
+                    <span class="btn btn-sm btn-outline-secondary icon-btn disabled" aria-disabled="true">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i>Agendada
+                    </span>
+                <?php else: ?>
+                    <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/login')) ?>">
+                        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Entrar para acessar
+                    </a>
+                <?php endif; ?>
             <?php else: ?>
                 <span class="btn btn-sm btn-outline-secondary icon-btn disabled" aria-disabled="true">
                     <i class="bi bi-lock-fill" aria-hidden="true"></i><?= $lessonScheduleLocked ? 'Agendada' : 'Bloqueada' ?>

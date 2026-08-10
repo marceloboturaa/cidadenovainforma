@@ -44,7 +44,8 @@ foreach ($lessons as $lessonItem) {
     $lessonIsDone = !empty($lessonItem['completed_at']);
     $lessonIsLocked = !empty($lessonItem['schedule_locked'])
         || !empty($lessonItem['sequence_locked'])
-        || !empty($lessonItem['locked']);
+        || !empty($lessonItem['locked'])
+        || !empty($lessonItem['public_login_required']);
 
     if ($lessonRequired && $lessonIsDone) {
         $completedLessonCount++;
@@ -223,9 +224,15 @@ if ($isStudentCourseView && function_exists('current_user')) {
 <?php if ($publicCourseView): ?>
     <section class="panel education-public-access-panel">
         <div>
-            <span class="eyebrow">Curso aberto</span>
-            <h2>Acesse os conteúdos liberados sem login</h2>
-            <p>Algumas aulas e atividades podem estar reservadas para estudantes inscritos. Para continuar quando encontrar um bloqueio, solicite sua inscrição no curso.</p>
+            <?php if (!empty($course['public_access_enabled'])): ?>
+                <span class="eyebrow">Curso aberto</span>
+                <h2>Acesse os conteúdos liberados sem login</h2>
+                <p>Algumas aulas e atividades podem estar reservadas para estudantes inscritos. Para continuar quando encontrar um bloqueio, entre com seu cadastro.</p>
+            <?php else: ?>
+                <span class="eyebrow">Acesso com login</span>
+                <h2>Entre para acessar as aulas deste curso</h2>
+                <p>O professor deixou a apresentação do curso visível no site, mas as aulas estão liberadas somente para usuários com login.</p>
+            <?php endif; ?>
         </div>
         <form method="post" action="<?= e(url('/curso/' . $course['id'] . '/inscricao')) ?>">
             <?= csrf_field() ?>

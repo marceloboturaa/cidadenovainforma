@@ -251,6 +251,8 @@
 
 .events-card-link {
     justify-self: start;
+    width: 188px;
+    max-width: 100%;
     border-color: var(--line);
     background: #ffffff;
 }
