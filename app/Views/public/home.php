@@ -109,7 +109,7 @@ $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl
         <?php foreach ($publicCourses as $course): ?>
             <?php
             $courseHref = url('/curso/' . $course['id']);
-            $courseActionLabel = !empty($course['public_access_enabled']) ? 'Acessar curso' : 'Entrar para acessar';
+            $courseActionLabel = 'Ver curso';
             ?>
             <article class="public-course-card">
                 <?php if (!empty($course['cover_image'])): ?>
@@ -122,7 +122,7 @@ $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl
                     <?php if (!empty($course['teacher_name'])): ?>
                         <small>Professor: <?= e($course['teacher_name']) ?></small>
                     <?php endif; ?>
-                    <a class="public-course-more" href="<?= e($courseHref) ?>"><?= e($courseActionLabel) ?></a>
+                    <a class="public-course-more" href="<?= e($courseHref) ?>"><i class="bi bi-arrow-right" aria-hidden="true"></i><?= e($courseActionLabel) ?></a>
                 </div>
             </article>
         <?php endforeach; ?>

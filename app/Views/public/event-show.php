@@ -106,7 +106,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                         <?php foreach ($event['linked_courses'] as $course): ?>
                             <?php
                             $courseHref = url('/curso/' . $course['id']);
-                            $courseActionLabel = !empty($course['public_access_enabled']) ? 'Acessar curso' : 'Entrar para acessar';
+                            $courseActionLabel = 'Ver curso';
                             ?>
                             <article class="event-linked-course">
                                 <div>
@@ -118,7 +118,7 @@ foreach (preg_split('/\R+/', (string) ($event['related_links'] ?? '')) ?: [] as 
                                 <?php if (!empty($course['cover_image'])): ?>
                                     <img src="<?= e(media_url($course['cover_image'])) ?>" alt="" loading="lazy" onerror="this.remove()">
                                 <?php endif; ?>
-                                <a class="events-card-link" href="<?= e($courseHref) ?>"><?= e($courseActionLabel) ?></a>
+                                <a class="events-card-link" href="<?= e($courseHref) ?>"><i class="bi bi-arrow-right" aria-hidden="true"></i><?= e($courseActionLabel) ?></a>
                             </article>
                         <?php endforeach; ?>
                     </div>
