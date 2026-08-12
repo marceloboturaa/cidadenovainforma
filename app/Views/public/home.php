@@ -14,6 +14,8 @@ $homeNoticeEnabled = ($homeNotice['enabled'] ?? '0') === '1' && (trim((string) (
 $homeNoticeUrl = trim((string) ($homeNotice['url'] ?? ''));
 $homeNoticeLabel = trim((string) ($homeNotice['label'] ?? '')) ?: 'Saiba mais';
 $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl : url($homeNoticeUrl);
+$homeCourseHighlights = array_slice($publicCourses ?? [], 0, 3);
+$homeEventHighlight = $libraryEvents[0] ?? null;
 ?>
 
 <?php if ($urgent): ?>
@@ -45,6 +47,24 @@ $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl
 <?php endif; ?>
 
 <section class="home-grid">
+    <?php if ($homeCourseHighlights): ?>
+        <section class="home-course-strip" aria-label="Cursos em destaque">
+            <?php foreach ($homeCourseHighlights as $course): ?>
+                <a class="home-course-tile" href="<?= e(url('/curso/' . $course['id'])) ?>">
+                    <span>Curso</span>
+                    <strong><?= e($course['title']) ?></strong>
+                </a>
+            <?php endforeach; ?>
+        </section>
+    <?php endif; ?>
+
+    <?php if ($homeEventHighlight): ?>
+        <a class="home-event-tile" href="<?= e(url('/evento/' . $homeEventHighlight['id'])) ?>">
+            <span>Evento</span>
+            <strong><?= e($homeEventHighlight['title']) ?></strong>
+        </a>
+    <?php endif; ?>
+
     <div class="lead-area">
         <?php if ($hero): ?>
             <article class="lead-story">

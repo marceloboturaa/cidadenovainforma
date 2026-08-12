@@ -232,6 +232,13 @@
         grid-template-columns: 1fr;
     }
 
+    .home-course-strip,
+    .home-event-tile,
+    .lead-area,
+    .side-list {
+        grid-column: auto;
+    }
+
     .side-list {
         border-left: 0;
         padding-left: 0;
@@ -239,6 +246,7 @@
 
     .news-grid,
     .compact-grid,
+    .home-course-strip,
     .public-courses-grid,
     .public-events-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -697,6 +705,7 @@
 
     .news-grid,
     .compact-grid,
+    .home-course-strip,
     .public-courses-grid,
     .public-events-grid {
         grid-template-columns: 1fr;

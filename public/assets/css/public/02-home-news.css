@@ -31,6 +31,78 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 340px;
     gap: 26px;
+    align-items: start;
+}
+
+.home-course-strip {
+    display: grid;
+    grid-column: 1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.home-event-tile {
+    grid-column: 2;
+}
+
+.lead-area {
+    grid-column: 1;
+}
+
+.side-list {
+    grid-column: 2;
+}
+
+.home-course-tile,
+.home-event-tile {
+    display: grid;
+    align-content: center;
+    min-height: 84px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.home-course-tile {
+    border: 1px solid #fecaca;
+    border-top: 4px solid var(--brand);
+    background: #fffafa;
+}
+
+.home-event-tile {
+    border: 1px solid #bbf7d0;
+    border-top: 4px solid #16a34a;
+    background: #f7fdf9;
+}
+
+.home-course-tile span,
+.home-event-tile span {
+    color: var(--brand);
+    font-size: 0.74rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.home-event-tile span {
+    color: #15803d;
+}
+
+.home-course-tile strong,
+.home-event-tile strong {
+    display: -webkit-box;
+    overflow: hidden;
+    margin-top: 5px;
+    color: var(--ink);
+    font-size: 1rem;
+    line-height: 1.2;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.home-course-tile:hover,
+.home-event-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
 }
 
 .lead-story {
