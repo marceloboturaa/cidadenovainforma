@@ -4317,6 +4317,68 @@
         grid-template-columns: 1fr;
     }
 
+    .education-public-page .education-course-presentation {
+        gap: 0;
+        padding: 16px;
+    }
+
+    .education-public-page .education-course-presentation-media {
+        display: none;
+    }
+
+    .education-public-page .education-course-presentation-body {
+        gap: 10px;
+    }
+
+    .education-public-page .education-playlist-panel {
+        padding: 18px 16px;
+    }
+
+    .education-public-page .education-playlist-panel .section-heading {
+        display: grid;
+        gap: 6px;
+    }
+
+    .education-public-page .education-playlist-panel .section-heading > span {
+        justify-self: start;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-module-card > header {
+        padding: 0 0 14px;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-lessons {
+        padding: 0;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-main {
+        grid-template-columns: 38px minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-main strong {
+        overflow-wrap: anywhere;
+        font-size: 0.95rem;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-lesson-actions {
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-lesson-actions .btn,
+    .education-public-page .education-playlist-panel.is-student-playlist .education-lesson-actions a {
+        width: 100%;
+        justify-content: center;
+        white-space: normal;
+    }
+
     .education-course-presentation > .btn {
         justify-self: start;
     }
