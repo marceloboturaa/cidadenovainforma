@@ -232,11 +232,14 @@
         grid-template-columns: 1fr;
     }
 
-    .home-course-strip,
-    .home-event-tile,
     .lead-area,
     .side-list {
         grid-column: auto;
+    }
+
+    .home-course-strip,
+    .home-event-tile {
+        display: none;
     }
 
     .side-list {
@@ -246,7 +249,6 @@
 
     .news-grid,
     .compact-grid,
-    .home-course-strip,
     .public-courses-grid,
     .public-events-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -705,7 +707,6 @@
 
     .news-grid,
     .compact-grid,
-    .home-course-strip,
     .public-courses-grid,
     .public-events-grid {
         grid-template-columns: 1fr;
