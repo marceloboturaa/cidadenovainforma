@@ -3,7 +3,7 @@
 <?php $adminCssFiles = $assets['css']['admin'] ?? ['/public/assets/css/admin.css']; ?>
 <?php $adminJsVersion = file_exists(dirname(__DIR__, 3) . '/public/assets/js/admin.js') ? filemtime(dirname(__DIR__, 3) . '/public/assets/js/admin.js') : time(); ?>
 <?php $faviconVersion = filemtime(dirname(__DIR__, 3) . '/public/assets/img/favicon-education.svg'); ?>
-<?php $isPublicFreeCourseLayout = !empty($publicCourseView) && !empty($course['public_access_enabled']); ?>
+<?php $isPublicFreeCourseLayout = false; ?>
 <!doctype html>
 <html lang="pt-BR">
 <head>

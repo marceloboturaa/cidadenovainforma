@@ -11,7 +11,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
 $teacherOptions = $teacherOptions ?? [];
 $forumAuthorOptions = $forumAuthorOptions ?? [];
 $publicCourseView = $publicCourseView ?? false;
-$isPublicFreeCourse = $publicCourseView && !empty($course['public_access_enabled']);
+$isPublicFreeCourse = false;
 $lessonsByModule = [];
 $moduleIds = array_map(fn (array $module): int => (int) $module['id'], $modules);
 
