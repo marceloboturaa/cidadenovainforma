@@ -1617,6 +1617,258 @@
         --certificate-mobile-scale: 0.288;
     }
 }
+
+@media (max-width: 640px) {
+    .education-public-page {
+        background: #f6f7f9;
+    }
+
+    .education-public-topbar {
+        display: grid;
+        gap: 10px;
+        padding: 14px 16px;
+    }
+
+    .education-public-brand {
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .education-public-topbar nav {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .education-public-topbar nav a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        border-radius: 6px;
+        font-size: 0.9rem;
+        line-height: 1.15;
+    }
+
+    .education-public-content {
+        width: 100%;
+        padding: 16px 10px 30px;
+    }
+
+    .education-public-page .education-course-page {
+        display: grid;
+        gap: 14px;
+    }
+
+    .education-public-page .page-heading {
+        display: grid;
+        gap: 12px;
+        align-items: start;
+        margin: 0;
+        padding: 0 2px;
+    }
+
+    .education-public-page .page-heading p {
+        margin: 0;
+        font-size: 0.72rem;
+        line-height: 1.2;
+    }
+
+    .education-public-page .page-heading h1 {
+        margin: 6px 0 0;
+        max-width: 100%;
+        font-size: clamp(1.55rem, 8vw, 2.05rem);
+        line-height: 1.08;
+    }
+
+    .education-public-page .page-heading .heading-actions {
+        display: grid;
+        width: 100%;
+        gap: 8px;
+        justify-content: stretch;
+    }
+
+    .education-public-page .page-heading .heading-actions .btn {
+        width: 100%;
+        min-height: 42px;
+        justify-content: center;
+    }
+
+    .education-public-page .education-course-presentation {
+        display: block;
+        padding: 16px;
+        border: 1px solid #dbeafe;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+    }
+
+    .education-public-page .education-course-presentation-media {
+        display: none !important;
+    }
+
+    .education-public-page .education-course-presentation-body {
+        display: grid;
+        gap: 10px;
+    }
+
+    .education-public-page .education-course-presentation-body h2 {
+        margin: 0;
+        font-size: 0.74rem;
+    }
+
+    .education-public-page .education-course-presentation-body p {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.55;
+    }
+
+    .education-public-page .education-course-presentation-stats {
+        gap: 8px;
+        margin-top: 2px;
+    }
+
+    .education-public-page .education-course-presentation-stats span {
+        padding: 7px 10px;
+        border-radius: 7px;
+        font-size: 0.85rem;
+    }
+
+    .education-public-page .education-playlist-panel {
+        padding: 16px;
+        border: 0;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+    }
+
+    .education-public-page .education-playlist-panel .section-heading {
+        display: grid;
+        gap: 3px;
+        margin: 0 0 14px;
+        padding: 0;
+        border: 0;
+    }
+
+    .education-public-page .education-playlist-panel .section-heading > span:not(.eyebrow) {
+        display: none;
+    }
+
+    .education-public-page .education-playlist-panel .section-heading h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        line-height: 1.2;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-module-list {
+        gap: 14px;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-module-card {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-module-card > header {
+        padding: 0 0 12px;
+        border: 0;
+        background: transparent;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-module-card > header h3 {
+        align-items: center;
+        gap: 9px;
+        font-size: 1rem;
+        line-height: 1.25;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-module-card > header h3::before {
+        width: 5px;
+        height: 28px;
+        border-radius: 99px;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-lessons {
+        display: grid;
+        gap: 10px;
+        padding: 0;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px !important;
+        background: #ffffff;
+        box-shadow: none;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-main {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+        min-width: 0;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-main > span:first-child {
+        width: 44px;
+        height: 44px;
+        border-radius: 7px;
+        font-size: 0.88rem;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-main > span:nth-child(2) {
+        min-width: 0;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-lesson-kind {
+        display: inline-flex;
+        width: fit-content;
+        margin: 0 0 7px;
+        font-size: 0.68rem;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-main strong {
+        display: block;
+        max-width: 100%;
+        font-size: 1rem;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-badges {
+        margin-top: 9px;
+        gap: 6px;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-playlist-badges em {
+        padding: 5px 8px;
+        border-radius: 7px;
+        font-size: 0.72rem;
+        line-height: 1.1;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-lesson-actions {
+        display: grid;
+        width: 100%;
+    }
+
+    .education-public-page .education-playlist-panel.is-student-playlist .education-lesson-actions .btn,
+    .education-public-page .education-playlist-panel.is-student-playlist .education-lesson-actions a {
+        width: 100%;
+        min-height: 40px;
+        justify-content: center;
+        white-space: normal;
+    }
+}
+
 @media (max-width: 768px) {
     .student-announcement-card {
         grid-template-columns: auto minmax(0, 1fr);
