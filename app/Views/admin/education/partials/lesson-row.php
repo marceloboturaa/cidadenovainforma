@@ -8,7 +8,7 @@ $lessonAvailableAt = !empty($lesson['available_at']) ? date('d/m/Y H:i', strtoti
 $lessonAttendanceMode = (string) ($lesson['attendance_mode'] ?? 'video');
 $lessonModuleRequired = (int) ($lesson['module_required'] ?? 1) === 1;
 $lessonIsComplete = !empty($lesson['completed_at']);
-$lessonIsNext = !$canManage && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
+$lessonIsNext = !$canManage && empty($publicCourseView) && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
 $lessonHasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
 $lessonContentLabel = $lessonHasVideo ? 'Vídeo' : ($lessonAttendanceMode === 'manual' ? 'Encontro' : 'Material');
 $lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? ($lessonHasVideo ? 'Rever' : 'Revisar') : ($lessonHasVideo ? 'Assistir' : 'Estudar'));
