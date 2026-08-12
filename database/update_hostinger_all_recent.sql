@@ -317,6 +317,8 @@ CREATE TABLE IF NOT EXISTS education_lesson_blocks (
     CONSTRAINT fk_education_blocks_lesson FOREIGN KEY (lesson_id) REFERENCES education_lessons(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 ALTER TABLE education_lesson_blocks ADD COLUMN IF NOT EXISTS settings_json LONGTEXT NULL AFTER file_path;
+ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS public_access VARCHAR(20) NOT NULL DEFAULT 'private' AFTER image_url;
+ALTER TABLE education_lesson_blocks ADD COLUMN IF NOT EXISTS public_access VARCHAR(20) NOT NULL DEFAULT 'inherit' AFTER settings_json;
 
 CREATE TABLE IF NOT EXISTS education_enrollments (
     course_id BIGINT UNSIGNED NOT NULL,

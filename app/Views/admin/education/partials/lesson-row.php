@@ -9,6 +9,7 @@ $lessonAttendanceMode = (string) ($lesson['attendance_mode'] ?? 'video');
 $lessonModuleRequired = (int) ($lesson['module_required'] ?? 1) === 1;
 $lessonIsComplete = !empty($lesson['completed_at']);
 $lessonIsNext = !$canManage && empty($publicCourseView) && !$lessonAccessLocked && !$lessonIsComplete && !empty($nextLessonId) && (int) $lesson['id'] === (int) $nextLessonId;
+$lessonPublicAccess = (string) ($lesson['public_access'] ?? 'private');
 $lessonHasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
 $lessonContentLabel = $lessonHasVideo ? 'Vídeo' : ($lessonAttendanceMode === 'manual' ? 'Encontro' : 'Material');
 $lessonButtonLabel = $lessonIsNext ? 'Continuar' : ($lessonIsComplete ? ($lessonHasVideo ? 'Rever' : 'Revisar') : ($lessonHasVideo ? 'Assistir' : 'Estudar'));
@@ -32,8 +33,13 @@ $lessonHref = isset($lessonUrl) && is_callable($lessonUrl)
             <?php endif; ?>
             <em class="education-lesson-kind <?= !$lessonHasVideo ? 'is-non-video' : '' ?>"><?= e($lessonContentLabel) ?></em>
             <strong><?= e($lesson['title']) ?></strong>
-            <?php if (!$lessonModuleRequired || $lessonAccessLocked || $lessonAttendanceMode === 'manual' || $lessonAttendanceMode === 'none' || !empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
+            <?php if (!empty($publicCourseView) || !$lessonModuleRequired || $lessonAccessLocked || $lessonAttendanceMode === 'manual' || $lessonAttendanceMode === 'none' || !empty($lesson['assignment_count']) || !empty($lesson['certificate_count'])): ?>
                 <span class="education-playlist-badges">
+                    <?php if (!empty($publicCourseView) && $lessonPublicAccess === 'public'): ?>
+                        <em><i class="bi bi-unlock" aria-hidden="true"></i>aula aberta</em>
+                    <?php elseif (!empty($publicCourseView) && $lessonPublicAccess === 'preview'): ?>
+                        <em><i class="bi bi-eye" aria-hidden="true"></i>prévia pública</em>
+                    <?php endif; ?>
                     <?php if (!$lessonModuleRequired): ?>
                         <em><i class="bi bi-journal-bookmark" aria-hidden="true"></i>opcional</em>
                     <?php endif; ?>

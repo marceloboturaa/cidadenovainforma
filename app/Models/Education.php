@@ -190,6 +190,7 @@ class Education
                 description_position VARCHAR(20) NOT NULL DEFAULT "after_media",
                 video_url VARCHAR(255) NULL,
                 image_url VARCHAR(255) NULL,
+                public_access VARCHAR(20) NOT NULL DEFAULT "private",
                 locked TINYINT(1) NOT NULL DEFAULT 0,
                 available_at DATETIME NULL,
                 attendance_mode VARCHAR(20) NOT NULL DEFAULT "video",
@@ -207,6 +208,7 @@ class Education
         self::ensureColumn('education_lessons', 'description_position', 'VARCHAR(20) NOT NULL DEFAULT "after_media" AFTER description');
         self::ensureColumn('education_lessons', 'video_url', 'VARCHAR(255) NULL AFTER description');
         self::ensureColumn('education_lessons', 'image_url', 'VARCHAR(255) NULL AFTER video_url');
+        self::ensureColumn('education_lessons', 'public_access', 'VARCHAR(20) NOT NULL DEFAULT "private" AFTER image_url');
         self::ensureColumn('education_lessons', 'locked', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
         self::ensureColumn('education_lessons', 'available_at', 'DATETIME NULL AFTER locked');
         self::ensureColumn('education_lessons', 'attendance_mode', 'VARCHAR(20) NOT NULL DEFAULT "video" AFTER available_at');
@@ -225,6 +227,7 @@ class Education
                 media_url VARCHAR(255) NULL,
                 file_path VARCHAR(255) NULL,
                 settings_json LONGTEXT NULL,
+                public_access VARCHAR(20) NOT NULL DEFAULT "inherit",
                 required TINYINT(1) NOT NULL DEFAULT 1,
                 sort_order INT NOT NULL DEFAULT 0,
                 active TINYINT(1) NOT NULL DEFAULT 1,
@@ -234,6 +237,7 @@ class Education
             ) ENGINE=InnoDB'
         );
         self::ensureColumn('education_lesson_blocks', 'settings_json', 'LONGTEXT NULL AFTER file_path');
+        self::ensureColumn('education_lesson_blocks', 'public_access', 'VARCHAR(20) NOT NULL DEFAULT "inherit" AFTER settings_json');
         self::ensureColumn('education_lesson_blocks', 'required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER file_path');
         self::ensureColumn('education_lesson_blocks', 'active', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER sort_order');
 
@@ -1089,9 +1093,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lesson_blocks
-                (lesson_id, type, title, content, media_url, file_path, settings_json, required, sort_order, active, created_at, updated_at)
+                (lesson_id, type, title, content, media_url, file_path, settings_json, public_access, required, sort_order, active, created_at, updated_at)
              VALUES
-                (:lesson_id, :type, :title, :content, :media_url, :file_path, :settings_json, :required, :sort_order, :active, NOW(), NOW())'
+                (:lesson_id, :type, :title, :content, :media_url, :file_path, :settings_json, :public_access, :required, :sort_order, :active, NOW(), NOW())'
         );
         $stmt->execute(self::blockPayload($data));
 
@@ -1113,6 +1117,7 @@ class Education
                  media_url = :media_url,
                  file_path = :file_path,
                  settings_json = :settings_json,
+                 public_access = :public_access,
                  required = :required,
                  sort_order = :sort_order,
                  active = :active,
@@ -1236,9 +1241,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_lessons
-                (course_id, module_id, title, description, description_position, video_url, image_url, locked, available_at, attendance_mode, sort_order, active, created_at, updated_at)
+                (course_id, module_id, title, description, description_position, video_url, image_url, public_access, locked, available_at, attendance_mode, sort_order, active, created_at, updated_at)
              VALUES
-                (:course_id, :module_id, :title, :description, :description_position, :video_url, :image_url, :locked, :available_at, :attendance_mode, :sort_order, 1, NOW(), NOW())'
+                (:course_id, :module_id, :title, :description, :description_position, :video_url, :image_url, :public_access, :locked, :available_at, :attendance_mode, :sort_order, 1, NOW(), NOW())'
         );
         $stmt->execute(self::lessonPayload($data));
 
@@ -1260,6 +1265,7 @@ class Education
                  description_position = :description_position,
                  video_url = :video_url,
                  image_url = :image_url,
+                 public_access = :public_access,
                  locked = :locked,
                  available_at = :available_at,
                  attendance_mode = :attendance_mode,
@@ -3631,6 +3637,7 @@ class Education
             'description_position' => self::descriptionPosition($data['description_position'] ?? 'after_media'),
             'video_url' => self::nullable($data['video_url'] ?? null),
             'image_url' => self::nullable($data['image_url'] ?? null),
+            'public_access' => self::lessonPublicAccess($data['public_access'] ?? 'private'),
             'locked' => !empty($data['locked']) ? 1 : 0,
             'available_at' => self::datetimeOrNull($data['available_at'] ?? null),
             'attendance_mode' => self::attendanceMode($data['attendance_mode'] ?? 'video'),
@@ -3648,6 +3655,18 @@ class Education
     {
         $mode = strtolower(trim((string) $mode));
         return in_array($mode, ['video', 'manual', 'none'], true) ? $mode : 'video';
+    }
+
+    private static function lessonPublicAccess(mixed $access): string
+    {
+        $access = strtolower(trim((string) $access));
+        return in_array($access, ['private', 'preview', 'public'], true) ? $access : 'private';
+    }
+
+    private static function blockPublicAccess(mixed $access): string
+    {
+        $access = strtolower(trim((string) $access));
+        return in_array($access, ['inherit', 'public', 'private'], true) ? $access : 'inherit';
     }
 
     private static function descriptionPosition(mixed $position): string
@@ -3680,6 +3699,7 @@ class Education
             'media_url' => self::nullable($data['media_url'] ?? null),
             'file_path' => self::nullable($data['file_path'] ?? null),
             'settings_json' => self::blockSettingsJson($data),
+            'public_access' => self::blockPublicAccess($data['public_access'] ?? 'inherit'),
             'required' => array_key_exists('required', $data) ? (!empty($data['required']) ? 1 : 0) : 1,
             'sort_order' => (int) ($data['sort_order'] ?? 0),
             'active' => array_key_exists('active', $data) ? (!empty($data['active']) ? 1 : 0) : 1,

@@ -250,6 +250,14 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
                         <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($lesson['sort_order'] ?? 0)) ?>">
                     </div>
                     <div>
+                        <label class="form-label">Publicação da aula</label>
+                        <select class="form-select" name="public_access">
+                            <option value="private" <?= selected((string) ($lesson['public_access'] ?? 'private'), 'private') ?>>Privada</option>
+                            <option value="preview" <?= selected((string) ($lesson['public_access'] ?? ''), 'preview') ?>>Prévia pública</option>
+                            <option value="public" <?= selected((string) ($lesson['public_access'] ?? ''), 'public') ?>>Pública</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="form-label">Liberar em</label>
                         <input class="form-control" name="available_at" type="datetime-local" value="<?= !empty($lesson['available_at']) ? e(date('Y-m-d\TH:i', strtotime((string) $lesson['available_at']))) : '' ?>">
                     </div>
@@ -334,6 +342,14 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
                         <div class="sequence-order-field">
                             <label class="form-label">Ordem</label>
                             <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingBlock['sort_order'] ?? ((count($blocks) + 1) * 10))) ?>">
+                        </div>
+                        <div>
+                            <label class="form-label">Publicação no site</label>
+                            <select class="form-select" name="public_access">
+                                <option value="inherit" <?= selected((string) ($editingBlock['public_access'] ?? 'inherit'), 'inherit') ?>>Seguir a aula</option>
+                                <option value="public" <?= selected((string) ($editingBlock['public_access'] ?? ''), 'public') ?>>Público</option>
+                                <option value="private" <?= selected((string) ($editingBlock['public_access'] ?? ''), 'private') ?>>Só alunos logados</option>
+                            </select>
                         </div>
                     </fieldset>
                     <input type="hidden" name="required" value="0">
@@ -505,7 +521,7 @@ $renderLessonDescription = function () use ($lesson, $canManage): void {
             $documentDownloadUrl = $documentFilePath !== '' ? url('/admin/education/block/download?id=' . $block['id']) : '';
             ?>
             <?php $blockHidden = empty($block['active']); ?>
-            <?php $blockRequired = !empty($block['required']) && ($type !== 'video' || $playlistRequired); ?>
+            <?php $blockRequired = empty($publicCourseView) && !empty($block['required']) && ($type !== 'video' || $playlistRequired); ?>
             <?php $blockVideoWatched = !empty($block['block_video_completed_at']); ?>
             <section id="material-<?= e((string) $block['id']) ?>" class="panel education-block-card <?= $isDocumentBlock ? 'education-document-card' : '' ?> <?= $blockHidden ? 'is-hidden-block' : '' ?> <?= $editingBlock && (int) ($editingBlock['id'] ?? 0) === (int) $block['id'] ? 'is-being-edited' : '' ?>">
                 <div class="education-block-heading">

@@ -547,6 +547,7 @@ $pdo->exec(
         description TEXT NULL,
         video_url VARCHAR(255) NULL,
         image_url VARCHAR(255) NULL,
+        public_access VARCHAR(20) NOT NULL DEFAULT "private",
         locked TINYINT(1) NOT NULL DEFAULT 0,
         available_at DATETIME NULL,
         attendance_mode VARCHAR(20) NOT NULL DEFAULT "video",
@@ -565,6 +566,9 @@ if (!in_array('module_id', $lessonColumns, true)) {
 }
 if (!in_array('image_url', $lessonColumns, true)) {
     $pdo->exec('ALTER TABLE education_lessons ADD COLUMN image_url VARCHAR(255) NULL AFTER video_url');
+}
+if (!in_array('public_access', $lessonColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lessons ADD COLUMN public_access VARCHAR(20) NOT NULL DEFAULT "private" AFTER image_url');
 }
 if (!in_array('locked', $lessonColumns, true)) {
     $pdo->exec('ALTER TABLE education_lessons ADD COLUMN locked TINYINT(1) NOT NULL DEFAULT 0 AFTER image_url');
@@ -589,6 +593,7 @@ $pdo->exec(
         media_url VARCHAR(255) NULL,
         file_path VARCHAR(255) NULL,
         settings_json LONGTEXT NULL,
+        public_access VARCHAR(20) NOT NULL DEFAULT "inherit",
         sort_order INT NOT NULL DEFAULT 0,
         active TINYINT(1) NOT NULL DEFAULT 1,
         created_at TIMESTAMP NULL,
@@ -599,6 +604,9 @@ $pdo->exec(
 $blockColumns = $pdo->query('SHOW COLUMNS FROM education_lesson_blocks')->fetchAll(PDO::FETCH_COLUMN);
 if (!in_array('settings_json', $blockColumns, true)) {
     $pdo->exec('ALTER TABLE education_lesson_blocks ADD COLUMN settings_json LONGTEXT NULL AFTER file_path');
+}
+if (!in_array('public_access', $blockColumns, true)) {
+    $pdo->exec('ALTER TABLE education_lesson_blocks ADD COLUMN public_access VARCHAR(20) NOT NULL DEFAULT "inherit" AFTER settings_json');
 }
 
 $pdo->exec(

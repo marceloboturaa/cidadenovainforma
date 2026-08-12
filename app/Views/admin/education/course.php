@@ -325,7 +325,9 @@ if ($isStudentCourseView && function_exists('current_user')) {
         <p><?= e(text_excerpt($coursePresentationText, 280)) ?></p>
         <div class="education-course-presentation-stats">
             <span><strong><?= e((string) $lessonCount) ?></strong> aula(s)</span>
-            <span><strong><?= e((string) $requiredLessonCount) ?></strong> obrigatória(s)</span>
+            <?php if (!empty($course['certificate_enabled'])): ?>
+                <span><strong>Sim</strong> certificado</span>
+            <?php endif; ?>
             <?php if ($canManage): ?>
                 <span><strong><?= e((string) count($modules)) ?></strong> módulo(s)</span>
             <?php endif; ?>
@@ -425,6 +427,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
                             <div>
                                 <label class="form-label">Ordem</label>
                                 <input class="form-control" name="sort_order" type="number" value="<?= e((string) ((count($moduleLessons) + 1) * 10)) ?>">
+                            </div>
+                            <div>
+                                <label class="form-label">Publicação da aula</label>
+                                <select class="form-select" name="public_access">
+                                    <option value="private">Privada</option>
+                                    <option value="preview">Prévia pública</option>
+                                    <option value="public">Pública</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="form-label">Vídeo principal opcional</label>
@@ -1210,6 +1220,15 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <div class="lesson-order-field">
                     <label class="form-label">Ordem</label>
                     <input class="form-control" name="sort_order" type="number" value="<?= e((string) ($editingLesson['sort_order'] ?? 0)) ?>">
+                </div>
+                <div>
+                    <label class="form-label">Publicação da aula</label>
+                    <select class="form-select" name="public_access">
+                        <option value="private" <?= selected((string) ($editingLesson['public_access'] ?? 'private'), 'private') ?>>Privada</option>
+                        <option value="preview" <?= selected((string) ($editingLesson['public_access'] ?? ''), 'preview') ?>>Prévia pública</option>
+                        <option value="public" <?= selected((string) ($editingLesson['public_access'] ?? ''), 'public') ?>>Pública</option>
+                    </select>
+                    <small class="field-hint">Privada pede login. Prévia mostra só materiais públicos. Pública abre a aula no site.</small>
                 </div>
                 <div>
                     <label class="form-label">Liberar em</label>

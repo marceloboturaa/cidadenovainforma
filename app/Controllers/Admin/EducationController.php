@@ -453,6 +453,11 @@ class EducationController
         }
 
         if (!$this->publicLessonIsOpen($lesson)) {
+            Session::flash('error', 'Entre para acessar esta aula.');
+            redirect('/login');
+        }
+
+        if (!$this->publicLessonIsAvailable($lesson)) {
             http_response_code(404);
             View::render('errors/404', [], 'education-public');
             return;
@@ -468,14 +473,15 @@ class EducationController
 
         $blocks = array_values(array_filter(
             Education::blocksForLesson((int) $lesson['id'], false, 0),
-            fn (array $block): bool => $this->publicBlockIsOpen($block)
+            fn (array $block): bool => $this->publicBlockIsOpen($block, $lesson)
         ));
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
+        $showMainVideo = ($lesson['public_access'] ?? 'private') === 'public';
 
         View::render('admin/education/lesson', [
             'lesson' => $lesson,
             'course' => $course,
-            'videoEmbedUrl' => $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')),
+            'videoEmbedUrl' => $showMainVideo ? $this->videoEmbedUrl((string) ($lesson['video_url'] ?? '')) : null,
             'blocks' => $blocks,
             'editingBlock' => null,
             'canManage' => false,
@@ -483,7 +489,7 @@ class EducationController
             'studentPreview' => false,
             'isLocked' => false,
             'isScheduleLocked' => false,
-            'hasVideo' => $hasVideo,
+            'hasVideo' => $showMainVideo && $hasVideo,
             'videoWatched' => true,
             'completionRequirements' => ['complete' => true, 'pending' => [], 'required_video_count' => 0, 'watched_video_count' => 0, 'required_assignment_count' => 0, 'submitted_assignment_count' => 0, 'required_forum_count' => 0, 'replied_forum_count' => 0],
             'modules' => Education::modulesForCourse((int) $lesson['course_id'], false),
@@ -2463,9 +2469,12 @@ class EducationController
         $lessons = Education::lessonsForCourse($courseId, 0, false);
 
         foreach ($lessons as $index => $lesson) {
-            $locked = !$allowGuestAccess || !$this->publicLessonIsOpen($lesson);
-            $lessons[$index]['public_login_required'] = !$allowGuestAccess ? 1 : 0;
-            $lessons[$index]['sequence_locked'] = $locked && !empty($lesson['locked']) ? 1 : 0;
+            $publicMode = (string) ($lesson['public_access'] ?? 'private');
+            $available = $this->publicLessonIsAvailable($lesson);
+            $needsLogin = !$allowGuestAccess || $publicMode === 'private';
+            $locked = $needsLogin || !$available;
+            $lessons[$index]['public_login_required'] = $needsLogin ? 1 : 0;
+            $lessons[$index]['sequence_locked'] = 0;
             $lessons[$index]['schedule_locked'] = !$this->lessonIsAvailable($lesson) ? 1 : 0;
             $lessons[$index]['can_watch'] = !$locked;
         }
@@ -2485,6 +2494,11 @@ class EducationController
 
     private function publicLessonIsOpen(array $lesson): bool
     {
+        return in_array((string) ($lesson['public_access'] ?? 'private'), ['preview', 'public'], true);
+    }
+
+    private function publicLessonIsAvailable(array $lesson): bool
+    {
         if (!empty($lesson['locked']) || !$this->lessonIsAvailable($lesson)) {
             return false;
         }
@@ -2496,14 +2510,28 @@ class EducationController
         return true;
     }
 
-    private function publicBlockIsOpen(array $block): bool
+    private function publicBlockIsOpen(array $block, array $lesson): bool
     {
         if (empty($block['active'])) {
             return false;
         }
 
         $type = (string) ($block['type'] ?? 'text');
-        return in_array($type, ['video', 'text', 'image', 'article', 'embed', 'podcast', 'audio'], true);
+        if (!in_array($type, ['video', 'text', 'image', 'article', 'embed', 'podcast', 'audio'], true)) {
+            return false;
+        }
+
+        $lessonPublicAccess = (string) ($lesson['public_access'] ?? 'private');
+        $blockPublicAccess = (string) ($block['public_access'] ?? 'inherit');
+        if ($blockPublicAccess === 'public') {
+            return true;
+        }
+
+        if ($blockPublicAccess === 'private') {
+            return false;
+        }
+
+        return $lessonPublicAccess === 'public';
     }
 
     private function certificateFieldsFromCourse(array $course): array
