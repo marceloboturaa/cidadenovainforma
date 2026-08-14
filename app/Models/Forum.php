@@ -515,7 +515,6 @@ class Forum
         $areas = [
             ['Fórum da direção', 'direcao', 'Discussões privadas da direção.', 0, 10],
             ['Fórum dos professores', 'professores', 'Planejamento pedagógico e suporte docente.', 0, 20],
-            ['Fórum dos estudantes', 'estudantes', 'Dúvidas e conversas dos estudantes.', 0, 30],
             ['Fórum institucional interno', 'institucional-interno', 'Assuntos internos autorizados da instituição.', 0, 40],
         ];
 
@@ -529,6 +528,10 @@ class Forum
             $stmt->execute($area);
         }
 
+        Database::connection()
+            ->prepare('UPDATE forum_areas SET active = 0, updated_at = NOW() WHERE slug = :slug')
+            ->execute(['slug' => 'estudantes']);
+
         $permissions = [
             'direcao' => [
                 'master' => [1, 1, 1],
@@ -538,12 +541,6 @@ class Forum
                 'master' => [1, 1, 1],
                 'diretor' => [1, 1, 1],
                 'professor' => [1, 1, 0],
-            ],
-            'estudantes' => [
-                'master' => [1, 1, 1],
-                'diretor' => [1, 1, 1],
-                'professor' => [1, 1, 1],
-                'estudante' => [1, 1, 0],
             ],
             'institucional-interno' => [
                 'master' => [1, 1, 1],
