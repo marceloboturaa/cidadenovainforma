@@ -380,9 +380,9 @@ class BackupController
         News::ensureSchema();
         $stmt = $db->prepare(
             'INSERT INTO news
-                (author_id, category_id, title, slug, summary, content, cover_image, type, status, public_visibility, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, views, published_at, created_at, updated_at)
+                (author_id, category_id, title, slug, summary, hide_summary_in_body, content, cover_image, cover_caption, cover_size, hide_cover_in_body, co_author_name, type, status, public_visibility, featured, urgent, is_archive, original_published_at, original_author, original_source, original_url, archive_note, views, published_at, created_at, updated_at)
              VALUES
-                (:author_id, :category_id, :title, :slug, :summary, :content, :cover_image, :type, :status, :public_visibility, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :views, :published_at, :created_at, :updated_at)'
+                (:author_id, :category_id, :title, :slug, :summary, :hide_summary_in_body, :content, :cover_image, :cover_caption, :cover_size, :hide_cover_in_body, :co_author_name, :type, :status, :public_visibility, :featured, :urgent, :is_archive, :original_published_at, :original_author, :original_source, :original_url, :archive_note, :views, :published_at, :created_at, :updated_at)'
         );
         $stmt->execute($this->importNewsPayload($news, $categoryId));
 
@@ -401,8 +401,13 @@ class BackupController
                 title = :title,
                 slug = :slug,
                 summary = :summary,
+                hide_summary_in_body = :hide_summary_in_body,
                 content = :content,
                 cover_image = :cover_image,
+                cover_caption = :cover_caption,
+                cover_size = :cover_size,
+                hide_cover_in_body = :hide_cover_in_body,
+                co_author_name = :co_author_name,
                 type = :type,
                 status = :status,
                 public_visibility = :public_visibility,
@@ -431,8 +436,15 @@ class BackupController
             'title' => trim((string) $news['title']),
             'slug' => trim((string) $news['slug']),
             'summary' => trim((string) ($news['summary'] ?? '')),
+            'hide_summary_in_body' => (int) !empty($news['hide_summary_in_body']),
             'content' => (string) $news['content'],
             'cover_image' => $this->cleanImportedCover($news['cover_image'] ?? null),
+            'cover_caption' => trim((string) ($news['cover_caption'] ?? '')),
+            'cover_size' => array_key_exists($news['cover_size'] ?? '', News::COVER_SIZE_LABELS)
+                ? $news['cover_size']
+                : News::COVER_SIZE_FULL,
+            'hide_cover_in_body' => (int) !empty($news['hide_cover_in_body']),
+            'co_author_name' => trim((string) ($news['co_author_name'] ?? '')),
             'type' => in_array($news['type'] ?? '', ['noticia', 'reportagem', 'artigo', 'coluna'], true) ? $news['type'] : 'noticia',
             'status' => in_array($news['status'] ?? '', ['draft', 'pending', 'rejected', 'published', 'archived'], true) ? $news['status'] : 'draft',
             'public_visibility' => in_array($news['public_visibility'] ?? '', array_keys(News::VISIBILITY_LABELS), true)

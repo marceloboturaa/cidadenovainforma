@@ -1,16 +1,25 @@
 <?php $usesMathJax = true; ?>
+<?php
+$articleAuthors = array_values(array_filter([
+    $news['author_name'] ?? '',
+    $news['co_author_name'] ?? '',
+], fn ($author) => trim((string) $author) !== ''));
+$coverSize = array_key_exists($news['cover_size'] ?? '', \App\Models\News::COVER_SIZE_LABELS)
+    ? $news['cover_size']
+    : \App\Models\News::COVER_SIZE_FULL;
+?>
 
 <article class="article-page">
     <header class="article-header">
         <a class="article-category" href="<?= e(url('/categoria/' . ($news['category_slug'] ?? ''))) ?>"><?= e($news['category_name'] ?? 'Geral') ?></a>
         <h1><?= e($news['title']) ?></h1>
-        <?php if (!empty($news['summary'])): ?>
-            <p><?= e($news['summary']) ?></p>
+        <?php if (!empty($news['summary']) && empty($news['hide_summary_in_body'])): ?>
+            <p class="article-summary"><?= e($news['summary']) ?></p>
         <?php endif; ?>
         <div class="article-meta">
-            Por <?= e($news['author_name']) ?> |
-            <?= e(date('d/m/Y H:i', strtotime($news['published_at'] ?? $news['created_at']))) ?> |
-            <?= e((string) ((int) $news['views'] + 1)) ?> visualizações
+            <span>Por <?= e(implode(' e ', $articleAuthors ?: [$news['author_name'] ?? 'Cidade Nova Informa'])) ?></span>
+            <span><?= e(date('d/m/Y H:i', strtotime($news['published_at'] ?? $news['created_at']))) ?></span>
+            <span><?= e((string) ((int) $news['views'] + 1)) ?> visualizações</span>
         </div>
     </header>
 
@@ -50,7 +59,7 @@
     <?php $hasCoverImage = media_available($news['cover_image'] ?? null); ?>
     <?php $showCoverInBody = empty($news['hide_cover_in_body']); ?>
     <?php if ($showCoverInBody && $hasCoverImage && $publicImage): ?>
-        <figure class="article-cover-figure">
+        <figure class="article-cover-figure article-cover-size-<?= e($coverSize) ?>">
             <img class="article-cover" src="<?= e(media_url($publicImage)) ?>" alt="<?= e($news['title']) ?>" onerror="this.closest('figure').remove()">
             <?php if (!empty($news['cover_caption'])): ?>
                 <figcaption><?= e($news['cover_caption']) ?></figcaption>
@@ -70,10 +79,10 @@
             'description' => $news['summary'],
             'datePublished' => $news['published_at'],
             'dateModified' => $news['updated_at'],
-            'author' => [
+            'author' => array_map(fn ($author) => [
                 '@type' => 'Person',
-                'name' => $news['author_name'],
-            ],
+                'name' => $author,
+            ], $articleAuthors ?: [$news['author_name'] ?? 'Cidade Nova Informa']),
             'publisher' => [
                 '@type' => 'Organization',
                 'name' => 'Cidade Nova Informa',

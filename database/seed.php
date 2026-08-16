@@ -830,8 +830,11 @@ if (!is_dir($storageDocumentsDir)) {
 }
 
 $columns = [
+    'hide_summary_in_body' => "ALTER TABLE news ADD COLUMN hide_summary_in_body TINYINT(1) NOT NULL DEFAULT 0 AFTER summary",
     'cover_caption' => "ALTER TABLE news ADD COLUMN cover_caption VARCHAR(255) NULL AFTER cover_image",
+    'cover_size' => "ALTER TABLE news ADD COLUMN cover_size VARCHAR(20) NOT NULL DEFAULT 'full' AFTER cover_caption",
     'hide_cover_in_body' => "ALTER TABLE news ADD COLUMN hide_cover_in_body TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_caption",
+    'co_author_name' => "ALTER TABLE news ADD COLUMN co_author_name VARCHAR(160) NULL AFTER hide_cover_in_body",
     'public_visibility' => "ALTER TABLE news ADD COLUMN public_visibility VARCHAR(20) NOT NULL DEFAULT 'listed' AFTER status",
     'is_archive' => "ALTER TABLE news ADD COLUMN is_archive TINYINT(1) NOT NULL DEFAULT 0 AFTER urgent",
     'original_published_at' => "ALTER TABLE news ADD COLUMN original_published_at DATE NULL AFTER is_archive",

@@ -57,6 +57,7 @@ class NewsController
             'action' => url('/admin/news'),
             'title' => 'Nova notícia',
             'visibilityLabels' => News::VISIBILITY_LABELS,
+            'coverSizeLabels' => News::COVER_SIZE_LABELS,
         ]);
     }
 
@@ -96,6 +97,7 @@ class NewsController
             'action' => url('/admin/news/update?id=' . $newsItem['id']),
             'title' => 'Editar notícia',
             'visibilityLabels' => News::VISIBILITY_LABELS,
+            'coverSizeLabels' => News::COVER_SIZE_LABELS,
         ]);
     }
 
@@ -276,9 +278,12 @@ class NewsController
         return [
             'title' => $title,
             'summary' => $_POST['summary'] ?? '',
+            'hide_summary_in_body' => isset($_POST['hide_summary_in_body']),
             'content' => $content,
             'cover_caption' => $_POST['cover_caption'] ?? '',
+            'cover_size' => $this->coverSizeFromRequest(),
             'hide_cover_in_body' => isset($_POST['hide_cover_in_body']),
+            'co_author_name' => $_POST['co_author_name'] ?? '',
             'category_id' => filter_input(INPUT_POST, 'category_id', FILTER_VALIDATE_INT) ?: null,
             'type' => in_array($_POST['type'] ?? '', ['noticia', 'reportagem', 'artigo', 'coluna'], true) ? $_POST['type'] : 'noticia',
             'featured' => Auth::can('news.manage') && isset($_POST['featured']),
@@ -328,6 +333,13 @@ class NewsController
         $visibility = $_POST['public_visibility'] ?? News::VISIBILITY_LISTED;
 
         return array_key_exists($visibility, News::VISIBILITY_LABELS) ? $visibility : News::VISIBILITY_LISTED;
+    }
+
+    private function coverSizeFromRequest(): string
+    {
+        $size = $_POST['cover_size'] ?? News::COVER_SIZE_FULL;
+
+        return array_key_exists($size, News::COVER_SIZE_LABELS) ? $size : News::COVER_SIZE_FULL;
     }
 
     private function nextStatusAfterEdit(array $newsItem): string

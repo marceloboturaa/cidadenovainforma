@@ -601,6 +601,11 @@ WHERE roles.slug = 'estudante';
 
 -- Adiciona colunas novas em bancos que ja tinham tabelas antigas.
 -- Requer MySQL/MariaDB com suporte a ADD COLUMN IF NOT EXISTS.
+ALTER TABLE news ADD COLUMN IF NOT EXISTS hide_summary_in_body TINYINT(1) NOT NULL DEFAULT 0 AFTER summary;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS cover_caption VARCHAR(255) NULL AFTER cover_image;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS cover_size VARCHAR(20) NOT NULL DEFAULT 'full' AFTER cover_caption;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS hide_cover_in_body TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_size;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS co_author_name VARCHAR(160) NULL AFTER hide_cover_in_body;
 ALTER TABLE news ADD COLUMN IF NOT EXISTS is_archive TINYINT(1) NOT NULL DEFAULT 0 AFTER urgent;
 ALTER TABLE news ADD COLUMN IF NOT EXISTS original_published_at DATE NULL AFTER is_archive;
 ALTER TABLE news ADD COLUMN IF NOT EXISTS original_author VARCHAR(160) NULL AFTER original_published_at;

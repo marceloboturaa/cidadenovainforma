@@ -25,7 +25,11 @@ $status = $newsItem['status'] ?? 'draft';
             <div class="editor-summary-row">
                 <label class="form-label mt-3" for="news-summary">Resumo</label>
                 <textarea class="form-control" id="news-summary" name="summary" rows="5" maxlength="1200" placeholder="Resumo para a capa, compartilhamento e contexto da materia"><?= e($newsItem['summary'] ?? '') ?></textarea>
-                <p class="field-hint">O resumo completo aparece na noticia; capas e listas usam uma versao curta automaticamente.</p>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="hide_summary_in_body" id="hide_summary_in_body" <?= checked((bool) ($newsItem['hide_summary_in_body'] ?? false)) ?>>
+                    <label class="form-check-label" for="hide_summary_in_body">Ocultar resumo dentro da reportagem</label>
+                </div>
+                <p class="field-hint">O resumo continua sendo usado em capas, listas e compartilhamentos. Marque a opção acima quando não quiser mostrar o resumo no topo da matéria.</p>
             </div>
         </div>
 
@@ -64,6 +68,9 @@ $status = $newsItem['status'] ?? 'draft';
                     <?php endforeach; ?>
                 </select>
             <?php endif; ?>
+
+            <label class="form-label mt-3">Coautor exibido</label>
+            <input class="form-control" name="co_author_name" value="<?= e($newsItem['co_author_name'] ?? '') ?>" maxlength="160" placeholder="Nome da segunda pessoa autora, se houver">
 
             <label class="form-label">Categoria</label>
             <select class="form-select" name="category_id">
@@ -112,6 +119,14 @@ $status = $newsItem['status'] ?? 'draft';
             <input class="form-control" name="cover_image_url" value="<?= !empty($newsItem['cover_image']) && preg_match('#^https?://#i', $newsItem['cover_image']) ? e($newsItem['cover_image']) : '' ?>" placeholder="https://site.com/imagem.jpg">
             <label class="form-label mt-3">Legenda da capa</label>
             <input class="form-control" name="cover_caption" value="<?= e($newsItem['cover_caption'] ?? '') ?>" maxlength="255" placeholder="Opcional; aparece abaixo da imagem de capa">
+            <label class="form-label mt-3">Tamanho da capa na reportagem</label>
+            <select class="form-select" name="cover_size">
+                <?php foreach (($coverSizeLabels ?? \App\Models\News::COVER_SIZE_LABELS) as $key => $label): ?>
+                    <option value="<?= e($key) ?>" <?= selected($newsItem['cover_size'] ?? \App\Models\News::COVER_SIZE_FULL, $key) ?>>
+                        <?= e($label) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
             <div class="form-check mt-3">
                 <input class="form-check-input" type="checkbox" name="hide_cover_in_body" id="hide_cover_in_body" <?= checked((bool) ($newsItem['hide_cover_in_body'] ?? false)) ?>>
                 <label class="form-check-label" for="hide_cover_in_body">Ocultar capa dentro da notícia</label>
