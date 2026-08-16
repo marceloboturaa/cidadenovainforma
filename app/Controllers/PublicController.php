@@ -28,12 +28,14 @@ class PublicController
     {
         $this->logAccess();
 
+        $showPublicCourses = SiteSetting::get('home_courses_enabled', '1') === '1';
+
         View::render('public/home', [
             'featured' => News::publicList(['featured' => true], 5),
             'urgent' => News::publicList(['urgent' => true], 4),
             'latest' => News::publicList([], 50),
             'popular' => News::popular(5),
-            'publicCourses' => Education::publicCourses(6),
+            'publicCourses' => $showPublicCourses ? Education::publicCourses(6) : [],
             'libraryEvents' => LibraryEvent::publicUpcoming(6),
             'menuItems' => MenuItem::visible(),
             'homeNotice' => [

@@ -44,6 +44,7 @@ class DashboardController
             'studentAnnouncements' => $isStudent ? Announcement::unreadForUser((int) ($user['id'] ?? 0), 8) : [],
             'homeNotice' => $canManageHomeNotice ? [
                 'enabled' => SiteSetting::get('home_notice_enabled', '0'),
+                'courses_enabled' => SiteSetting::get('home_courses_enabled', '1'),
                 'title' => SiteSetting::get('home_notice_title', ''),
                 'text' => SiteSetting::get('home_notice_text', ''),
                 'url' => SiteSetting::get('home_notice_url', ''),
@@ -67,6 +68,7 @@ class DashboardController
         }
 
         $enabled = !empty($_POST['home_notice_enabled']) ? '1' : '0';
+        $coursesEnabled = !empty($_POST['home_courses_enabled']) ? '1' : '0';
         $title = trim((string) ($_POST['home_notice_title'] ?? ''));
         $text = trim((string) ($_POST['home_notice_text'] ?? ''));
         $url = trim((string) ($_POST['home_notice_url'] ?? ''));
@@ -76,6 +78,7 @@ class DashboardController
         };
 
         SiteSetting::set('home_notice_enabled', $enabled);
+        SiteSetting::set('home_courses_enabled', $coursesEnabled);
         SiteSetting::set('home_notice_title', $limit($title, 120));
         SiteSetting::set('home_notice_text', $limit($text, 260));
         SiteSetting::set('home_notice_url', $limit($url, 255));

@@ -14,6 +14,12 @@ ON DUPLICATE KEY UPDATE
     value = value,
     updated_at = updated_at;
 
+INSERT INTO site_settings (name, value, updated_at)
+VALUES ('home_courses_enabled', '1', NOW())
+ON DUPLICATE KEY UPDATE
+    value = value,
+    updated_at = updated_at;
+
 CREATE TABLE IF NOT EXISTS user_presence (
     user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
     last_seen_at DATETIME NOT NULL,

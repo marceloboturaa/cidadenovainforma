@@ -48,6 +48,10 @@
             <input class="form-check-input" type="checkbox" name="home_notice_enabled" value="1" <?= checked(($homeNotice['enabled'] ?? '0') === '1') ?>>
             <span class="form-check-label">Mostrar aviso na página inicial</span>
         </label>
+        <label class="form-check home-notice-toggle">
+            <input class="form-check-input" type="checkbox" name="home_courses_enabled" value="1" <?= checked(($homeNotice['courses_enabled'] ?? '1') === '1') ?>>
+            <span class="form-check-label">Mostrar seção de cursos públicos na página inicial</span>
+        </label>
         <div class="home-notice-grid">
             <label class="form-label">Título
                 <input class="form-control" name="home_notice_title" maxlength="120" value="<?= e($homeNotice['title'] ?? '') ?>" placeholder="Ex.: Inscrições abertas">

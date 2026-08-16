@@ -219,6 +219,8 @@ $pdo->exec(
 
 $pdo->prepare('INSERT IGNORE INTO site_settings (name, value, updated_at) VALUES (?, ?, NOW())')
     ->execute(['registration_enabled', '1']);
+$pdo->prepare('INSERT IGNORE INTO site_settings (name, value, updated_at) VALUES (?, ?, NOW())')
+    ->execute(['home_courses_enabled', '1']);
 
 $institutionTags = [
     ['biblioteca', 'Biblioteca', 'biblioteca'],
