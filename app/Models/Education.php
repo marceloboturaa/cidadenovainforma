@@ -2658,6 +2658,24 @@ class Education
              LIMIT 8'
         )->fetchAll();
 
+        $pendingRows = $db->query(
+            'SELECT education_certificates.id,
+                    education_certificates.verification_code,
+                    education_certificates.status,
+                    education_certificates.issued_at,
+                    education_certificates.created_at,
+                    education_courses.title AS course_title,
+                    COALESCE(NULLIF(education_certificates.student_name, ""), users.name, people.full_name) AS student_name
+             FROM education_certificates
+             INNER JOIN education_courses ON education_courses.id = education_certificates.course_id
+             LEFT JOIN users ON users.id = education_certificates.user_id
+             LEFT JOIN people ON people.id = education_certificates.person_id
+             WHERE education_courses.certificate_activity_type <> "reconhecimento"
+               AND education_certificates.status = "pending"
+             ORDER BY education_certificates.created_at ASC, education_certificates.id ASC
+             LIMIT 50'
+        )->fetchAll();
+
         return [
             'total_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status <> "deleted" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
             'issued_certificates' => (int) $db->query('SELECT COUNT(*) FROM education_certificates INNER JOIN education_courses ON education_courses.id = education_certificates.course_id WHERE education_certificates.status = "issued" AND education_courses.certificate_activity_type <> "reconhecimento"')->fetchColumn(),
@@ -2669,6 +2687,7 @@ class Education
             'pending_batches' => (int) $db->query('SELECT COUNT(*) FROM certificate_batches WHERE status IN ("draft", "pending", "approved", "processing")')->fetchColumn(),
             'by_status' => array_column($statusRows, 'total', 'status'),
             'recent' => $recentRows,
+            'pending' => $pendingRows,
         ];
     }
 

@@ -1,6 +1,7 @@
 <?php
 $stats = $stats ?? [];
 $recent = $stats['recent'] ?? [];
+$pendingCertificates = $stats['pending'] ?? [];
 $byStatus = $stats['by_status'] ?? [];
 $institutions = $institutions ?? [];
 $statusLabels = [
@@ -151,6 +152,48 @@ $statusLabels = [
                         <strong><?= e(trim(($institution['city'] ?? '') . '/' . ($institution['state'] ?? ''), '/')) ?></strong>
                     </div>
                 <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <?php if (!empty($canIssueCertificates)): ?>
+        <section class="panel">
+            <div class="section-heading">
+                <h2>Aguardando aprovacao</h2>
+                <span><?= e((string) count($pendingCertificates)) ?> certificado(s)</span>
+            </div>
+            <div class="admin-card-list compact-list">
+                <?php foreach ($pendingCertificates as $certificate): ?>
+                    <?php $requestedAt = !empty($certificate['created_at']) ? date('d/m/Y H:i', strtotime((string) $certificate['created_at'])) : ''; ?>
+                    <article class="admin-list-card">
+                        <div class="admin-list-main">
+                            <strong class="admin-list-title"><?= e($certificate['student_name'] ?? '') ?></strong>
+                            <dl class="admin-list-meta">
+                                <div><dt>Curso</dt><dd><?= e($certificate['course_title'] ?? '') ?></dd></div>
+                                <div><dt>Solicitado em</dt><dd><?= e($requestedAt) ?></dd></div>
+                                <div><dt>Status</dt><dd>Pendente de revisao</dd></div>
+                            </dl>
+                        </div>
+                        <div class="admin-list-actions">
+                            <a class="btn btn-sm btn-primary icon-btn" href="<?= e(url('/admin/education/certificate?certificate_id=' . ($certificate['id'] ?? ''))) ?>"><i class="bi bi-eye" aria-hidden="true"></i>Pre-visualizar</a>
+                            <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
+                                <input type="hidden" name="action" value="issue">
+                                <button class="btn btn-sm btn-outline-success icon-btn"><i class="bi bi-check2-circle" aria-hidden="true"></i>Liberar</button>
+                            </form>
+                            <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Excluir esta solicitacao de certificado?');">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
+                                <input type="hidden" name="action" value="delete">
+                                <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash" aria-hidden="true"></i>Excluir</button>
+                            </form>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+                <?php if (!$pendingCertificates): ?>
+                    <div class="empty-state">Nenhum certificado aguardando aprovacao agora.</div>
+                <?php endif; ?>
             </div>
         </section>
     <?php endif; ?>
