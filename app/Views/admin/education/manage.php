@@ -5,8 +5,8 @@ $studentOptions = $studentOptions ?? $users;
 $canManageAll = $canManageAll ?? true;
 $canAssignTeacher = $canAssignTeacher ?? false;
 $courseVisibility = (string) ($editing['public_access_mode'] ?? '');
-if (!in_array($courseVisibility, ['private', 'mixed', 'public'], true)) {
-    $courseVisibility = empty($editing['public_enabled']) ? 'private' : 'mixed';
+if (!in_array($courseVisibility, ['hidden', 'private', 'mixed', 'public'], true)) {
+    $courseVisibility = empty($editing['public_enabled']) ? 'hidden' : (!empty($editing['public_access_enabled']) ? 'mixed' : 'private');
 }
 ?>
 
@@ -39,11 +39,12 @@ if (!in_array($courseVisibility, ['private', 'mixed', 'public'], true)) {
             <span>
                 <strong>Visibilidade do curso</strong>
                 <select class="form-select mt-2" name="course_visibility">
-                    <option value="private" <?= selected($courseVisibility, 'private') ?>>Privado / oculto no site</option>
+                    <option value="hidden" <?= selected($courseVisibility, 'hidden') ?>>Oculto: não aparece no site</option>
+                    <option value="private" <?= selected($courseVisibility, 'private') ?>>Privado: aparece no site e exige login</option>
                     <option value="mixed" <?= selected($courseVisibility, 'mixed') ?>>Misto: aparece no site e parte exige login</option>
                     <option value="public" <?= selected($courseVisibility, 'public') ?>>Público: aulas liberadas sem login</option>
                 </select>
-                <small>No modo misto, o professor libera algumas aulas para visitantes e mantém o restante para alunos logados ou matriculados.</small>
+                <small>Use oculto para tirar da vitrine. Use privado quando quiser mostrar o curso, mas exigir login para acessar as aulas.</small>
             </span>
         </label>
         <input type="hidden" name="playlist_required" value="0">
@@ -154,8 +155,8 @@ if (!in_array($courseVisibility, ['private', 'mixed', 'public'], true)) {
         <?php foreach ($courses as $course): ?>
             <?php
             $listCourseVisibility = (string) ($course['public_access_mode'] ?? '');
-            if (!in_array($listCourseVisibility, ['private', 'mixed', 'public'], true)) {
-                $listCourseVisibility = empty($course['public_enabled']) ? 'private' : 'mixed';
+            if (!in_array($listCourseVisibility, ['hidden', 'private', 'mixed', 'public'], true)) {
+                $listCourseVisibility = empty($course['public_enabled']) ? 'hidden' : (!empty($course['public_access_enabled']) ? 'mixed' : 'private');
             }
             ?>
             <article class="admin-list-card">
@@ -163,8 +164,10 @@ if (!in_array($courseVisibility, ['private', 'mixed', 'public'], true)) {
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($course['title']) ?></strong>
                         <span class="state-pill is-active"><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
-                        <?php if ($listCourseVisibility === 'private'): ?>
+                        <?php if ($listCourseVisibility === 'hidden'): ?>
                             <span class="state-pill is-muted">Oculto</span>
+                        <?php elseif ($listCourseVisibility === 'private'): ?>
+                            <span class="state-pill is-muted">Privado</span>
                         <?php elseif ($listCourseVisibility === 'public'): ?>
                             <span class="state-pill is-active">Público</span>
                         <?php else: ?>

@@ -117,7 +117,7 @@ class Education
                 ends_at DATE NULL,
                 public_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 public_access_enabled TINYINT(1) NOT NULL DEFAULT 0,
-                public_access_mode VARCHAR(20) NOT NULL DEFAULT "private",
+                public_access_mode VARCHAR(20) NOT NULL DEFAULT "hidden",
                 playlist_required TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_title VARCHAR(180) NULL,
@@ -507,7 +507,7 @@ class Education
         self::ensureColumn('education_courses', 'ends_at', 'DATE NULL AFTER starts_at');
         self::ensureColumn('education_courses', 'public_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER ends_at');
         self::ensureColumn('education_courses', 'public_access_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled');
-        self::ensureColumn('education_courses', 'public_access_mode', 'VARCHAR(20) NOT NULL DEFAULT "private" AFTER public_access_enabled');
+        self::ensureColumn('education_courses', 'public_access_mode', 'VARCHAR(20) NOT NULL DEFAULT "hidden" AFTER public_access_enabled');
         self::ensureColumn('education_courses', 'playlist_required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER public_access_mode');
         self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER playlist_required');
         self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
@@ -542,16 +542,16 @@ class Education
 
         $db->exec(
             'UPDATE education_courses
-             SET public_access_mode = "mixed",
-                 public_access_enabled = 1
+             SET public_access_mode = "private"
              WHERE active = 1
                AND public_enabled = 1
+               AND public_access_enabled = 0
                AND certificate_activity_type <> "reconhecimento"
-               AND public_access_mode = "private"'
+               AND public_access_mode = "hidden"'
         );
         $db->exec(
             'UPDATE education_courses
-             SET public_access_mode = "private",
+             SET public_access_mode = "hidden",
                  public_enabled = 0,
                  public_access_enabled = 0
              WHERE certificate_activity_type = "reconhecimento"
@@ -721,6 +721,7 @@ class Education
              LEFT JOIN education_lessons ON education_lessons.course_id = education_courses.id AND education_lessons.active = 1
              WHERE education_courses.active = 1
                AND education_courses.public_enabled = 1
+               AND education_courses.public_access_mode <> "hidden"
                AND education_courses.certificate_activity_type <> "reconhecimento"
              GROUP BY education_courses.id
              ORDER BY education_courses.updated_at DESC, education_courses.created_at DESC, education_courses.id DESC
@@ -3458,7 +3459,7 @@ class Education
     {
         $activityType = self::activityType($data['certificate_activity_type'] ?? 'curso_livre');
         $publicMode = $activityType === 'reconhecimento'
-            ? 'private'
+            ? 'hidden'
             : self::publicAccessMode($data['public_access_mode'] ?? null, !empty($data['public_enabled']), !empty($data['public_access_enabled']));
 
         return [
@@ -3472,8 +3473,8 @@ class Education
             'workload_hours' => self::nullableDecimal($data['workload_hours'] ?? null),
             'starts_at' => self::nullableDate($data['starts_at'] ?? null),
             'ends_at' => self::nullableDate($data['ends_at'] ?? null),
-            'public_enabled' => $publicMode === 'private' ? 0 : 1,
-            'public_access_enabled' => $publicMode === 'private' ? 0 : 1,
+            'public_enabled' => $publicMode === 'hidden' ? 0 : 1,
+            'public_access_enabled' => in_array($publicMode, ['mixed', 'public'], true) ? 1 : 0,
             'public_access_mode' => $publicMode,
             'playlist_required' => array_key_exists('playlist_required', $data) ? (!empty($data['playlist_required']) ? 1 : 0) : 1,
             'certificate_enabled' => !empty($data['certificate_enabled']) ? 1 : 0,
@@ -3523,15 +3524,15 @@ class Education
     private static function publicAccessMode(mixed $mode, bool $publicEnabled, bool $publicAccessEnabled): string
     {
         $mode = trim((string) $mode);
-        if (in_array($mode, ['private', 'mixed', 'public'], true)) {
+        if (in_array($mode, ['hidden', 'private', 'mixed', 'public'], true)) {
             return $mode;
         }
 
         if (!$publicEnabled) {
-            return 'private';
+            return 'hidden';
         }
 
-        return $publicAccessEnabled ? 'mixed' : 'mixed';
+        return $publicAccessEnabled ? 'mixed' : 'private';
     }
 
     private static function certificateFont(mixed $font): ?string

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     cover_image VARCHAR(255) NULL,
     public_enabled TINYINT(1) NOT NULL DEFAULT 0,
     public_access_enabled TINYINT(1) NOT NULL DEFAULT 0,
-    public_access_mode VARCHAR(20) NOT NULL DEFAULT 'private',
+    public_access_mode VARCHAR(20) NOT NULL DEFAULT 'hidden',
     teacher_user_id BIGINT UNSIGNED NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_by BIGINT UNSIGNED NULL,
@@ -23,19 +23,19 @@ CREATE TABLE IF NOT EXISTS education_courses (
 
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image;
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled;
-ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_mode VARCHAR(20) NOT NULL DEFAULT 'private' AFTER public_access_enabled;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_mode VARCHAR(20) NOT NULL DEFAULT 'hidden' AFTER public_access_enabled;
 
 UPDATE education_courses
-SET public_access_mode = 'mixed',
-    public_access_enabled = 1
+SET public_access_mode = 'private'
 WHERE active = 1
   AND public_enabled = 1
-  AND public_access_mode = 'private';
+  AND public_access_enabled = 0
+  AND public_access_mode = 'hidden';
 
 UPDATE education_courses
 SET public_enabled = 0,
     public_access_enabled = 0,
-    public_access_mode = 'private'
+    public_access_mode = 'hidden'
 WHERE public_enabled = 0;
 
 CREATE TABLE IF NOT EXISTS education_modules (

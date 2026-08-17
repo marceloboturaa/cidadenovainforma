@@ -444,7 +444,7 @@ $pdo->exec(
         ends_at DATE NULL,
         public_enabled TINYINT(1) NOT NULL DEFAULT 0,
         public_access_enabled TINYINT(1) NOT NULL DEFAULT 0,
-        public_access_mode VARCHAR(20) NOT NULL DEFAULT "private",
+        public_access_mode VARCHAR(20) NOT NULL DEFAULT "hidden",
         certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
         certificate_title VARCHAR(180) NULL,
         certificate_text TEXT NULL,
@@ -501,7 +501,7 @@ $courseCertificateColumns = [
     'ends_at' => 'ALTER TABLE education_courses ADD COLUMN ends_at DATE NULL AFTER starts_at',
     'public_enabled' => 'ALTER TABLE education_courses ADD COLUMN public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER ends_at',
     'public_access_enabled' => 'ALTER TABLE education_courses ADD COLUMN public_access_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled',
-    'public_access_mode' => 'ALTER TABLE education_courses ADD COLUMN public_access_mode VARCHAR(20) NOT NULL DEFAULT "private" AFTER public_access_enabled',
+    'public_access_mode' => 'ALTER TABLE education_courses ADD COLUMN public_access_mode VARCHAR(20) NOT NULL DEFAULT "hidden" AFTER public_access_enabled',
     'certificate_enabled' => 'ALTER TABLE education_courses ADD COLUMN certificate_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_access_mode',
     'certificate_title' => 'ALTER TABLE education_courses ADD COLUMN certificate_title VARCHAR(180) NULL AFTER certificate_enabled',
     'certificate_text' => 'ALTER TABLE education_courses ADD COLUMN certificate_text TEXT NULL AFTER certificate_title',
@@ -540,12 +540,12 @@ foreach ($courseCertificateColumns as $column => $sql) {
 }
 
 if ($pdo->query("SELECT COUNT(*) FROM site_settings WHERE name = 'education_public_visibility_initialized' AND value = '1'")->fetchColumn() == 0) {
-    $pdo->exec('UPDATE education_courses SET public_enabled = 1, public_access_enabled = 1, public_access_mode = "mixed" WHERE active = 1 AND certificate_activity_type <> "reconhecimento"');
+    $pdo->exec('UPDATE education_courses SET public_enabled = 1, public_access_enabled = 0, public_access_mode = "private" WHERE active = 1 AND certificate_activity_type <> "reconhecimento"');
     $settingInsert->execute(['education_public_visibility_initialized', '1']);
 }
 
-$pdo->exec('UPDATE education_courses SET public_access_mode = "mixed", public_access_enabled = 1 WHERE active = 1 AND public_enabled = 1 AND certificate_activity_type <> "reconhecimento" AND public_access_mode = "private"');
-$pdo->exec('UPDATE education_courses SET public_enabled = 0, public_access_enabled = 0, public_access_mode = "private" WHERE certificate_activity_type = "reconhecimento" OR public_enabled = 0');
+$pdo->exec('UPDATE education_courses SET public_access_mode = "private" WHERE active = 1 AND public_enabled = 1 AND public_access_enabled = 0 AND certificate_activity_type <> "reconhecimento" AND public_access_mode = "hidden"');
+$pdo->exec('UPDATE education_courses SET public_enabled = 0, public_access_enabled = 0, public_access_mode = "hidden" WHERE certificate_activity_type = "reconhecimento" OR public_enabled = 0');
 
 $pdo->exec(
     'CREATE TABLE IF NOT EXISTS education_modules (
