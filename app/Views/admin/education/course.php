@@ -597,6 +597,20 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {issued_at}, {verification_code}.</small>
             </div>
             <div class="grid-span-2">
+                <span class="form-label">Exibir no certificado</span>
+                <div class="education-certificate-toggle-grid">
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1" <?= checked((int) ($course['certificate_show_recipient'] ?? 1) === 1) ?>><span class="form-check-label">Nome do estudante</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1" <?= checked((int) ($course['certificate_show_nature'] ?? 1) === 1) ?>><span class="form-check-label">Natureza do curso</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1" <?= checked((int) ($course['certificate_show_modality'] ?? 1) === 1) ?>><span class="form-check-label">Modalidade</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_period" value="1" <?= checked((int) ($course['certificate_show_period'] ?? 1) === 1) ?>><span class="form-check-label">Periodo/data</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_approval" value="1" <?= checked((int) ($course['certificate_show_approval'] ?? 1) === 1) ?>><span class="form-check-label">Criterio de aprovacao</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_institution" value="1" <?= checked((int) ($course['certificate_show_institution'] ?? 1) === 1) ?>><span class="form-check-label">Instituicao</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_meta" value="1" <?= checked((int) ($course['certificate_show_meta'] ?? 1) === 1) ?>><span class="form-check-label">Emissao e codigo</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_legal" value="1" <?= checked((int) ($course['certificate_show_legal'] ?? 1) === 1) ?>><span class="form-check-label">Base legal</span></label>
+                </div>
+                <small class="field-hint">Desmarque os itens que devem ficar ocultos na visualizacao e no certificado liberado.</small>
+            </div>
+            <div class="grid-span-2">
                 <label class="form-label">Critério de aprovação</label>
                 <input class="form-control" name="certificate_approval_criteria" maxlength="255" value="<?= e($course['certificate_approval_criteria'] ?? '') ?>" placeholder="Certificado concedido mediante frequência mínima de 75% e aproveitamento satisfatório.">
             </div>
