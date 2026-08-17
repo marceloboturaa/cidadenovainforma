@@ -696,9 +696,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 </div>
             </div>
             <?php if (!empty($certificateStatus['certificate'])): ?>
+                <?php $certificatePendingReview = ($certificateStatus['certificate']['status'] ?? '') === 'pending'; ?>
                 <div class="education-certificate-actions">
-                    <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'])) ?>"><i class="bi bi-printer" aria-hidden="true"></i>Abrir certificado</a>
-                    <?php if ($certificateVerificationUrl): ?>
+                    <?php if ($certificatePendingReview): ?>
+                        <span class="field-hint mb-0">Seu certificado esta aguardando revisao. Depois da aprovacao, ele aparecera em Meus certificados.</span>
+                    <?php else: ?>
+                        <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'])) ?>"><i class="bi bi-printer" aria-hidden="true"></i>Abrir certificado</a>
+                    <?php endif; ?>
+                    <?php if (!$certificatePendingReview && $certificateVerificationUrl): ?>
                         <a class="btn btn-outline-primary icon-btn" href="<?= e($certificateVerificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
                     <?php endif; ?>
                 </div>

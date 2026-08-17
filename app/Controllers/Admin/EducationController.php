@@ -231,7 +231,7 @@ class EducationController
         }
 
         $messages = [
-            'issue' => 'Certificado reativado.',
+            'issue' => 'Certificado liberado para o estudante.',
             'revoke' => 'Certificado revogado.',
             'delete' => 'Certificado excluido.',
         ];
@@ -1815,9 +1815,10 @@ class EducationController
             redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
         }
 
-        Education::issueCertificate((int) $course['id'], $userId);
-        Logger::info('education.certificate_issued', 'Certificado emitido para o curso: ' . ($course['title'] ?? ''), $userId ?: null);
-        redirect('/admin/education/certificate?id=' . $course['id']);
+        Education::issueCertificate((int) $course['id'], $userId, true);
+        Logger::info('education.certificate_requested', 'Certificado solicitado para revisao: ' . ($course['title'] ?? ''), $userId ?: null);
+        Session::flash('success', 'Solicitacao enviada. A equipe vai visualizar o certificado e liberar para voce quando estiver aprovado.');
+        redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
     }
 
     public function certificate(): void
@@ -1875,6 +1876,10 @@ class EducationController
         $certificate = Education::certificateForCourseUser((int) $course['id'], $userId);
         if (!$certificate) {
             Session::flash('error', 'Solicite o certificado quando o curso estiver concluido.');
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+        }
+        if (($certificate['status'] ?? 'issued') !== 'issued') {
+            Session::flash('success', 'Seu certificado esta aguardando liberacao.');
             redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
         }
 

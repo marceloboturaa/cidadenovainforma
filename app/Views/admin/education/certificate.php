@@ -14,6 +14,8 @@ $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ??
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
 $certificatePeriod = $certificatePeriod ?? [];
+$certificateRecordStatus = (string) ($certificate['status'] ?? 'issued');
+$certificatePendingReview = $certificateRecordStatus === 'pending';
 $formatCertificateDate = static function (?string $value) use ($issuedAt): string {
     $timestamp = $value ? strtotime($value) : false;
     return $timestamp ? date('d/m/Y', $timestamp) : $issuedAt;
@@ -58,13 +60,22 @@ $backLabel = $isRecognitionCertificate
 
 <div class="page-heading certificate-toolbar">
     <div>
-        <p>Certificado emitido</p>
+        <p><?= $certificatePendingReview ? 'Pre-visualizacao do certificado' : 'Certificado emitido' ?></p>
         <h1><?= e($course['title']) ?></h1>
     </div>
     <div class="certificate-toolbar-actions">
         <div class="certificate-toolbar-primary">
             <button class="btn btn-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
-            <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
+            <?php if ($certificatePendingReview && !empty($isManagedCertificate)): ?>
+                <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
+                    <input type="hidden" name="action" value="issue">
+                    <button class="btn btn-outline-success icon-btn" type="submit"><i class="bi bi-check2-circle" aria-hidden="true"></i>Liberar para estudante</button>
+                </form>
+            <?php elseif (!$certificatePendingReview): ?>
+                <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
+            <?php endif; ?>
             <?php if (!empty($isManagedCertificate) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
                 <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Excluir este certificado? Ele deixara de aparecer nas listas.');">
                     <?= csrf_field() ?>
@@ -77,6 +88,16 @@ $backLabel = $isRecognitionCertificate
         <a class="btn btn-outline-secondary icon-btn certificate-toolbar-back" href="<?= e($backUrl) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i><?= e($backLabel) ?></a>
     </div>
 </div>
+
+<?php if ($certificatePendingReview && !empty($isManagedCertificate)): ?>
+    <section class="panel">
+        <div class="section-heading">
+            <h2>Conferencia antes da liberacao</h2>
+            <span>Aguardando aprovacao</span>
+        </div>
+        <p class="field-hint mb-0">Revise nome, curso, datas, texto e layout. Depois de clicar em Liberar para estudante, o certificado ficara disponivel em Meus certificados e no verificador publico.</p>
+    </section>
+<?php endif; ?>
 
 <section class="panel education-certificate-sheet-panel">
     <article class="education-certificate-sheet<?= $background !== '' ? ' has-background' : '' ?><?= e($fontClass) ?>">

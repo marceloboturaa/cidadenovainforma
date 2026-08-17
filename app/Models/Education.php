@@ -1922,7 +1922,7 @@ class Education
         ];
     }
 
-    public static function issueCertificate(int $courseId, int $userId): array
+    public static function issueCertificate(int $courseId, int $userId, bool $pendingReview = false): array
     {
         self::ensureSchema();
         $certificate = self::certificateForCourseUser($courseId, $userId);
@@ -1934,27 +1934,35 @@ class Education
         $code = self::certificateCode($courseId, $userId);
         $hash = self::certificateHash($courseId, $userId, $code);
 
+        $status = $pendingReview ? 'pending' : 'issued';
+        $authorizedBy = $pendingReview ? null : $userId;
+        $issuedBy = $pendingReview ? null : $userId;
+
         Database::connection()->prepare(
             'INSERT IGNORE INTO education_certificates
                 (course_id, user_id, verification_code, validation_hash, status, student_name, authorized_by, authorized_at, issued_by, issued_at, created_at, updated_at)
              VALUES
-                (:course_id, :user_id, :verification_code, :validation_hash, "issued", :student_name, :authorized_by, NOW(), :issued_by, NOW(), NOW(), NOW())'
+                (:course_id, :user_id, :verification_code, :validation_hash, :status, :student_name, :authorized_by, :authorized_at, :issued_by, :issued_at, NOW(), NOW())'
         )->execute([
             'course_id' => $courseId,
             'user_id' => $userId,
             'verification_code' => $code,
             'validation_hash' => $hash,
+            'status' => $status,
             'student_name' => $user['name'] ?? null,
-            'authorized_by' => $userId,
-            'issued_by' => $userId,
+            'authorized_by' => $authorizedBy,
+            'authorized_at' => $pendingReview ? null : date('Y-m-d H:i:s'),
+            'issued_by' => $issuedBy,
+            'issued_at' => $pendingReview ? date('Y-m-d H:i:s') : date('Y-m-d H:i:s'),
         ]);
 
         $certificate = self::certificateForCourseUser($courseId, $userId) ?? [];
         if ($certificate) {
-            self::auditCertificate((int) $certificate['id'], null, $userId, 'issued', [], [
+            self::auditCertificate((int) $certificate['id'], null, $userId, $pendingReview ? 'requested' : 'issued', [], [
                 'course_id' => $courseId,
                 'user_id' => $userId,
                 'verification_code' => $code,
+                'status' => $status,
             ]);
         }
 
@@ -2319,11 +2327,17 @@ class Education
         if ($action === 'issue') {
             $sql = 'UPDATE education_certificates
                     SET status = :status,
+                        authorized_by = :authorized_by,
+                        authorized_at = NOW(),
+                        issued_by = :issued_by,
+                        issued_at = NOW(),
                         revoked_by = NULL,
                         revoked_at = NULL,
                         revoked_reason = NULL,
                         updated_at = NOW()
                     WHERE id = :id';
+            $params['authorized_by'] = $userId ?: null;
+            $params['issued_by'] = $userId ?: null;
         } elseif ($action === 'revoke') {
             $sql = 'UPDATE education_certificates
                     SET status = :status,
@@ -2463,7 +2477,7 @@ class Education
              LEFT JOIN users AS teacher ON teacher.id = education_courses.teacher_user_id
              WHERE education_certificates.user_id = :user_id
                AND education_courses.active = 1
-               AND education_certificates.status <> "deleted"
+               AND education_certificates.status = "issued"
              ORDER BY education_certificates.issued_at DESC, education_certificates.id DESC'
         );
         $stmt->execute(['user_id' => $userId]);
@@ -2595,6 +2609,7 @@ class Education
              LEFT JOIN certificate_institutions ON certificate_institutions.id = education_courses.certificate_institution_id
              LEFT JOIN users AS teacher ON teacher.id = education_courses.teacher_user_id
              WHERE education_certificates.verification_code = :code
+               AND education_certificates.status <> "pending"
              LIMIT 1'
         );
         $stmt->execute(['code' => $code]);

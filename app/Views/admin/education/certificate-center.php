@@ -173,13 +173,13 @@ $statusLabels = [
                     </div>
                     <div class="admin-list-actions">
                         <?php if (!empty($canIssueCertificates)): ?>
-                            <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/certificate?certificate_id=' . ($certificate['id'] ?? ''))) ?>"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</a>
-                            <?php if (($certificate['status'] ?? '') === 'revoked'): ?>
+                            <a class="btn btn-sm btn-outline-secondary icon-btn" href="<?= e(url('/admin/education/certificate?certificate_id=' . ($certificate['id'] ?? ''))) ?>"><i class="bi bi-eye" aria-hidden="true"></i><?= ($certificate['status'] ?? '') === 'pending' ? 'Pre-visualizar' : 'Ver' ?></a>
+                            <?php if (in_array(($certificate['status'] ?? ''), ['pending', 'revoked'], true)): ?>
                                 <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
                                     <input type="hidden" name="action" value="issue">
-                                    <button class="btn btn-sm btn-outline-success icon-btn"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Reativar</button>
+                                    <button class="btn btn-sm btn-outline-success icon-btn"><i class="bi <?= ($certificate['status'] ?? '') === 'pending' ? 'bi-check2-circle' : 'bi-arrow-counterclockwise' ?>" aria-hidden="true"></i><?= ($certificate['status'] ?? '') === 'pending' ? 'Liberar' : 'Reativar' ?></button>
                                 </form>
                             <?php else: ?>
                                 <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Revogar este certificado?');">
@@ -196,7 +196,9 @@ $statusLabels = [
                                 <button class="btn btn-sm btn-outline-danger icon-btn"><i class="bi bi-trash" aria-hidden="true"></i>Excluir</button>
                             </form>
                         <?php endif; ?>
-                        <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/certificado/' . ($certificate['verification_code'] ?? ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar</a>
+                        <?php if (($certificate['status'] ?? '') === 'issued'): ?>
+                            <a class="btn btn-sm btn-outline-primary icon-btn" href="<?= e(url('/certificado/' . ($certificate['verification_code'] ?? ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar</a>
+                        <?php endif; ?>
                     </div>
                 </article>
             <?php endforeach; ?>
