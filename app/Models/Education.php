@@ -117,6 +117,7 @@ class Education
                 ends_at DATE NULL,
                 public_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 public_access_enabled TINYINT(1) NOT NULL DEFAULT 0,
+                public_access_mode VARCHAR(20) NOT NULL DEFAULT "private",
                 playlist_required TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_title VARCHAR(180) NULL,
@@ -506,7 +507,8 @@ class Education
         self::ensureColumn('education_courses', 'ends_at', 'DATE NULL AFTER starts_at');
         self::ensureColumn('education_courses', 'public_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER ends_at');
         self::ensureColumn('education_courses', 'public_access_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled');
-        self::ensureColumn('education_courses', 'playlist_required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER public_access_enabled');
+        self::ensureColumn('education_courses', 'public_access_mode', 'VARCHAR(20) NOT NULL DEFAULT "private" AFTER public_access_enabled');
+        self::ensureColumn('education_courses', 'playlist_required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER public_access_mode');
         self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER playlist_required');
         self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
@@ -537,6 +539,24 @@ class Education
         self::ensureColumn('education_courses', 'certificate_program_background', 'VARCHAR(255) NULL AFTER certificate_program_enabled');
         self::ensureColumn('education_courses', 'certificate_program_extra', 'TEXT NULL AFTER certificate_program_background');
         self::ensureColumn('education_courses', 'certificate_program_columns', 'TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER certificate_program_extra');
+
+        $db->exec(
+            'UPDATE education_courses
+             SET public_access_mode = "mixed",
+                 public_access_enabled = 1
+             WHERE active = 1
+               AND public_enabled = 1
+               AND certificate_activity_type <> "reconhecimento"
+               AND public_access_mode = "private"'
+        );
+        $db->exec(
+            'UPDATE education_courses
+             SET public_access_mode = "private",
+                 public_enabled = 0,
+                 public_access_enabled = 0
+             WHERE certificate_activity_type = "reconhecimento"
+                OR public_enabled = 0'
+        );
 
         $db->exec(
             'CREATE TABLE IF NOT EXISTS education_forms (
@@ -701,6 +721,7 @@ class Education
              LEFT JOIN education_lessons ON education_lessons.course_id = education_courses.id AND education_lessons.active = 1
              WHERE education_courses.active = 1
                AND education_courses.public_enabled = 1
+               AND education_courses.certificate_activity_type <> "reconhecimento"
              GROUP BY education_courses.id
              ORDER BY education_courses.updated_at DESC, education_courses.created_at DESC, education_courses.id DESC
              LIMIT :limit'
@@ -1159,9 +1180,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, playlist_required, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_background, certificate_min_frequency, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, public_access_mode, playlist_required, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_background, certificate_min_frequency, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :playlist_required, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_background, :certificate_min_frequency, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :public_access_mode, :playlist_required, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_background, :certificate_min_frequency, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -1189,6 +1210,7 @@ class Education
                  ends_at = :ends_at,
                  public_enabled = :public_enabled,
                  public_access_enabled = :public_access_enabled,
+                 public_access_mode = :public_access_mode,
                  playlist_required = :playlist_required,
                  certificate_enabled = :certificate_enabled,
                  certificate_title = :certificate_title,
@@ -3434,6 +3456,11 @@ class Education
 
     private static function coursePayload(array $data): array
     {
+        $activityType = self::activityType($data['certificate_activity_type'] ?? 'curso_livre');
+        $publicMode = $activityType === 'reconhecimento'
+            ? 'private'
+            : self::publicAccessMode($data['public_access_mode'] ?? null, !empty($data['public_enabled']), !empty($data['public_access_enabled']));
+
         return [
             'title' => trim((string) ($data['title'] ?? '')),
             'summary' => self::nullable($data['summary'] ?? null),
@@ -3441,12 +3468,13 @@ class Education
             'certificate_institution_id' => !empty($data['certificate_institution_id']) ? (int) $data['certificate_institution_id'] : null,
             'certificate_category_id' => !empty($data['certificate_category_id']) ? (int) $data['certificate_category_id'] : null,
             'certificate_template_id' => !empty($data['certificate_template_id']) ? (int) $data['certificate_template_id'] : null,
-            'certificate_activity_type' => self::activityType($data['certificate_activity_type'] ?? 'curso_livre'),
+            'certificate_activity_type' => $activityType,
             'workload_hours' => self::nullableDecimal($data['workload_hours'] ?? null),
             'starts_at' => self::nullableDate($data['starts_at'] ?? null),
             'ends_at' => self::nullableDate($data['ends_at'] ?? null),
-            'public_enabled' => !empty($data['public_enabled']) ? 1 : 0,
-            'public_access_enabled' => !empty($data['public_access_enabled']) ? 1 : 0,
+            'public_enabled' => $publicMode === 'private' ? 0 : 1,
+            'public_access_enabled' => $publicMode === 'private' ? 0 : 1,
+            'public_access_mode' => $publicMode,
             'playlist_required' => array_key_exists('playlist_required', $data) ? (!empty($data['playlist_required']) ? 1 : 0) : 1,
             'certificate_enabled' => !empty($data['certificate_enabled']) ? 1 : 0,
             'certificate_title' => self::nullable($data['certificate_title'] ?? null),
@@ -3490,6 +3518,20 @@ class Education
         return in_array($type, ['curso_livre', 'oficina', 'palestra', 'capacitacao', 'evento', 'acao_comunitaria', 'voluntariado', 'reconhecimento', 'extensao', 'formacao_continuada'], true)
             ? $type
             : 'curso_livre';
+    }
+
+    private static function publicAccessMode(mixed $mode, bool $publicEnabled, bool $publicAccessEnabled): string
+    {
+        $mode = trim((string) $mode);
+        if (in_array($mode, ['private', 'mixed', 'public'], true)) {
+            return $mode;
+        }
+
+        if (!$publicEnabled) {
+            return 'private';
+        }
+
+        return $publicAccessEnabled ? 'mixed' : 'mixed';
     }
 
     private static function certificateFont(mixed $font): ?string

@@ -4,6 +4,10 @@ $teacherOptions = $teacherOptions ?? $users;
 $studentOptions = $studentOptions ?? $users;
 $canManageAll = $canManageAll ?? true;
 $canAssignTeacher = $canAssignTeacher ?? false;
+$courseVisibility = (string) ($editing['public_access_mode'] ?? '');
+if (!in_array($courseVisibility, ['private', 'mixed', 'public'], true)) {
+    $courseVisibility = empty($editing['public_enabled']) ? 'private' : 'mixed';
+}
 ?>
 
 <div class="page-heading">
@@ -30,20 +34,18 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             <label class="form-label">Resumo</label>
             <textarea class="form-control" name="summary" rows="3" placeholder="Descrição curta para os alunos."><?= e($editing['summary'] ?? '') ?></textarea>
         </div>
-            <label class="education-public-toggle">
-                <input type="checkbox" name="public_enabled" value="1" <?= checked(!empty($editing['public_enabled'])) ?>>
-                <span>
-                    <strong>Mostrar curso no site</strong>
-                    <small>Quando marcado, o curso aparece na área pública/vitrine. O acesso às aulas ainda pode exigir login.</small>
-                </span>
-            </label>
-            <label class="education-public-toggle">
-                <input type="checkbox" name="public_access_enabled" value="1" <?= checked(!empty($editing['public_access_enabled'])) ?>>
-                <span>
-                    <strong>Permitir aulas liberadas sem login</strong>
-                    <small>Visitantes acessam aulas e vídeos liberados. Aulas, módulos e materiais ocultos ou bloqueados continuam restritos; para continuar, o visitante solicita inscrição.</small>
-                </span>
-            </label>
+        <label class="education-public-toggle">
+            <i class="bi bi-globe2" aria-hidden="true"></i>
+            <span>
+                <strong>Visibilidade do curso</strong>
+                <select class="form-select mt-2" name="course_visibility">
+                    <option value="private" <?= selected($courseVisibility, 'private') ?>>Privado / oculto no site</option>
+                    <option value="mixed" <?= selected($courseVisibility, 'mixed') ?>>Misto: aparece no site e parte exige login</option>
+                    <option value="public" <?= selected($courseVisibility, 'public') ?>>Público: aulas liberadas sem login</option>
+                </select>
+                <small>No modo misto, o professor libera algumas aulas para visitantes e mantém o restante para alunos logados ou matriculados.</small>
+            </span>
+        </label>
         <input type="hidden" name="playlist_required" value="0">
         <label class="education-public-toggle education-playlist-required-toggle">
             <input type="checkbox" name="playlist_required" value="1" <?= checked((string) ($editing['playlist_required'] ?? '1'), '1') ?>>
@@ -92,7 +94,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
             $enrollmentRows = $isEdit ? \App\Models\Education::enrollmentUsers((int) $editing['id']) : [];
             $pendingEnrollmentRows = array_values(array_filter($enrollmentRows, fn (array $row): bool => ($row['status'] ?? 'approved') === 'pending'));
             ?>
-            <summary><i class="bi bi-people" aria-hidden="true"></i>Estudantes matriculados <span><?= e((string) count($enrolledUserIds)) ?> selecionado(s)<?= !empty($editing['public_access_enabled']) ? ' + acesso livre' : '' ?></span></summary>
+            <summary><i class="bi bi-people" aria-hidden="true"></i>Estudantes matriculados <span><?= e((string) count($enrolledUserIds)) ?> selecionado(s)<?= $courseVisibility === 'public' ? ' + acesso livre' : '' ?></span></summary>
             <?php if ($isEdit): ?>
                 <?php if ($pendingEnrollmentRows): ?>
                     <div class="empty-state">
@@ -105,7 +107,7 @@ $canAssignTeacher = $canAssignTeacher ?? false;
                     <button class="btn btn-sm btn-outline-secondary icon-btn" type="button" data-education-clear-visible><i class="bi bi-square" aria-hidden="true"></i>Limpar visíveis</button>
                 </div>
                 <div class="education-user-picker" data-education-student-list>
-                    <?php if (!empty($editing['public_access_enabled'])): ?>
+                    <?php if ($courseVisibility === 'public'): ?>
                         <label class="education-free-access-user" data-student-label="usuario livre sem login acesso livre publico">
                             <input type="checkbox" checked disabled>
                             <span>Usuário livre sem login<small>Liberado pelo professor para acessar as aulas públicas deste curso sem cadastro.</small></span>
@@ -150,16 +152,23 @@ $canAssignTeacher = $canAssignTeacher ?? false;
     </div>
     <div class="admin-card-list">
         <?php foreach ($courses as $course): ?>
+            <?php
+            $listCourseVisibility = (string) ($course['public_access_mode'] ?? '');
+            if (!in_array($listCourseVisibility, ['private', 'mixed', 'public'], true)) {
+                $listCourseVisibility = empty($course['public_enabled']) ? 'private' : 'mixed';
+            }
+            ?>
             <article class="admin-list-card">
                 <div class="admin-list-main">
                     <div class="admin-list-title-row">
                         <strong class="admin-list-title"><?= e($course['title']) ?></strong>
                         <span class="state-pill is-active"><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
-                        <?php if (!empty($course['public_enabled'])): ?>
-                            <span class="state-pill is-active">No site</span>
-                        <?php endif; ?>
-                        <?php if (!empty($course['public_access_enabled'])): ?>
-                            <span class="state-pill is-active">Sem login</span>
+                        <?php if ($listCourseVisibility === 'private'): ?>
+                            <span class="state-pill is-muted">Oculto</span>
+                        <?php elseif ($listCourseVisibility === 'public'): ?>
+                            <span class="state-pill is-active">Público</span>
+                        <?php else: ?>
+                            <span class="state-pill is-active">Misto</span>
                         <?php endif; ?>
                         <span class="state-pill <?= !empty($course['playlist_required']) ? 'is-active' : 'is-muted' ?>"><?= !empty($course['playlist_required']) ? 'Playlist obrigatória' : 'Playlist livre' ?></span>
                     </div>

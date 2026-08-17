@@ -282,10 +282,12 @@ class EducationController
         $teacherUserId = $this->canAssignTeacher()
             ? ($_POST['teacher_user_id'] ?? null)
             : ($this->canTeach() ? $userId : null);
+        $visibility = $this->courseVisibilityFromRequest();
         $id = Education::createCourse(array_merge($_POST, [
             'cover_image' => $this->courseCoverFromRequest(null),
-            'public_enabled' => !empty($_POST['public_enabled']) ? 1 : 0,
-            'public_access_enabled' => !empty($_POST['public_access_enabled']) ? 1 : 0,
+            'public_enabled' => $visibility['public_enabled'],
+            'public_access_enabled' => $visibility['public_access_enabled'],
+            'public_access_mode' => $visibility['public_access_mode'],
             'teacher_user_id' => $teacherUserId,
             'created_by' => $userId ?: null,
             'updated_by' => $userId ?: null,
@@ -313,10 +315,12 @@ class EducationController
 
         $userId = (int) (current_user()['id'] ?? 0);
         $teacherUserId = $this->canAssignTeacher() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? null);
+        $visibility = $this->courseVisibilityFromRequest();
         Education::updateCourse((int) $course['id'], array_merge($this->certificateFieldsFromCourse($course), $_POST, [
             'cover_image' => $this->courseCoverFromRequest($course['cover_image'] ?? null),
-            'public_enabled' => !empty($_POST['public_enabled']) ? 1 : 0,
-            'public_access_enabled' => !empty($_POST['public_access_enabled']) ? 1 : 0,
+            'public_enabled' => $visibility['public_enabled'],
+            'public_access_enabled' => $visibility['public_access_enabled'],
+            'public_access_mode' => $visibility['public_access_mode'],
             'teacher_user_id' => $teacherUserId,
             'updated_by' => $userId ?: null,
         ]));
@@ -404,7 +408,7 @@ class EducationController
             return;
         }
 
-        $lessons = $this->publicLessonsForCourse((int) $course['id'], !empty($course['public_access_enabled']));
+        $lessons = $this->publicLessonsForCourse((int) $course['id'], $this->courseAllowsPublicAccess($course), $this->coursePublicMode($course));
 
         View::render('admin/education/course', [
             'course' => $course,
@@ -447,12 +451,13 @@ class EducationController
             return;
         }
 
-        if (empty($course['public_access_enabled'])) {
+        $coursePublicMode = $this->coursePublicMode($course);
+        if (!$this->courseAllowsPublicAccess($course)) {
             Session::flash('error', 'Entre para acessar as aulas deste curso.');
             redirect('/login');
         }
 
-        if (!$this->publicLessonIsOpen($lesson)) {
+        if ($coursePublicMode !== 'public' && !$this->publicLessonIsOpen($lesson)) {
             Session::flash('error', 'Entre para acessar esta aula.');
             redirect('/login');
         }
@@ -463,7 +468,7 @@ class EducationController
             return;
         }
 
-        $playlist = $this->publicLessonsForCourse((int) $lesson['course_id'], true);
+        $playlist = $this->publicLessonsForCourse((int) $lesson['course_id'], true, $coursePublicMode);
         $lessonIds = array_map(static fn (array $item): int => (int) $item['id'], $playlist);
         if (!in_array((int) $lesson['id'], $lessonIds, true)) {
             http_response_code(404);
@@ -473,10 +478,10 @@ class EducationController
 
         $blocks = array_values(array_filter(
             Education::blocksForLesson((int) $lesson['id'], false, 0),
-            fn (array $block): bool => $this->publicBlockIsOpen($block, $lesson)
+            fn (array $block): bool => $this->publicBlockIsOpen($block, $lesson, $coursePublicMode)
         ));
         $hasVideo = trim((string) ($lesson['video_url'] ?? '')) !== '';
-        $showMainVideo = ($lesson['public_access'] ?? 'private') === 'public';
+        $showMainVideo = $coursePublicMode === 'public' || ($lesson['public_access'] ?? 'private') === 'public';
 
         View::render('admin/education/lesson', [
             'lesson' => $lesson,
@@ -508,7 +513,7 @@ class EducationController
     {
         $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
         $course = $id ? Education::findCourse($id) : null;
-        if (empty($course['public_enabled'])) {
+        if (!$this->courseIsPublic($course)) {
             http_response_code(404);
             View::render('errors/404', [], 'education-public');
             return;
@@ -2464,14 +2469,14 @@ class EducationController
         return $availableAt === '' || strtotime($availableAt) <= time();
     }
 
-    private function publicLessonsForCourse(int $courseId, bool $allowGuestAccess = true): array
+    private function publicLessonsForCourse(int $courseId, bool $allowGuestAccess = true, string $coursePublicMode = 'mixed'): array
     {
         $lessons = Education::lessonsForCourse($courseId, 0, false);
 
         foreach ($lessons as $index => $lesson) {
             $publicMode = (string) ($lesson['public_access'] ?? 'private');
             $available = $this->publicLessonIsAvailable($lesson);
-            $needsLogin = !$allowGuestAccess || $publicMode === 'private';
+            $needsLogin = !$allowGuestAccess || ($coursePublicMode !== 'public' && $publicMode === 'private');
             $locked = $needsLogin || !$available;
             $lessons[$index]['public_login_required'] = $needsLogin ? 1 : 0;
             $lessons[$index]['sequence_locked'] = 0;
@@ -2484,12 +2489,26 @@ class EducationController
 
     private function courseAllowsPublicAccess(?array $course): bool
     {
-        return $this->courseIsPublic($course) && !empty($course['public_access_enabled']);
+        return $this->courseIsPublic($course) && $this->coursePublicMode($course) !== 'private';
+    }
+
+    private function coursePublicMode(?array $course): string
+    {
+        $mode = (string) ($course['public_access_mode'] ?? '');
+        if (in_array($mode, ['private', 'mixed', 'public'], true)) {
+            return $mode;
+        }
+
+        if (empty($course['public_enabled'])) {
+            return 'private';
+        }
+
+        return !empty($course['public_access_enabled']) ? 'mixed' : 'mixed';
     }
 
     private function courseIsPublic(?array $course): bool
     {
-        return !empty($course['public_enabled']);
+        return !empty($course['public_enabled']) && ($course['certificate_activity_type'] ?? 'curso_livre') !== 'reconhecimento';
     }
 
     private function publicLessonIsOpen(array $lesson): bool
@@ -2510,7 +2529,7 @@ class EducationController
         return true;
     }
 
-    private function publicBlockIsOpen(array $block, array $lesson): bool
+    private function publicBlockIsOpen(array $block, array $lesson, string $coursePublicMode = 'mixed'): bool
     {
         if (empty($block['active'])) {
             return false;
@@ -2523,6 +2542,10 @@ class EducationController
 
         $lessonPublicAccess = (string) ($lesson['public_access'] ?? 'private');
         $blockPublicAccess = (string) ($block['public_access'] ?? 'inherit');
+        if ($coursePublicMode === 'public') {
+            return $blockPublicAccess !== 'private';
+        }
+
         if ($blockPublicAccess === 'public') {
             return true;
         }
@@ -2559,6 +2582,22 @@ class EducationController
             'certificate_program_extra' => $course['certificate_program_extra'] ?? null,
             'certificate_program_columns' => $course['certificate_program_columns'] ?? 2,
         ];
+    }
+
+    private function courseVisibilityFromRequest(): array
+    {
+        $mode = (string) ($_POST['course_visibility'] ?? '');
+        if ($mode === '') {
+            $mode = !empty($_POST['public_enabled'])
+                ? (!empty($_POST['public_access_enabled']) ? 'public' : 'mixed')
+                : 'private';
+        }
+
+        return match ($mode) {
+            'public' => ['public_enabled' => 1, 'public_access_enabled' => 1, 'public_access_mode' => 'public'],
+            'mixed' => ['public_enabled' => 1, 'public_access_enabled' => 1, 'public_access_mode' => 'mixed'],
+            default => ['public_enabled' => 0, 'public_access_enabled' => 0, 'public_access_mode' => 'private'],
+        };
     }
 
     private function certificateProgram(array $modules, array $lessons): array

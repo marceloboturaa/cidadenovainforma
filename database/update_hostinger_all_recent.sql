@@ -268,6 +268,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     cover_image VARCHAR(255) NULL,
     public_enabled TINYINT(1) NOT NULL DEFAULT 0,
     public_access_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    public_access_mode VARCHAR(20) NOT NULL DEFAULT 'private',
     teacher_user_id BIGINT UNSIGNED NULL,
     active TINYINT(1) NOT NULL DEFAULT 1,
     created_by BIGINT UNSIGNED NULL,
@@ -673,10 +674,15 @@ ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS attendance_mode VARCHAR(2
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS description_position VARCHAR(20) NOT NULL DEFAULT 'after_media' AFTER description;
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image;
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_mode VARCHAR(20) NOT NULL DEFAULT 'private' AFTER public_access_enabled;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS certificate_activity_type VARCHAR(40) NOT NULL DEFAULT 'curso_livre' AFTER public_access_mode;
 
 UPDATE education_courses
-SET public_enabled = 1
+SET public_enabled = 1,
+    public_access_enabled = 1,
+    public_access_mode = 'mixed'
 WHERE active = 1
+  AND certificate_activity_type <> 'reconhecimento'
   AND NOT EXISTS (
       SELECT 1
       FROM site_settings
@@ -689,6 +695,21 @@ VALUES ('education_public_visibility_initialized', '1', NOW())
 ON DUPLICATE KEY UPDATE
     value = value,
     updated_at = updated_at;
+
+UPDATE education_courses
+SET public_access_mode = 'mixed',
+    public_access_enabled = 1
+WHERE active = 1
+  AND public_enabled = 1
+  AND certificate_activity_type <> 'reconhecimento'
+  AND public_access_mode = 'private';
+
+UPDATE education_courses
+SET public_enabled = 0,
+    public_access_enabled = 0,
+    public_access_mode = 'private'
+WHERE certificate_activity_type = 'reconhecimento'
+   OR public_enabled = 0;
 
 ALTER TABLE education_attendance ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER user_id;
 
