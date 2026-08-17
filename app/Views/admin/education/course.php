@@ -34,6 +34,7 @@ $isEnrollmentPending = $isEnrollmentPending ?? false;
 $certificateVerificationUrl = !empty($certificateStatus['certificate']['verification_code'] ?? null)
     ? url('/certificado/' . $certificateStatus['certificate']['verification_code'])
     : null;
+$canPreviewCertificate = $canPreviewCertificate ?? false;
 $isStudentCourseView = !$canManage && !$canTakeAttendance;
 $lessonCount = count($lessons);
 $requiredLessonCount = count(array_filter($lessons, fn (array $lessonItem): bool => (int) ($lessonItem['module_required'] ?? 1) === 1));
@@ -657,6 +658,9 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input class="form-control" name="certificate_responsible_credential" maxlength="180" value="<?= e($course['certificate_responsible_credential'] ?? '') ?>" placeholder="Formação ou credencial do responsável">
             </div>
             <div class="form-action-cell">
+                <?php if ($canPreviewCertificate): ?>
+                    <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'] . '&preview=certificate')) ?>" target="_blank" rel="noopener"><i class="bi bi-eye" aria-hidden="true"></i>Ver certificado</a>
+                <?php endif; ?>
                 <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Salvar certificado</button>
             </div>
         </form>

@@ -394,6 +394,7 @@ class EducationController
             'certificateStatus' => $certificateStatus,
             'certificateInstitutions' => Education::certificateInstitutions(),
             'certificateNameRequests' => $canManageView ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
+            'canPreviewCertificate' => $canManageView && (Auth::hasRole(['master', 'admin']) || Auth::can('certificates.issue') || Auth::can('certificates.manage')),
             'isEnrollmentPending' => $isEnrollmentPending,
         ]);
     }
@@ -1861,6 +1862,40 @@ class EducationController
         }
 
         $course = $this->courseFromQuery();
+        if (($_GET['preview'] ?? '') === 'certificate') {
+            if (!$this->canManageCourse($course) || (!Auth::hasRole(['master', 'admin']) && !Auth::can('certificates.issue') && !Auth::can('certificates.manage'))) {
+                http_response_code(403);
+                View::render('errors/403');
+                return;
+            }
+
+            $certificate = [
+                'id' => 0,
+                'course_id' => (int) ($course['id'] ?? 0),
+                'user_id' => null,
+                'verification_code' => 'PREVIEW',
+                'status' => 'preview',
+                'student_name' => 'Nome do estudante',
+                'issued_at' => date('Y-m-d H:i:s'),
+            ];
+            $status = [
+                'frequency' => max(100, (int) ($course['certificate_min_frequency'] ?? 0)),
+                'minimum_frequency' => (int) ($course['certificate_min_frequency'] ?? 0),
+            ];
+
+            View::render('admin/education/certificate', [
+                'course' => $course,
+                'certificate' => $certificate,
+                'certificateStatus' => $status,
+                'certificateText' => $this->certificateText($course, $certificate, $status),
+                'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), Education::lessonsForCourse((int) $course['id'], 0, true)),
+                'certificatePeriod' => ['start' => date('Y-m-d'), 'end' => date('Y-m-d'), 'issued_at' => date('Y-m-d H:i:s')],
+                'isManagedCertificate' => true,
+                'isCertificatePreview' => true,
+            ]);
+            return;
+        }
+
         $userId = (int) (current_user()['id'] ?? 0);
 
         if ($this->isEnrollmentPendingForCourse($course, $userId)) {

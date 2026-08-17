@@ -14,8 +14,9 @@ $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ??
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
 $certificatePeriod = $certificatePeriod ?? [];
+$isCertificatePreview = !empty($isCertificatePreview);
 $certificateRecordStatus = (string) ($certificate['status'] ?? 'issued');
-$certificatePendingReview = $certificateRecordStatus === 'pending';
+$certificatePendingReview = !$isCertificatePreview && $certificateRecordStatus === 'pending';
 $formatCertificateDate = static function (?string $value) use ($issuedAt): string {
     $timestamp = $value ? strtotime($value) : false;
     return $timestamp ? date('d/m/Y', $timestamp) : $issuedAt;
@@ -48,7 +49,7 @@ $courseResponsible = trim((string) ($course['certificate_responsible_name'] ?? '
 $courseResponsibleCredential = trim((string) ($course['certificate_responsible_credential'] ?? ''));
 $hasProgramSummary = $courseObjectives !== '' || $courseCompetencies || $courseResponsible !== '' || $courseResponsibleCredential !== '';
 $hasCertificateProgramBack = $programExtra !== '' || $hasProgramSummary || !empty($certificateProgram);
-$verificationUrl = url('/certificado/' . ($certificate['verification_code'] ?? ''));
+$verificationUrl = $isCertificatePreview ? url('/certificados') : url('/certificado/' . ($certificate['verification_code'] ?? ''));
 $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' . rawurlencode($verificationUrl);
 $backUrl = $isRecognitionCertificate
     ? url(!empty($isManagedCertificate) ? '/admin/education/recognitions' : '/admin/education/certificates')
@@ -60,13 +61,15 @@ $backLabel = $isRecognitionCertificate
 
 <div class="page-heading certificate-toolbar">
     <div>
-        <p><?= $certificatePendingReview ? 'Pre-visualizacao do certificado' : 'Certificado emitido' ?></p>
+        <p><?= $isCertificatePreview ? 'Previa administrativa' : ($certificatePendingReview ? 'Pre-visualizacao do certificado' : 'Certificado emitido') ?></p>
         <h1><?= e($course['title']) ?></h1>
     </div>
     <div class="certificate-toolbar-actions">
         <div class="certificate-toolbar-primary">
             <button class="btn btn-primary icon-btn" type="button" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i>Imprimir</button>
-            <?php if ($certificatePendingReview && !empty($isManagedCertificate)): ?>
+            <?php if ($isCertificatePreview): ?>
+                <span class="btn btn-outline-secondary icon-btn disabled" aria-disabled="true"><i class="bi bi-eye" aria-hidden="true"></i>Somente visualizacao</span>
+            <?php elseif ($certificatePendingReview && !empty($isManagedCertificate)): ?>
                 <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
@@ -76,7 +79,7 @@ $backLabel = $isRecognitionCertificate
             <?php elseif (!$certificatePendingReview): ?>
                 <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
             <?php endif; ?>
-            <?php if (!empty($isManagedCertificate) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
+            <?php if (!$isCertificatePreview && !empty($isManagedCertificate) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
                 <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Excluir este certificado? Ele deixara de aparecer nas listas.');">
                     <?= csrf_field() ?>
                     <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">
@@ -96,6 +99,16 @@ $backLabel = $isRecognitionCertificate
             <span>Aguardando aprovacao</span>
         </div>
         <p class="field-hint mb-0">Revise nome, curso, datas, texto e layout. Depois de clicar em Liberar para estudante, o certificado ficara disponivel em Meus certificados e no verificador publico.</p>
+    </section>
+<?php endif; ?>
+
+<?php if ($isCertificatePreview): ?>
+    <section class="panel">
+        <div class="section-heading">
+            <h2>Previa do modelo</h2>
+            <span>Master/Admin</span>
+        </div>
+        <p class="field-hint mb-0">Esta visualizacao usa dados de exemplo e nao libera certificado para estudante.</p>
     </section>
 <?php endif; ?>
 
