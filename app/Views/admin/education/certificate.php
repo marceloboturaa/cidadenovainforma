@@ -17,6 +17,7 @@ $certificatePeriod = $certificatePeriod ?? [];
 $isCertificatePreview = !empty($isCertificatePreview);
 $certificateRecordStatus = (string) ($certificate['status'] ?? 'issued');
 $certificatePendingReview = !$isCertificatePreview && $certificateRecordStatus === 'pending';
+$certificateTextSearch = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', strip_tags((string) ($certificateText ?? ''))) ?: strip_tags((string) ($certificateText ?? '')));
 $formatCertificateDate = static function (?string $value) use ($issuedAt): string {
     $timestamp = $value ? strtotime($value) : false;
     return $timestamp ? date('d/m/Y', $timestamp) : $issuedAt;
@@ -28,14 +29,24 @@ $courseNature = trim((string) ($course['certificate_course_nature'] ?? '')) ?: (
 $courseModality = trim((string) ($course['certificate_modality'] ?? '')) ?: ($isRecognitionCertificate ? '' : 'Online');
 $approvalCriteria = trim((string) ($course['certificate_approval_criteria'] ?? '')) ?: ($isRecognitionCertificate ? '' : 'Certificado concedido mediante frequência mínima de ' . $minimumFrequency . '% e aproveitamento satisfatório.');
 $legalText = trim((string) ($course['certificate_legal_text'] ?? '')) ?: ($isRecognitionCertificate ? '' : 'Curso Livre de Capacitação Profissional ofertado nos termos da Lei nº 9.394/96 (LDB) e Decreto nº 5.154/04.');
+$courseModalitySearch = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $courseModality) ?: $courseModality);
+$textHasModality = $courseModalitySearch !== '' && str_contains($certificateTextSearch, $courseModalitySearch);
+$textHasPeriod = str_contains($certificateTextSearch, 'periodo') || str_contains($certificateTextSearch, 'realizado em') || str_contains($certificateTextSearch, 'realizado no');
+$textHasApproval = str_contains($certificateTextSearch, 'aproveitamento') || str_contains($certificateTextSearch, 'rendimento') || str_contains($certificateTextSearch, 'frequencia minima') || str_contains($certificateTextSearch, 'frequencia de');
+$textHasCode = str_contains($certificateTextSearch, 'codigo') || str_contains($certificateTextSearch, strtolower((string) ($certificate['verification_code'] ?? '')));
+$textHasFrequency = str_contains($certificateTextSearch, 'frequencia') || str_contains($certificateTextSearch, '100%') || str_contains($certificateTextSearch, '75%');
 $showNature = (int) ($course['certificate_show_nature'] ?? 1) === 1 && $courseNature !== '';
-$showModality = (int) ($course['certificate_show_modality'] ?? 1) === 1 && $courseModality !== '';
-$showPeriod = (int) ($course['certificate_show_period'] ?? 1) === 1;
-$showApproval = (int) ($course['certificate_show_approval'] ?? 1) === 1 && $approvalCriteria !== '';
+$showModality = (int) ($course['certificate_show_modality'] ?? 1) === 1 && $courseModality !== '' && !$textHasModality;
+$showPeriod = (int) ($course['certificate_show_period'] ?? 1) === 1 && !$textHasPeriod;
+$showApproval = (int) ($course['certificate_show_approval'] ?? 1) === 1 && $approvalCriteria !== '' && !$textHasApproval;
 $showInstitution = (int) ($course['certificate_show_institution'] ?? 1) === 1;
 $showMeta = (int) ($course['certificate_show_meta'] ?? 1) === 1;
 $showLegal = (int) ($course['certificate_show_legal'] ?? 1) === 1 && $legalText !== '';
 $showRecipient = (int) ($course['certificate_show_recipient'] ?? 1) === 1;
+$showIssuedMeta = $showMeta && !$textHasCode && !$textHasPeriod;
+$showCodeMeta = $showMeta && !$textHasCode;
+$showTeacherMeta = $showMeta && !$textHasCode && !$isRecognitionCertificate && !empty($course['teacher_name']);
+$showFrequencyMeta = $showMeta && !$textHasCode && !$isRecognitionCertificate && !$textHasFrequency;
 $officialCity = trim((string) ($course['certificate_institution_official_city'] ?? ''));
 $officialState = trim((string) ($course['certificate_institution_official_state'] ?? ''));
 $institutionName = trim((string) ($course['certificate_institution_name'] ?? '')) ?: trim((string) ($course['certificate_institution_official_name'] ?? '')) ?: (getenv('INSTITUTION_CERTIFICATE_NAME') ?: 'Cidade Nova Informa - CNI');
@@ -149,12 +160,12 @@ $backLabel = $isRecognitionCertificate
                         <?php if ($institutionSite !== ''): ?><span><?= e($institutionSite) ?></span><?php endif; ?>
                     </div>
                 <?php endif; ?>
-                <?php if ($showMeta): ?>
+                <?php if ($showIssuedMeta || $showCodeMeta || $showTeacherMeta || $showFrequencyMeta): ?>
                     <div class="education-certificate-footnote-meta">
-                        <span>Emitido em <?= e($issuedAt) ?></span>
-                        <span>Código <?= e($certificate['verification_code'] ?? '') ?></span>
-                        <?php if (!$isRecognitionCertificate && !empty($course['teacher_name'])): ?><span>Professor: <?= e($course['teacher_name']) ?></span><?php endif; ?>
-                        <?php if (!$isRecognitionCertificate): ?><span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span><?php endif; ?>
+                        <?php if ($showIssuedMeta): ?><span>Emitido em <?= e($issuedAt) ?></span><?php endif; ?>
+                        <?php if ($showCodeMeta): ?><span>Código <?= e($certificate['verification_code'] ?? '') ?></span><?php endif; ?>
+                        <?php if ($showTeacherMeta): ?><span>Professor: <?= e($course['teacher_name']) ?></span><?php endif; ?>
+                        <?php if ($showFrequencyMeta): ?><span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span><?php endif; ?>
                     </div>
                 <?php endif; ?>
                 <?php if ($showLegal): ?><p><?= e($legalText) ?></p><?php endif; ?>
