@@ -28,14 +28,25 @@ class PublicController
     {
         $this->logAccess();
 
-        $showPublicCourses = SiteSetting::get('home_courses_enabled', '1') === '1';
+        $homeCourseSettings = [
+            'section_enabled' => SiteSetting::get('home_courses_enabled', '1') === '1',
+            'highlights_enabled' => SiteSetting::get('home_course_highlights_enabled', '1') === '1',
+            'show_images' => SiteSetting::get('home_courses_show_images', '1') === '1',
+            'show_lesson_count' => SiteSetting::get('home_courses_show_lesson_count', '1') === '1',
+            'show_summary' => SiteSetting::get('home_courses_show_summary', '1') === '1',
+            'show_teacher' => SiteSetting::get('home_courses_show_teacher', '1') === '1',
+            'show_button' => SiteSetting::get('home_courses_show_button', '1') === '1',
+            'position' => SiteSetting::get('home_courses_position', 'after_news'),
+        ];
+        $needsPublicCourses = $homeCourseSettings['section_enabled'] || $homeCourseSettings['highlights_enabled'];
 
         View::render('public/home', [
             'featured' => News::publicList(['featured' => true], 5),
             'urgent' => News::publicList(['urgent' => true], 4),
             'latest' => News::publicList([], 50),
             'popular' => News::popular(5),
-            'publicCourses' => $showPublicCourses ? Education::publicCourses(6) : [],
+            'publicCourses' => $needsPublicCourses ? Education::publicCourses(6) : [],
+            'homeCourseSettings' => $homeCourseSettings,
             'libraryEvents' => LibraryEvent::publicUpcoming(6),
             'menuItems' => MenuItem::visible(),
             'homeNotice' => [

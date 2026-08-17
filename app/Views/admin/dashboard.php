@@ -52,6 +52,38 @@
             <input class="form-check-input" type="checkbox" name="home_courses_enabled" value="1" <?= checked(($homeNotice['courses_enabled'] ?? '1') === '1') ?>>
             <span class="form-check-label">Mostrar seção de cursos públicos na página inicial</span>
         </label>
+        <label class="form-check home-notice-toggle">
+            <input class="form-check-input" type="checkbox" name="home_course_highlights_enabled" value="1" <?= checked(($homeNotice['course_highlights_enabled'] ?? '1') === '1') ?>>
+            <span class="form-check-label">Mostrar destaque compacto de cursos no topo</span>
+        </label>
+        <div class="home-notice-grid">
+            <label class="form-label">Posição da seção de cursos
+                <select class="form-select" name="home_courses_position">
+                    <option value="after_news" <?= selected($homeNotice['courses_position'] ?? 'after_news', 'after_news') ?>>Depois das notícias</option>
+                    <option value="before_news" <?= selected($homeNotice['courses_position'] ?? 'after_news', 'before_news') ?>>Antes das notícias</option>
+                </select>
+            </label>
+            <label class="form-check home-notice-toggle">
+                <input class="form-check-input" type="checkbox" name="home_courses_show_images" value="1" <?= checked(($homeNotice['courses_show_images'] ?? '1') === '1') ?>>
+                <span class="form-check-label">Mostrar imagem dos cursos</span>
+            </label>
+            <label class="form-check home-notice-toggle">
+                <input class="form-check-input" type="checkbox" name="home_courses_show_lesson_count" value="1" <?= checked(($homeNotice['courses_show_lesson_count'] ?? '1') === '1') ?>>
+                <span class="form-check-label">Mostrar quantidade de aulas</span>
+            </label>
+            <label class="form-check home-notice-toggle">
+                <input class="form-check-input" type="checkbox" name="home_courses_show_summary" value="1" <?= checked(($homeNotice['courses_show_summary'] ?? '1') === '1') ?>>
+                <span class="form-check-label">Mostrar resumo dos cursos</span>
+            </label>
+            <label class="form-check home-notice-toggle">
+                <input class="form-check-input" type="checkbox" name="home_courses_show_teacher" value="1" <?= checked(($homeNotice['courses_show_teacher'] ?? '1') === '1') ?>>
+                <span class="form-check-label">Mostrar professor</span>
+            </label>
+            <label class="form-check home-notice-toggle">
+                <input class="form-check-input" type="checkbox" name="home_courses_show_button" value="1" <?= checked(($homeNotice['courses_show_button'] ?? '1') === '1') ?>>
+                <span class="form-check-label">Mostrar botão Ver curso</span>
+            </label>
+        </div>
         <div class="home-notice-grid">
             <label class="form-label">Título
                 <input class="form-control" name="home_notice_title" maxlength="120" value="<?= e($homeNotice['title'] ?? '') ?>" placeholder="Ex.: Inscrições abertas">

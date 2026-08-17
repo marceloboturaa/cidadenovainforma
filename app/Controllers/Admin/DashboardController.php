@@ -45,6 +45,13 @@ class DashboardController
             'homeNotice' => $canManageHomeNotice ? [
                 'enabled' => SiteSetting::get('home_notice_enabled', '0'),
                 'courses_enabled' => SiteSetting::get('home_courses_enabled', '1'),
+                'course_highlights_enabled' => SiteSetting::get('home_course_highlights_enabled', '1'),
+                'courses_show_images' => SiteSetting::get('home_courses_show_images', '1'),
+                'courses_show_lesson_count' => SiteSetting::get('home_courses_show_lesson_count', '1'),
+                'courses_show_summary' => SiteSetting::get('home_courses_show_summary', '1'),
+                'courses_show_teacher' => SiteSetting::get('home_courses_show_teacher', '1'),
+                'courses_show_button' => SiteSetting::get('home_courses_show_button', '1'),
+                'courses_position' => SiteSetting::get('home_courses_position', 'after_news'),
                 'title' => SiteSetting::get('home_notice_title', ''),
                 'text' => SiteSetting::get('home_notice_text', ''),
                 'url' => SiteSetting::get('home_notice_url', ''),
@@ -69,6 +76,15 @@ class DashboardController
 
         $enabled = !empty($_POST['home_notice_enabled']) ? '1' : '0';
         $coursesEnabled = !empty($_POST['home_courses_enabled']) ? '1' : '0';
+        $courseHighlightsEnabled = !empty($_POST['home_course_highlights_enabled']) ? '1' : '0';
+        $coursesShowImages = !empty($_POST['home_courses_show_images']) ? '1' : '0';
+        $coursesShowLessonCount = !empty($_POST['home_courses_show_lesson_count']) ? '1' : '0';
+        $coursesShowSummary = !empty($_POST['home_courses_show_summary']) ? '1' : '0';
+        $coursesShowTeacher = !empty($_POST['home_courses_show_teacher']) ? '1' : '0';
+        $coursesShowButton = !empty($_POST['home_courses_show_button']) ? '1' : '0';
+        $coursesPosition = in_array($_POST['home_courses_position'] ?? '', ['before_news', 'after_news'], true)
+            ? $_POST['home_courses_position']
+            : 'after_news';
         $title = trim((string) ($_POST['home_notice_title'] ?? ''));
         $text = trim((string) ($_POST['home_notice_text'] ?? ''));
         $url = trim((string) ($_POST['home_notice_url'] ?? ''));
@@ -79,6 +95,13 @@ class DashboardController
 
         SiteSetting::set('home_notice_enabled', $enabled);
         SiteSetting::set('home_courses_enabled', $coursesEnabled);
+        SiteSetting::set('home_course_highlights_enabled', $courseHighlightsEnabled);
+        SiteSetting::set('home_courses_show_images', $coursesShowImages);
+        SiteSetting::set('home_courses_show_lesson_count', $coursesShowLessonCount);
+        SiteSetting::set('home_courses_show_summary', $coursesShowSummary);
+        SiteSetting::set('home_courses_show_teacher', $coursesShowTeacher);
+        SiteSetting::set('home_courses_show_button', $coursesShowButton);
+        SiteSetting::set('home_courses_position', $coursesPosition);
         SiteSetting::set('home_notice_title', $limit($title, 120));
         SiteSetting::set('home_notice_text', $limit($text, 260));
         SiteSetting::set('home_notice_url', $limit($url, 255));

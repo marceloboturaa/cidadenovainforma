@@ -20,6 +20,19 @@ ON DUPLICATE KEY UPDATE
     value = value,
     updated_at = updated_at;
 
+INSERT INTO site_settings (name, value, updated_at)
+VALUES
+    ('home_course_highlights_enabled', '1', NOW()),
+    ('home_courses_show_images', '1', NOW()),
+    ('home_courses_show_lesson_count', '1', NOW()),
+    ('home_courses_show_summary', '1', NOW()),
+    ('home_courses_show_teacher', '1', NOW()),
+    ('home_courses_show_button', '1', NOW()),
+    ('home_courses_position', 'after_news', NOW())
+ON DUPLICATE KEY UPDATE
+    value = value,
+    updated_at = updated_at;
+
 CREATE TABLE IF NOT EXISTS user_presence (
     user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
     last_seen_at DATETIME NOT NULL,
@@ -660,6 +673,22 @@ ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS attendance_mode VARCHAR(2
 ALTER TABLE education_lessons ADD COLUMN IF NOT EXISTS description_position VARCHAR(20) NOT NULL DEFAULT 'after_media' AFTER description;
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER cover_image;
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled;
+
+UPDATE education_courses
+SET public_enabled = 1
+WHERE active = 1
+  AND NOT EXISTS (
+      SELECT 1
+      FROM site_settings
+      WHERE name = 'education_public_visibility_initialized'
+        AND value = '1'
+  );
+
+INSERT INTO site_settings (name, value, updated_at)
+VALUES ('education_public_visibility_initialized', '1', NOW())
+ON DUPLICATE KEY UPDATE
+    value = value,
+    updated_at = updated_at;
 
 ALTER TABLE education_attendance ADD COLUMN IF NOT EXISTS lesson_id BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER user_id;
 

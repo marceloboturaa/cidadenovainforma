@@ -219,8 +219,19 @@ $pdo->exec(
 
 $pdo->prepare('INSERT IGNORE INTO site_settings (name, value, updated_at) VALUES (?, ?, NOW())')
     ->execute(['registration_enabled', '1']);
-$pdo->prepare('INSERT IGNORE INTO site_settings (name, value, updated_at) VALUES (?, ?, NOW())')
-    ->execute(['home_courses_enabled', '1']);
+$settingInsert = $pdo->prepare('INSERT IGNORE INTO site_settings (name, value, updated_at) VALUES (?, ?, NOW())');
+foreach ([
+    'home_courses_enabled' => '1',
+    'home_course_highlights_enabled' => '1',
+    'home_courses_show_images' => '1',
+    'home_courses_show_lesson_count' => '1',
+    'home_courses_show_summary' => '1',
+    'home_courses_show_teacher' => '1',
+    'home_courses_show_button' => '1',
+    'home_courses_position' => 'after_news',
+] as $settingName => $settingValue) {
+    $settingInsert->execute([$settingName, $settingValue]);
+}
 
 $institutionTags = [
     ['biblioteca', 'Biblioteca', 'biblioteca'],
@@ -524,6 +535,11 @@ foreach ($courseCertificateColumns as $column => $sql) {
     if (!in_array($column, $courseColumns, true)) {
         $pdo->exec($sql);
     }
+}
+
+if ($pdo->query("SELECT COUNT(*) FROM site_settings WHERE name = 'education_public_visibility_initialized' AND value = '1'")->fetchColumn() == 0) {
+    $pdo->exec('UPDATE education_courses SET public_enabled = 1 WHERE active = 1');
+    $settingInsert->execute(['education_public_visibility_initialized', '1']);
 }
 
 $pdo->exec(

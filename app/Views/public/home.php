@@ -14,8 +14,60 @@ $homeNoticeEnabled = ($homeNotice['enabled'] ?? '0') === '1' && (trim((string) (
 $homeNoticeUrl = trim((string) ($homeNotice['url'] ?? ''));
 $homeNoticeLabel = trim((string) ($homeNotice['label'] ?? '')) ?: 'Saiba mais';
 $homeNoticeHref = preg_match('/^https?:\/\//i', $homeNoticeUrl) ? $homeNoticeUrl : url($homeNoticeUrl);
-$homeCourseHighlights = array_slice($publicCourses ?? [], 0, 3);
+$homeCourseSettings = array_merge([
+    'section_enabled' => true,
+    'highlights_enabled' => true,
+    'show_images' => true,
+    'show_lesson_count' => true,
+    'show_summary' => true,
+    'show_teacher' => true,
+    'show_button' => true,
+    'position' => 'after_news',
+], $homeCourseSettings ?? []);
+$homeCourseHighlights = !empty($homeCourseSettings['highlights_enabled']) ? array_slice($publicCourses ?? [], 0, 3) : [];
+$showPublicCourseSection = !empty($homeCourseSettings['section_enabled']) && !empty($publicCourses);
+$homeCoursesPosition = in_array($homeCourseSettings['position'] ?? '', ['before_news', 'after_news'], true) ? $homeCourseSettings['position'] : 'after_news';
 $homeEventHighlight = $libraryEvents[0] ?? null;
+$renderPublicCoursesSection = function () use ($publicCourses, $homeCourseSettings): void {
+    if (empty($publicCourses)) {
+        return;
+    }
+    ?>
+    <section class="section-heading public-courses-heading" id="cursos">
+        <span>Formação aberta</span>
+        <h2>Cursos públicos</h2>
+    </section>
+
+    <section class="public-courses-grid">
+        <?php foreach ($publicCourses as $course): ?>
+            <?php
+            $courseHref = url('/curso/' . $course['id']);
+            $courseActionLabel = 'Ver curso';
+            ?>
+            <article class="public-course-card">
+                <?php if (!empty($homeCourseSettings['show_images']) && !empty($course['cover_image'])): ?>
+                    <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" loading="lazy" onerror="this.remove()">
+                <?php endif; ?>
+                <div class="public-course-body">
+                    <?php if (!empty($homeCourseSettings['show_lesson_count'])): ?>
+                        <span><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
+                    <?php endif; ?>
+                    <h3><?= e($course['title']) ?></h3>
+                    <?php if (!empty($homeCourseSettings['show_summary']) && trim((string) ($course['summary'] ?? '')) !== ''): ?>
+                        <p><?= e(text_excerpt($course['summary'] ?? '', 150)) ?></p>
+                    <?php endif; ?>
+                    <?php if (!empty($homeCourseSettings['show_teacher']) && !empty($course['teacher_name'])): ?>
+                        <small>Professor: <?= e($course['teacher_name']) ?></small>
+                    <?php endif; ?>
+                    <?php if (!empty($homeCourseSettings['show_button'])): ?>
+                        <a class="public-course-more" href="<?= e($courseHref) ?>"><i class="bi bi-arrow-right" aria-hidden="true"></i><?= e($courseActionLabel) ?></a>
+                    <?php endif; ?>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </section>
+    <?php
+};
 ?>
 
 <?php if ($urgent): ?>
@@ -100,6 +152,10 @@ $homeEventHighlight = $libraryEvents[0] ?? null;
     </aside>
 </section>
 
+<?php if ($showPublicCourseSection && $homeCoursesPosition === 'before_news'): ?>
+    <?php $renderPublicCoursesSection(); ?>
+<?php endif; ?>
+
 <section class="section-heading">
     <h2>Últimas notícias</h2>
 </section>
@@ -119,34 +175,8 @@ $homeEventHighlight = $libraryEvents[0] ?? null;
     </div>
 <?php endif; ?>
 
-<?php if (!empty($publicCourses)): ?>
-    <section class="section-heading public-courses-heading" id="cursos">
-        <span>Formação aberta</span>
-        <h2>Cursos públicos</h2>
-    </section>
-
-    <section class="public-courses-grid">
-        <?php foreach ($publicCourses as $course): ?>
-            <?php
-            $courseHref = url('/curso/' . $course['id']);
-            $courseActionLabel = 'Ver curso';
-            ?>
-            <article class="public-course-card">
-                <?php if (!empty($course['cover_image'])): ?>
-                    <img src="<?= e(media_url($course['cover_image'])) ?>" alt="<?= e($course['title']) ?>" loading="lazy" onerror="this.remove()">
-                <?php endif; ?>
-                <div class="public-course-body">
-                    <span><?= e((string) ($course['lesson_count'] ?? 0)) ?> aula(s)</span>
-                    <h3><?= e($course['title']) ?></h3>
-                    <p><?= e(text_excerpt($course['summary'] ?? '', 150)) ?></p>
-                    <?php if (!empty($course['teacher_name'])): ?>
-                        <small>Professor: <?= e($course['teacher_name']) ?></small>
-                    <?php endif; ?>
-                    <a class="public-course-more" href="<?= e($courseHref) ?>"><i class="bi bi-arrow-right" aria-hidden="true"></i><?= e($courseActionLabel) ?></a>
-                </div>
-            </article>
-        <?php endforeach; ?>
-    </section>
+<?php if ($showPublicCourseSection && $homeCoursesPosition === 'after_news'): ?>
+    <?php $renderPublicCoursesSection(); ?>
 <?php endif; ?>
 
 <?php if (!empty($libraryEvents)): ?>
