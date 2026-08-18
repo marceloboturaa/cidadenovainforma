@@ -30,6 +30,7 @@ $forumTopics = $forumTopics ?? [];
 $forumRepliesByTopic = $forumRepliesByTopic ?? [];
 $courseForms = $courseForms ?? [];
 $certificateStatus = $certificateStatus ?? [];
+$certificateSourceCourses = $certificateSourceCourses ?? [];
 $isEnrollmentPending = $isEnrollmentPending ?? false;
 $certificateVerificationUrl = !empty($certificateStatus['certificate']['verification_code'] ?? null)
     ? url('/certificado/' . $certificateStatus['certificate']['verification_code'])
@@ -545,6 +546,24 @@ if ($isStudentCourseView && function_exists('current_user')) {
     <?php if ($canManage): ?>
         <form method="post" action="<?= e(url('/admin/education/certificate/settings?id=' . $course['id'])) ?>" enctype="multipart/form-data" class="education-certificate-settings">
             <?= csrf_field() ?>
+            <?php if ($certificateSourceCourses): ?>
+                <div class="grid-span-2">
+                    <label class="form-label">Copiar informaÃ§Ãµes de certificado de outro curso</label>
+                    <div class="input-group">
+                        <select class="form-select" name="certificate_source_course_id">
+                            <option value="">Selecione um curso de origem</option>
+                            <?php foreach ($certificateSourceCourses as $sourceCourse): ?>
+                                <option value="<?= e((string) ($sourceCourse['id'] ?? '')) ?>">
+                                    <?= e($sourceCourse['title'] ?? '') ?>
+                                    <?= !empty($sourceCourse['certificate_enabled']) ? ' - certificado ativo' : '' ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button class="btn btn-outline-primary icon-btn" type="submit" name="copy_certificate_from_course" value="1" onclick="return confirm('Copiar as configuracoes de certificado do curso selecionado para este curso?');"><i class="bi bi-files" aria-hidden="true"></i>Copiar</button>
+                    </div>
+                    <small class="field-hint">Copia texto, fundos, regras, instituiÃ§Ã£o, campos exibidos e informaÃ§Ãµes do verso. Aulas, alunos e certificados jÃ¡ emitidos continuam separados.</small>
+                </div>
+            <?php endif; ?>
             <label class="forum-check-line grid-span-2">
                 <input type="checkbox" name="certificate_enabled" value="1" <?= checked(!empty($course['certificate_enabled'])) ?>>
                 <span>Liberar certificado quando o aluno concluir o curso</span>

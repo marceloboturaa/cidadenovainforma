@@ -393,6 +393,7 @@ class EducationController
             'courseForms' => $courseForms,
             'certificateStatus' => $certificateStatus,
             'certificateInstitutions' => Education::certificateInstitutions(),
+            'certificateSourceCourses' => $canManageView ? $this->certificateSourceCourses((int) $course['id']) : [],
             'certificateNameRequests' => $canManageView ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
             'canPreviewCertificate' => $canManageView && (Auth::hasRole(['master', 'admin']) || Auth::can('certificates.issue') || Auth::can('certificates.manage')),
             'isEnrollmentPending' => $isEnrollmentPending,
@@ -1756,6 +1757,26 @@ class EducationController
         $this->authorizeCourseManage($course);
         $this->validateCsrf('/admin/education/course?id=' . $course['id']);
 
+        if (!empty($_POST['copy_certificate_from_course'])) {
+            $sourceCourseId = (int) ($_POST['certificate_source_course_id'] ?? 0);
+            $sourceCourse = $sourceCourseId > 0 && $sourceCourseId !== (int) $course['id']
+                ? Education::findCourse($sourceCourseId)
+                : null;
+
+            if (!$sourceCourse || !$this->canManageCourse($sourceCourse)) {
+                Session::flash('error', 'Escolha um curso de origem que voce pode gerenciar.');
+                redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+            }
+
+            Education::updateCourse((int) $course['id'], array_merge($course, $this->certificateFieldsFromCourse($sourceCourse), [
+                'updated_by' => (int) (current_user()['id'] ?? 0) ?: null,
+            ]));
+
+            Logger::info('education.certificate_settings_copied', 'Configuracao de certificado copiada de "' . ($sourceCourse['title'] ?? '') . '" para "' . ($course['title'] ?? '') . '".', current_user()['id'] ?? null);
+            Session::flash('success', 'Configuracoes do certificado copiadas de "' . ($sourceCourse['title'] ?? 'outro curso') . '".');
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+        }
+
         $title = trim((string) ($_POST['certificate_title'] ?? ''));
         $text = trim((string) ($_POST['certificate_text'] ?? ''));
         if (!empty($_POST['certificate_enabled']) && ($title === '' || $text === '')) {
@@ -2610,11 +2631,24 @@ class EducationController
     private function certificateFieldsFromCourse(array $course): array
     {
         return [
+            'certificate_institution_id' => $course['certificate_institution_id'] ?? null,
+            'certificate_category_id' => $course['certificate_category_id'] ?? null,
+            'certificate_template_id' => $course['certificate_template_id'] ?? null,
+            'certificate_activity_type' => $course['certificate_activity_type'] ?? 'curso_livre',
             'certificate_enabled' => $course['certificate_enabled'] ?? 0,
             'certificate_title' => $course['certificate_title'] ?? null,
             'certificate_text' => $course['certificate_text'] ?? null,
+            'certificate_font_family' => $course['certificate_font_family'] ?? null,
             'certificate_background' => $course['certificate_background'] ?? null,
             'certificate_min_frequency' => $course['certificate_min_frequency'] ?? 0,
+            'certificate_show_recipient' => $course['certificate_show_recipient'] ?? 1,
+            'certificate_show_nature' => $course['certificate_show_nature'] ?? 1,
+            'certificate_show_modality' => $course['certificate_show_modality'] ?? 1,
+            'certificate_show_period' => $course['certificate_show_period'] ?? 1,
+            'certificate_show_approval' => $course['certificate_show_approval'] ?? 1,
+            'certificate_show_institution' => $course['certificate_show_institution'] ?? 1,
+            'certificate_show_meta' => $course['certificate_show_meta'] ?? 1,
+            'certificate_show_legal' => $course['certificate_show_legal'] ?? 1,
             'certificate_course_nature' => $course['certificate_course_nature'] ?? null,
             'certificate_modality' => $course['certificate_modality'] ?? null,
             'certificate_approval_criteria' => $course['certificate_approval_criteria'] ?? null,
@@ -2632,6 +2666,15 @@ class EducationController
             'certificate_program_extra' => $course['certificate_program_extra'] ?? null,
             'certificate_program_columns' => $course['certificate_program_columns'] ?? 2,
         ];
+    }
+
+    private function certificateSourceCourses(int $currentCourseId): array
+    {
+        $courses = Education::coursesForManagement($this->canManageAll() ? null : (int) (current_user()['id'] ?? 0));
+
+        return array_values(array_filter($courses, static function (array $course) use ($currentCourseId): bool {
+            return (int) ($course['id'] ?? 0) !== $currentCourseId;
+        }));
     }
 
     private function courseVisibilityFromRequest(): array
