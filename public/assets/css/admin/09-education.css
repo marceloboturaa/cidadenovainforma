@@ -2794,12 +2794,17 @@
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 1;
     background: rgba(255, 255, 255, 0.88);
 }
 
-.education-certificate-program-sheet > * {
+.education-certificate-program-sheet > :not(.education-certificate-background) {
     position: relative;
-    z-index: 1;
+    z-index: 2;
+}
+
+.education-certificate-program-sheet > .education-certificate-background {
+    z-index: 0;
 }
 
 .education-certificate-program-sheet.is-multi-column {
