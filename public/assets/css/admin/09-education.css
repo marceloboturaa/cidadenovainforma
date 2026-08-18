@@ -2887,37 +2887,38 @@
 }
 
 .education-certificate-program-list {
-    column-count: var(--certificate-program-columns, 2);
-    column-gap: 24px;
-    column-fill: balance;
+    display: grid;
+    grid-template-columns: repeat(var(--certificate-program-columns, 2), minmax(0, 1fr));
+    gap: 14px 24px;
     color: #172033;
     font-size: 0.84rem;
     line-height: 1.35;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 .education-certificate-program-sheet.is-multi-column .education-certificate-program-list {
-    column-rule: 1px solid rgba(23, 32, 51, 0.08);
+    align-items: start;
 }
 
 .education-certificate-program-columns-3 .education-certificate-program-list,
 .education-certificate-program-columns-4 .education-certificate-program-list {
-    column-gap: 18px;
+    gap: 12px 18px;
     font-size: 0.78rem;
     line-height: 1.28;
 }
 
 .education-certificate-program-columns-4 .education-certificate-program-list {
-    column-gap: 14px;
+    gap: 10px 14px;
     font-size: 0.72rem;
     line-height: 1.22;
 }
 
 .education-certificate-program-module {
-    display: inline-block;
+    display: block;
     width: 100%;
     margin: 0 0 14px;
     break-inside: avoid;
+    page-break-inside: avoid;
 }
 
 .education-certificate-program-module h3 {
@@ -2943,7 +2944,8 @@
 
 .education-certificate-program-module strong {
     display: block;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
 }
 
 .education-certificate-program-empty {
