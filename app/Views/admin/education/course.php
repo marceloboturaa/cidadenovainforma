@@ -548,7 +548,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <?= csrf_field() ?>
             <?php if ($certificateSourceCourses): ?>
                 <div class="grid-span-2">
-                    <label class="form-label">Copiar informaÃ§Ãµes de certificado de outro curso</label>
+                    <label class="form-label">Copiar informacoes de certificado de outro curso</label>
                     <div class="input-group">
                         <select class="form-select" name="certificate_source_course_id">
                             <option value="">Selecione um curso de origem</option>
@@ -561,7 +561,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
                         </select>
                         <button class="btn btn-outline-primary icon-btn" type="submit" name="copy_certificate_from_course" value="1" onclick="return confirm('Copiar as configuracoes de certificado do curso selecionado para este curso?');"><i class="bi bi-files" aria-hidden="true"></i>Copiar</button>
                     </div>
-                    <small class="field-hint">Copia texto, fundos, regras, instituiÃ§Ã£o, campos exibidos e informaÃ§Ãµes do verso. Aulas, alunos e certificados jÃ¡ emitidos continuam separados.</small>
+                    <small class="field-hint">Copia texto, fundos, regras, instituicao, campos exibidos e informacoes do verso. Aulas, alunos e certificados ja emitidos continuam separados.</small>
                 </div>
             <?php endif; ?>
             <label class="forum-check-line grid-span-2">
