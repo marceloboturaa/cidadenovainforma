@@ -2574,7 +2574,9 @@
     width: 297mm;
     height: 210mm;
     --certificate-write-left: 17mm;
+    --certificate-write-right: 17mm;
     --certificate-write-top: 16mm;
+    --certificate-write-bottom: 23mm;
     --certificate-write-width: 263mm;
     --certificate-write-height: 171mm;
     --certificate-footnote-height: 34mm;
@@ -2790,9 +2792,10 @@
 }
 
 .education-certificate-program-sheet {
+    display: grid;
     align-content: start;
     gap: 18px;
-    padding: clamp(34px, 4vw, 58px);
+    padding: var(--certificate-write-top) var(--certificate-write-right) var(--certificate-write-bottom) var(--certificate-write-left);
     background: #ffffff;
     page-break-before: always;
 }
@@ -2820,7 +2823,6 @@
 
 .education-certificate-program-sheet.is-multi-column {
     gap: 14px;
-    padding: clamp(28px, 3.4vw, 46px);
 }
 
 .education-certificate-program-header {
