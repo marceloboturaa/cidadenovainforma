@@ -2573,6 +2573,11 @@
     display: grid;
     width: 297mm;
     height: 210mm;
+    --certificate-write-left: 17mm;
+    --certificate-write-top: 16mm;
+    --certificate-write-width: 263mm;
+    --certificate-write-height: 171mm;
+    --certificate-footnote-height: 34mm;
     max-width: 100%;
     margin: 0 auto;
     overflow: hidden;
@@ -2601,16 +2606,19 @@
 }
 
 .education-certificate-copy {
-    position: relative;
+    position: absolute;
+    top: var(--certificate-write-top);
+    left: var(--certificate-write-left);
     z-index: 1;
     display: grid;
     align-content: center;
     justify-items: center;
     gap: 10px;
-    width: calc(100% - 42mm);
-    max-height: 142mm;
-    margin: 0 auto 32mm;
-    padding: 16mm 0 0;
+    width: var(--certificate-write-width);
+    height: calc(var(--certificate-write-height) - var(--certificate-footnote-height));
+    max-height: none;
+    margin: 0;
+    padding: 8mm 0 4mm;
     transform: none;
     text-align: center;
     color: #172033;
@@ -2684,21 +2692,24 @@
 
 .education-certificate-footnote {
     position: absolute;
-    right: clamp(20px, 3vw, 42px);
-    bottom: clamp(8px, 1.8vw, 20px);
-    left: clamp(20px, 3vw, 42px);
+    right: auto;
+    bottom: auto;
+    left: var(--certificate-write-left);
+    top: calc(var(--certificate-write-top) + var(--certificate-write-height) - var(--certificate-footnote-height));
     z-index: 1;
     display: flex;
     align-items: end;
     justify-content: space-between;
     gap: 8px 18px;
+    width: var(--certificate-write-width);
+    height: var(--certificate-footnote-height);
     padding-top: 0;
     border-top: 0;
     color: #475569;
     font-size: 0.76rem;
     line-height: 1.35;
     text-align: center;
-    max-height: 36mm;
+    max-height: var(--certificate-footnote-height);
     overflow: hidden;
 }
 

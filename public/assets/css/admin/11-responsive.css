@@ -490,10 +490,6 @@
 
     .education-certificate-copy {
         gap: 10px;
-        width: calc(100% - 42mm);
-        max-height: 142mm;
-        margin: 0 auto 32mm;
-        padding: 16mm 0 0;
         transform: none;
         overflow: hidden;
     }
@@ -518,12 +514,8 @@
     }
 
     .education-certificate-footnote {
-        right: 18px;
-        bottom: 14px;
-        left: 18px;
         align-items: flex-end;
         font-size: 0.72rem;
-        max-height: 36mm;
         overflow: hidden;
     }
 
@@ -955,10 +947,6 @@
 
     .education-certificate-copy {
         gap: 10px;
-        width: calc(100% - 42mm);
-        max-height: 142mm;
-        margin: 0 auto 32mm;
-        padding: 16mm 0 0;
         transform: none;
         overflow: hidden;
     }
@@ -999,13 +987,9 @@
     }
 
     .education-certificate-footnote {
-        right: clamp(20px, 3vw, 42px);
-        bottom: clamp(8px, 1.8vw, 20px);
-        left: clamp(20px, 3vw, 42px);
         gap: 8px 18px;
         padding-top: 0;
         font-size: 0.76rem;
-        max-height: 36mm;
         overflow: hidden;
     }
 
