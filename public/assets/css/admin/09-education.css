@@ -2593,7 +2593,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     object-position: center;
     background: #fffdf8;
     pointer-events: none;
@@ -3085,6 +3085,10 @@
         display: none !important;
     }
 
+    .content > .panel:not(.education-certificate-sheet-panel) {
+        display: none !important;
+    }
+
     .admin-layout,
     .main-panel,
     .content,
@@ -3118,93 +3122,9 @@
     .education-certificate-background {
         width: 100%;
         height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
-    }
-
-    .education-certificate-copy {
-        gap: 10px;
-        width: calc(100% - 42mm);
-        max-height: 142mm;
-        margin: 0 auto 32mm;
-        padding: 16mm 0 0;
-        transform: none;
-        overflow: hidden;
-    }
-
-    .education-certificate-copy > span {
-        font-size: 30px;
-    }
-
-    .education-certificate-copy h2 {
-        font-size: 28px;
-        line-height: 1.12;
-    }
-
-    .education-certificate-nature {
-        margin-top: -8px;
-        font-size: 12px;
-    }
-
-    .education-certificate-copy > div {
-        width: min(100%, 238mm);
-        font-size: 20px;
-        line-height: 1.48;
-    }
-
-    .education-certificate-details {
-        max-width: 238mm;
-        font-size: 12px;
-        line-height: 1.35;
-    }
-
-    .education-certificate-copy footer {
-        width: min(560px, 100%);
-        padding-top: 12px;
-    }
-
-    .education-certificate-copy footer strong {
-        font-size: 18px;
-    }
-
-    .education-certificate-footnote {
-        right: 42px;
-        bottom: 20px;
-        left: 42px;
-        gap: 8px 18px;
-        padding-top: 0;
-        font-size: 11px;
-        line-height: 1.35;
-        max-height: 36mm;
-        overflow: hidden;
-    }
-
-    .education-certificate-footnote-text {
-        gap: 4px;
-    }
-
-    .education-certificate-institution,
-    .education-certificate-footnote-meta {
-        gap: 4px 14px;
-    }
-
-    .education-certificate-footnote-text p {
-        max-width: 760px;
-        font-size: 9px;
-    }
-
-    .education-certificate-qr {
-        width: 108px;
-        margin-top: 0;
-        font-size: 7px;
-    }
-
-    .education-certificate-qr img {
-        width: 78px;
-        height: 78px;
-        border-width: 4px;
-        border-radius: 6px;
     }
 
     .education-certificate-sheet:last-child {
@@ -3215,54 +3135,6 @@
     .education-certificate-program-sheet {
         break-before: page;
         page-break-before: always;
-        padding: 12mm;
-    }
-
-    .education-certificate-program-sheet.is-multi-column {
-        padding: 10mm;
-    }
-
-    .education-certificate-program-columns-3 .education-certificate-program-header,
-    .education-certificate-program-columns-4 .education-certificate-program-header {
-        padding-bottom: 9px;
-    }
-
-    .education-certificate-program-columns-3 .education-certificate-program-extra,
-    .education-certificate-program-columns-4 .education-certificate-program-extra {
-        padding: 7px 10px;
-        font-size: 0.74rem;
-        line-height: 1.25;
-    }
-
-    .education-certificate-program-summary {
-        gap: 7px;
-    }
-
-    .education-certificate-program-summary article {
-        padding: 7px 9px;
-        font-size: 0.68rem;
-        line-height: 1.22;
-    }
-
-    .education-certificate-program-summary h3 {
-        margin-bottom: 3px;
-        font-size: 0.66rem;
-    }
-
-    .education-certificate-program-columns-3 .education-certificate-program-module,
-    .education-certificate-program-columns-4 .education-certificate-program-module {
-        margin-bottom: 9px;
-    }
-
-    .education-certificate-program-columns-3 .education-certificate-program-module h3,
-    .education-certificate-program-columns-4 .education-certificate-program-module h3 {
-        margin-bottom: 4px;
-        font-size: 0.78rem;
-    }
-
-    .education-certificate-program-columns-3 .education-certificate-program-module ol,
-    .education-certificate-program-columns-4 .education-certificate-program-module ol {
-        padding-left: 14px;
     }
 }
 
