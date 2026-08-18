@@ -59,7 +59,7 @@ $courseCompetencies = array_values(array_filter(array_map('trim', preg_split('/\
 $courseResponsible = trim((string) ($course['certificate_responsible_name'] ?? '')) ?: trim((string) ($course['teacher_name'] ?? ''));
 $courseResponsibleCredential = trim((string) ($course['certificate_responsible_credential'] ?? ''));
 $hasProgramSummary = $courseObjectives !== '' || $courseCompetencies || $courseResponsible !== '' || $courseResponsibleCredential !== '';
-$hasCertificateProgramBack = $programExtra !== '' || $hasProgramSummary || !empty($certificateProgram);
+$hasCertificateProgramBack = $programBackground !== '' || $programExtra !== '' || $hasProgramSummary || !empty($certificateProgram);
 $verificationUrl = $isCertificatePreview ? url('/certificados') : url('/certificado/' . ($certificate['verification_code'] ?? ''));
 $verificationQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=' . rawurlencode($verificationUrl);
 $backUrl = $isRecognitionCertificate

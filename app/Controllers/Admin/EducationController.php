@@ -395,7 +395,7 @@ class EducationController
             'certificateInstitutions' => Education::certificateInstitutions(),
             'certificateSourceCourses' => $canManageView ? $this->certificateSourceCourses((int) $course['id']) : [],
             'certificateNameRequests' => $canManageView ? Education::certificateNameRequestsForCourse((int) $course['id']) : [],
-            'canPreviewCertificate' => $canManageView && (Auth::hasRole(['master', 'admin']) || Auth::can('certificates.issue') || Auth::can('certificates.manage')),
+            'canPreviewCertificate' => $canManageView,
             'isEnrollmentPending' => $isEnrollmentPending,
         ]);
     }
@@ -1883,7 +1883,7 @@ class EducationController
                 'certificate' => $certificate,
                 'certificateStatus' => ['frequency' => 0, 'minimum_frequency' => (int) ($course['certificate_min_frequency'] ?? 0)],
                 'certificateText' => $this->certificateText($course, $certificate, ['frequency' => 0]),
-                'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), []),
+                'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), Education::lessonsForCourse((int) $course['id'], 0, true)),
                 'certificatePeriod' => ['enrolled_at' => null, 'completed_at' => null, 'last_attendance_at' => null, 'issued_at' => $certificate['issued_at'] ?? null],
                 'isManagedCertificate' => $canViewManaged,
             ]);
@@ -1892,7 +1892,7 @@ class EducationController
 
         $course = $this->courseFromQuery();
         if (($_GET['preview'] ?? '') === 'certificate') {
-            if (!$this->canManageCourse($course) || (!Auth::hasRole(['master', 'admin']) && !Auth::can('certificates.issue') && !Auth::can('certificates.manage'))) {
+            if (!$this->canManageCourse($course)) {
                 http_response_code(403);
                 View::render('errors/403');
                 return;
