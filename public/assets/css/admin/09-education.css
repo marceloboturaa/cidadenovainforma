@@ -944,6 +944,7 @@
 .education-video-frame {
     width: 100%;
     max-width: 100%;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     border-radius: 8px;
     background: #111827;
@@ -953,8 +954,8 @@
 .education-video-frame video {
     display: block;
     width: 100%;
+    height: 100%;
     min-width: 0;
-    aspect-ratio: 16 / 9;
     border: 0;
 }
 
@@ -3857,6 +3858,30 @@
     color: #374151;
     line-height: 1.65;
     overflow-wrap: anywhere;
+}
+
+.education-block-text iframe,
+.education-block-text video,
+.education-lesson-description-text iframe,
+.education-lesson-description-text video {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 220px;
+    max-height: 520px;
+    aspect-ratio: 16 / 9;
+    margin: 18px 0;
+    border: 0;
+    border-radius: 8px;
+    background: #111827;
+}
+
+.education-block-text audio,
+.education-lesson-description-text audio {
+    display: block;
+    width: 100%;
+    margin: 18px 0;
 }
 
 .education-block-text.is-highlight,

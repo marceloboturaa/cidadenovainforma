@@ -63,7 +63,7 @@ $embed = function (?string $url): ?string {
         return null;
     }
 
-    if (preg_match('#(?:youtube\.com/(?:watch\?v=|embed/|live/)|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
+    if (preg_match('#(?:youtube\.com/(?:watch\?v=|embed/|live/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{6,})#', $url, $match)) {
         return 'https://www.youtube.com/embed/' . $match[1] . '?enablejsapi=1';
     }
 
