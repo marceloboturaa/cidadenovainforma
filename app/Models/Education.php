@@ -3298,6 +3298,45 @@ class Education
         return $stmt->fetchAll();
     }
 
+    public static function pendingFormResponsesForCorrection(?int $teacherUserId = null, int $limit = 12): array
+    {
+        self::ensureSchema();
+
+        $where = 'education_courses.active = 1
+            AND education_forms.active = 1
+            AND education_form_responses.correction_status = "pending"';
+        $params = [];
+
+        if ($teacherUserId) {
+            $where .= ' AND education_courses.teacher_user_id = :teacher_user_id';
+            $params['teacher_user_id'] = $teacherUserId;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT education_form_responses.id,
+                    education_form_responses.updated_at,
+                    education_forms.id AS form_id,
+                    education_forms.title AS form_title,
+                    education_forms.course_id,
+                    education_forms.lesson_id,
+                    education_courses.title AS course_title,
+                    education_lessons.title AS lesson_title,
+                    users.name AS student_name,
+                    users.email AS student_email
+             FROM education_form_responses
+             INNER JOIN education_forms ON education_forms.id = education_form_responses.form_id
+             INNER JOIN education_courses ON education_courses.id = education_forms.course_id
+             LEFT JOIN education_lessons ON education_lessons.id = education_forms.lesson_id
+             INNER JOIN users ON users.id = education_form_responses.user_id
+             WHERE ' . $where . '
+             ORDER BY education_form_responses.updated_at ASC, education_form_responses.created_at ASC
+             LIMIT ' . max(1, min(50, $limit))
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
     public static function findFormResponse(int $id): ?array
     {
         self::ensureSchema();

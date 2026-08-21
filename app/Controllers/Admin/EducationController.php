@@ -36,15 +36,20 @@ class EducationController
     {
         Middleware::auth();
         $user = current_user();
-        $canManage = $this->canManageAll();
-        $canViewAllCourses = $canManage || Auth::hasRole(['admin', 'admin-local']);
+        $canManageAll = $this->canManageAll();
+        $canManageEducation = $this->canManage();
+        $canViewAllCourses = $canManageAll || Auth::hasRole(['admin', 'admin-local']);
         $courses = $this->canTeach() && !$canViewAllCourses
             ? Education::coursesForManagement((int) $user['id'])
             : Education::coursesForUser((int) $user['id'], $canViewAllCourses);
+        $correctionTeacherScope = $canManageAll ? null : ($this->canTeach() ? (int) $user['id'] : null);
 
         View::render('admin/education/index', [
             'courses' => $courses,
-            'canManage' => $this->canManage(),
+            'canManage' => $canManageEducation,
+            'pendingFormResponses' => $canManageEducation
+                ? Education::pendingFormResponsesForCorrection($correctionTeacherScope)
+                : [],
         ]);
     }
 

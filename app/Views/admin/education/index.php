@@ -8,6 +8,45 @@
     <?php endif; ?>
 </div>
 
+<?php if ($canManage): ?>
+    <?php $pendingFormResponses = $pendingFormResponses ?? []; ?>
+    <section class="panel education-correction-queue">
+        <div class="section-heading">
+            <div>
+                <p>Espaço do professor</p>
+                <h2>Formulários para corrigir</h2>
+            </div>
+            <span><?= e((string) count($pendingFormResponses)) ?> pendente(s)</span>
+        </div>
+        <div class="education-correction-queue-list">
+            <?php foreach ($pendingFormResponses as $response): ?>
+                <?php
+                    $correctionUrl = !empty($response['lesson_id'])
+                        ? url('/admin/education/lesson?id=' . $response['lesson_id'] . '#lesson-forms')
+                        : url('/admin/education/course?id=' . $response['course_id'] . '#course-forms');
+                ?>
+                <article>
+                    <div>
+                        <strong><?= e($response['form_title'] ?? 'Formulário') ?></strong>
+                        <span><?= e($response['student_name'] ?? 'Estudante') ?><?= !empty($response['student_email']) ? ' - ' . e($response['student_email']) : '' ?></span>
+                        <small>
+                            <?= e($response['course_title'] ?? 'Curso') ?>
+                            <?= !empty($response['lesson_title']) ? ' / ' . e($response['lesson_title']) : '' ?>
+                        </small>
+                    </div>
+                    <div class="education-correction-queue-actions">
+                        <span class="state-pill is-muted"><?= e($response['updated_at'] ?? '') ?></span>
+                        <a class="btn btn-sm btn-primary icon-btn" href="<?= e($correctionUrl) ?>"><i class="bi bi-ui-checks" aria-hidden="true"></i>Corrigir</a>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+            <?php if (!$pendingFormResponses): ?>
+                <div class="empty-state">Nenhum formulário pendente de correção.</div>
+            <?php endif; ?>
+        </div>
+    </section>
+<?php endif; ?>
+
 <section class="education-grid">
     <?php foreach ($courses as $course): ?>
         <?php
