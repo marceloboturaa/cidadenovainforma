@@ -4623,10 +4623,37 @@
     align-items: center;
 }
 
-.education-correction-more {
+.education-correction-pagination {
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
     justify-content: center;
-    padding: 4px 0;
+    padding: 8px 0 0;
+}
+
+.education-correction-pagination span {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.education-correction-pagination a {
+    min-width: 34px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ink);
+    font-weight: 900;
+    text-align: center;
+    text-decoration: none;
+}
+
+.education-correction-pagination a.active {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: #ffffff;
 }
 
 @media (max-width: 760px) {

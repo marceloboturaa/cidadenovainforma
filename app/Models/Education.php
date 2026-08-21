@@ -3346,23 +3346,11 @@ class Education
         return $stmt->fetchAll();
     }
 
-    public static function formResponsesForCorrection(?int $teacherUserId = null, string $status = 'pending', int $limit = 80): array
+    public static function formResponsesForCorrection(?int $teacherUserId = null, string $status = 'pending', int $limit = 80, int $offset = 0): array
     {
         self::ensureSchema();
 
-        $where = 'education_courses.active = 1
-            AND education_forms.active = 1';
-        $params = [];
-
-        if ($teacherUserId) {
-            $where .= ' AND education_courses.teacher_user_id = :teacher_user_id';
-            $params['teacher_user_id'] = $teacherUserId;
-        }
-
-        if ($status !== 'all') {
-            $where .= ' AND education_form_responses.correction_status = :status';
-            $params['status'] = self::correctionStatus($status);
-        }
+        [$where, $params] = self::formCorrectionWhere($teacherUserId, $status);
 
         $stmt = Database::connection()->prepare(
             'SELECT education_form_responses.id,
@@ -3398,11 +3386,48 @@ class Education
                 END,
                 education_form_responses.updated_at ASC,
                 education_form_responses.created_at ASC
-             LIMIT ' . max(1, min(120, $limit))
+             LIMIT ' . max(1, min(120, $limit)) . '
+             OFFSET ' . max(0, $offset)
         );
         $stmt->execute($params);
 
         return $stmt->fetchAll();
+    }
+
+    public static function countFormResponsesForCorrection(?int $teacherUserId = null, string $status = 'pending'): int
+    {
+        self::ensureSchema();
+        [$where, $params] = self::formCorrectionWhere($teacherUserId, $status);
+
+        $stmt = Database::connection()->prepare(
+            'SELECT COUNT(*)
+             FROM education_form_responses
+             INNER JOIN education_forms ON education_forms.id = education_form_responses.form_id
+             INNER JOIN education_courses ON education_courses.id = education_forms.course_id
+             WHERE ' . $where
+        );
+        $stmt->execute($params);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    private static function formCorrectionWhere(?int $teacherUserId, string $status): array
+    {
+        $where = 'education_courses.active = 1
+            AND education_forms.active = 1';
+        $params = [];
+
+        if ($teacherUserId) {
+            $where .= ' AND education_courses.teacher_user_id = :teacher_user_id';
+            $params['teacher_user_id'] = $teacherUserId;
+        }
+
+        if ($status !== 'all') {
+            $where .= ' AND education_form_responses.correction_status = :status';
+            $params['status'] = self::correctionStatus($status);
+        }
+
+        return [$where, $params];
     }
 
     public static function findFormResponse(int $id): ?array

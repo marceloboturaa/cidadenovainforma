@@ -3,7 +3,8 @@ $responses = $responses ?? [];
 $responseDetails = $responseDetails ?? [];
 $status = $status ?? 'pending';
 $page = max(1, (int) ($page ?? 1));
-$hasMore = !empty($hasMore);
+$totalPages = max(1, (int) ($totalPages ?? 1));
+$totalResponses = max(0, (int) ($totalResponses ?? 0));
 $statusLabels = [
     'pending' => 'Pendente',
     'corrected' => 'Corrigido',
@@ -118,10 +119,13 @@ $statusFilterLabels = [
             <div class="empty-state">Nenhum formulário encontrado neste filtro.</div>
         <?php endif; ?>
 
-        <?php if ($status === 'all' && $hasMore): ?>
-            <div class="education-correction-more">
-                <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/form-corrections?status=all&page=' . ($page + 1))) ?>"><i class="bi bi-plus-circle" aria-hidden="true"></i>Mostrar mais 10</a>
-            </div>
+        <?php if ($status === 'all' && $totalPages > 1): ?>
+            <nav class="education-correction-pagination" aria-label="Paginação das correções">
+                <span><?= e((string) $totalResponses) ?> formulário(s)</span>
+                <?php for ($pageNumber = 1; $pageNumber <= $totalPages; $pageNumber++): ?>
+                    <a class="<?= $pageNumber === $page ? 'active' : '' ?>" href="<?= e(url('/admin/education/form-corrections?status=all&page=' . $pageNumber)) ?>"><?= e((string) $pageNumber) ?></a>
+                <?php endfor; ?>
+            </nav>
         <?php endif; ?>
     </div>
 </section>

@@ -59,14 +59,13 @@ class EducationController
             $status = 'pending';
         }
 
-        $page = max(1, filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1);
-        $limit = $status === 'all' ? $page * 10 : 40;
         $teacherUserId = $this->canManageAll() ? null : (int) (current_user()['id'] ?? 0);
-        $responses = Education::formResponsesForCorrection($teacherUserId, $status, $limit + 1);
-        $hasMore = count($responses) > $limit;
-        if ($hasMore) {
-            array_pop($responses);
-        }
+        $perPage = $status === 'all' ? 5 : 40;
+        $totalResponses = $status === 'all' ? Education::countFormResponsesForCorrection($teacherUserId, $status) : 0;
+        $totalPages = $status === 'all' ? max(1, (int) ceil($totalResponses / $perPage)) : 1;
+        $page = max(1, min(filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1, $totalPages));
+        $offset = $status === 'all' ? ($page - 1) * $perPage : 0;
+        $responses = Education::formResponsesForCorrection($teacherUserId, $status, $perPage, $offset);
         $questionsByForm = Education::formQuestionsForForms(array_column($responses, 'form_id'));
         $answersByResponse = Education::formAnswersForResponses(array_column($responses, 'id'));
         $responseDetails = [];
@@ -84,7 +83,8 @@ class EducationController
             'responseDetails' => $responseDetails,
             'status' => $status,
             'page' => $page,
-            'hasMore' => $hasMore,
+            'totalPages' => $totalPages,
+            'totalResponses' => $totalResponses,
         ]);
     }
 
