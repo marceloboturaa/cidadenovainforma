@@ -41,57 +41,6 @@
     line-height: 1.25;
 }
 
-.education-correction-queue {
-    margin-bottom: 18px;
-}
-
-.education-correction-queue-list {
-    display: grid;
-    gap: 10px;
-}
-
-.education-correction-queue-list article {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 14px;
-    align-items: center;
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #ffffff;
-}
-
-.education-correction-queue-list article > div:first-child {
-    display: grid;
-    gap: 4px;
-}
-
-.education-correction-queue-list strong {
-    color: var(--text);
-}
-
-.education-correction-queue-list span,
-.education-correction-queue-list small {
-    color: var(--muted);
-}
-
-.education-correction-queue-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-end;
-}
-
-@media (max-width: 700px) {
-    .education-correction-queue-list article {
-        grid-template-columns: 1fr;
-    }
-
-    .education-correction-queue-actions {
-        justify-content: space-between;
-    }
-}
-
 .education-course-body p {
     margin: 0;
     color: var(--muted);
@@ -4547,6 +4496,148 @@
 
 .education-correction-note p {
     margin: 0;
+}
+
+.education-form-corrections-panel {
+    display: grid;
+    gap: 16px;
+}
+
+.education-correction-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.education-correction-tabs a {
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--muted);
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.education-correction-tabs a.active {
+    border-color: var(--brand);
+    background: #fff1f2;
+    color: var(--brand);
+}
+
+.education-correction-list {
+    display: grid;
+    gap: 14px;
+}
+
+.education-correction-card {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.education-correction-card.status-pending {
+    border-left: 4px solid #f59e0b;
+}
+
+.education-correction-card.status-redo {
+    border-left: 4px solid #2563eb;
+}
+
+.education-correction-card.status-corrected {
+    border-left: 4px solid #16a34a;
+}
+
+.education-correction-card header,
+.education-correction-student,
+.education-correction-form-footer {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.education-correction-card h2 {
+    margin: 4px 0;
+    color: var(--ink);
+    font-size: 1.1rem;
+}
+
+.education-correction-card header p,
+.education-correction-student span,
+.education-correction-meta small,
+.education-correction-form-footer small {
+    color: var(--muted);
+}
+
+.education-correction-meta {
+    display: grid;
+    gap: 6px;
+    justify-items: end;
+    min-width: 160px;
+}
+
+.education-correction-student {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.education-correction-student div,
+.education-correction-answers,
+.education-correction-answers section {
+    display: grid;
+    gap: 6px;
+}
+
+.education-correction-answers {
+    gap: 10px;
+}
+
+.education-correction-answers section {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.education-correction-answers strong {
+    color: var(--ink);
+}
+
+.education-correction-answers p {
+    margin: 0;
+    color: #374151;
+    line-height: 1.55;
+}
+
+.education-correction-panel-form {
+    grid-template-columns: minmax(160px, 0.6fr) minmax(160px, 0.6fr);
+}
+
+.education-correction-form-footer {
+    align-items: center;
+}
+
+@media (max-width: 760px) {
+    .education-correction-card header,
+    .education-correction-student,
+    .education-correction-form-footer {
+        display: grid;
+    }
+
+    .education-correction-meta {
+        justify-items: start;
+        min-width: 0;
+    }
+
+    .education-correction-panel-form {
+        grid-template-columns: 1fr;
+    }
 }
 
 .education-assignment-form {

@@ -3298,13 +3298,12 @@ class Education
         return $stmt->fetchAll();
     }
 
-    public static function pendingFormResponsesForCorrection(?int $teacherUserId = null, int $limit = 12): array
+    public static function formResponsesForCorrection(?int $teacherUserId = null, string $status = 'pending', int $limit = 80): array
     {
         self::ensureSchema();
 
         $where = 'education_courses.active = 1
-            AND education_forms.active = 1
-            AND education_form_responses.correction_status = "pending"';
+            AND education_forms.active = 1';
         $params = [];
 
         if ($teacherUserId) {
@@ -3312,25 +3311,46 @@ class Education
             $params['teacher_user_id'] = $teacherUserId;
         }
 
+        if ($status !== 'all') {
+            $where .= ' AND education_form_responses.correction_status = :status';
+            $params['status'] = self::correctionStatus($status);
+        }
+
         $stmt = Database::connection()->prepare(
             'SELECT education_form_responses.id,
+                    education_form_responses.form_id,
+                    education_form_responses.user_id,
+                    education_form_responses.correction_status,
+                    education_form_responses.grade,
+                    education_form_responses.feedback,
+                    education_form_responses.created_at,
                     education_form_responses.updated_at,
-                    education_forms.id AS form_id,
+                    education_form_responses.corrected_at,
                     education_forms.title AS form_title,
+                    education_forms.description AS form_description,
                     education_forms.course_id,
                     education_forms.lesson_id,
                     education_courses.title AS course_title,
                     education_lessons.title AS lesson_title,
                     users.name AS student_name,
-                    users.email AS student_email
+                    users.email AS student_email,
+                    corrector.name AS corrector_name
              FROM education_form_responses
              INNER JOIN education_forms ON education_forms.id = education_form_responses.form_id
              INNER JOIN education_courses ON education_courses.id = education_forms.course_id
              LEFT JOIN education_lessons ON education_lessons.id = education_forms.lesson_id
              INNER JOIN users ON users.id = education_form_responses.user_id
+             LEFT JOIN users AS corrector ON corrector.id = education_form_responses.corrected_by
              WHERE ' . $where . '
-             ORDER BY education_form_responses.updated_at ASC, education_form_responses.created_at ASC
-             LIMIT ' . max(1, min(50, $limit))
+             ORDER BY
+                CASE education_form_responses.correction_status
+                    WHEN "pending" THEN 1
+                    WHEN "redo" THEN 2
+                    ELSE 3
+                END,
+                education_form_responses.updated_at ASC,
+                education_form_responses.created_at ASC
+             LIMIT ' . max(1, min(120, $limit))
         );
         $stmt->execute($params);
 

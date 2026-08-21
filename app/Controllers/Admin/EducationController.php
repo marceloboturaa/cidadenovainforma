@@ -42,14 +42,39 @@ class EducationController
         $courses = $this->canTeach() && !$canViewAllCourses
             ? Education::coursesForManagement((int) $user['id'])
             : Education::coursesForUser((int) $user['id'], $canViewAllCourses);
-        $correctionTeacherScope = $canManageAll ? null : ($this->canTeach() ? (int) $user['id'] : null);
 
         View::render('admin/education/index', [
             'courses' => $courses,
             'canManage' => $canManageEducation,
-            'pendingFormResponses' => $canManageEducation
-                ? Education::pendingFormResponsesForCorrection($correctionTeacherScope)
-                : [],
+        ]);
+    }
+
+    public function formCorrections(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+
+        $status = (string) ($_GET['status'] ?? 'pending');
+        if (!in_array($status, ['pending', 'corrected', 'redo', 'all'], true)) {
+            $status = 'pending';
+        }
+
+        $teacherUserId = $this->canManageAll() ? null : (int) (current_user()['id'] ?? 0);
+        $responses = Education::formResponsesForCorrection($teacherUserId, $status, 80);
+        $responseDetails = [];
+        foreach ($responses as $response) {
+            $formId = (int) ($response['form_id'] ?? 0);
+            $responseId = (int) ($response['id'] ?? 0);
+            $responseDetails[$responseId] = [
+                'questions' => $formId > 0 ? Education::formQuestions($formId) : [],
+                'answers' => Education::formAnswersForResponse($responseId),
+            ];
+        }
+
+        View::render('admin/education/form-corrections', [
+            'responses' => $responses,
+            'responseDetails' => $responseDetails,
+            'status' => $status,
         ]);
     }
 
@@ -1461,6 +1486,11 @@ class EducationController
         );
 
         Session::flash('success', 'Correcao do formulario salva.');
+        $returnTo = (string) ($_POST['return_to'] ?? '');
+        if (str_starts_with($returnTo, '/admin/education/')) {
+            redirect($returnTo);
+        }
+
         redirect($this->formRedirect($response));
     }
 
