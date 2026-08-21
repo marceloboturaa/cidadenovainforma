@@ -54,20 +54,22 @@ class EducationController
         Middleware::auth();
         $this->authorizeManage();
 
-        $status = (string) ($_GET['status'] ?? 'all');
+        $status = (string) ($_GET['status'] ?? 'pending');
         if (!in_array($status, ['pending', 'corrected', 'redo', 'all'], true)) {
-            $status = 'all';
+            $status = 'pending';
         }
 
         $teacherUserId = $this->canManageAll() ? null : (int) (current_user()['id'] ?? 0);
-        $responses = Education::formResponsesForCorrection($teacherUserId, $status, 80);
+        $responses = Education::formResponsesForCorrection($teacherUserId, $status, 40);
+        $questionsByForm = Education::formQuestionsForForms(array_column($responses, 'form_id'));
+        $answersByResponse = Education::formAnswersForResponses(array_column($responses, 'id'));
         $responseDetails = [];
         foreach ($responses as $response) {
             $formId = (int) ($response['form_id'] ?? 0);
             $responseId = (int) ($response['id'] ?? 0);
             $responseDetails[$responseId] = [
-                'questions' => $formId > 0 ? Education::formQuestions($formId) : [],
-                'answers' => Education::formAnswersForResponse($responseId),
+                'questions' => $questionsByForm[$formId] ?? [],
+                'answers' => $answersByResponse[$responseId] ?? [],
             ];
         }
 

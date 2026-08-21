@@ -110,7 +110,6 @@
                             <a class="<?= $currentPath === '/admin/education/recognitions' ? 'active' : '' ?>" href="<?= e(url('/admin/education/recognitions')) ?>" title="Reconhecimentos"><i class="bi bi-stars" aria-hidden="true"></i><span>Reconhecimentos</span></a>
                         <?php endif; ?>
                         <?php if ($canManageEducationCourses): ?>
-                            <a class="<?= str_starts_with($currentPath, '/admin/education/form-corrections') ? 'active' : '' ?>" href="<?= e(url('/admin/education/form-corrections')) ?>" title="Correções"><i class="bi bi-ui-checks" aria-hidden="true"></i><span>Correções</span></a>
                             <a class="<?= str_starts_with($currentPath, '/admin/education/manage') ? 'active' : '' ?>" href="<?= e(url('/admin/education/manage')) ?>" title="Escola"><i class="bi bi-house-door" aria-hidden="true"></i><span>Escola</span></a>
                         <?php endif; ?>
                     </div>

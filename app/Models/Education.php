@@ -3280,6 +3280,54 @@ class Education
         return $answers;
     }
 
+    public static function formQuestionsForForms(array $formIds): array
+    {
+        $formIds = array_values(array_unique(array_filter(array_map('intval', $formIds))));
+        if (!$formIds) {
+            return [];
+        }
+
+        self::ensureSchema();
+        $placeholders = implode(',', array_fill(0, count($formIds), '?'));
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM education_form_questions
+             WHERE form_id IN (' . $placeholders . ')
+             ORDER BY form_id ASC, sort_order ASC, id ASC'
+        );
+        $stmt->execute($formIds);
+
+        $grouped = [];
+        foreach ($stmt->fetchAll() as $question) {
+            $grouped[(int) $question['form_id']][] = $question;
+        }
+
+        return $grouped;
+    }
+
+    public static function formAnswersForResponses(array $responseIds): array
+    {
+        $responseIds = array_values(array_unique(array_filter(array_map('intval', $responseIds))));
+        if (!$responseIds) {
+            return [];
+        }
+
+        self::ensureSchema();
+        $placeholders = implode(',', array_fill(0, count($responseIds), '?'));
+        $stmt = Database::connection()->prepare(
+            'SELECT response_id, question_id, answer
+             FROM education_form_answers
+             WHERE response_id IN (' . $placeholders . ')'
+        );
+        $stmt->execute($responseIds);
+
+        $grouped = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $grouped[(int) $row['response_id']][(int) $row['question_id']] = $row['answer'];
+        }
+
+        return $grouped;
+    }
+
     public static function formResponses(int $formId): array
     {
         self::ensureSchema();
