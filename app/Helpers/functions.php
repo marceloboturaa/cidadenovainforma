@@ -333,13 +333,40 @@ function clean_inline_style(string $style): string
 {
     $safe = [];
     $allowed = [
+        'align-items',
+        'background',
         'background-color',
+        'border',
+        'border-bottom',
+        'border-left',
+        'border-radius',
+        'border-right',
+        'border-top',
+        'box-shadow',
         'color',
+        'display',
         'font-size',
+        'font-weight',
+        'gap',
+        'grid-template-columns',
+        'justify-content',
         'letter-spacing',
         'line-height',
+        'margin',
         'margin-bottom',
+        'margin-left',
+        'margin-right',
+        'margin-top',
+        'max-width',
+        'min-height',
+        'padding',
+        'padding-bottom',
+        'padding-left',
+        'padding-right',
+        'padding-top',
         'text-align',
+        'text-transform',
+        'width',
     ];
 
     foreach (explode(';', $style) as $declaration) {
@@ -357,10 +384,21 @@ function clean_inline_style(string $style): string
 
         $isSafeValue = match ($property) {
             'color', 'background-color' => (bool) preg_match('/^(#[0-9a-f]{3,8}|rgba?\([0-9.,\s%]+\)|[a-z]+)$/i', $value),
-            'font-size', 'letter-spacing' => (bool) preg_match('/^-?\d+(\.\d+)?(px|em|rem|%)$/i', $value),
+            'background' => (bool) preg_match('/^(#[0-9a-f]{3,8}|rgba?\([0-9.,\s%]+\)|[a-z]+)(\s+.*)?$/i', $value),
+            'border', 'border-top', 'border-right', 'border-bottom', 'border-left' => (bool) preg_match('/^\d+(\.\d+)?(px|em|rem)?\s+(solid|dashed|dotted)\s+(#[0-9a-f]{3,8}|rgba?\([0-9.,\s%]+\)|[a-z]+)$/i', $value),
+            'box-shadow' => (bool) preg_match('/^(none|(?:inset\s+)?-?\d+(\.\d+)?px\s+-?\d+(\.\d+)?px\s+\d+(\.\d+)?px(?:\s+\d+(\.\d+)?px)?\s+(#[0-9a-f]{3,8}|rgba?\([0-9.,\s%]+\)|[a-z]+))$/i', $value),
+            'display' => in_array(strtolower($value), ['block', 'inline-block', 'flex', 'grid'], true),
+            'align-items' => in_array(strtolower($value), ['start', 'center', 'end', 'stretch', 'flex-start', 'flex-end'], true),
+            'justify-content' => in_array(strtolower($value), ['start', 'center', 'end', 'space-between', 'space-around', 'space-evenly', 'flex-start', 'flex-end'], true),
+            'font-size', 'letter-spacing', 'gap', 'width', 'max-width', 'min-height',
+            'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+            'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+            'border-radius' => (bool) preg_match('/^(auto|0|-?\d+(\.\d+)?(px|em|rem|%))(?:\s+(auto|0|-?\d+(\.\d+)?(px|em|rem|%))){0,3}$/i', $value),
+            'font-weight' => (bool) preg_match('/^(normal|bold|[1-9]00)$/i', $value),
+            'grid-template-columns' => (bool) preg_match('/^[a-z0-9\s().,%-]+$/i', $value) && !preg_match('/[^a-z0-9\s().,%-]/i', $value),
             'line-height' => (bool) preg_match('/^\d+(\.\d+)?(px|em|rem|%)?$/i', $value),
-            'margin-bottom' => (bool) preg_match('/^\d+(\.\d+)?(px|em|rem|%)?$/i', $value),
             'text-align' => in_array(strtolower($value), ['left', 'center', 'right', 'justify'], true),
+            'text-transform' => in_array(strtolower($value), ['none', 'uppercase', 'lowercase', 'capitalize'], true),
             default => false,
         };
 
@@ -370,6 +408,30 @@ function clean_inline_style(string $style): string
     }
 
     return implode(';', $safe);
+}
+
+function clean_html_classes(string $classList, array $allowedClasses = [], bool $allowCustomClasses = false): array
+{
+    $classes = preg_split('/\s+/', trim($classList)) ?: [];
+    $safe = [];
+
+    foreach ($classes as $className) {
+        $className = trim($className);
+        if ($className === '') {
+            continue;
+        }
+
+        if (in_array($className, $allowedClasses, true)) {
+            $safe[] = $className;
+            continue;
+        }
+
+        if ($allowCustomClasses && preg_match('/^[a-z][a-z0-9_-]{1,40}$/i', $className)) {
+            $safe[] = $className;
+        }
+    }
+
+    return array_values(array_unique(array_slice($safe, 0, 12)));
 }
 
 function clean_latex_formula_markup(string $formula): string
@@ -410,11 +472,8 @@ function clean_article_html(string $html): string
 {
     $html = trim($html);
     $html = clean_escaped_article_markup($html);
-    $html = preg_replace('/<\/div>\s*<div([^>]*)>/i', '</p><p$1>', $html) ?? $html;
-    $html = preg_replace('/<div([^>]*)>/i', '<p$1>', $html) ?? $html;
-    $html = preg_replace('/<\/div>/i', '</p>', $html) ?? $html;
 
-    $allowed = '<p><br><strong><b><em><i><u><h2><h3><h4><blockquote><ul><ol><li><a><img><iframe><video><audio><span><table><thead><tbody><tr><th><td><hr><pre><code><figure><figcaption>';
+    $allowed = '<div><p><br><strong><b><em><i><u><h2><h3><h4><blockquote><ul><ol><li><a><img><iframe><video><audio><span><table><thead><tbody><tr><th><td><hr><pre><code><figure><figcaption>';
     $html = strip_tags($html, $allowed);
 
     $html = preg_replace('/\son[a-z]+\s*=\s*("|\').*?\1/i', '', $html) ?? $html;
@@ -438,23 +497,21 @@ function clean_article_html(string $html): string
     $html = preg_replace_callback('/<span\s+([^>]*)>/i', function (array $matches): string {
         preg_match('/class\s*=\s*("|\')([^"\']+)\1/i', $matches[1], $class);
         preg_match('/style\s*=\s*("|\')([^"\']+)\1/i', $matches[1], $style);
-        $classes = preg_split('/\s+/', trim($class[2] ?? '')) ?: [];
         $allowedClasses = ['text-color-ink', 'text-color-gray', 'text-color-red', 'text-color-orange', 'text-color-gold', 'text-color-green', 'text-color-teal', 'text-color-blue'];
-        $safeClasses = array_values(array_intersect($classes, $allowedClasses));
+        $safeClasses = clean_html_classes($class[2] ?? '', $allowedClasses, true);
         $safeStyle = clean_inline_style($style[2] ?? '');
         $styleAttribute = $safeStyle !== '' ? ' style="' . e($safeStyle) . '"' : '';
 
         return '<span' . ($safeClasses ? ' class="' . e(implode(' ', $safeClasses)) . '"' : '') . $styleAttribute . '>';
     }, $html) ?? $html;
 
-    $html = preg_replace_callback('/<(p|h2|h3|h4|blockquote|li|td|th)\s+([^>]*)>/i', function (array $matches): string {
+    $html = preg_replace_callback('/<(div|p|h2|h3|h4|blockquote|li|td|th)\s+([^>]*)>/i', function (array $matches): string {
         $tag = strtolower($matches[1]);
         preg_match('/class\s*=\s*("|\')([^"\']+)\1/i', $matches[2], $class);
         preg_match('/style\s*=\s*("|\')([^"\']+)\1/i', $matches[2], $style);
         preg_match('/(?:text-align\s*:\s*|align\s*=\s*("|\')?)(left|center|right|justify)/i', $matches[2], $align);
-        $classes = preg_split('/\s+/', trim($class[2] ?? '')) ?: [];
         $allowedClasses = ['text-align-left', 'text-align-center', 'text-align-right', 'text-align-justify'];
-        $safeClasses = array_values(array_intersect($classes, $allowedClasses));
+        $safeClasses = clean_html_classes($class[2] ?? '', $allowedClasses, true);
 
         if (!empty($align[2])) {
             $safeClasses[] = 'text-align-' . strtolower($align[2]);

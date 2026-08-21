@@ -462,6 +462,8 @@
         relative_urls: false,
         remove_script_host: false,
         entity_encoding: 'raw',
+        extended_valid_elements: 'div[class|style],span[class|style],p[class|style],h2[class|style],h3[class|style],h4[class|style],li[class|style],td[class|style],th[class|style]',
+        valid_children: '+div[div|h2|h3|h4|p|ul|ol|li|span|strong|em|a|img|table|figure|blockquote|hr]',
         plugins: 'advlist autoresize charmap code fullscreen image link lists media preview searchreplace table visualblocks wordcount',
         toolbar: [
             'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor',
