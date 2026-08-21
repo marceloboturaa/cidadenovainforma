@@ -194,8 +194,8 @@ $router->post('/admin/education/recognition-certificate', [EducationController::
 $router->post('/admin/education/recognition-certificate/update', [EducationController::class, 'updateRecognitionCertificate']);
 $router->post('/admin/education/recognition-certificate/status', [EducationController::class, 'recognitionCertificateStatus']);
 $router->post('/admin/education/certificate/status', [EducationController::class, 'certificateStatus']);
-$router->get('/admin/education/manage', [EducationController::class, 'manage']);
 $router->get('/admin/education/form-corrections', [EducationController::class, 'formCorrections']);
+$router->get('/admin/education/manage', [EducationController::class, 'manage']);
 $router->post('/admin/education/course', [EducationController::class, 'storeCourse']);
 $router->post('/admin/education/course/update', [EducationController::class, 'updateCourse']);
 $router->post('/admin/education/course/delete', [EducationController::class, 'deleteCourse']);

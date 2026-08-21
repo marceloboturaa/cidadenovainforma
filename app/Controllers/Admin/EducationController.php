@@ -54,9 +54,9 @@ class EducationController
         Middleware::auth();
         $this->authorizeManage();
 
-        $status = (string) ($_GET['status'] ?? 'pending');
+        $status = (string) ($_GET['status'] ?? 'all');
         if (!in_array($status, ['pending', 'corrected', 'redo', 'all'], true)) {
-            $status = 'pending';
+            $status = 'all';
         }
 
         $teacherUserId = $this->canManageAll() ? null : (int) (current_user()['id'] ?? 0);
@@ -1463,7 +1463,6 @@ class EducationController
     public function gradeFormResponse(): void
     {
         Middleware::auth();
-        $this->authorizeManage();
         $this->validateCsrf('/admin/education');
 
         $id = filter_input(INPUT_GET, 'response_id', FILTER_VALIDATE_INT);
