@@ -2,6 +2,8 @@
 $responses = $responses ?? [];
 $responseDetails = $responseDetails ?? [];
 $status = $status ?? 'pending';
+$page = max(1, (int) ($page ?? 1));
+$hasMore = !empty($hasMore);
 $statusLabels = [
     'pending' => 'Pendente',
     'corrected' => 'Corrigido',
@@ -44,7 +46,7 @@ $statusFilterLabels = [
                 $courseUrl = !empty($response['lesson_id'])
                     ? url('/admin/education/lesson?id=' . $response['lesson_id'] . '#lesson-forms')
                     : url('/admin/education/course?id=' . $response['course_id'] . '#course-forms');
-                $returnTo = '/admin/education/form-corrections?status=' . $status . '#response-' . $responseId;
+                $returnTo = '/admin/education/form-corrections?status=' . $status . ($status === 'all' ? '&page=' . $page : '') . '#response-' . $responseId;
             ?>
             <article class="education-correction-card status-<?= e($currentStatus) ?>" id="response-<?= e((string) $responseId) ?>">
                 <header>
@@ -114,6 +116,12 @@ $statusFilterLabels = [
 
         <?php if (!$responses): ?>
             <div class="empty-state">Nenhum formulário encontrado neste filtro.</div>
+        <?php endif; ?>
+
+        <?php if ($status === 'all' && $hasMore): ?>
+            <div class="education-correction-more">
+                <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/form-corrections?status=all&page=' . ($page + 1))) ?>"><i class="bi bi-plus-circle" aria-hidden="true"></i>Mostrar mais 10</a>
+            </div>
         <?php endif; ?>
     </div>
 </section>

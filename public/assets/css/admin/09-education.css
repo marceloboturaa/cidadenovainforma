@@ -4623,6 +4623,12 @@
     align-items: center;
 }
 
+.education-correction-more {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+}
+
 @media (max-width: 760px) {
     .education-correction-card header,
     .education-correction-student,

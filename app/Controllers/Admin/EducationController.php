@@ -59,8 +59,14 @@ class EducationController
             $status = 'pending';
         }
 
+        $page = max(1, filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1);
+        $limit = $status === 'all' ? $page * 10 : 40;
         $teacherUserId = $this->canManageAll() ? null : (int) (current_user()['id'] ?? 0);
-        $responses = Education::formResponsesForCorrection($teacherUserId, $status, 40);
+        $responses = Education::formResponsesForCorrection($teacherUserId, $status, $limit + 1);
+        $hasMore = count($responses) > $limit;
+        if ($hasMore) {
+            array_pop($responses);
+        }
         $questionsByForm = Education::formQuestionsForForms(array_column($responses, 'form_id'));
         $answersByResponse = Education::formAnswersForResponses(array_column($responses, 'id'));
         $responseDetails = [];
@@ -77,6 +83,8 @@ class EducationController
             'responses' => $responses,
             'responseDetails' => $responseDetails,
             'status' => $status,
+            'page' => $page,
+            'hasMore' => $hasMore,
         ]);
     }
 
