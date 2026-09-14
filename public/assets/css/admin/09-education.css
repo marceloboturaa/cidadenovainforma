@@ -2608,6 +2608,20 @@
     user-select: none;
 }
 
+.education-certificate-ready-image {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    background: #ffffff;
+    pointer-events: none;
+    user-select: none;
+}
+
 .education-certificate-copy {
     position: absolute;
     top: var(--certificate-write-top);
@@ -3139,6 +3153,14 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .education-certificate-ready-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
     }

@@ -179,6 +179,7 @@ class EducationController
         try {
             $certificate = Education::issueRecognitionCertificate(array_merge($_POST, [
                 'certificate_background' => $this->certificateBackgroundFromRequest(null, 'certificate_background', 'certificate_background_upload'),
+                'certificate_ready_image' => $this->certificateBackgroundFromRequest(null, 'certificate_ready_image', 'certificate_ready_image_upload', 'certificado pronto'),
                 'certificate_program_background' => $this->certificateBackgroundFromRequest(null, 'certificate_program_background', 'certificate_program_background_upload'),
                 'issued_by' => (int) (current_user()['id'] ?? 0),
             ]));
@@ -212,6 +213,7 @@ class EducationController
 
         Education::updateRecognitionCertificate($certificateId, array_merge($_POST, [
             'certificate_background' => $this->certificateBackgroundFromRequest($recognition['certificate_background'] ?? null, 'certificate_background', 'certificate_background_upload'),
+            'certificate_ready_image' => $this->certificateBackgroundFromRequest($recognition['certificate_ready_image'] ?? null, 'certificate_ready_image', 'certificate_ready_image_upload', 'certificado pronto'),
             'certificate_program_background' => $this->certificateBackgroundFromRequest($recognition['certificate_program_background'] ?? null, 'certificate_program_background', 'certificate_program_background_upload'),
             'updated_by' => (int) (current_user()['id'] ?? 0) ?: null,
         ]));
@@ -1823,8 +1825,9 @@ class EducationController
 
         $title = trim((string) ($_POST['certificate_title'] ?? ''));
         $text = trim((string) ($_POST['certificate_text'] ?? ''));
-        if (!empty($_POST['certificate_enabled']) && ($title === '' || $text === '')) {
-            Session::flash('error', 'Informe o título e o texto do certificado para liberar a emissão.');
+        $readyImage = $this->certificateBackgroundFromRequest($course['certificate_ready_image'] ?? null, 'certificate_ready_image', 'certificate_ready_image_upload', 'certificado pronto');
+        if (!empty($_POST['certificate_enabled']) && trim((string) $readyImage) === '' && ($title === '' || $text === '')) {
+            Session::flash('error', 'Informe o título e o texto do certificado, ou envie a imagem do certificado pronto, para liberar a emissão.');
             redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
         }
 
@@ -1834,7 +1837,9 @@ class EducationController
             'certificate_title' => $title,
             'certificate_text' => $text,
             'certificate_background' => $this->certificateBackgroundFromRequest($course['certificate_background'] ?? null, 'certificate_background', 'certificate_background_upload'),
+            'certificate_ready_image' => $readyImage,
             'certificate_min_frequency' => $_POST['certificate_min_frequency'] ?? 0,
+            'certificate_show_heading' => !empty($_POST['certificate_show_heading']) ? 1 : 0,
             'certificate_show_recipient' => !empty($_POST['certificate_show_recipient']) ? 1 : 0,
             'certificate_show_nature' => !empty($_POST['certificate_show_nature']) ? 1 : 0,
             'certificate_show_modality' => !empty($_POST['certificate_show_modality']) ? 1 : 0,
@@ -2684,7 +2689,9 @@ class EducationController
             'certificate_text' => $course['certificate_text'] ?? null,
             'certificate_font_family' => $course['certificate_font_family'] ?? null,
             'certificate_background' => $course['certificate_background'] ?? null,
+            'certificate_ready_image' => $course['certificate_ready_image'] ?? null,
             'certificate_min_frequency' => $course['certificate_min_frequency'] ?? 0,
+            'certificate_show_heading' => $course['certificate_show_heading'] ?? 1,
             'certificate_show_recipient' => $course['certificate_show_recipient'] ?? 1,
             'certificate_show_nature' => $course['certificate_show_nature'] ?? 1,
             'certificate_show_modality' => $course['certificate_show_modality'] ?? 1,
@@ -3085,7 +3092,7 @@ class EducationController
         return '/public/uploads/education/' . $filename;
     }
 
-    private function certificateBackgroundFromRequest(?string $existing, string $fieldName = 'certificate_background', string $uploadFieldName = 'certificate_background_upload'): ?string
+    private function certificateBackgroundFromRequest(?string $existing, string $fieldName = 'certificate_background', string $uploadFieldName = 'certificate_background_upload', string $label = 'fundo do certificado'): ?string
     {
         $background = trim((string) ($_POST[$fieldName] ?? ''));
 
@@ -3094,7 +3101,7 @@ class EducationController
         }
 
         if (($_FILES[$uploadFieldName]['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-            Session::flash('error', 'Nao foi possivel enviar o fundo do certificado.');
+            Session::flash('error', 'Nao foi possivel enviar o ' . $label . '.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
         }
 
@@ -3108,7 +3115,7 @@ class EducationController
         ];
 
         if (!$imageInfo || !isset($allowedTypes[$imageInfo[2] ?? 0]) || $size <= 0 || $size > self::MAX_CERTIFICATE_BACKGROUND_SIZE) {
-            Session::flash('error', 'Use um fundo JPG, PNG ou WEBP com ate 12MB.');
+            Session::flash('error', 'Use uma imagem JPG, PNG ou WEBP com ate 12MB para o ' . $label . '.');
             redirect($_SERVER['HTTP_REFERER'] ?? '/admin/education');
         }
 

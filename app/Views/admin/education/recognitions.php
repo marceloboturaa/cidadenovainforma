@@ -105,6 +105,7 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                     <div class="grid-span-2">
                         <span class="form-label">Exibir no certificado</span>
                         <div class="education-certificate-toggle-grid">
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1"<?= $recognitionChecked('certificate_show_heading', true) ?>><span class="form-check-label">Título fixo Certificado</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1"<?= $recognitionChecked('certificate_show_recipient', true) ?>><span class="form-check-label">Nome do recebedor</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1"<?= $recognitionChecked('certificate_show_nature', true) ?>><span class="form-check-label">Natureza</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1"<?= $recognitionChecked('certificate_show_modality', false) ?>><span class="form-check-label">Modalidade/contexto</span></label>
@@ -122,6 +123,15 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                     <div>
                         <label class="form-label">Enviar fundo da frente</label>
                         <input class="form-control" type="file" name="certificate_background_upload" accept="image/png,image/jpeg,image/webp">
+                    </div>
+                    <div>
+                        <label class="form-label">Certificado pronto por link</label>
+                        <input class="form-control" name="certificate_ready_image" value="<?= e($recognitionValue('certificate_ready_image')) ?>" placeholder="/public/uploads/education/certificado.jpg ou URL">
+                        <small class="field-hint">Quando preenchido, a imagem pronta substitui o modelo gerado.</small>
+                    </div>
+                    <div>
+                        <label class="form-label">Enviar certificado pronto</label>
+                        <input class="form-control" type="file" name="certificate_ready_image_upload" accept="image/png,image/jpeg,image/webp">
                     </div>
                     <div>
                         <label class="form-label">Natureza do certificado</label>

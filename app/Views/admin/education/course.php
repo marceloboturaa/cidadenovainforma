@@ -610,6 +610,15 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <label class="form-label">Enviar imagem de fundo</label>
                 <input class="form-control" name="certificate_background_upload" type="file" accept="image/jpeg,image/png,image/webp">
             </div>
+            <div>
+                <label class="form-label">Certificado pronto por link</label>
+                <input class="form-control" name="certificate_ready_image" value="<?= e($course['certificate_ready_image'] ?? '') ?>" placeholder="/public/uploads/... ou URL">
+                <small class="field-hint">Quando preenchido, a imagem pronta substitui o modelo gerado.</small>
+            </div>
+            <div>
+                <label class="form-label">Enviar certificado pronto</label>
+                <input class="form-control" name="certificate_ready_image_upload" type="file" accept="image/jpeg,image/png,image/webp">
+            </div>
             <div class="grid-span-2">
                 <label class="form-label">Texto do certificado</label>
                 <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title} em {issued_at}."><?= e($course['certificate_text'] ?? '') ?></textarea>
@@ -618,6 +627,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <div class="grid-span-2">
                 <span class="form-label">Exibir no certificado</span>
                 <div class="education-certificate-toggle-grid">
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Título fixo Certificado</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1" <?= checked((int) ($course['certificate_show_recipient'] ?? 1) === 1) ?>><span class="form-check-label">Nome do estudante</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1" <?= checked((int) ($course['certificate_show_nature'] ?? 1) === 1) ?>><span class="form-check-label">Natureza do curso</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1" <?= checked((int) ($course['certificate_show_modality'] ?? 1) === 1) ?>><span class="form-check-label">Modalidade</span></label>

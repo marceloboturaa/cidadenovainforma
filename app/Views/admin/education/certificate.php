@@ -5,8 +5,9 @@ if ($title === '') {
     $title = 'Certificado de conclusão';
 }
 $background = trim((string) ($course['certificate_background'] ?? ''));
+$readyImage = trim((string) ($course['certificate_ready_image'] ?? ''));
 $programBackground = trim((string) ($course['certificate_program_background'] ?? ''));
-$programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
+$programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1 && $readyImage === '';
 $isRecognitionCertificate = ($course['certificate_activity_type'] ?? '') === 'reconhecimento';
 $certificateFont = trim((string) ($course['certificate_font_family'] ?? ''));
 $fontClass = in_array($certificateFont, ['serif', 'georgia', 'garamond', 'playfair', 'montserrat'], true) ? ' certificate-font-' . $certificateFont : '';
@@ -43,6 +44,7 @@ $showInstitution = (int) ($course['certificate_show_institution'] ?? 1) === 1;
 $showMeta = (int) ($course['certificate_show_meta'] ?? 1) === 1;
 $showLegal = (int) ($course['certificate_show_legal'] ?? 1) === 1 && $legalText !== '';
 $showRecipient = (int) ($course['certificate_show_recipient'] ?? 1) === 1;
+$showHeading = (int) ($course['certificate_show_heading'] ?? 1) === 1;
 $showIssuedMeta = $showMeta && !$textHasCode && !$textHasPeriod;
 $showCodeMeta = $showMeta && !$textHasCode;
 $showTeacherMeta = $showMeta && !$textHasCode && !$isRecognitionCertificate && !empty($course['teacher_name']);
@@ -124,57 +126,61 @@ $backLabel = $isRecognitionCertificate
 <?php endif; ?>
 
 <section class="panel education-certificate-sheet-panel">
-    <article class="education-certificate-sheet<?= $background !== '' ? ' has-background' : '' ?><?= e($fontClass) ?>">
-        <?php if ($background !== ''): ?>
+    <article class="education-certificate-sheet<?= $background !== '' || $readyImage !== '' ? ' has-background' : '' ?><?= $readyImage !== '' ? ' has-ready-image' : '' ?><?= e($fontClass) ?>">
+        <?php if ($readyImage !== ''): ?>
+            <img class="education-certificate-ready-image" src="<?= e(media_url($readyImage)) ?>" alt="Certificado pronto">
+        <?php elseif ($background !== ''): ?>
             <img class="education-certificate-background" src="<?= e(media_url($background)) ?>" alt="" aria-hidden="true">
         <?php endif; ?>
-        <div class="education-certificate-copy">
-            <span>Certificado</span>
-            <h2><?= e($title) ?></h2>
-            <?php if ($showNature): ?>
-                <p class="education-certificate-nature"><?= e($courseNature) ?></p>
-            <?php endif; ?>
-            <?php if (trim($certificateText) !== ''): ?>
-                <div><?= nl2br(e($certificateText)) ?></div>
-            <?php endif; ?>
-            <?php if ($showModality || $showPeriod || $showApproval): ?>
-                <section class="education-certificate-details" aria-label="Detalhes do certificado">
-                    <?php if ($showModality): ?><span>Modalidade: <?= e($courseModality) ?></span><?php endif; ?>
-                    <?php if ($showPeriod): ?><span>Realizado de <?= e($periodStart) ?> até <?= e($periodEnd) ?></span><?php endif; ?>
-                    <?php if ($showApproval): ?><span><?= e($approvalCriteria) ?></span><?php endif; ?>
-                </section>
-            <?php endif; ?>
-            <?php if ($showRecipient): ?>
-                <footer>
-                    <strong><?= e($certificate['student_name'] ?? '') ?></strong>
-                </footer>
-            <?php endif; ?>
-        </div>
-        <footer class="education-certificate-footnote">
-            <div class="education-certificate-footnote-text">
-                <?php if ($showInstitution): ?>
-                    <div class="education-certificate-institution">
-                        <?php if ($institutionName !== ''): ?><strong><?= e($institutionName) ?></strong><?php endif; ?>
-                        <?php if ($institutionCity !== ''): ?><span><?= e($institutionCity) ?></span><?php endif; ?>
-                        <?php if ($institutionCnpj !== ''): ?><span>CNPJ: <?= e($institutionCnpj) ?></span><?php endif; ?>
-                        <?php if ($institutionSite !== ''): ?><span><?= e($institutionSite) ?></span><?php endif; ?>
-                    </div>
+        <?php if ($readyImage === ''): ?>
+            <div class="education-certificate-copy">
+                <?php if ($showHeading): ?><span>Certificado</span><?php endif; ?>
+                <h2><?= e($title) ?></h2>
+                <?php if ($showNature): ?>
+                    <p class="education-certificate-nature"><?= e($courseNature) ?></p>
                 <?php endif; ?>
-                <?php if ($showIssuedMeta || $showCodeMeta || $showTeacherMeta || $showFrequencyMeta): ?>
-                    <div class="education-certificate-footnote-meta">
-                        <?php if ($showIssuedMeta): ?><span>Emitido em <?= e($issuedAt) ?></span><?php endif; ?>
-                        <?php if ($showCodeMeta): ?><span>Código <?= e($certificate['verification_code'] ?? '') ?></span><?php endif; ?>
-                        <?php if ($showTeacherMeta): ?><span>Professor: <?= e($course['teacher_name']) ?></span><?php endif; ?>
-                        <?php if ($showFrequencyMeta): ?><span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span><?php endif; ?>
-                    </div>
+                <?php if (trim($certificateText) !== ''): ?>
+                    <div><?= nl2br(e($certificateText)) ?></div>
                 <?php endif; ?>
-                <?php if ($showLegal): ?><p><?= e($legalText) ?></p><?php endif; ?>
+                <?php if ($showModality || $showPeriod || $showApproval): ?>
+                    <section class="education-certificate-details" aria-label="Detalhes do certificado">
+                        <?php if ($showModality): ?><span>Modalidade: <?= e($courseModality) ?></span><?php endif; ?>
+                        <?php if ($showPeriod): ?><span>Realizado de <?= e($periodStart) ?> até <?= e($periodEnd) ?></span><?php endif; ?>
+                        <?php if ($showApproval): ?><span><?= e($approvalCriteria) ?></span><?php endif; ?>
+                    </section>
+                <?php endif; ?>
+                <?php if ($showRecipient): ?>
+                    <footer>
+                        <strong><?= e($certificate['student_name'] ?? '') ?></strong>
+                    </footer>
+                <?php endif; ?>
             </div>
-            <figure class="education-certificate-qr">
-                <img src="<?= e($verificationQrUrl) ?>" alt="QR Code para verificar o certificado" crossorigin="anonymous">
-                <figcaption>Verifique a autenticidade</figcaption>
-            </figure>
-        </footer>
+            <footer class="education-certificate-footnote">
+                <div class="education-certificate-footnote-text">
+                    <?php if ($showInstitution): ?>
+                        <div class="education-certificate-institution">
+                            <?php if ($institutionName !== ''): ?><strong><?= e($institutionName) ?></strong><?php endif; ?>
+                            <?php if ($institutionCity !== ''): ?><span><?= e($institutionCity) ?></span><?php endif; ?>
+                            <?php if ($institutionCnpj !== ''): ?><span>CNPJ: <?= e($institutionCnpj) ?></span><?php endif; ?>
+                            <?php if ($institutionSite !== ''): ?><span><?= e($institutionSite) ?></span><?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($showIssuedMeta || $showCodeMeta || $showTeacherMeta || $showFrequencyMeta): ?>
+                        <div class="education-certificate-footnote-meta">
+                            <?php if ($showIssuedMeta): ?><span>Emitido em <?= e($issuedAt) ?></span><?php endif; ?>
+                            <?php if ($showCodeMeta): ?><span>Código <?= e($certificate['verification_code'] ?? '') ?></span><?php endif; ?>
+                            <?php if ($showTeacherMeta): ?><span>Professor: <?= e($course['teacher_name']) ?></span><?php endif; ?>
+                            <?php if ($showFrequencyMeta): ?><span>Frequência registrada: <?= e((string) ($certificateStatus['frequency'] ?? 0)) ?>%</span><?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($showLegal): ?><p><?= e($legalText) ?></p><?php endif; ?>
+                </div>
+                <figure class="education-certificate-qr">
+                    <img src="<?= e($verificationQrUrl) ?>" alt="QR Code para verificar o certificado" crossorigin="anonymous">
+                    <figcaption>Verifique a autenticidade</figcaption>
+                </figure>
+            </footer>
+        <?php endif; ?>
     </article>
     <?php if ($programEnabled && $hasCertificateProgramBack): ?>
         <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
