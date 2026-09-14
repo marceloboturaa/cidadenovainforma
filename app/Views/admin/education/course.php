@@ -573,11 +573,31 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 $certificateBodyBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_body_background_color'] ?? '')) ? (string) $course['certificate_body_background_color'] : '#ffffff';
                 $certificateFooterTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_text_color'] ?? '')) ? (string) $course['certificate_footer_text_color'] : $certificateTextColor;
                 $certificateFooterBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_background_color'] ?? '')) ? (string) $course['certificate_footer_background_color'] : '#ffffff';
+                $certificateHasReadyImage = trim((string) ($course['certificate_ready_image'] ?? '')) !== '';
+                $certificateHasFrontBackground = trim((string) ($course['certificate_background'] ?? '')) !== '';
+                $certificateProgramIsEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
             ?>
+            <div class="certificate-editor-overview grid-span-2">
+                <div>
+                    <span>Status</span>
+                    <strong><?= !empty($course['certificate_enabled']) ? 'Liberado' : 'Desativado' ?></strong>
+                    <small><?= !empty($course['certificate_enabled']) ? 'Aluno pode solicitar ao concluir.' : 'Ative quando o modelo estiver pronto.' ?></small>
+                </div>
+                <div>
+                    <span>Frente</span>
+                    <strong><?= $certificateHasReadyImage ? 'Imagem pronta' : ($certificateHasFrontBackground ? 'Modelo com fundo' : 'Modelo editavel') ?></strong>
+                    <small><?= $certificateHasReadyImage ? 'A imagem substitui campos editaveis.' : 'Texto, cores e rodape ficam editaveis.' ?></small>
+                </div>
+                <div>
+                    <span>Verso</span>
+                    <strong><?= $certificateProgramIsEnabled ? 'Incluido' : 'Oculto' ?></strong>
+                    <small><?= $certificateProgramIsEnabled ? 'Mostra programacao e dados extras.' : 'Somente frente do certificado.' ?></small>
+                </div>
+            </div>
             <section class="certificate-editor-section grid-span-2">
                 <header>
-                    <strong>Modelo e escola</strong>
-                    <span>Escolha a escola emissora e as regras gerais.</span>
+                    <strong>1. Ativacao e escola</strong>
+                    <span>Defina se o certificado sera liberado e quem assina como instituicao emissora.</span>
                 </header>
                 <div class="certificate-editor-grid">
             <div class="grid-span-2">
@@ -616,8 +636,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
             </section>
             <section class="certificate-editor-section grid-span-2">
                 <header>
-                    <strong>Frente do certificado</strong>
-                    <span>Use fundo da frente ou envie o certificado pronto.</span>
+                    <strong>2. Frente e imagens</strong>
+                    <span>Use o modelo editavel, uma imagem de fundo ou uma arte pronta.</span>
                 </header>
                 <div class="certificate-editor-grid">
             <div>
@@ -655,8 +675,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
             </section>
             <section class="certificate-editor-section certificate-editor-body grid-span-2">
                 <header>
-                    <strong>Corpo do texto</strong>
-                    <span>Edite a mensagem central e o que aparece no certificado.</span>
+                    <strong>3. Texto principal</strong>
+                    <span>Edite a frase central e escolha quais informacoes aparecem na frente.</span>
                 </header>
                 <div class="certificate-editor-grid">
             <div class="grid-span-2">
@@ -668,8 +688,11 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input type="checkbox" name="certificate_body_background_enabled" value="1" <?= checked((int) ($course['certificate_body_background_enabled'] ?? 0) === 1) ?>>
                 <span>Usar fundo no corpo do texto</span>
             </label>
-            <div class="grid-span-2">
-                <span class="form-label">Exibir no certificado</span>
+            <details class="certificate-editor-advanced grid-span-2">
+                <summary>
+                    <span>Campos exibidos na frente</span>
+                    <small>Mostrar ou ocultar titulo, QR Code, modalidade, datas e dados legais.</small>
+                </summary>
                 <div class="education-certificate-toggle-grid">
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Título fixo Certificado</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_text" value="1" <?= checked((int) ($course['certificate_show_text'] ?? 1) === 1) ?>><span class="form-check-label">Texto principal</span></label>
@@ -684,13 +707,13 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_legal" value="1" <?= checked((int) ($course['certificate_show_legal'] ?? 1) === 1) ?>><span class="form-check-label">Base legal</span></label>
                 </div>
                 <small class="field-hint">Desmarque os itens que devem ficar ocultos na visualizacao e no certificado liberado.</small>
-            </div>
+            </details>
                 </div>
             </section>
             <section class="certificate-editor-section grid-span-2">
                 <header>
-                    <strong>Rodapé</strong>
-                    <span>Controle textos, cores e fundo da faixa inferior.</span>
+                    <strong>4. Rodape e dados oficiais</strong>
+                    <span>Controle a faixa inferior, base legal e dados da instituicao.</span>
                 </header>
                 <div class="certificate-editor-grid">
             <div>
@@ -709,6 +732,12 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input type="checkbox" name="certificate_footer_rounded" value="1" <?= checked((int) ($course['certificate_footer_rounded'] ?? 0) === 1) ?>>
                 <span>Rodapé arredondado</span>
             </label>
+            <details class="certificate-editor-advanced grid-span-2">
+                <summary>
+                    <span>Textos e dados oficiais do rodape</span>
+                    <small>Criterio de aprovacao, base legal, CNPJ, cidade e site.</small>
+                </summary>
+                <div class="certificate-editor-grid">
             <div class="grid-span-2">
                 <label class="form-label">Critério de aprovação</label>
                 <input class="form-control" name="certificate_approval_criteria" maxlength="255" value="<?= e($course['certificate_approval_criteria'] ?? '') ?>" placeholder="Certificado concedido mediante frequência mínima de 75% e aproveitamento satisfatório.">
@@ -734,11 +763,13 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input class="form-control" name="certificate_institution_site" maxlength="180" value="<?= e($course['certificate_institution_site'] ?? '') ?>" placeholder="www.cidadenovainforma.com.br">
             </div>
                 </div>
+            </details>
+                </div>
             </section>
             <section class="certificate-editor-section grid-span-2">
                 <header>
-                    <strong>Verso</strong>
-                    <span>Adicione fundo e informações complementares no verso.</span>
+                    <strong>5. Verso</strong>
+                    <span>Adicione programacao, colunas e informacoes complementares no verso.</span>
                 </header>
                 <div class="certificate-editor-grid">
             <label class="forum-check-line">
@@ -747,7 +778,13 @@ if ($isStudentCourseView && function_exists('current_user')) {
             </label>
             <div>
                 <label class="form-label">Colunas do verso</label>
-                <input class="form-control" name="certificate_program_columns" type="number" min="1" max="4" value="<?= e((string) ($course['certificate_program_columns'] ?? 2)) ?>">
+                <?php $certificateProgramColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2))); ?>
+                <select class="form-select" name="certificate_program_columns">
+                    <option value="1" <?= selected('1', (string) $certificateProgramColumns) ?>>1 coluna</option>
+                    <option value="2" <?= selected('2', (string) $certificateProgramColumns) ?>>2 colunas</option>
+                    <option value="3" <?= selected('3', (string) $certificateProgramColumns) ?>>3 colunas</option>
+                    <option value="4" <?= selected('4', (string) $certificateProgramColumns) ?>>4 colunas</option>
+                </select>
             </div>
             <div>
                 <label class="form-label">Fundo do verso por link</label>

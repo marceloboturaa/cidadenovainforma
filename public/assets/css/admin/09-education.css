@@ -2397,6 +2397,47 @@
     align-items: end;
 }
 
+.certificate-editor-overview {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.certificate-editor-overview div {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.certificate-editor-overview span,
+.certificate-editor-overview strong,
+.certificate-editor-overview small {
+    display: block;
+}
+
+.certificate-editor-overview span {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.certificate-editor-overview strong {
+    margin-top: 3px;
+    color: var(--ink);
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.certificate-editor-overview small {
+    margin-top: 4px;
+    color: #64748b;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
 .certificate-editor-section {
     display: grid;
     gap: 14px;
@@ -2465,6 +2506,58 @@
 .certificate-editor-grid > .grid-span-2,
 .certificate-editor-grid > .form-action-cell {
     grid-column: 1 / -1;
+}
+
+.certificate-editor-advanced {
+    padding: 0;
+    border: 1px solid #dbe4ef;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.certificate-editor-advanced summary {
+    display: grid;
+    gap: 3px;
+    padding: 12px 14px;
+    cursor: pointer;
+    color: var(--ink);
+    font-weight: 900;
+    list-style: none;
+}
+
+.certificate-editor-advanced summary::-webkit-details-marker {
+    display: none;
+}
+
+.certificate-editor-advanced summary::after {
+    content: "+";
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    color: #2563eb;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.certificate-editor-advanced[open] summary::after {
+    content: "-";
+}
+
+.certificate-editor-advanced summary {
+    position: relative;
+    padding-right: 38px;
+}
+
+.certificate-editor-advanced summary small {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.certificate-editor-advanced > .certificate-editor-grid,
+.certificate-editor-advanced > .education-certificate-toggle-grid,
+.certificate-editor-advanced > .field-hint {
+    margin: 0 14px 14px;
 }
 
 .certificate-editor-body textarea {
@@ -4840,6 +4933,7 @@
 
 @media (max-width: 760px) {
     .education-certificate-settings,
+    .certificate-editor-overview,
     .certificate-editor-grid {
         grid-template-columns: 1fr;
     }
