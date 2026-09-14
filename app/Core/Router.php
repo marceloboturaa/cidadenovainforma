@@ -61,6 +61,11 @@ class Router
 
         if ($path === '/admin' || str_starts_with($path, '/admin/')) {
             Middleware::auth();
+            if (AdminNavigation::contains($path) && !AdminNavigation::allows($path)) {
+                http_response_code(403);
+                View::render('errors/403');
+                return;
+            }
         }
 
         [$controller, $action] = $handler;

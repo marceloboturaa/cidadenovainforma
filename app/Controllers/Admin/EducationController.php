@@ -2373,7 +2373,7 @@ class EducationController
 
     private function canManage(): bool
     {
-        return $this->canManageAll() || $this->canTeach();
+        return Auth::can('education.manage') || Auth::can('education.teach');
     }
 
     private function canManageAll(): bool
