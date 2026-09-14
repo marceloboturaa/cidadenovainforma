@@ -7,6 +7,7 @@ if ($title === '') {
 $background = trim((string) ($course['certificate_background'] ?? ''));
 $readyImage = trim((string) ($course['certificate_ready_image'] ?? ''));
 $programBackground = trim((string) ($course['certificate_program_background'] ?? ''));
+$programBackgroundColor = trim((string) ($course['certificate_program_background_color'] ?? ''));
 $programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1 && $readyImage === '';
 $isRecognitionCertificate = ($course['certificate_activity_type'] ?? '') === 'reconhecimento';
 $certificateFont = trim((string) ($course['certificate_font_family'] ?? ''));
@@ -33,6 +34,9 @@ if (preg_match('/^#[0-9a-fA-F]{6}$/', $footerBackgroundColor)) {
 }
 if ($footerRounded) {
     $certificateStyle[] = '--certificate-footnote-radius: 8mm';
+}
+if (preg_match('/^#[0-9a-fA-F]{6}$/', $programBackgroundColor)) {
+    $certificateStyle[] = '--certificate-program-background: ' . $programBackgroundColor;
 }
 $certificateStyleAttr = $certificateStyle ? ' style="' . e(implode('; ', $certificateStyle)) . ';"' : '';
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));

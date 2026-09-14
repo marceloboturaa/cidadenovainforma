@@ -573,6 +573,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 $certificateBodyBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_body_background_color'] ?? '')) ? (string) $course['certificate_body_background_color'] : '#ffffff';
                 $certificateFooterTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_text_color'] ?? '')) ? (string) $course['certificate_footer_text_color'] : $certificateTextColor;
                 $certificateFooterBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_background_color'] ?? '')) ? (string) $course['certificate_footer_background_color'] : '#ffffff';
+                $certificateProgramBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_program_background_color'] ?? '')) ? (string) $course['certificate_program_background_color'] : '#ffffff';
                 $certificateHasReadyImage = trim((string) ($course['certificate_ready_image'] ?? '')) !== '';
                 $certificateHasFrontBackground = trim((string) ($course['certificate_background'] ?? '')) !== '';
                 $certificateProgramIsEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1;
@@ -785,6 +786,10 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <option value="3" <?= selected('3', (string) $certificateProgramColumns) ?>>3 colunas</option>
                     <option value="4" <?= selected('4', (string) $certificateProgramColumns) ?>>4 colunas</option>
                 </select>
+            </div>
+            <div>
+                <label class="form-label">Cor do fundo do verso</label>
+                <input class="form-control form-control-color" name="certificate_program_background_color" type="color" value="<?= e($certificateProgramBackgroundColor) ?>">
             </div>
             <div>
                 <label class="form-label">Fundo do verso por link</label>

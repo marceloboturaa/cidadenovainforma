@@ -3030,12 +3030,13 @@
     align-content: start;
     gap: 18px;
     padding: var(--certificate-write-top) var(--certificate-write-right) var(--certificate-write-bottom) var(--certificate-write-left);
-    background: #ffffff;
+    --certificate-program-background: #ffffff;
+    background: var(--certificate-program-background);
     page-break-before: always;
 }
 
 .education-certificate-program-sheet.has-background {
-    background-color: #ffffff;
+    background-color: var(--certificate-program-background);
 }
 
 .education-certificate-program-sheet.has-background::before {
