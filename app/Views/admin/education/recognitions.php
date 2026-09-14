@@ -69,7 +69,7 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                         <?php endif; ?>
                     </div>
                     <div>
-                        <label class="form-label">Instituição emissora</label>
+                        <label class="form-label">Escola / instituição emissora</label>
                         <select class="form-select" name="institution_id">
                             <option value="">Cidade Nova Informa / padrão do certificado</option>
                             <?php foreach ($institutions as $institution): ?>
@@ -111,6 +111,8 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                         <span class="form-label">Exibir no certificado</span>
                         <div class="education-certificate-toggle-grid">
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1"<?= $recognitionChecked('certificate_show_heading', true) ?>><span class="form-check-label">Título fixo Certificado</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_text" value="1"<?= $recognitionChecked('certificate_show_text', true) ?>><span class="form-check-label">Texto principal</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_qr" value="1"<?= $recognitionChecked('certificate_show_qr', true) ?>><span class="form-check-label">QR Code</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1"<?= $recognitionChecked('certificate_show_recipient', true) ?>><span class="form-check-label">Nome do recebedor</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1"<?= $recognitionChecked('certificate_show_nature', true) ?>><span class="form-check-label">Natureza</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1"<?= $recognitionChecked('certificate_show_modality', false) ?>><span class="form-check-label">Modalidade/contexto</span></label>

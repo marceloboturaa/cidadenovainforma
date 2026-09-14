@@ -568,23 +568,21 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input type="checkbox" name="certificate_enabled" value="1" <?= checked(!empty($course['certificate_enabled'])) ?>>
                 <span>Liberar certificado quando o aluno concluir o curso</span>
             </label>
-            <?php if (!empty($certificateInstitutions ?? [])): ?>
-                <div class="grid-span-2">
-                    <label class="form-label">Instituição emissora</label>
-                    <select class="form-select" name="certificate_institution_id">
-                        <option value="">Usar dados preenchidos manualmente</option>
-                        <?php foreach ($certificateInstitutions as $institution): ?>
-                            <option value="<?= e((string) $institution['id']) ?>" <?= selected((string) ($institution['id'] ?? ''), (string) ($course['certificate_institution_id'] ?? '')) ?>>
-                                <?= e($institution['name'] ?? '') ?>
-                                <?php if (!empty($institution['city']) || !empty($institution['state'])): ?>
-                                    - <?= e(trim(($institution['city'] ?? '') . '/' . ($institution['state'] ?? ''), '/')) ?>
-                                <?php endif; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <small class="field-hint">Quando selecionada, a instituição oficial preenche nome, CNPJ, cidade/UF e site do certificado.</small>
-                </div>
-            <?php endif; ?>
+            <div class="grid-span-2">
+                <label class="form-label">Escola / instituição emissora</label>
+                <select class="form-select" name="certificate_institution_id">
+                    <option value="">Usar dados preenchidos manualmente</option>
+                    <?php foreach (($certificateInstitutions ?? []) as $institution): ?>
+                        <option value="<?= e((string) $institution['id']) ?>" <?= selected((string) ($institution['id'] ?? ''), (string) ($course['certificate_institution_id'] ?? '')) ?>>
+                            <?= e($institution['name'] ?? '') ?>
+                            <?php if (!empty($institution['city']) || !empty($institution['state'])): ?>
+                                - <?= e(trim(($institution['city'] ?? '') . '/' . ($institution['state'] ?? ''), '/')) ?>
+                            <?php endif; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small class="field-hint">Escolha uma escola cadastrada ou preencha os dados manuais abaixo.</small>
+            </div>
             <div>
                 <label class="form-label">Título do certificado</label>
                 <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusão">
@@ -633,6 +631,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <span class="form-label">Exibir no certificado</span>
                 <div class="education-certificate-toggle-grid">
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Título fixo Certificado</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_text" value="1" <?= checked((int) ($course['certificate_show_text'] ?? 1) === 1) ?>><span class="form-check-label">Texto principal</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_qr" value="1" <?= checked((int) ($course['certificate_show_qr'] ?? 1) === 1) ?>><span class="form-check-label">QR Code</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1" <?= checked((int) ($course['certificate_show_recipient'] ?? 1) === 1) ?>><span class="form-check-label">Nome do estudante</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1" <?= checked((int) ($course['certificate_show_nature'] ?? 1) === 1) ?>><span class="form-check-label">Natureza do curso</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1" <?= checked((int) ($course['certificate_show_modality'] ?? 1) === 1) ?>><span class="form-check-label">Modalidade</span></label>

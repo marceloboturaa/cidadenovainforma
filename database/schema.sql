@@ -587,6 +587,8 @@ CREATE TABLE IF NOT EXISTS education_courses (
     certificate_ready_image VARCHAR(255) NULL,
     certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
     certificate_show_heading TINYINT(1) NOT NULL DEFAULT 1,
+    certificate_show_text TINYINT(1) NOT NULL DEFAULT 1,
+    certificate_show_qr TINYINT(1) NOT NULL DEFAULT 1,
     certificate_show_recipient TINYINT(1) NOT NULL DEFAULT 1,
     certificate_show_nature TINYINT(1) NOT NULL DEFAULT 1,
     certificate_show_modality TINYINT(1) NOT NULL DEFAULT 1,

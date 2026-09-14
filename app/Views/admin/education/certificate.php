@@ -47,6 +47,8 @@ $showMeta = (int) ($course['certificate_show_meta'] ?? 1) === 1;
 $showLegal = (int) ($course['certificate_show_legal'] ?? 1) === 1 && $legalText !== '';
 $showRecipient = (int) ($course['certificate_show_recipient'] ?? 1) === 1;
 $showHeading = (int) ($course['certificate_show_heading'] ?? 1) === 1;
+$showText = (int) ($course['certificate_show_text'] ?? 1) === 1;
+$showQr = (int) ($course['certificate_show_qr'] ?? 1) === 1;
 $showIssuedMeta = $showMeta && !$textHasCode && !$textHasPeriod;
 $showCodeMeta = $showMeta && !$textHasCode;
 $showTeacherMeta = $showMeta && !$textHasCode && !$isRecognitionCertificate && !empty($course['teacher_name']);
@@ -72,6 +74,7 @@ $backUrl = $isRecognitionCertificate
 $backLabel = $isRecognitionCertificate
     ? (!empty($isManagedCertificate) ? 'Voltar aos reconhecimentos' : 'Voltar aos meus certificados')
     : 'Voltar ao curso';
+$hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTeacherMeta || $showFrequencyMeta || $showLegal;
 ?>
 
 <div class="page-heading certificate-toolbar">
@@ -141,7 +144,7 @@ $backLabel = $isRecognitionCertificate
                 <?php if ($showNature): ?>
                     <p class="education-certificate-nature"><?= e($courseNature) ?></p>
                 <?php endif; ?>
-                <?php if (trim($certificateText) !== ''): ?>
+                <?php if ($showText && trim($certificateText) !== ''): ?>
                     <div><?= nl2br(e($certificateText)) ?></div>
                 <?php endif; ?>
                 <?php if ($showModality || $showPeriod || $showApproval): ?>
@@ -157,6 +160,7 @@ $backLabel = $isRecognitionCertificate
                     </footer>
                 <?php endif; ?>
             </div>
+            <?php if ($hasBottomInfo): ?>
             <footer class="education-certificate-footnote">
                 <div class="education-certificate-footnote-text">
                     <?php if ($showInstitution): ?>
@@ -177,15 +181,18 @@ $backLabel = $isRecognitionCertificate
                     <?php endif; ?>
                     <?php if ($showLegal): ?><p><?= e($legalText) ?></p><?php endif; ?>
                 </div>
+            </footer>
+            <?php endif; ?>
+            <?php if ($showQr): ?>
                 <figure class="education-certificate-qr">
                     <img src="<?= e($verificationQrUrl) ?>" alt="QR Code para verificar o certificado" crossorigin="anonymous">
                     <figcaption>Verifique a autenticidade</figcaption>
                 </figure>
-            </footer>
+            <?php endif; ?>
         <?php endif; ?>
     </article>
     <?php if ($programEnabled && $hasCertificateProgramBack): ?>
-        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;">
+        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;<?= $textColorStyle !== '' ? ' --certificate-text-color: ' . e($textColor) . ';' : '' ?>">
             <?php if ($programBackground !== ''): ?>
                 <img class="education-certificate-background" src="<?= e(media_url($programBackground)) ?>" alt="" aria-hidden="true">
             <?php endif; ?>

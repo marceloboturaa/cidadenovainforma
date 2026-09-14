@@ -2574,13 +2574,14 @@
     display: grid;
     width: 297mm;
     height: 210mm;
-    --certificate-write-left: 17mm;
-    --certificate-write-right: 17mm;
-    --certificate-write-top: 16mm;
-    --certificate-write-bottom: 23mm;
-    --certificate-write-width: 263mm;
-    --certificate-write-height: 171mm;
-    --certificate-footnote-height: 34mm;
+    --certificate-write-left: 11mm;
+    --certificate-write-right: 11mm;
+    --certificate-write-top: 37mm;
+    --certificate-write-bottom: 7mm;
+    --certificate-write-width: 275mm;
+    --certificate-write-height: 151mm;
+    --certificate-main-height: 82mm;
+    --certificate-footnote-height: 18mm;
     --certificate-text-color: #172033;
     max-width: 100%;
     margin: 0 auto;
@@ -2629,14 +2630,14 @@
     left: var(--certificate-write-left);
     z-index: 1;
     display: grid;
-    align-content: center;
+    align-content: start;
     justify-items: center;
-    gap: 10px;
+    gap: 7px;
     width: var(--certificate-write-width);
-    height: calc(var(--certificate-write-height) - var(--certificate-footnote-height));
+    height: var(--certificate-main-height);
     max-height: none;
     margin: 0;
-    padding: 8mm 0 4mm;
+    padding: 0;
     transform: none;
     text-align: center;
     color: var(--certificate-text-color);
@@ -2645,21 +2646,22 @@
 
 .education-certificate-copy > span {
     color: var(--certificate-text-color);
-    font-size: clamp(1.7rem, 3vw, 2.45rem);
+    font-size: clamp(1.9rem, 3.15vw, 2.85rem);
     font-weight: 900;
     text-transform: uppercase;
 }
 
 .education-certificate-copy h2 {
     margin: 0;
-    max-width: 100%;
-    font-size: clamp(1.35rem, 2.35vw, 2rem);
+    max-width: 262mm;
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
     line-height: 1.12;
+    text-transform: uppercase;
     overflow-wrap: anywhere;
 }
 
 .education-certificate-nature {
-    margin: -8px 0 0;
+    margin: -5px 0 0;
     color: var(--certificate-text-color);
     font-size: clamp(0.78rem, 1vw, 0.92rem);
     font-weight: 900;
@@ -2669,9 +2671,9 @@
 }
 
 .education-certificate-copy > div {
-    width: min(100%, 238mm);
-    font-size: clamp(1.05rem, 1.8vw, 1.32rem);
-    line-height: 1.48;
+    width: min(100%, 270mm);
+    font-size: clamp(0.86rem, 1.28vw, 1.05rem);
+    line-height: 1.32;
     overflow-wrap: anywhere;
 }
 
@@ -2680,7 +2682,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 5px 12px;
-    max-width: 238mm;
+    max-width: 270mm;
     color: var(--certificate-text-color);
     font-size: 0.78rem;
     font-weight: 800;
@@ -2695,8 +2697,8 @@
 .education-certificate-copy footer {
     display: grid;
     gap: 4px;
-    width: min(560px, 100%);
-    padding-top: 12px;
+    width: min(148mm, 100%);
+    padding-top: 8px;
     border-top: 1px solid color-mix(in srgb, var(--certificate-text-color) 28%, transparent);
 }
 
@@ -2713,29 +2715,30 @@
     right: auto;
     bottom: auto;
     left: var(--certificate-write-left);
-    top: calc(var(--certificate-write-top) + var(--certificate-write-height) - var(--certificate-footnote-height));
+    top: calc(210mm - var(--certificate-footnote-height) - var(--certificate-write-bottom));
     z-index: 1;
     display: flex;
-    align-items: end;
+    align-items: center;
     justify-content: space-between;
-    gap: 8px 18px;
+    gap: 8px 12px;
     width: var(--certificate-write-width);
     height: var(--certificate-footnote-height);
-    padding-top: 0;
+    padding: 3mm 4mm;
     border-top: 0;
-    color: #475569;
-    font-size: 0.76rem;
-    line-height: 1.35;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--certificate-text-color);
+    font-size: 0.72rem;
+    line-height: 1.25;
     text-align: center;
     max-height: var(--certificate-footnote-height);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .education-certificate-footnote-text {
     display: grid;
     flex: 1;
-    justify-items: center;
-    gap: 4px;
+    justify-items: start;
+    gap: 2px;
     min-width: 0;
 }
 
@@ -2743,8 +2746,8 @@
 .education-certificate-footnote-meta {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px 14px;
+    justify-content: start;
+    gap: 2px 12px;
     min-width: 0;
 }
 
@@ -2754,20 +2757,22 @@
 
 .education-certificate-footnote-text p {
     margin: 0;
-    max-width: 760px;
+    max-width: 236mm;
     color: var(--certificate-text-color);
     font-size: 0.64rem;
     line-height: 1.25;
 }
 
 .education-certificate-qr {
+    position: absolute;
+    right: 5mm;
+    bottom: calc(var(--certificate-footnote-height) + 8mm);
     display: grid;
-    align-self: end;
     justify-items: center;
-    gap: 4px;
-    width: 108px;
+    gap: 3px;
+    width: 26mm;
     margin: 0;
-    color: #334155;
+    color: var(--certificate-text-color);
     font-size: 0.5rem;
     font-weight: 800;
     line-height: 1.1;
@@ -2776,8 +2781,8 @@
 
 .education-certificate-qr img {
     display: block;
-    width: 78px;
-    height: 78px;
+    width: 23mm;
+    height: 23mm;
     border: 4px solid #ffffff;
     border-radius: 6px;
     background: #ffffff;
