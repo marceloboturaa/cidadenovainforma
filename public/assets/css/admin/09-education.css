@@ -5058,23 +5058,60 @@
     display: grid;
     gap: 3mm;
     width: 100%;
-    margin-bottom: 3mm;
+    margin-bottom: 1mm;
     line-height: 1.15;
 }
 
 .education-certificate-copy {
     grid-auto-rows: max-content;
     height: auto;
-    max-height: 125mm;
+    max-height: 100mm;
+}
+
+/* Reserve the upper band of illustrated certificates for the artwork title. */
+.education-certificate-sheet.has-background > .education-certificate-copy {
+    top: 55mm;
+}
+
+.education-certificate-copy .education-certificate-heading h2 {
+    max-width: 250mm;
+    margin-inline: auto;
+    font-size: 20pt;
+    line-height: 1.25;
+    text-wrap: balance;
 }
 
 .education-certificate-copy .education-certificate-nature {
     margin: 0;
+    max-width: 245mm;
+    font-size: 10pt;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
 }
 
 .education-certificate-copy .education-certificate-body {
+    width: min(100%, 245mm);
+    font-size: 12pt;
+    line-height: 1.6;
+    margin-block: 3mm;
+    text-wrap: pretty;
+}
+
+.education-certificate-copy .education-certificate-details {
+    max-width: 245mm;
+    font-size: 9pt;
     line-height: 1.5;
-    margin-block: 2mm;
+}
+
+.education-certificate-copy > footer {
+    margin-top: 3mm;
+    padding-top: 3mm;
+}
+
+.education-certificate-copy > footer strong {
+    font-size: 14pt;
+    line-height: 1.4;
 }
 
 .education-certificate-program-sheet {

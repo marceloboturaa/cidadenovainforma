@@ -695,7 +695,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <small>Mostrar ou ocultar titulo, QR Code, modalidade, datas e dados legais.</small>
                 </summary>
                 <div class="education-certificate-toggle-grid">
-                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Título fixo Certificado</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Título fixo Certificado (modelos sem imagem de fundo)</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_text" value="1" <?= checked((int) ($course['certificate_show_text'] ?? 1) === 1) ?>><span class="form-check-label">Texto principal</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_qr" value="1" <?= checked((int) ($course['certificate_show_qr'] ?? 1) === 1) ?>><span class="form-check-label">QR Code</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1" <?= checked((int) ($course['certificate_show_recipient'] ?? 1) === 1) ?>><span class="form-check-label">Nome do estudante</span></label>
