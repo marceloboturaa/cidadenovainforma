@@ -717,10 +717,18 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <span>Controle a faixa inferior, base legal e dados da instituicao.</span>
                 </header>
                 <div class="certificate-editor-grid">
-            <label class="forum-check-line grid-span-2">
-                <input type="checkbox" name="certificate_footer_on_back" value="1" <?= checked((int) ($course['certificate_footer_on_back'] ?? 0) === 1) ?>>
-                <span>Exibir o rodapé no verso do certificado</span>
+            <label class="grid-span-2">
+                <span class="form-label">Posição do rodapé</span>
+                <select class="form-select" name="certificate_footer_on_back">
+                    <option value="0" <?= selected('0', (string) ($course['certificate_footer_on_back'] ?? 0)) ?>>Na frente do certificado</option>
+                    <option value="1" <?= selected('1', (string) ($course['certificate_footer_on_back'] ?? 0)) ?>>No verso do certificado</option>
+                </select>
             </label>
+            <label class="forum-check-line grid-span-2">
+                <input type="checkbox" name="certificate_hide_responsible" value="1" <?= checked((int) ($course['certificate_hide_responsible'] ?? 0) === 1) ?>>
+                <span>Ocultar o responsável/professor no certificado</span>
+            </label>
+            <small class="field-hint grid-span-2">Oculta o professor no rodapé e o nome e a formação do responsável no verso. Textos digitados e nomes presentes na imagem de fundo devem ser editados na origem.</small>
             <small class="field-hint grid-span-2">O verso será incluído para receber o rodapé, mesmo quando a programação estiver desativada.</small>
             <div>
                 <label class="form-label">Cor da escrita do rodapé</label>

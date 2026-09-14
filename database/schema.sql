@@ -617,6 +617,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     certificate_responsible_credential VARCHAR(180) NULL,
     certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1,
     certificate_footer_on_back TINYINT(1) NOT NULL DEFAULT 0,
+    certificate_hide_responsible TINYINT(1) NOT NULL DEFAULT 0,
     certificate_program_background_enabled TINYINT(1) NOT NULL DEFAULT 1,
     certificate_program_text_color VARCHAR(20) NULL,
     certificate_program_background_color VARCHAR(20) NULL,

@@ -84,7 +84,8 @@ $showText = (int) ($course['certificate_show_text'] ?? 1) === 1;
 $showQr = (int) ($course['certificate_show_qr'] ?? 1) === 1;
 $showIssuedMeta = $showMeta && !$textHasCode && !$textHasPeriod;
 $showCodeMeta = $showMeta && !$textHasCode;
-$showTeacherMeta = $showMeta && !$textHasCode && !$isRecognitionCertificate && !empty($course['teacher_name']);
+$hideResponsible = (int) ($course['certificate_hide_responsible'] ?? 0) === 1;
+$showTeacherMeta = !$hideResponsible && $showMeta && !$textHasCode && !$isRecognitionCertificate && !empty($course['teacher_name']);
 $showFrequencyMeta = $showMeta && !$textHasCode && !$isRecognitionCertificate && !$textHasFrequency;
 $officialCity = trim((string) ($course['certificate_institution_official_city'] ?? ''));
 $officialState = trim((string) ($course['certificate_institution_official_state'] ?? ''));
@@ -97,6 +98,10 @@ $courseObjectives = trim((string) ($course['certificate_objectives'] ?? ''));
 $courseCompetencies = array_values(array_filter(array_map('trim', preg_split('/\R/u', (string) ($course['certificate_competencies'] ?? '')) ?: [])));
 $courseResponsible = trim((string) ($course['certificate_responsible_name'] ?? '')) ?: trim((string) ($course['teacher_name'] ?? ''));
 $courseResponsibleCredential = trim((string) ($course['certificate_responsible_credential'] ?? ''));
+if ($hideResponsible) {
+    $courseResponsible = '';
+    $courseResponsibleCredential = '';
+}
 $hasProgramSummary = $courseObjectives !== '' || $courseCompetencies || $courseResponsible !== '' || $courseResponsibleCredential !== '';
 $hasCertificateProgramBack = $programBackground !== '' || $programExtra !== '' || $hasProgramSummary || !empty($certificateProgram);
 $verificationUrl = $isCertificatePreview ? url('/certificados') : url('/certificado/' . ($certificate['verification_code'] ?? ''));

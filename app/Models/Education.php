@@ -158,6 +158,7 @@ class Education
                 certificate_responsible_credential VARCHAR(180) NULL,
                 certificate_program_enabled TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_footer_on_back TINYINT(1) NOT NULL DEFAULT 0,
+                certificate_hide_responsible TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_program_background_enabled TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_program_text_color VARCHAR(20) NULL,
                 certificate_program_background_color VARCHAR(20) NULL,
@@ -563,6 +564,7 @@ class Education
         self::ensureColumn('education_courses', 'certificate_responsible_credential', 'VARCHAR(180) NULL AFTER certificate_responsible_name');
         self::ensureColumn('education_courses', 'certificate_program_enabled', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_responsible_credential');
         self::ensureColumn('education_courses', 'certificate_footer_on_back', 'TINYINT(1) NOT NULL DEFAULT 0');
+        self::ensureColumn('education_courses', 'certificate_hide_responsible', 'TINYINT(1) NOT NULL DEFAULT 0');
         self::ensureColumn('education_courses', 'certificate_program_background_enabled', 'TINYINT(1) NOT NULL DEFAULT 1');
         self::ensureColumn('education_courses', 'certificate_program_text_color', 'VARCHAR(20) NULL');
         self::ensureColumn('education_courses', 'certificate_program_background_color', 'VARCHAR(20) NULL AFTER certificate_program_enabled');
@@ -1211,9 +1213,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, public_access_mode, playlist_required, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_text_color, certificate_body_background_color, certificate_body_background_enabled, certificate_footer_text_color, certificate_footer_background_color, certificate_footer_background_enabled, certificate_footer_rounded, certificate_background, certificate_ready_image, certificate_min_frequency, certificate_show_heading, certificate_show_text, certificate_show_qr, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_footer_on_back, certificate_program_background_enabled, certificate_program_text_color, certificate_program_background_color, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, public_access_mode, playlist_required, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_text_color, certificate_body_background_color, certificate_body_background_enabled, certificate_footer_text_color, certificate_footer_background_color, certificate_footer_background_enabled, certificate_footer_rounded, certificate_background, certificate_ready_image, certificate_min_frequency, certificate_show_heading, certificate_show_text, certificate_show_qr, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_footer_on_back, certificate_hide_responsible, certificate_program_background_enabled, certificate_program_text_color, certificate_program_background_color, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :public_access_mode, :playlist_required, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_text_color, :certificate_body_background_color, :certificate_body_background_enabled, :certificate_footer_text_color, :certificate_footer_background_color, :certificate_footer_background_enabled, :certificate_footer_rounded, :certificate_background, :certificate_ready_image, :certificate_min_frequency, :certificate_show_heading, :certificate_show_text, :certificate_show_qr, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_footer_on_back, :certificate_program_background_enabled, :certificate_program_text_color, :certificate_program_background_color, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :public_access_mode, :playlist_required, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_text_color, :certificate_body_background_color, :certificate_body_background_enabled, :certificate_footer_text_color, :certificate_footer_background_color, :certificate_footer_background_enabled, :certificate_footer_rounded, :certificate_background, :certificate_ready_image, :certificate_min_frequency, :certificate_show_heading, :certificate_show_text, :certificate_show_qr, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_footer_on_back, :certificate_hide_responsible, :certificate_program_background_enabled, :certificate_program_text_color, :certificate_program_background_color, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -1282,6 +1284,7 @@ class Education
                  certificate_responsible_credential = :certificate_responsible_credential,
                  certificate_program_enabled = :certificate_program_enabled,
                  certificate_footer_on_back = :certificate_footer_on_back,
+                 certificate_hide_responsible = :certificate_hide_responsible,
                  certificate_program_background_enabled = :certificate_program_background_enabled,
                  certificate_program_text_color = :certificate_program_text_color,
                  certificate_program_background_color = :certificate_program_background_color,
@@ -2204,6 +2207,7 @@ class Education
             'certificate_responsible_credential' => self::nullable($data['certificate_responsible_credential'] ?? null),
             'certificate_program_enabled' => !empty($data['certificate_program_enabled']) ? 1 : 0,
             'certificate_footer_on_back' => !empty($data['certificate_footer_on_back']) ? 1 : 0,
+            'certificate_hide_responsible' => !empty($data['certificate_hide_responsible']) ? 1 : 0,
             'certificate_program_background_enabled' => (int) ($data['certificate_program_background_enabled'] ?? 1) === 1 ? 1 : 0,
             'certificate_program_text_color' => self::certificateColor($data['certificate_program_text_color'] ?? null),
             'certificate_program_background_color' => self::certificateColor($data['certificate_program_background_color'] ?? null),
@@ -2305,6 +2309,7 @@ class Education
             'certificate_responsible_credential' => self::nullable($data['certificate_responsible_credential'] ?? null),
             'certificate_program_enabled' => !empty($data['certificate_program_enabled']) ? 1 : 0,
             'certificate_footer_on_back' => !empty($data['certificate_footer_on_back']) ? 1 : 0,
+            'certificate_hide_responsible' => !empty($data['certificate_hide_responsible']) ? 1 : 0,
             'certificate_program_background_enabled' => (int) ($data['certificate_program_background_enabled'] ?? 1) === 1 ? 1 : 0,
             'certificate_program_text_color' => self::certificateColor($data['certificate_program_text_color'] ?? null),
             'certificate_program_background_color' => self::certificateColor($data['certificate_program_background_color'] ?? null),
@@ -3757,6 +3762,7 @@ class Education
             'certificate_responsible_credential' => self::nullable($data['certificate_responsible_credential'] ?? null),
             'certificate_program_enabled' => array_key_exists('certificate_program_enabled', $data) ? (!empty($data['certificate_program_enabled']) ? 1 : 0) : 1,
             'certificate_footer_on_back' => !empty($data['certificate_footer_on_back']) ? 1 : 0,
+            'certificate_hide_responsible' => !empty($data['certificate_hide_responsible']) ? 1 : 0,
             'certificate_program_background_enabled' => (int) ($data['certificate_program_background_enabled'] ?? 1) === 1 ? 1 : 0,
             'certificate_program_text_color' => self::certificateColor($data['certificate_program_text_color'] ?? null),
             'certificate_program_background_color' => self::certificateColor($data['certificate_program_background_color'] ?? null),
