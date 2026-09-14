@@ -2978,11 +2978,8 @@
 
 .education-certificate-qr {
     position: absolute;
-    right: auto;
-    left: 50%;
+    right: 5mm;
     bottom: calc(var(--certificate-footnote-height) + 8mm);
-    transform: translateX(-50%);
-    z-index: 2;
     display: grid;
     justify-items: center;
     gap: 3px;
@@ -2993,7 +2990,6 @@
     font-weight: 800;
     line-height: 1.1;
     text-transform: uppercase;
-    text-align: center;
 }
 
 .education-certificate-qr img {
@@ -3007,6 +3003,8 @@
 
 .education-certificate-qr figcaption {
     max-width: 100%;
+    width: 100%;
+    text-align: center;
 }
 
 .education-certificate-sheet.certificate-font-serif {
