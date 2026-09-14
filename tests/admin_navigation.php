@@ -36,7 +36,9 @@ namespace {
         foreach (['/admin/news', '/admin/users', '/admin/education/manage', '/admin/education/certificate-center', '/admin/forum'] as $path) {
             check(!AdminNavigation::allows($path), "$role cannot access $path without permission");
         }
-        check(!isset(AdminNavigation::visibleGroups()['Cursos e certificados']), 'Empty course group must be hidden');
+        $reportAccess = in_array($role, ['admin', 'admin-local', 'diretor', 'professor'], true);
+        check(AdminNavigation::allows('/admin/education/certificate-report') === $reportAccess, 'Report role access');
+        check(isset(AdminNavigation::visibleGroups()['Cursos e certificados']) === $reportAccess, 'Course group follows report access');
         Auth::$permissions = ['education.teach', 'news.create', 'certificates.issue'];
         foreach (['/admin/news', '/admin/education/manage', '/admin/education/certificate-center'] as $path) {
             check(AdminNavigation::allows($path), "Explicit permission must allow $path");

@@ -98,6 +98,27 @@ class EducationController
         ]);
     }
 
+    public function certificateReport(): void
+    {
+        Middleware::auth();
+        if (!$this->canManageAll() && !$this->canTeach()) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+
+        $teacherId = $this->canManageAll() ? null : (int) current_user()['id'];
+        $search = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 180);
+        $courseId = max(0, (int) ($_GET['course_id'] ?? 0));
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        View::render('admin/education/certificate-report', [
+            'report' => Education::certificateReport($teacherId, $search, $courseId, $page),
+            'search' => $search,
+            'courseId' => $courseId,
+            'ownCoursesOnly' => $teacherId !== null,
+        ]);
+    }
+
     public function certificateCenter(): void
     {
         Middleware::auth();

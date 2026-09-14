@@ -14,7 +14,7 @@ class AdminNavigation
             'Usuários e acessos' => [['/admin/users', 'Usuários', 'people'], ['/admin/authorizations', 'Autorizações', 'shield-lock']],
             'Conteúdo' => [['/admin/news', 'Notícias', 'newspaper'], ['/admin/categories', 'Categorias', 'folder2-open'], ['/admin/tags', 'Tags', 'tags']],
             'Institucional' => [['/admin/institution-pages', 'Instituição', 'building'], ['/admin/people', 'Pessoas', 'person-lines-fill'], ['/admin/library-events', 'Eventos', 'calendar-event'], ['/admin/registrations', 'Inscrições', 'clipboard-check'], ['/admin/documents', 'Documentos', 'file-earmark-arrow-down']],
-            'Cursos e certificados' => [['/admin/education', 'Curso', 'mortarboard'], ['/admin/education/certificates', 'Meus certificados', 'award'], ['/admin/education/certificate-center', 'Certificados', 'patch-check'], ['/admin/education/recognitions', 'Reconhecimentos', 'stars'], ['/admin/education/manage', 'Escola', 'house-door']],
+            'Cursos e certificados' => [['/admin/education', 'Curso', 'mortarboard'], ['/admin/education/certificate-report', 'Painel de certificados', 'bar-chart'], ['/admin/education/certificates', 'Meus certificados', 'award'], ['/admin/education/certificate-center', 'Certificados', 'patch-check'], ['/admin/education/recognitions', 'Reconhecimentos', 'stars'], ['/admin/education/manage', 'Escola', 'house-door']],
             'Comunicação' => [['/admin/communication', 'Comunicação', 'chat-dots'], ['/admin/forum', 'Fóruns', 'chat-square-text']],
             'Gestão do site' => [['/admin/menu', 'Menu', 'list-ul'], ['/admin/backups', 'Backups', 'cloud-arrow-down'], ['/admin/consent', 'LGPD Cookies', 'shield-check']],
             'Minha conta' => [['/admin/profile', 'Meu cadastro', 'person-vcard'], ['/admin/password', 'Minha senha', 'key']],
@@ -54,6 +54,7 @@ class AdminNavigation
         }
 
         return match ($path) {
+            '/admin/education/certificate-report' => Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor']) || Auth::can('education.teach'),
             '/admin/authorizations' => Auth::hasRole('master'),
             '/admin/menu', '/admin/backups' => ($user['role_slug'] ?? '') === 'master',
             '/admin/institution-pages' => Auth::hasRole(['master', 'admin']) || (bool) InstitutionPage::manageableForUser((int) $user['id'], false),

@@ -2544,6 +2544,49 @@ class Education
         ];
     }
 
+    public static function certificateReport(?int $teacherId, string $search, int $courseId, int $page): array
+    {
+        self::ensureSchema();
+        $db = Database::connection();
+        $from = ' FROM education_certificates c
+                  INNER JOIN education_courses course ON course.id = c.course_id
+                  LEFT JOIN users student ON student.id = c.user_id
+                  LEFT JOIN people person ON person.id = c.person_id
+                  LEFT JOIN users teacher ON teacher.id = course.teacher_user_id';
+        $where = ' WHERE c.status = "issued" AND course.certificate_activity_type <> "reconhecimento"';
+        $params = [];
+        if ($teacherId !== null) {
+            $where .= ' AND course.teacher_user_id = :teacher_id';
+            $params['teacher_id'] = $teacherId;
+        }
+        $courses = $db->prepare('SELECT DISTINCT course.id, course.title' . $from . $where . ' ORDER BY course.title, course.id');
+        $courses->execute($params);
+        $courseOptions = $courses->fetchAll();
+        if ($courseId > 0) {
+            $where .= ' AND course.id = :course_id';
+            $params['course_id'] = $courseId;
+        }
+        $recipient = 'COALESCE(NULLIF(c.student_name, ""), student.name, person.full_name, "Nome não informado")';
+        if ($search !== '') {
+            $where .= ' AND (' . $recipient . ' LIKE :recipient OR c.verification_code LIKE :code)';
+            $params['recipient'] = '%' . $search . '%';
+            $params['code'] = '%' . $search . '%';
+        }
+        $summary = $db->prepare('SELECT COUNT(*) AS certificates, COUNT(DISTINCT c.course_id) AS courses,
+            COUNT(DISTINCT CASE WHEN c.user_id IS NOT NULL THEN CONCAT("user:", c.user_id)
+                WHEN c.person_id IS NOT NULL THEN CONCAT("person:", c.person_id)
+                ELSE CONCAT("certificate:", c.id) END) AS recipients' . $from . $where);
+        $summary->execute($params);
+        $totals = $summary->fetch();
+        $pages = max(1, (int) ceil((int) $totals['certificates'] / 25));
+        $page = max(1, min($pages, $page));
+        $rows = $db->prepare('SELECT c.id, c.verification_code, c.issued_at, c.authorized_at,
+            course.title AS course_title, teacher.name AS teacher_name, ' . $recipient . ' AS recipient_name'
+            . $from . $where . ' ORDER BY c.issued_at DESC, c.id DESC LIMIT 25 OFFSET ' . (($page - 1) * 25));
+        $rows->execute($params);
+        return ['totals' => $totals, 'rows' => $rows->fetchAll(), 'courses' => $courseOptions, 'page' => $page, 'pages' => $pages];
+    }
+
     public static function certificatesForUser(int $userId): array
     {
         self::ensureSchema();
