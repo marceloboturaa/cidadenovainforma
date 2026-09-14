@@ -494,7 +494,7 @@
         overflow: hidden;
     }
 
-    .education-certificate-copy > span {
+    .education-certificate-heading > span {
         font-size: 1.2rem;
     }
 
@@ -950,7 +950,7 @@
         overflow: hidden;
     }
 
-    .education-certificate-copy > span {
+    .education-certificate-heading > span {
         font-size: clamp(1.7rem, 3vw, 2.45rem);
     }
 

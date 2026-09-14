@@ -2847,7 +2847,7 @@
     overflow: hidden;
 }
 
-.education-certificate-copy > span {
+.education-certificate-heading > span {
     color: var(--certificate-text-color);
     font-size: clamp(1.9rem, 3.15vw, 2.85rem);
     font-weight: 900;
@@ -3044,10 +3044,12 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: rgba(255, 255, 255, 0.88);
+    background: var(--certificate-program-background);
+    opacity: 0.88;
+    pointer-events: none;
 }
 
-.education-certificate-program-sheet > :not(.education-certificate-background) {
+.education-certificate-program-sheet > :not(.education-certificate-background):not(.education-certificate-footnote) {
     position: relative;
     z-index: 2;
 }
@@ -5049,4 +5051,55 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.5rem;
+}
+
+/* Keep the title separate from the certificate body in every output size. */
+.education-certificate-heading {
+    display: grid;
+    gap: 3mm;
+    width: 100%;
+    margin-bottom: 3mm;
+    line-height: 1.15;
+}
+
+.education-certificate-copy {
+    grid-auto-rows: max-content;
+    height: auto;
+    max-height: 125mm;
+}
+
+.education-certificate-copy .education-certificate-nature {
+    margin: 0;
+}
+
+.education-certificate-copy .education-certificate-body {
+    line-height: 1.5;
+    margin-block: 2mm;
+}
+
+.education-certificate-program-sheet {
+    isolation: isolate;
+    color: var(--certificate-text-color);
+}
+
+.education-certificate-program-sheet.is-overlay-hidden::before {
+    display: none;
+}
+
+.education-certificate-program-sheet.is-overlay-hidden {
+    background: #ffffff;
+}
+
+.education-certificate-program-extra,
+.education-certificate-program-summary article {
+    background: transparent;
+}
+
+.education-certificate-program-sheet.has-back-footer {
+    padding-bottom: calc(var(--certificate-footnote-height) + var(--certificate-write-bottom) + 5mm);
+}
+
+.education-certificate-program-sheet > .education-certificate-footnote {
+    position: absolute;
+    z-index: 2;
 }

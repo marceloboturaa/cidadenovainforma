@@ -717,6 +717,11 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <span>Controle a faixa inferior, base legal e dados da instituicao.</span>
                 </header>
                 <div class="certificate-editor-grid">
+            <label class="forum-check-line grid-span-2">
+                <input type="checkbox" name="certificate_footer_on_back" value="1" <?= checked((int) ($course['certificate_footer_on_back'] ?? 0) === 1) ?>>
+                <span>Exibir o rodapé no verso do certificado</span>
+            </label>
+            <small class="field-hint grid-span-2">O verso será incluído para receber o rodapé, mesmo quando a programação estiver desativada.</small>
             <div>
                 <label class="form-label">Cor da escrita do rodapé</label>
                 <input class="form-control form-control-color" name="certificate_footer_text_color" type="color" value="<?= e($certificateFooterTextColor) ?>">
@@ -787,8 +792,16 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <option value="4" <?= selected('4', (string) $certificateProgramColumns) ?>>4 colunas</option>
                 </select>
             </div>
+            <label class="forum-check-line">
+                <input type="checkbox" name="certificate_program_background_enabled" value="1" <?= checked((int) ($course['certificate_program_background_enabled'] ?? 1) === 1) ?>>
+                <span>Exibir camada de cor sobre a imagem do verso</span>
+            </label>
             <div>
-                <label class="form-label">Cor do fundo do verso</label>
+                <label class="form-label">Cor do texto do verso</label>
+                <input class="form-control form-control-color" name="certificate_program_text_color" type="color" value="<?= e($course['certificate_program_text_color'] ?? $certificateTextColor) ?>">
+            </div>
+            <div>
+                <label class="form-label">Cor da camada sobre a imagem do verso</label>
                 <input class="form-control form-control-color" name="certificate_program_background_color" type="color" value="<?= e($certificateProgramBackgroundColor) ?>">
             </div>
             <div>
