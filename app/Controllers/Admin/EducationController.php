@@ -1834,6 +1834,7 @@ class EducationController
         Education::updateCourse((int) $course['id'], array_merge($course, [
             'certificate_enabled' => !empty($_POST['certificate_enabled']) ? 1 : 0,
             'certificate_institution_id' => $_POST['certificate_institution_id'] ?? null,
+            'certificate_heading' => trim((string) ($_POST['certificate_heading'] ?? '')),
             'certificate_title' => $title,
             'certificate_text' => $text,
             'certificate_text_color' => $_POST['certificate_text_color'] ?? null,
@@ -2703,6 +2704,7 @@ class EducationController
             'certificate_template_id' => $course['certificate_template_id'] ?? null,
             'certificate_activity_type' => $course['certificate_activity_type'] ?? 'curso_livre',
             'certificate_enabled' => $course['certificate_enabled'] ?? 0,
+            'certificate_heading' => $course['certificate_heading'] ?? null,
             'certificate_title' => $course['certificate_title'] ?? null,
             'certificate_text' => $course['certificate_text'] ?? null,
             'certificate_font_family' => $course['certificate_font_family'] ?? null,

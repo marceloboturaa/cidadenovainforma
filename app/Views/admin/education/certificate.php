@@ -1,5 +1,6 @@
 <?php
 $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : date('d/m/Y');
+$heading = trim((string) ($course['certificate_heading'] ?? '')) ?: 'Certificado';
 $title = trim((string) ($course['certificate_title'] ?? ''));
 if ($title === '') {
     $title = 'Certificado de conclusão';
@@ -178,7 +179,7 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
         <?php if ($readyImage === ''): ?>
             <div class="education-certificate-copy">
                 <header class="education-certificate-heading">
-                    <?php if ($showHeading && $background === ''): ?><span>Certificado</span><?php endif; ?>
+                    <?php if ($showHeading && $background === ''): ?><span><?= e($heading) ?></span><?php endif; ?>
                     <h2><?= e($title) ?></h2>
                 </header>
                 <?php if ($showNature): ?>

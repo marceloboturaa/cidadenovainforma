@@ -619,6 +619,9 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <div>
                 <label class="form-label">Título do certificado</label>
                 <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusão">
+                <label class="form-label mt-2">Texto do cabeçalho</label>
+                <input class="form-control" name="certificate_heading" maxlength="180" value="<?= e($course['certificate_heading'] ?? '') ?>" placeholder="Certificado">
+                <small class="field-hint">Use Certificado, Declaração ou outro texto. Se vazio, será usado Certificado. Exibido nos modelos sem imagem de fundo.</small>
             </div>
             <div>
                 <label class="form-label">Cor da escrita principal</label>
@@ -644,10 +647,12 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <div>
                 <label class="form-label">Natureza do curso</label>
                 <input class="form-control" name="certificate_course_nature" maxlength="180" value="<?= e($course['certificate_course_nature'] ?? '') ?>" placeholder="Curso Livre de Capacitação Profissional - Formação Continuada">
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1" <?= checked((int) ($course['certificate_show_nature'] ?? 1) === 1) ?>><span class="form-check-label">Exibir natureza do curso</span></label>
             </div>
             <div>
                 <label class="form-label">Modalidade</label>
                 <input class="form-control" name="certificate_modality" maxlength="80" value="<?= e($course['certificate_modality'] ?? '') ?>" placeholder="Online, presencial ou híbrida">
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1" <?= checked((int) ($course['certificate_show_modality'] ?? 1) === 1) ?>><span class="form-check-label">Exibir modalidade do curso</span></label>
             </div>
             <div>
                 <label class="form-label">Fundo por link</label>
@@ -695,12 +700,10 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <small>Mostrar ou ocultar titulo, QR Code, modalidade, datas e dados legais.</small>
                 </summary>
                 <div class="education-certificate-toggle-grid">
-                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Título fixo Certificado (modelos sem imagem de fundo)</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Exibir texto do cabeçalho (modelos sem imagem de fundo)</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_text" value="1" <?= checked((int) ($course['certificate_show_text'] ?? 1) === 1) ?>><span class="form-check-label">Texto principal</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_qr" value="1" <?= checked((int) ($course['certificate_show_qr'] ?? 1) === 1) ?>><span class="form-check-label">QR Code</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1" <?= checked((int) ($course['certificate_show_recipient'] ?? 1) === 1) ?>><span class="form-check-label">Nome do estudante</span></label>
-                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_nature" value="1" <?= checked((int) ($course['certificate_show_nature'] ?? 1) === 1) ?>><span class="form-check-label">Natureza do curso</span></label>
-                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_modality" value="1" <?= checked((int) ($course['certificate_show_modality'] ?? 1) === 1) ?>><span class="form-check-label">Modalidade</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_period" value="1" <?= checked((int) ($course['certificate_show_period'] ?? 1) === 1) ?>><span class="form-check-label">Periodo/data</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_approval" value="1" <?= checked((int) ($course['certificate_show_approval'] ?? 1) === 1) ?>><span class="form-check-label">Criterio de aprovacao</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_institution" value="1" <?= checked((int) ($course['certificate_show_institution'] ?? 1) === 1) ?>><span class="form-check-label">Instituicao</span></label>

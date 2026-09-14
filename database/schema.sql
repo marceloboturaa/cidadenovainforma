@@ -580,6 +580,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     playlist_required TINYINT(1) NOT NULL DEFAULT 1,
     certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
     certificate_title VARCHAR(180) NULL,
+    certificate_heading VARCHAR(180) NULL,
     certificate_text TEXT NULL,
     certificate_font_family VARCHAR(80) NULL,
     certificate_text_color VARCHAR(20) NULL,

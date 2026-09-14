@@ -84,6 +84,9 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                     <div>
                         <label class="form-label">Título no certificado</label>
                         <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($recognitionValue('certificate_title', 'Certificado de reconhecimento')) ?>">
+                <label class="form-label mt-2">Texto do cabeçalho</label>
+                <input class="form-control" name="certificate_heading" maxlength="180" value="<?= e($recognitionValue('certificate_heading', '')) ?>" placeholder="Certificado">
+                <small class="field-hint">Use Certificado, Declaração ou outro texto. Se vazio, será usado Certificado. Exibido nos modelos sem imagem de fundo.</small>
                     </div>
                     <div>
                         <label class="form-label">Fonte do certificado</label>
@@ -124,7 +127,7 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                     <div class="grid-span-2">
                         <span class="form-label">Exibir no certificado</span>
                         <div class="education-certificate-toggle-grid">
-                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1"<?= $recognitionChecked('certificate_show_heading', true) ?>><span class="form-check-label">Título fixo Certificado</span></label>
+                            <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1"<?= $recognitionChecked('certificate_show_heading', true) ?>><span class="form-check-label">Exibir texto do cabeçalho</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_text" value="1"<?= $recognitionChecked('certificate_show_text', true) ?>><span class="form-check-label">Texto principal</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_qr" value="1"<?= $recognitionChecked('certificate_show_qr', true) ?>><span class="form-check-label">QR Code</span></label>
                             <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1"<?= $recognitionChecked('certificate_show_recipient', true) ?>><span class="form-check-label">Nome do recebedor</span></label>
