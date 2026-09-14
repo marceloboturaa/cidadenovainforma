@@ -12,7 +12,20 @@ $isRecognitionCertificate = ($course['certificate_activity_type'] ?? '') === 're
 $certificateFont = trim((string) ($course['certificate_font_family'] ?? ''));
 $fontClass = in_array($certificateFont, ['serif', 'georgia', 'garamond', 'playfair', 'montserrat'], true) ? ' certificate-font-' . $certificateFont : '';
 $textColor = trim((string) ($course['certificate_text_color'] ?? ''));
-$textColorStyle = preg_match('/^#[0-9a-fA-F]{6}$/', $textColor) ? ' style="--certificate-text-color: ' . e($textColor) . ';"' : '';
+$footerTextColor = trim((string) ($course['certificate_footer_text_color'] ?? ''));
+$footerBackgroundColor = trim((string) ($course['certificate_footer_background_color'] ?? ''));
+$footerBackgroundEnabled = (int) ($course['certificate_footer_background_enabled'] ?? 1) === 1;
+$certificateStyle = [];
+if (preg_match('/^#[0-9a-fA-F]{6}$/', $textColor)) {
+    $certificateStyle[] = '--certificate-text-color: ' . $textColor;
+}
+if (preg_match('/^#[0-9a-fA-F]{6}$/', $footerTextColor)) {
+    $certificateStyle[] = '--certificate-footer-text-color: ' . $footerTextColor;
+}
+if (preg_match('/^#[0-9a-fA-F]{6}$/', $footerBackgroundColor)) {
+    $certificateStyle[] = '--certificate-footer-background: ' . $footerBackgroundColor;
+}
+$certificateStyleAttr = $certificateStyle ? ' style="' . e(implode('; ', $certificateStyle)) . ';"' : '';
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
@@ -131,7 +144,7 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
 <?php endif; ?>
 
 <section class="panel education-certificate-sheet-panel">
-    <article class="education-certificate-sheet<?= $background !== '' || $readyImage !== '' ? ' has-background' : '' ?><?= $readyImage !== '' ? ' has-ready-image' : '' ?><?= e($fontClass) ?>"<?= $textColorStyle ?>>
+    <article class="education-certificate-sheet<?= $background !== '' || $readyImage !== '' ? ' has-background' : '' ?><?= $readyImage !== '' ? ' has-ready-image' : '' ?><?= e($fontClass) ?>"<?= $certificateStyleAttr ?>>
         <?php if ($readyImage !== ''): ?>
             <img class="education-certificate-ready-image" src="<?= e(media_url($readyImage)) ?>" alt="Certificado pronto">
         <?php elseif ($background !== ''): ?>
@@ -161,7 +174,7 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
                 <?php endif; ?>
             </div>
             <?php if ($hasBottomInfo): ?>
-            <footer class="education-certificate-footnote">
+            <footer class="education-certificate-footnote<?= $footerBackgroundEnabled ? '' : ' is-transparent' ?>">
                 <div class="education-certificate-footnote-text">
                     <?php if ($showInstitution): ?>
                         <div class="education-certificate-institution">
@@ -192,7 +205,7 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
         <?php endif; ?>
     </article>
     <?php if ($programEnabled && $hasCertificateProgramBack): ?>
-        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;<?= $textColorStyle !== '' ? ' --certificate-text-color: ' . e($textColor) . ';' : '' ?>">
+        <article class="education-certificate-sheet education-certificate-program-sheet education-certificate-program-columns-<?= e((string) $programColumns) ?><?= $programColumns >= 2 ? ' is-multi-column' : '' ?><?= $programBackground !== '' ? ' has-background' : '' ?>" style="--certificate-program-columns: <?= e((string) $programColumns) ?>;<?= $certificateStyle ? ' ' . e(implode('; ', $certificateStyle)) . ';' : '' ?>">
             <?php if ($programBackground !== ''): ?>
                 <img class="education-certificate-background" src="<?= e(media_url($programBackground)) ?>" alt="" aria-hidden="true">
             <?php endif; ?>

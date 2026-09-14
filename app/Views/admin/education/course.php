@@ -568,6 +568,17 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input type="checkbox" name="certificate_enabled" value="1" <?= checked(!empty($course['certificate_enabled'])) ?>>
                 <span>Liberar certificado quando o aluno concluir o curso</span>
             </label>
+            <?php
+                $certificateTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_text_color'] ?? '')) ? (string) $course['certificate_text_color'] : '#172033';
+                $certificateFooterTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_text_color'] ?? '')) ? (string) $course['certificate_footer_text_color'] : $certificateTextColor;
+                $certificateFooterBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_background_color'] ?? '')) ? (string) $course['certificate_footer_background_color'] : '#ffffff';
+            ?>
+            <section class="certificate-editor-section grid-span-2">
+                <header>
+                    <strong>Modelo e escola</strong>
+                    <span>Escolha a escola emissora e as regras gerais.</span>
+                </header>
+                <div class="certificate-editor-grid">
             <div class="grid-span-2">
                 <label class="form-label">Escola / instituição emissora</label>
                 <select class="form-select" name="certificate_institution_id">
@@ -588,8 +599,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusão">
             </div>
             <div>
-                <label class="form-label">Cor da escrita</label>
-                <?php $certificateTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_text_color'] ?? '')) ? (string) $course['certificate_text_color'] : '#172033'; ?>
+                <label class="form-label">Cor da escrita principal</label>
                 <input class="form-control form-control-color" name="certificate_text_color" type="color" value="<?= e($certificateTextColor) ?>">
             </div>
             <div>
@@ -597,6 +607,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input class="form-control" name="certificate_min_frequency" type="number" min="0" max="100" value="<?= e((string) ($course['certificate_min_frequency'] ?? 0)) ?>">
                 <small class="field-hint">Use 0 para não bloquear a emissão pela chamada.</small>
             </div>
+                </div>
+            </section>
+            <section class="certificate-editor-section grid-span-2">
+                <header>
+                    <strong>Frente do certificado</strong>
+                    <span>Use fundo da frente ou envie o certificado pronto.</span>
+                </header>
+                <div class="certificate-editor-grid">
             <div>
                 <label class="form-label">Natureza do curso</label>
                 <input class="form-control" name="certificate_course_nature" maxlength="180" value="<?= e($course['certificate_course_nature'] ?? '') ?>" placeholder="Curso Livre de Capacitação Profissional - Formação Continuada">
@@ -622,6 +640,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <label class="form-label">Enviar certificado pronto</label>
                 <input class="form-control" name="certificate_ready_image_upload" type="file" accept="image/jpeg,image/png,image/webp">
             </div>
+                </div>
+            </section>
+            <section class="certificate-editor-section certificate-editor-body grid-span-2">
+                <header>
+                    <strong>Corpo do texto</strong>
+                    <span>Edite a mensagem central e o que aparece no certificado.</span>
+                </header>
+                <div class="certificate-editor-grid">
             <div class="grid-span-2">
                 <label class="form-label">Texto do certificado</label>
                 <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title} em {issued_at}."><?= e($course['certificate_text'] ?? '') ?></textarea>
@@ -644,6 +670,26 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 </div>
                 <small class="field-hint">Desmarque os itens que devem ficar ocultos na visualizacao e no certificado liberado.</small>
             </div>
+                </div>
+            </section>
+            <section class="certificate-editor-section grid-span-2">
+                <header>
+                    <strong>Rodapé</strong>
+                    <span>Controle textos, cores e fundo da faixa inferior.</span>
+                </header>
+                <div class="certificate-editor-grid">
+            <div>
+                <label class="form-label">Cor da escrita do rodapé</label>
+                <input class="form-control form-control-color" name="certificate_footer_text_color" type="color" value="<?= e($certificateFooterTextColor) ?>">
+            </div>
+            <div>
+                <label class="form-label">Cor do fundo do rodapé</label>
+                <input class="form-control form-control-color" name="certificate_footer_background_color" type="color" value="<?= e($certificateFooterBackgroundColor) ?>">
+            </div>
+            <label class="forum-check-line">
+                <input type="checkbox" name="certificate_footer_background_enabled" value="1" <?= checked((int) ($course['certificate_footer_background_enabled'] ?? 1) === 1) ?>>
+                <span>Usar fundo no rodapé</span>
+            </label>
             <div class="grid-span-2">
                 <label class="form-label">Critério de aprovação</label>
                 <input class="form-control" name="certificate_approval_criteria" maxlength="255" value="<?= e($course['certificate_approval_criteria'] ?? '') ?>" placeholder="Certificado concedido mediante frequência mínima de 75% e aproveitamento satisfatório.">
@@ -668,6 +714,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <label class="form-label">Site oficial</label>
                 <input class="form-control" name="certificate_institution_site" maxlength="180" value="<?= e($course['certificate_institution_site'] ?? '') ?>" placeholder="www.cidadenovainforma.com.br">
             </div>
+                </div>
+            </section>
+            <section class="certificate-editor-section grid-span-2">
+                <header>
+                    <strong>Verso</strong>
+                    <span>Adicione fundo e informações complementares no verso.</span>
+                </header>
+                <div class="certificate-editor-grid">
             <label class="forum-check-line">
                 <input type="checkbox" name="certificate_program_enabled" value="1" <?= checked((int) ($course['certificate_program_enabled'] ?? 1) === 1) ?>>
                 <span>Incluir programação no verso</span>
@@ -705,6 +759,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <label class="form-label">Formação do responsável</label>
                 <input class="form-control" name="certificate_responsible_credential" maxlength="180" value="<?= e($course['certificate_responsible_credential'] ?? '') ?>" placeholder="Formação ou credencial do responsável">
             </div>
+                </div>
+            </section>
             <div class="form-action-cell">
                 <?php if ($canPreviewCertificate): ?>
                     <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'] . '&preview=certificate')) ?>" target="_blank" rel="noopener"><i class="bi bi-eye" aria-hidden="true"></i>Ver certificado</a>

@@ -2397,6 +2397,57 @@
     align-items: end;
 }
 
+.certificate-editor-section {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.certificate-editor-section > header {
+    display: grid;
+    gap: 3px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+}
+
+.certificate-editor-section > header strong {
+    color: var(--ink);
+    font-size: 0.98rem;
+    font-weight: 900;
+}
+
+.certificate-editor-section > header span {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.certificate-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.certificate-editor-grid > .grid-span-2,
+.certificate-editor-grid > .form-action-cell {
+    grid-column: 1 / -1;
+}
+
+.certificate-editor-body textarea {
+    min-height: 150px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.education-certificate-settings .form-control-color {
+    width: 100%;
+    min-height: 42px;
+    padding: 5px;
+}
+
 .education-certificate-settings .grid-span-2,
 .education-certificate-settings .form-action-cell {
     grid-column: 1 / -1;
@@ -2583,6 +2634,8 @@
     --certificate-main-height: 82mm;
     --certificate-footnote-height: 18mm;
     --certificate-text-color: #172033;
+    --certificate-footer-text-color: var(--certificate-text-color);
+    --certificate-footer-background: #ffffff;
     max-width: 100%;
     margin: 0 auto;
     overflow: hidden;
@@ -2725,13 +2778,18 @@
     height: var(--certificate-footnote-height);
     padding: 3mm 4mm;
     border-top: 0;
-    background: rgba(255, 255, 255, 0.94);
-    color: var(--certificate-text-color);
+    background: var(--certificate-footer-background);
+    color: var(--certificate-footer-text-color);
     font-size: 0.72rem;
     line-height: 1.25;
     text-align: center;
     max-height: var(--certificate-footnote-height);
     overflow: visible;
+}
+
+.education-certificate-footnote.is-transparent {
+    background: transparent;
+    padding-inline: 0;
 }
 
 .education-certificate-footnote-text {
@@ -2752,13 +2810,13 @@
 }
 
 .education-certificate-institution strong {
-    color: var(--certificate-text-color);
+    color: var(--certificate-footer-text-color);
 }
 
 .education-certificate-footnote-text p {
     margin: 0;
     max-width: 236mm;
-    color: var(--certificate-text-color);
+    color: var(--certificate-footer-text-color);
     font-size: 0.64rem;
     line-height: 1.25;
 }
@@ -4710,6 +4768,11 @@
 }
 
 @media (max-width: 760px) {
+    .education-certificate-settings,
+    .certificate-editor-grid {
+        grid-template-columns: 1fr;
+    }
+
     .education-correction-card header,
     .education-correction-student,
     .education-correction-form-footer {

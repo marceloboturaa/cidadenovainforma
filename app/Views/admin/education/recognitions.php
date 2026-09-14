@@ -102,6 +102,20 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                         <?php $recognitionTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $recognitionValue('certificate_text_color')) ? (string) $recognitionValue('certificate_text_color') : '#172033'; ?>
                         <input class="form-control form-control-color" name="certificate_text_color" type="color" value="<?= e($recognitionTextColor) ?>">
                     </div>
+                    <div>
+                        <label class="form-label">Cor da escrita do rodapé</label>
+                        <?php $recognitionFooterTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $recognitionValue('certificate_footer_text_color')) ? (string) $recognitionValue('certificate_footer_text_color') : $recognitionTextColor; ?>
+                        <input class="form-control form-control-color" name="certificate_footer_text_color" type="color" value="<?= e($recognitionFooterTextColor) ?>">
+                    </div>
+                    <div>
+                        <label class="form-label">Cor do fundo do rodapé</label>
+                        <?php $recognitionFooterBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $recognitionValue('certificate_footer_background_color')) ? (string) $recognitionValue('certificate_footer_background_color') : '#ffffff'; ?>
+                        <input class="form-control form-control-color" name="certificate_footer_background_color" type="color" value="<?= e($recognitionFooterBackgroundColor) ?>">
+                    </div>
+                    <label class="form-check">
+                        <input class="form-check-input" type="checkbox" name="certificate_footer_background_enabled" value="1"<?= $recognitionChecked('certificate_footer_background_enabled', true) ?>>
+                        <span class="form-check-label">Usar fundo no rodapé</span>
+                    </label>
                     <div class="grid-span-2">
                         <label class="form-label">Texto editável do certificado</label>
                         <textarea class="form-control" name="certificate_text" rows="4"><?= e($recognitionValue('certificate_text', 'Certificamos que {student_name} recebeu este certificado de reconhecimento por sua contribuição voluntária em ações institucionais e comunitárias.')) ?></textarea>
