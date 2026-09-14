@@ -233,8 +233,9 @@ class LibraryEvent
         $params = [];
 
         if ($createdBy !== null) {
-            $sql .= ' AND (library_events.created_by = :created_by OR library_events.responsible_user_id = :created_by)';
+            $sql .= ' AND (library_events.created_by = :created_by OR library_events.responsible_user_id = :responsible_user_id)';
             $params['created_by'] = $createdBy;
+            $params['responsible_user_id'] = $createdBy;
         }
 
         $sql .= ' ORDER BY COALESCE(library_events.starts_at, library_events.created_at) DESC';
