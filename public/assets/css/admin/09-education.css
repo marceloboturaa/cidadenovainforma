@@ -2687,8 +2687,10 @@
     --certificate-main-height: 82mm;
     --certificate-footnote-height: 18mm;
     --certificate-text-color: #172033;
+    --certificate-body-background: transparent;
     --certificate-footer-text-color: var(--certificate-text-color);
     --certificate-footer-background: #ffffff;
+    --certificate-footnote-radius: 0;
     max-width: 100%;
     margin: 0 auto;
     overflow: hidden;
@@ -2744,6 +2746,8 @@
     max-height: none;
     margin: 0;
     padding: 0;
+    border-radius: 6mm;
+    background: var(--certificate-body-background);
     transform: none;
     text-align: center;
     color: var(--certificate-text-color);
@@ -2831,6 +2835,7 @@
     height: var(--certificate-footnote-height);
     padding: 3mm 4mm;
     border-top: 0;
+    border-radius: var(--certificate-footnote-radius);
     background: var(--certificate-footer-background);
     color: var(--certificate-footer-text-color);
     font-size: 0.72rem;
@@ -2843,6 +2848,10 @@
 .education-certificate-footnote.is-transparent {
     background: transparent;
     padding-inline: 0;
+}
+
+.education-certificate-footnote.is-rounded {
+    overflow: hidden;
 }
 
 .education-certificate-footnote-text {
@@ -3042,6 +3051,9 @@
 }
 
 .education-certificate-program-sheet.is-multi-column .education-certificate-program-list {
+    display: block;
+    columns: var(--certificate-program-columns, 2);
+    column-gap: 18px;
     align-items: start;
 }
 
@@ -3053,6 +3065,7 @@
 }
 
 .education-certificate-program-columns-4 .education-certificate-program-list {
+    column-gap: 14px;
     gap: 10px 14px;
     font-size: 0.72rem;
     line-height: 1.22;
@@ -3064,6 +3077,11 @@
     margin: 0 0 14px;
     break-inside: avoid;
     page-break-inside: avoid;
+}
+
+.education-certificate-program-sheet.is-multi-column .education-certificate-program-module {
+    break-inside: auto;
+    page-break-inside: auto;
 }
 
 .education-certificate-program-module h3 {

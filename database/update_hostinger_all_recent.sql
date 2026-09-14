@@ -676,6 +676,9 @@ ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_enabled TINYINT(1)
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER public_enabled;
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS public_access_mode VARCHAR(20) NOT NULL DEFAULT 'hidden' AFTER public_access_enabled;
 ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS certificate_activity_type VARCHAR(40) NOT NULL DEFAULT 'curso_livre' AFTER public_access_mode;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS certificate_body_background_color VARCHAR(20) NULL AFTER certificate_text_color;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS certificate_body_background_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER certificate_body_background_color;
+ALTER TABLE education_courses ADD COLUMN IF NOT EXISTS certificate_footer_rounded TINYINT(1) NOT NULL DEFAULT 0 AFTER certificate_footer_background_enabled;
 
 UPDATE education_courses
 SET public_enabled = 1,

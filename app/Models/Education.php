@@ -124,9 +124,12 @@ class Education
                 certificate_text TEXT NULL,
                 certificate_font_family VARCHAR(80) NULL,
                 certificate_text_color VARCHAR(20) NULL,
+                certificate_body_background_color VARCHAR(20) NULL,
+                certificate_body_background_enabled TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_footer_text_color VARCHAR(20) NULL,
                 certificate_footer_background_color VARCHAR(20) NULL,
                 certificate_footer_background_enabled TINYINT(1) NOT NULL DEFAULT 1,
+                certificate_footer_rounded TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_background VARCHAR(255) NULL,
                 certificate_ready_image VARCHAR(255) NULL,
                 certificate_min_frequency TINYINT UNSIGNED NOT NULL DEFAULT 0,
@@ -522,10 +525,13 @@ class Education
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
         self::ensureColumn('education_courses', 'certificate_font_family', 'VARCHAR(80) NULL AFTER certificate_text');
         self::ensureColumn('education_courses', 'certificate_text_color', 'VARCHAR(20) NULL AFTER certificate_font_family');
-        self::ensureColumn('education_courses', 'certificate_footer_text_color', 'VARCHAR(20) NULL AFTER certificate_text_color');
+        self::ensureColumn('education_courses', 'certificate_body_background_color', 'VARCHAR(20) NULL AFTER certificate_text_color');
+        self::ensureColumn('education_courses', 'certificate_body_background_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER certificate_body_background_color');
+        self::ensureColumn('education_courses', 'certificate_footer_text_color', 'VARCHAR(20) NULL AFTER certificate_body_background_enabled');
         self::ensureColumn('education_courses', 'certificate_footer_background_color', 'VARCHAR(20) NULL AFTER certificate_footer_text_color');
         self::ensureColumn('education_courses', 'certificate_footer_background_enabled', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_footer_background_color');
-        self::ensureColumn('education_courses', 'certificate_background', 'VARCHAR(255) NULL AFTER certificate_footer_background_enabled');
+        self::ensureColumn('education_courses', 'certificate_footer_rounded', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER certificate_footer_background_enabled');
+        self::ensureColumn('education_courses', 'certificate_background', 'VARCHAR(255) NULL AFTER certificate_footer_rounded');
         self::ensureColumn('education_courses', 'certificate_ready_image', 'VARCHAR(255) NULL AFTER certificate_background');
         self::ensureColumn('education_courses', 'certificate_min_frequency', 'TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER certificate_ready_image');
         self::ensureColumn('education_courses', 'certificate_show_heading', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER certificate_min_frequency');
@@ -1197,9 +1203,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, public_access_mode, playlist_required, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_text_color, certificate_footer_text_color, certificate_footer_background_color, certificate_footer_background_enabled, certificate_background, certificate_ready_image, certificate_min_frequency, certificate_show_heading, certificate_show_text, certificate_show_qr, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, public_access_mode, playlist_required, certificate_enabled, certificate_title, certificate_text, certificate_font_family, certificate_text_color, certificate_body_background_color, certificate_body_background_enabled, certificate_footer_text_color, certificate_footer_background_color, certificate_footer_background_enabled, certificate_footer_rounded, certificate_background, certificate_ready_image, certificate_min_frequency, certificate_show_heading, certificate_show_text, certificate_show_qr, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :public_access_mode, :playlist_required, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_text_color, :certificate_footer_text_color, :certificate_footer_background_color, :certificate_footer_background_enabled, :certificate_background, :certificate_ready_image, :certificate_min_frequency, :certificate_show_heading, :certificate_show_text, :certificate_show_qr, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :public_access_mode, :playlist_required, :certificate_enabled, :certificate_title, :certificate_text, :certificate_font_family, :certificate_text_color, :certificate_body_background_color, :certificate_body_background_enabled, :certificate_footer_text_color, :certificate_footer_background_color, :certificate_footer_background_enabled, :certificate_footer_rounded, :certificate_background, :certificate_ready_image, :certificate_min_frequency, :certificate_show_heading, :certificate_show_text, :certificate_show_qr, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -1234,9 +1240,12 @@ class Education
                  certificate_text = :certificate_text,
                  certificate_font_family = :certificate_font_family,
                  certificate_text_color = :certificate_text_color,
+                 certificate_body_background_color = :certificate_body_background_color,
+                 certificate_body_background_enabled = :certificate_body_background_enabled,
                  certificate_footer_text_color = :certificate_footer_text_color,
                  certificate_footer_background_color = :certificate_footer_background_color,
                  certificate_footer_background_enabled = :certificate_footer_background_enabled,
+                 certificate_footer_rounded = :certificate_footer_rounded,
                  certificate_background = :certificate_background,
                  certificate_ready_image = :certificate_ready_image,
                  certificate_min_frequency = :certificate_min_frequency,
@@ -2149,9 +2158,12 @@ class Education
             'certificate_text' => $certificateText !== '' ? $certificateText : null,
             'certificate_font_family' => $data['certificate_font_family'] ?? null,
             'certificate_text_color' => self::certificateColor($data['certificate_text_color'] ?? null),
+            'certificate_body_background_color' => self::certificateColor($data['certificate_body_background_color'] ?? null),
+            'certificate_body_background_enabled' => !empty($data['certificate_body_background_enabled']) ? 1 : 0,
             'certificate_footer_text_color' => self::certificateColor($data['certificate_footer_text_color'] ?? null),
             'certificate_footer_background_color' => self::certificateColor($data['certificate_footer_background_color'] ?? null),
             'certificate_footer_background_enabled' => array_key_exists('certificate_footer_background_enabled', $data) ? (!empty($data['certificate_footer_background_enabled']) ? 1 : 0) : 1,
+            'certificate_footer_rounded' => !empty($data['certificate_footer_rounded']) ? 1 : 0,
             'certificate_background' => $data['certificate_background'] ?? null,
             'certificate_ready_image' => $data['certificate_ready_image'] ?? null,
             'certificate_min_frequency' => 0,
@@ -2243,9 +2255,12 @@ class Education
             'certificate_text' => self::nullable($data['certificate_text'] ?? null),
             'certificate_font_family' => $data['certificate_font_family'] ?? null,
             'certificate_text_color' => self::certificateColor($data['certificate_text_color'] ?? null),
+            'certificate_body_background_color' => self::certificateColor($data['certificate_body_background_color'] ?? null),
+            'certificate_body_background_enabled' => !empty($data['certificate_body_background_enabled']) ? 1 : 0,
             'certificate_footer_text_color' => self::certificateColor($data['certificate_footer_text_color'] ?? null),
             'certificate_footer_background_color' => self::certificateColor($data['certificate_footer_background_color'] ?? null),
             'certificate_footer_background_enabled' => array_key_exists('certificate_footer_background_enabled', $data) ? (!empty($data['certificate_footer_background_enabled']) ? 1 : 0) : 1,
+            'certificate_footer_rounded' => !empty($data['certificate_footer_rounded']) ? 1 : 0,
             'certificate_background' => $data['certificate_background'] ?? null,
             'certificate_ready_image' => $data['certificate_ready_image'] ?? null,
             'certificate_min_frequency' => 0,
@@ -3688,9 +3703,12 @@ class Education
             'certificate_text' => self::nullable($data['certificate_text'] ?? null),
             'certificate_font_family' => self::certificateFont($data['certificate_font_family'] ?? null),
             'certificate_text_color' => self::certificateColor($data['certificate_text_color'] ?? null),
+            'certificate_body_background_color' => self::certificateColor($data['certificate_body_background_color'] ?? null),
+            'certificate_body_background_enabled' => !empty($data['certificate_body_background_enabled']) ? 1 : 0,
             'certificate_footer_text_color' => self::certificateColor($data['certificate_footer_text_color'] ?? null),
             'certificate_footer_background_color' => self::certificateColor($data['certificate_footer_background_color'] ?? null),
             'certificate_footer_background_enabled' => array_key_exists('certificate_footer_background_enabled', $data) ? (!empty($data['certificate_footer_background_enabled']) ? 1 : 0) : 1,
+            'certificate_footer_rounded' => !empty($data['certificate_footer_rounded']) ? 1 : 0,
             'certificate_background' => self::nullable($data['certificate_background'] ?? null),
             'certificate_ready_image' => self::nullable($data['certificate_ready_image'] ?? null),
             'certificate_min_frequency' => max(0, min(100, (int) ($data['certificate_min_frequency'] ?? 0))),

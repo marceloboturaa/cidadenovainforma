@@ -570,6 +570,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
             </label>
             <?php
                 $certificateTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_text_color'] ?? '')) ? (string) $course['certificate_text_color'] : '#172033';
+                $certificateBodyBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_body_background_color'] ?? '')) ? (string) $course['certificate_body_background_color'] : '#ffffff';
                 $certificateFooterTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_text_color'] ?? '')) ? (string) $course['certificate_footer_text_color'] : $certificateTextColor;
                 $certificateFooterBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_footer_background_color'] ?? '')) ? (string) $course['certificate_footer_background_color'] : '#ffffff';
             ?>
@@ -601,6 +602,10 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <div>
                 <label class="form-label">Cor da escrita principal</label>
                 <input class="form-control form-control-color" name="certificate_text_color" type="color" value="<?= e($certificateTextColor) ?>">
+            </div>
+            <div>
+                <label class="form-label">Cor do fundo do corpo</label>
+                <input class="form-control form-control-color" name="certificate_body_background_color" type="color" value="<?= e($certificateBodyBackgroundColor) ?>">
             </div>
             <div>
                 <label class="form-label">Frequência mínima</label>
@@ -656,9 +661,13 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <div class="certificate-editor-grid">
             <div class="grid-span-2">
                 <label class="form-label">Texto do certificado</label>
-                <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title} em {issued_at}."><?= e($course['certificate_text'] ?? '') ?></textarea>
-                <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {issued_at}, {verification_code}.</small>
+                <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title}, realizado no periodo de {period_start} a {period_end}, com frequencia de {frequency}."><?= e($course['certificate_text'] ?? '') ?></textarea>
+                <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {period_start}, {period_end}, {issued_at}, {verification_code}.</small>
             </div>
+            <label class="forum-check-line">
+                <input type="checkbox" name="certificate_body_background_enabled" value="1" <?= checked((int) ($course['certificate_body_background_enabled'] ?? 0) === 1) ?>>
+                <span>Usar fundo no corpo do texto</span>
+            </label>
             <div class="grid-span-2">
                 <span class="form-label">Exibir no certificado</span>
                 <div class="education-certificate-toggle-grid">
@@ -695,6 +704,10 @@ if ($isStudentCourseView && function_exists('current_user')) {
             <label class="forum-check-line">
                 <input type="checkbox" name="certificate_footer_background_enabled" value="1" <?= checked((int) ($course['certificate_footer_background_enabled'] ?? 1) === 1) ?>>
                 <span>Usar fundo no rodapé</span>
+            </label>
+            <label class="forum-check-line">
+                <input type="checkbox" name="certificate_footer_rounded" value="1" <?= checked((int) ($course['certificate_footer_rounded'] ?? 0) === 1) ?>>
+                <span>Rodapé arredondado</span>
             </label>
             <div class="grid-span-2">
                 <label class="form-label">Critério de aprovação</label>

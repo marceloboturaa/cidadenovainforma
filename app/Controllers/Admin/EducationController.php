@@ -1837,9 +1837,12 @@ class EducationController
             'certificate_title' => $title,
             'certificate_text' => $text,
             'certificate_text_color' => $_POST['certificate_text_color'] ?? null,
+            'certificate_body_background_color' => $_POST['certificate_body_background_color'] ?? null,
+            'certificate_body_background_enabled' => !empty($_POST['certificate_body_background_enabled']) ? 1 : 0,
             'certificate_footer_text_color' => $_POST['certificate_footer_text_color'] ?? null,
             'certificate_footer_background_color' => $_POST['certificate_footer_background_color'] ?? null,
             'certificate_footer_background_enabled' => !empty($_POST['certificate_footer_background_enabled']) ? 1 : 0,
+            'certificate_footer_rounded' => !empty($_POST['certificate_footer_rounded']) ? 1 : 0,
             'certificate_background' => $this->certificateBackgroundFromRequest($course['certificate_background'] ?? null, 'certificate_background', 'certificate_background_upload'),
             'certificate_ready_image' => $readyImage,
             'certificate_min_frequency' => $_POST['certificate_min_frequency'] ?? 0,
@@ -1937,7 +1940,7 @@ class EducationController
                 'course' => $course,
                 'certificate' => $certificate,
                 'certificateStatus' => ['frequency' => 0, 'minimum_frequency' => (int) ($course['certificate_min_frequency'] ?? 0)],
-                'certificateText' => $this->certificateText($course, $certificate, ['frequency' => 0]),
+                'certificateText' => $this->certificateText($course, $certificate, ['frequency' => 0], ['issued_at' => $certificate['issued_at'] ?? null]),
                 'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), Education::lessonsForCourse((int) $course['id'], 0, true)),
                 'certificatePeriod' => ['enrolled_at' => null, 'completed_at' => null, 'last_attendance_at' => null, 'issued_at' => $certificate['issued_at'] ?? null],
                 'isManagedCertificate' => $canViewManaged,
@@ -1971,7 +1974,7 @@ class EducationController
                 'course' => $course,
                 'certificate' => $certificate,
                 'certificateStatus' => $status,
-                'certificateText' => $this->certificateText($course, $certificate, $status),
+                'certificateText' => $this->certificateText($course, $certificate, $status, ['start' => date('Y-m-d'), 'end' => date('Y-m-d'), 'issued_at' => date('Y-m-d H:i:s')]),
                 'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), Education::lessonsForCourse((int) $course['id'], 0, true)),
                 'certificatePeriod' => ['start' => date('Y-m-d'), 'end' => date('Y-m-d'), 'issued_at' => date('Y-m-d H:i:s')],
                 'isManagedCertificate' => true,
@@ -2003,14 +2006,15 @@ class EducationController
         }
 
         $status = Education::certificateStatusForCourseUser((int) $course['id'], $userId);
+        $certificatePeriod = Education::certificatePeriodForCourseUser((int) $course['id'], $userId);
         $lessons = Education::lessonsForCourse((int) $course['id'], $userId);
         View::render('admin/education/certificate', [
             'course' => $course,
             'certificate' => $certificate,
             'certificateStatus' => $status,
-            'certificateText' => $this->certificateText($course, $certificate, $status),
+            'certificateText' => $this->certificateText($course, $certificate, $status, $certificatePeriod),
             'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), $lessons),
-            'certificatePeriod' => Education::certificatePeriodForCourseUser((int) $course['id'], $userId),
+            'certificatePeriod' => $certificatePeriod,
         ]);
     }
 
@@ -2695,9 +2699,12 @@ class EducationController
             'certificate_text' => $course['certificate_text'] ?? null,
             'certificate_font_family' => $course['certificate_font_family'] ?? null,
             'certificate_text_color' => $course['certificate_text_color'] ?? null,
+            'certificate_body_background_color' => $course['certificate_body_background_color'] ?? null,
+            'certificate_body_background_enabled' => $course['certificate_body_background_enabled'] ?? 0,
             'certificate_footer_text_color' => $course['certificate_footer_text_color'] ?? null,
             'certificate_footer_background_color' => $course['certificate_footer_background_color'] ?? null,
             'certificate_footer_background_enabled' => $course['certificate_footer_background_enabled'] ?? 1,
+            'certificate_footer_rounded' => $course['certificate_footer_rounded'] ?? 0,
             'certificate_background' => $course['certificate_background'] ?? null,
             'certificate_ready_image' => $course['certificate_ready_image'] ?? null,
             'certificate_min_frequency' => $course['certificate_min_frequency'] ?? 0,
@@ -2814,15 +2821,17 @@ class EducationController
         return $text;
     }
 
-    private function certificateText(array $course, array $certificate, array $status): string
+    private function certificateText(array $course, array $certificate, array $status, array $period = []): string
     {
         $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : date('d/m/Y');
+        $periodStart = !empty($period['start']) ? date('d/m/Y', strtotime((string) $period['start'])) : $issuedAt;
+        $periodEnd = !empty($period['end']) ? date('d/m/Y', strtotime((string) $period['end'])) : $issuedAt;
         $text = trim((string) ($course['certificate_text'] ?? ''));
         if ($text === '') {
             if (($course['certificate_activity_type'] ?? '') === 'reconhecimento') {
                 return '';
             }
-            $text = 'Certificamos que {student_name} concluiu o curso {course_title}.';
+            $text = 'Certificamos que {student_name} concluiu o curso {course_title}, realizado no periodo de {period_start} a {period_end}, com frequencia de {frequency}.';
         }
 
         return strtr($text, [
@@ -2830,6 +2839,8 @@ class EducationController
             '{course_title}' => (string) ($course['title'] ?? ''),
             '{teacher_name}' => (string) ($course['teacher_name'] ?? ''),
             '{frequency}' => (string) ((int) ($status['frequency'] ?? 0)) . '%',
+            '{period_start}' => $periodStart,
+            '{period_end}' => $periodEnd,
             '{issued_at}' => $issuedAt,
             '{verification_code}' => (string) ($certificate['verification_code'] ?? ''),
         ]);

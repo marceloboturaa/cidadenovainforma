@@ -12,18 +12,27 @@ $isRecognitionCertificate = ($course['certificate_activity_type'] ?? '') === 're
 $certificateFont = trim((string) ($course['certificate_font_family'] ?? ''));
 $fontClass = in_array($certificateFont, ['serif', 'georgia', 'garamond', 'playfair', 'montserrat'], true) ? ' certificate-font-' . $certificateFont : '';
 $textColor = trim((string) ($course['certificate_text_color'] ?? ''));
+$bodyBackgroundColor = trim((string) ($course['certificate_body_background_color'] ?? ''));
+$bodyBackgroundEnabled = (int) ($course['certificate_body_background_enabled'] ?? 0) === 1;
 $footerTextColor = trim((string) ($course['certificate_footer_text_color'] ?? ''));
 $footerBackgroundColor = trim((string) ($course['certificate_footer_background_color'] ?? ''));
 $footerBackgroundEnabled = (int) ($course['certificate_footer_background_enabled'] ?? 1) === 1;
+$footerRounded = (int) ($course['certificate_footer_rounded'] ?? 0) === 1;
 $certificateStyle = [];
 if (preg_match('/^#[0-9a-fA-F]{6}$/', $textColor)) {
     $certificateStyle[] = '--certificate-text-color: ' . $textColor;
+}
+if ($bodyBackgroundEnabled && preg_match('/^#[0-9a-fA-F]{6}$/', $bodyBackgroundColor)) {
+    $certificateStyle[] = '--certificate-body-background: ' . $bodyBackgroundColor;
 }
 if (preg_match('/^#[0-9a-fA-F]{6}$/', $footerTextColor)) {
     $certificateStyle[] = '--certificate-footer-text-color: ' . $footerTextColor;
 }
 if (preg_match('/^#[0-9a-fA-F]{6}$/', $footerBackgroundColor)) {
     $certificateStyle[] = '--certificate-footer-background: ' . $footerBackgroundColor;
+}
+if ($footerRounded) {
+    $certificateStyle[] = '--certificate-footnote-radius: 8mm';
 }
 $certificateStyleAttr = $certificateStyle ? ' style="' . e(implode('; ', $certificateStyle)) . ';"' : '';
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
@@ -174,7 +183,7 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
                 <?php endif; ?>
             </div>
             <?php if ($hasBottomInfo): ?>
-            <footer class="education-certificate-footnote<?= $footerBackgroundEnabled ? '' : ' is-transparent' ?>">
+            <footer class="education-certificate-footnote<?= $footerBackgroundEnabled ? '' : ' is-transparent' ?><?= $footerRounded ? ' is-rounded' : '' ?>">
                 <div class="education-certificate-footnote-text">
                     <?php if ($showInstitution): ?>
                         <div class="education-certificate-institution">
