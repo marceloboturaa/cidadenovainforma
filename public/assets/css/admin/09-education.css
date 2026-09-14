@@ -2581,6 +2581,7 @@
     --certificate-write-width: 263mm;
     --certificate-write-height: 171mm;
     --certificate-footnote-height: 34mm;
+    --certificate-text-color: #172033;
     max-width: 100%;
     margin: 0 auto;
     overflow: hidden;
@@ -2638,12 +2639,12 @@
     padding: 8mm 0 4mm;
     transform: none;
     text-align: center;
-    color: #172033;
+    color: var(--certificate-text-color);
     overflow: hidden;
 }
 
 .education-certificate-copy > span {
-    color: #8b1e2d;
+    color: var(--certificate-text-color);
     font-size: clamp(1.7rem, 3vw, 2.45rem);
     font-weight: 900;
     text-transform: uppercase;
@@ -2659,7 +2660,7 @@
 
 .education-certificate-nature {
     margin: -8px 0 0;
-    color: #8b1e2d;
+    color: var(--certificate-text-color);
     font-size: clamp(0.78rem, 1vw, 0.92rem);
     font-weight: 900;
     letter-spacing: 0.08em;
@@ -2680,7 +2681,7 @@
     justify-content: center;
     gap: 5px 12px;
     max-width: 238mm;
-    color: #334155;
+    color: var(--certificate-text-color);
     font-size: 0.78rem;
     font-weight: 800;
     line-height: 1.35;
@@ -2696,7 +2697,7 @@
     gap: 4px;
     width: min(560px, 100%);
     padding-top: 12px;
-    border-top: 1px solid rgba(23, 32, 51, 0.28);
+    border-top: 1px solid color-mix(in srgb, var(--certificate-text-color) 28%, transparent);
 }
 
 .education-certificate-copy footer strong {
@@ -2748,13 +2749,13 @@
 }
 
 .education-certificate-institution strong {
-    color: #172033;
+    color: var(--certificate-text-color);
 }
 
 .education-certificate-footnote-text p {
     margin: 0;
     max-width: 760px;
-    color: #64748b;
+    color: var(--certificate-text-color);
     font-size: 0.64rem;
     line-height: 1.25;
 }
@@ -2844,12 +2845,12 @@
     display: grid;
     gap: 5px;
     padding-bottom: 14px;
-    border-bottom: 2px solid rgba(23, 32, 51, 0.16);
+    border-bottom: 2px solid color-mix(in srgb, var(--certificate-text-color) 16%, transparent);
     text-align: center;
 }
 
 .education-certificate-program-header span {
-    color: #8b1e2d;
+    color: var(--certificate-text-color);
     font-size: 0.78rem;
     font-weight: 900;
     text-transform: uppercase;
@@ -2857,14 +2858,14 @@
 
 .education-certificate-program-header h2 {
     margin: 0;
-    color: #172033;
+    color: var(--certificate-text-color);
     font-size: clamp(1.45rem, 2.4vw, 2.1rem);
     line-height: 1.15;
 }
 
 .education-certificate-program-header p {
     margin: 0;
-    color: #475569;
+    color: var(--certificate-text-color);
     font-weight: 700;
 }
 
@@ -2873,7 +2874,7 @@
     border: 1px solid rgba(23, 32, 51, 0.12);
     border-radius: 8px;
     background: #f8fafc;
-    color: #334155;
+    color: var(--certificate-text-color);
     font-size: 0.9rem;
     line-height: 1.45;
 }
@@ -2889,14 +2890,14 @@
     border: 1px solid rgba(23, 32, 51, 0.1);
     border-radius: 8px;
     background: #f8fafc;
-    color: #334155;
+    color: var(--certificate-text-color);
     font-size: 0.78rem;
     line-height: 1.32;
 }
 
 .education-certificate-program-summary h3 {
     margin: 0 0 5px;
-    color: #8b1e2d;
+    color: var(--certificate-text-color);
     font-size: 0.78rem;
     font-weight: 900;
     letter-spacing: 0.04em;
@@ -2918,7 +2919,7 @@
     display: grid;
     grid-template-columns: repeat(var(--certificate-program-columns, 2), minmax(0, 1fr));
     gap: 14px 24px;
-    color: #172033;
+    color: var(--certificate-text-color);
     font-size: 0.84rem;
     line-height: 1.35;
     overflow-wrap: break-word;
@@ -2951,14 +2952,14 @@
 
 .education-certificate-program-module h3 {
     margin: 0 0 6px;
-    color: #8b1e2d;
+    color: var(--certificate-text-color);
     font-size: 0.98rem;
     line-height: 1.18;
 }
 
 .education-certificate-program-module p {
     margin: 0 0 6px;
-    color: #475569;
+    color: var(--certificate-text-color);
 }
 
 .education-certificate-program-module ol {

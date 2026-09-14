@@ -590,6 +590,11 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusão">
             </div>
             <div>
+                <label class="form-label">Cor da escrita</label>
+                <?php $certificateTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_text_color'] ?? '')) ? (string) $course['certificate_text_color'] : '#172033'; ?>
+                <input class="form-control form-control-color" name="certificate_text_color" type="color" value="<?= e($certificateTextColor) ?>">
+            </div>
+            <div>
                 <label class="form-label">Frequência mínima</label>
                 <input class="form-control" name="certificate_min_frequency" type="number" min="0" max="100" value="<?= e((string) ($course['certificate_min_frequency'] ?? 0)) ?>">
                 <small class="field-hint">Use 0 para não bloquear a emissão pela chamada.</small>

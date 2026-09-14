@@ -11,6 +11,8 @@ $programEnabled = (int) ($course['certificate_program_enabled'] ?? 1) === 1 && $
 $isRecognitionCertificate = ($course['certificate_activity_type'] ?? '') === 'reconhecimento';
 $certificateFont = trim((string) ($course['certificate_font_family'] ?? ''));
 $fontClass = in_array($certificateFont, ['serif', 'georgia', 'garamond', 'playfair', 'montserrat'], true) ? ' certificate-font-' . $certificateFont : '';
+$textColor = trim((string) ($course['certificate_text_color'] ?? ''));
+$textColorStyle = preg_match('/^#[0-9a-fA-F]{6}$/', $textColor) ? ' style="--certificate-text-color: ' . e($textColor) . ';"' : '';
 $programColumns = max(1, min(4, (int) ($course['certificate_program_columns'] ?? 2)));
 $programExtra = trim((string) ($course['certificate_program_extra'] ?? ''));
 $certificateProgram = $certificateProgram ?? [];
@@ -126,7 +128,7 @@ $backLabel = $isRecognitionCertificate
 <?php endif; ?>
 
 <section class="panel education-certificate-sheet-panel">
-    <article class="education-certificate-sheet<?= $background !== '' || $readyImage !== '' ? ' has-background' : '' ?><?= $readyImage !== '' ? ' has-ready-image' : '' ?><?= e($fontClass) ?>">
+    <article class="education-certificate-sheet<?= $background !== '' || $readyImage !== '' ? ' has-background' : '' ?><?= $readyImage !== '' ? ' has-ready-image' : '' ?><?= e($fontClass) ?>"<?= $textColorStyle ?>>
         <?php if ($readyImage !== ''): ?>
             <img class="education-certificate-ready-image" src="<?= e(media_url($readyImage)) ?>" alt="Certificado pronto">
         <?php elseif ($background !== ''): ?>
