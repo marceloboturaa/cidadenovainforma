@@ -5054,6 +5054,45 @@
 }
 
 /* Keep the title separate from the certificate body in every output size. */
+.certificate-footer-position {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.certificate-footer-position legend {
+    float: none;
+    width: auto;
+    padding: 0 6px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.certificate-footer-position label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    cursor: pointer;
+}
+
+.certificate-editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.certificate-editor-actions .field-hint {
+    flex-basis: 100%;
+}
+
 .education-certificate-heading {
     display: grid;
     gap: 3mm;

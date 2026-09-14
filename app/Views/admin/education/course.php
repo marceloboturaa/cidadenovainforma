@@ -717,13 +717,11 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <span>Controle a faixa inferior, base legal e dados da instituicao.</span>
                 </header>
                 <div class="certificate-editor-grid">
-            <label class="grid-span-2">
-                <span class="form-label">Posição do rodapé</span>
-                <select class="form-select" name="certificate_footer_on_back">
-                    <option value="0" <?= selected('0', (string) ($course['certificate_footer_on_back'] ?? 0)) ?>>Na frente do certificado</option>
-                    <option value="1" <?= selected('1', (string) ($course['certificate_footer_on_back'] ?? 0)) ?>>No verso do certificado</option>
-                </select>
-            </label>
+            <fieldset class="certificate-footer-position grid-span-2">
+                <legend>Onde exibir o rodapé?</legend>
+                <label><input type="radio" name="certificate_footer_on_back" value="0" <?= checked((int) ($course['certificate_footer_on_back'] ?? 0) === 0) ?>><span>Na frente do certificado</span></label>
+                <label><input type="radio" name="certificate_footer_on_back" value="1" <?= checked((int) ($course['certificate_footer_on_back'] ?? 0) === 1) ?>><span>No verso do certificado</span></label>
+            </fieldset>
             <label class="forum-check-line grid-span-2">
                 <input type="checkbox" name="certificate_hide_responsible" value="1" <?= checked((int) ($course['certificate_hide_responsible'] ?? 0) === 1) ?>>
                 <span>Ocultar o responsável/professor no certificado</span>
@@ -843,11 +841,12 @@ if ($isStudentCourseView && function_exists('current_user')) {
             </div>
                 </div>
             </section>
-            <div class="form-action-cell">
+            <div class="certificate-editor-actions grid-span-2">
+                <button class="btn btn-primary icon-btn" type="submit" name="certificate_action" value="save"><i class="bi bi-floppy" aria-hidden="true"></i>Salvar alterações</button>
                 <?php if ($canPreviewCertificate): ?>
-                    <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/certificate?id=' . $course['id'] . '&preview=certificate')) ?>" target="_blank" rel="noopener"><i class="bi bi-eye" aria-hidden="true"></i>Ver certificado</a>
+                    <button class="btn btn-outline-primary icon-btn" type="submit" name="certificate_action" value="preview"><i class="bi bi-eye" aria-hidden="true"></i>Salvar e visualizar certificado</button>
                 <?php endif; ?>
-                <button class="btn btn-primary icon-btn"><i class="bi bi-award" aria-hidden="true"></i>Salvar certificado</button>
+                <small class="field-hint">Salvar alterações mantém você neste editor. Salvar e visualizar abre a prévia com as alterações salvas, incluindo a posição do rodapé.</small>
             </div>
         </form>
         <?php if (!empty($certificateNameRequests)): ?>

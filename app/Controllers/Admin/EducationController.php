@@ -1882,6 +1882,9 @@ class EducationController
         ]));
 
         Session::flash('success', 'Certificado do curso atualizado.');
+        if (($_POST['certificate_action'] ?? '') === 'preview') {
+            redirect('/admin/education/certificate?id=' . $course['id'] . '&preview=certificate');
+        }
         redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
     }
 
