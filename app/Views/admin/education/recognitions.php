@@ -154,6 +154,12 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                         <label class="form-label">Enviar certificado pronto</label>
                         <input class="form-control" type="file" name="certificate_ready_image_upload" accept="image/png,image/jpeg,image/webp">
                     </div>
+                    <?php if ($recognitionValue('certificate_ready_image') !== ''): ?>
+                        <label class="form-check grid-span-2 certificate-remove-line">
+                            <input class="form-check-input" type="checkbox" name="certificate_ready_image_remove" value="1">
+                            <span class="form-check-label">Retirar certificado pronto e voltar a usar o modelo editável</span>
+                        </label>
+                    <?php endif; ?>
                     <div>
                         <label class="form-label">Natureza do certificado</label>
                         <input class="form-control" name="certificate_course_nature" maxlength="180" value="<?= e($recognitionValue('certificate_course_nature', 'Certificado de Reconhecimento Institucional')) ?>">

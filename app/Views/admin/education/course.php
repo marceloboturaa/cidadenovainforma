@@ -640,6 +640,12 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <label class="form-label">Enviar certificado pronto</label>
                 <input class="form-control" name="certificate_ready_image_upload" type="file" accept="image/jpeg,image/png,image/webp">
             </div>
+            <?php if (!empty($course['certificate_ready_image'])): ?>
+                <label class="forum-check-line certificate-remove-line grid-span-2">
+                    <input type="checkbox" name="certificate_ready_image_remove" value="1">
+                    <span>Retirar certificado pronto e voltar a usar o modelo editável</span>
+                </label>
+            <?php endif; ?>
                 </div>
             </section>
             <section class="certificate-editor-section certificate-editor-body grid-span-2">

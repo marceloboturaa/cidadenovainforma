@@ -3106,6 +3106,10 @@ class EducationController
 
     private function certificateBackgroundFromRequest(?string $existing, string $fieldName = 'certificate_background', string $uploadFieldName = 'certificate_background_upload', string $label = 'fundo do certificado'): ?string
     {
+        if (!empty($_POST[$fieldName . '_remove'])) {
+            return null;
+        }
+
         $background = trim((string) ($_POST[$fieldName] ?? ''));
 
         if (empty($_FILES[$uploadFieldName]['name']) || ($_FILES[$uploadFieldName]['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {

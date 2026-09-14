@@ -2401,20 +2401,23 @@
     display: grid;
     gap: 14px;
     padding: 16px;
-    border: 1px solid var(--line);
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    background: #ffffff;
+    background: #f8fafc;
 }
 
 .certificate-editor-section > header {
     display: grid;
     gap: 3px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--line);
+    margin: -16px -16px 0;
+    padding: 12px 16px;
+    border-bottom: 1px solid #cbd5e1;
+    border-radius: 8px 8px 0 0;
+    background: #e0f2fe;
 }
 
 .certificate-editor-section > header strong {
-    color: var(--ink);
+    color: #075985;
     font-size: 0.98rem;
     font-weight: 900;
 }
@@ -2425,10 +2428,38 @@
     font-weight: 700;
 }
 
+.certificate-editor-section:nth-of-type(3n + 1) > header {
+    background: #dcfce7;
+}
+
+.certificate-editor-section:nth-of-type(3n + 1) > header strong {
+    color: #166534;
+}
+
+.certificate-editor-section:nth-of-type(3n + 2) > header {
+    background: #fef3c7;
+}
+
+.certificate-editor-section:nth-of-type(3n + 2) > header strong {
+    color: #92400e;
+}
+
 .certificate-editor-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
+    align-items: end;
+}
+
+.certificate-editor-grid > div,
+.certificate-editor-grid > label:not(.forum-check-line):not(.form-check) {
+    min-width: 0;
+}
+
+.certificate-editor-grid .form-control,
+.certificate-editor-grid .form-select {
+    background: #ffffff;
+    border-color: #cbd5e1;
 }
 
 .certificate-editor-grid > .grid-span-2,
@@ -2446,6 +2477,28 @@
     width: 100%;
     min-height: 42px;
     padding: 5px;
+}
+
+.certificate-remove-line {
+    border-color: #fecaca;
+    background: #fff1f2;
+    color: #991b1b;
+}
+
+.certificate-remove-line span {
+    font-weight: 900;
+}
+
+.education-certificate-settings .form-action-cell {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    margin-top: 4px;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
 }
 
 .education-certificate-settings .grid-span-2,
