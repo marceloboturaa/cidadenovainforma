@@ -179,7 +179,7 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
         <?php if ($readyImage === ''): ?>
             <div class="education-certificate-copy">
                 <header class="education-certificate-heading">
-                    <?php if ($showHeading && $background === ''): ?><span><?= e($heading) ?></span><?php endif; ?>
+                    <?php if ($showHeading): ?><span><?= e($heading) ?></span><?php endif; ?>
                     <h2><?= e($title) ?></h2>
                 </header>
                 <?php if ($showNature): ?>

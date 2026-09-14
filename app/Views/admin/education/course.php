@@ -621,7 +621,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($course['certificate_title'] ?? '') ?>" placeholder="Certificado de conclusão">
                 <label class="form-label mt-2">Texto do cabeçalho</label>
                 <input class="form-control" name="certificate_heading" maxlength="180" value="<?= e($course['certificate_heading'] ?? '') ?>" placeholder="Certificado">
-                <small class="field-hint">Use Certificado, Declaração ou outro texto. Se vazio, será usado Certificado. Exibido nos modelos sem imagem de fundo.</small>
+                <small class="field-hint">Use Certificado, Declaração ou outro texto. Se vazio, será usado Certificado. Também aparece sobre a imagem de fundo.</small>
             </div>
             <div>
                 <label class="form-label">Cor da escrita principal</label>
@@ -700,7 +700,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
                     <small>Mostrar ou ocultar titulo, QR Code, modalidade, datas e dados legais.</small>
                 </summary>
                 <div class="education-certificate-toggle-grid">
-                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Exibir texto do cabeçalho (modelos sem imagem de fundo)</span></label>
+                    <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_heading" value="1" <?= checked((int) ($course['certificate_show_heading'] ?? 1) === 1) ?>><span class="form-check-label">Exibir texto do cabeçalho</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_text" value="1" <?= checked((int) ($course['certificate_show_text'] ?? 1) === 1) ?>><span class="form-check-label">Texto principal</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_qr" value="1" <?= checked((int) ($course['certificate_show_qr'] ?? 1) === 1) ?>><span class="form-check-label">QR Code</span></label>
                     <label class="form-check"><input class="form-check-input" type="checkbox" name="certificate_show_recipient" value="1" <?= checked((int) ($course['certificate_show_recipient'] ?? 1) === 1) ?>><span class="form-check-label">Nome do estudante</span></label>

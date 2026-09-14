@@ -86,7 +86,7 @@ $recognitionChecked = static function (string $key, bool $default = true) use ($
                         <input class="form-control" name="certificate_title" maxlength="180" value="<?= e($recognitionValue('certificate_title', 'Certificado de reconhecimento')) ?>">
                 <label class="form-label mt-2">Texto do cabeçalho</label>
                 <input class="form-control" name="certificate_heading" maxlength="180" value="<?= e($recognitionValue('certificate_heading', '')) ?>" placeholder="Certificado">
-                <small class="field-hint">Use Certificado, Declaração ou outro texto. Se vazio, será usado Certificado. Exibido nos modelos sem imagem de fundo.</small>
+                <small class="field-hint">Use Certificado, Declaração ou outro texto. Se vazio, será usado Certificado. Também aparece sobre a imagem de fundo.</small>
                     </div>
                     <div>
                         <label class="form-label">Fonte do certificado</label>
