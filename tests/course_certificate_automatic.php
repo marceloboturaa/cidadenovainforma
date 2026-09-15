@@ -10,6 +10,10 @@ namespace App\Core {
     }
 }
 namespace App\Models {
+    class CertificateNotification {
+        public static array $calls = [];
+        public static function notify(int $id): bool { self::$calls[] = $id; return true; }
+    }
     class User {
         public static function find($id) { return ['name' => 'Estudante Teste']; }
     }
@@ -48,9 +52,11 @@ check(!Education::certificateStatusForCourseUser(1, 1)['certificate'], 'Disabled
 $pdo->exec('UPDATE education_courses SET certificate_enabled = 1');
 $first = Education::certificateStatusForCourseUser(1, 1)['certificate'];
 check($first['status'] === 'issued', 'Eligible course must issue');
+check(count(\App\Models\CertificateNotification::$calls) === 1, 'Automatic issue must notify');
 check(Education::certificateStatusForCourseUser(1, 1)['certificate']['verification_code'] === $first['verification_code'], 'Repeated access must be idempotent');
 $pdo->exec('UPDATE education_certificates SET status = "pending"');
 check(Education::certificateStatusForCourseUser(1, 1)['certificate']['status'] === 'issued', 'Eligible pending request must release');
+check(count(\App\Models\CertificateNotification::$calls) === 2, 'Automatic approval must notify');
 $pdo->exec('UPDATE education_certificates SET status = "revoked"');
 check(Education::certificateStatusForCourseUser(1, 1)['certificate']['status'] === 'revoked', 'Revoked certificate must stay revoked');
 $pdo->exec('UPDATE education_certificates SET status = "deleted"');

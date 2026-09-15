@@ -1971,6 +1971,7 @@ class Education
                 $stmt->execute(['id' => $certificate['id']]);
                 if ($stmt->rowCount() > 0) {
                     self::auditCertificate((int) $certificate['id'], !empty($course['certificate_institution_id']) ? (int) $course['certificate_institution_id'] : null, null, 'automatically_issued', ['status' => 'pending'], ['status' => 'issued']);
+                    CertificateNotification::notify((int) $certificate['id']);
                 }
                 $certificate = self::certificateForCourseUser($courseId, $userId);
             }
@@ -2032,6 +2033,9 @@ class Education
                 'verification_code' => $code,
                 'status' => $status,
             ]);
+            if (($certificate['status'] ?? '') === 'issued') {
+                CertificateNotification::notify((int) $certificate['id']);
+            }
         }
 
         return $certificate;
@@ -2266,6 +2270,7 @@ class Education
             'verification_code' => $code,
         ]);
 
+        CertificateNotification::notify($certificateId);
         return self::certificateById($certificateId) ?? [
             'id' => $certificateId,
             'course_id' => $courseId,
@@ -2459,6 +2464,10 @@ class Education
         ], [
             'status' => $status,
         ]);
+
+        CertificateNotification::notify($certificateId);
+
+        CertificateNotification::notify($certificateId);
 
         return true;
     }
