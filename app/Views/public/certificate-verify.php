@@ -27,6 +27,10 @@ if ($certificateTitle === '') {
 }
 $activityLabel = $isRecognitionCertificate ? 'Reconhecimento' : 'Curso';
 $recipientLabel = $isRecognitionCertificate ? 'Pessoa reconhecida' : 'Estudante';
+if (($certificate['certificate_activity_type'] ?? '') === 'evento') {
+    $activityLabel = 'Evento';
+    $recipientLabel = ($certificate['certificate_type'] ?? '') === 'coordenacao' ? 'Coordenador(a)' : 'Participante';
+}
 $institutionHeading = $isRecognitionCertificate ? 'Instituição certificadora' : 'Instituição emissora';
 ?>
 

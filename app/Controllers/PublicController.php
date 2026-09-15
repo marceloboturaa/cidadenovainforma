@@ -320,6 +320,9 @@ class PublicController
     {
         $code = strtoupper(preg_replace('/[^A-Z0-9]/i', '', (string) ($_GET['codigo'] ?? $_GET['code'] ?? '')) ?? '');
         $certificate = $code !== '' ? Education::certificateByVerificationCode($code) : null;
+        if (!$certificate && str_starts_with($code, 'EVT')) {
+            $certificate = \App\Models\EventCertificate::verify($code);
+        }
 
         $this->logAccess();
 

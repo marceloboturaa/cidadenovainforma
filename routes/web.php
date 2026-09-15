@@ -110,6 +110,10 @@ $router->post('/admin/library-events', [LibraryEventController::class, 'store'])
 $router->post('/admin/library-events/update', [LibraryEventController::class, 'update']);
 $router->post('/admin/library-events/delete', [LibraryEventController::class, 'delete']);
 $router->get('/admin/library-events/participants', [LibraryEventController::class, 'participants']);
+$router->get('/admin/library-events/certificates', [LibraryEventController::class, 'certificates']);
+$router->post('/admin/library-events/certificates/coordinator', [LibraryEventController::class, 'saveCoordinator']);
+$router->post('/admin/library-events/certificates/issue', [LibraryEventController::class, 'issueEventCertificate']);
+$router->get('/admin/library-events/certificate', [LibraryEventController::class, 'eventCertificate']);
 $router->post('/admin/library-events/participants', [LibraryEventController::class, 'addParticipant']);
 $router->post('/admin/library-events/participants/create', [LibraryEventController::class, 'createParticipant']);
 $router->post('/admin/library-events/participants/person', [LibraryEventController::class, 'updateParticipantPerson']);

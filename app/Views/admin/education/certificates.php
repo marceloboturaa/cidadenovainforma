@@ -25,6 +25,9 @@
                     $viewUrl = $isRecognitionCertificate
                         ? url('/admin/education/certificate?certificate_id=' . ($certificate['id'] ?? ''))
                         : url('/admin/education/certificate?id=' . ($certificate['course_id'] ?? ''));
+                    if (($certificate['certificate_activity_type'] ?? '') === 'evento') {
+                        $viewUrl = url('/admin/library-events/certificate?certificate_id=' . $certificate['id']);
+                    }
                 ?>
                 <article class="education-certificate-card">
                     <div class="education-certificate-icon">

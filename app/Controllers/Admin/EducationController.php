@@ -94,7 +94,7 @@ class EducationController
         $user = current_user();
 
         View::render('admin/education/certificates', [
-            'certificates' => Education::certificatesForUser((int) $user['id']),
+            'certificates' => array_merge(Education::certificatesForUser((int) $user['id']), \App\Models\EventCertificate::forUser((int) $user['id'])),
         ]);
     }
 

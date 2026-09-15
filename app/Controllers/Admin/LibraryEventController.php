@@ -13,6 +13,7 @@ use App\Core\SimplePdf;
 use App\Core\View;
 use App\Models\Document;
 use App\Models\Education;
+use App\Models\EventCertificate;
 use App\Models\LibraryEvent;
 use App\Models\Person;
 use App\Models\Role;
@@ -108,6 +109,77 @@ class LibraryEventController
         Logger::info('library_events.deactivated', 'Evento desativado: ' . $event['title'], current_user()['id'] ?? null);
         Session::flash('success', 'Evento desativado.');
         redirect('/admin/library-events');
+    }
+
+    public function certificates(): void
+    {
+        Middleware::auth();
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+        EventCertificate::ensureSchema();
+        View::render('admin/library-events/certificates', [
+            'event' => $event,
+            'participants' => LibraryEvent::participants((int) $event['id']),
+            'certificates' => EventCertificate::forEvent((int) $event['id']),
+        ]);
+    }
+
+    public function saveCoordinator(): void
+    {
+        Middleware::auth();
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+        $this->validateCsrf();
+        $personId = (int) ($_POST['person_id'] ?? 0);
+        EventCertificate::setCoordinator((int) $event['id'], $personId, !empty($_POST['is_coordinator']));
+        Logger::info('events.coordinator_updated', 'Coordenação atualizada no evento ' . $event['id'] . ', pessoa ' . $personId, current_user()['id']);
+        Session::flash('success', 'Função de coordenação atualizada. Certificados já emitidos são preservados.');
+        redirect('/admin/library-events/certificates?id=' . $event['id']);
+    }
+
+    public function issueEventCertificate(): void
+    {
+        Middleware::auth();
+        $event = $this->eventFromQuery();
+        $this->authorizeParticipantManagement($event);
+        $this->validateCsrf();
+        $types = $_POST['types'] ?? [];
+        try {
+            EventCertificate::issue((int) $event['id'], (int) ($_POST['person_id'] ?? 0), is_array($types) ? $types : [], (int) current_user()['id']);
+            Logger::info('events.certificates_issued', 'Certificados do evento ' . $event['id'] . ', pessoa ' . (int) ($_POST['person_id'] ?? 0), current_user()['id']);
+            Session::flash('success', 'Certificados disponíveis. Os já emitidos foram mantidos sem duplicação.');
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+        }
+        redirect('/admin/library-events/certificates?id=' . $event['id']);
+    }
+
+    public function eventCertificate(): void
+    {
+        Middleware::auth();
+        $certificate = EventCertificate::find((int) ($_GET['certificate_id'] ?? 0));
+        if (!$certificate) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+        $isOwner = (int) ($certificate['user_id'] ?? 0) === (int) current_user()['id'];
+        if (!$isOwner) {
+            $event = LibraryEvent::find((int) $certificate['event_id']);
+            if (!$event) {
+                http_response_code(404);
+                View::render('errors/404');
+                return;
+            }
+            $scope = $this->volunteerScopeUserId();
+            if ($scope !== null && (int) $event['created_by'] !== $scope && (int) $event['responsible_user_id'] !== $scope) {
+                http_response_code(403);
+                View::render('errors/403');
+                return;
+            }
+            $this->authorizeParticipantManagement($event);
+        }
+        View::render('admin/library-events/certificate', ['certificate' => $certificate, 'isOwner' => $isOwner]);
     }
 
     public function participants(): void

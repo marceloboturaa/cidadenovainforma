@@ -4,6 +4,7 @@
         <h1><?= e($event['title']) ?></h1>
     </div>
     <div class="export-actions">
+        <a class="btn btn-primary" href="<?= e(url('/admin/library-events/certificates?id=' . $event['id'])) ?>">Certificados do evento</a>
         <a class="btn btn-outline-secondary icon-btn" href="<?= e(url('/admin/library-events/edit?id=' . $event['id'])) ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i>Voltar</a>
     </div>
 </div>
