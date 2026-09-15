@@ -1,35 +1,60 @@
+<div class="site-dashboard">
 <div class="page-heading">
     <div>
         <p>Painel administrativo</p>
         <h1>Visão geral</h1>
     </div>
+    <div class="heading-actions">
+        <?php if ($canViewCertificates ?? false): ?>
+        <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/certificates')) ?>"><i class="bi bi-award" aria-hidden="true"></i>Visualizar meus certificados</a>
+        <?php endif; ?>
+        <?php if ($canViewCertificateCenter ?? false): ?>
+        <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/certificate-center')) ?>"><i class="bi bi-patch-check" aria-hidden="true"></i>Central de certificados</a>
+        <?php endif; ?>
+    </div>
 </div>
+
+<section class="panel dashboard-shortcuts-panel">
+    <div class="section-heading"><h2><i class="bi bi-grid" aria-hidden="true"></i>Acesso rápido</h2><span>Suas atividades e ferramentas</span></div>
+    <nav class="dashboard-shortcuts" aria-label="Atalhos do Dashboard">
+        <?php if ($canViewEducation ?? false): ?>
+        <a class="dashboard-shortcut" href="<?= e(url('/admin/education')) ?>"><i class="bi bi-mortarboard" aria-hidden="true"></i><div><strong><?= ($isStudent ?? false) ? 'Meus cursos' : 'Ensino' ?></strong><span>Aulas, atividades e acompanhamento</span></div><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <?php endif; ?>
+        <?php if ($canViewCertificateCenter ?? false): ?>
+        <a class="dashboard-shortcut" href="<?= e(url('/admin/education/certificate-center')) ?>"><i class="bi bi-patch-check" aria-hidden="true"></i><div><strong>Gerenciar certificados</strong><span>Solicitações, configurações e emitidos</span></div><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <?php elseif ($canViewCertificates ?? false): ?>
+        <a class="dashboard-shortcut" href="<?= e(url('/admin/education/certificates')) ?>"><i class="bi bi-award" aria-hidden="true"></i><div><strong>Meus certificados</strong><span>Visualize os documentos liberados</span></div><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <?php endif; ?>
+        <a class="dashboard-shortcut" href="<?= e(url('/admin/communication')) ?>"><i class="bi bi-chat-dots" aria-hidden="true"></i><div><strong>Comunicação</strong><span>Mensagens e conversas da equipe</span></div><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a class="dashboard-shortcut" href="<?= e(url('/admin/profile')) ?>"><i class="bi bi-person-vcard" aria-hidden="true"></i><div><strong>Meu cadastro</strong><span>Consulte e atualize seus dados</span></div><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    </nav>
+</section>
 
 <?php if ($canViewEditorialDashboard ?? false): ?>
 <div class="metric-grid">
     <?php if ($canViewSensitiveDashboard ?? false): ?>
     <article class="metric-card">
-        <span>Usuários</span>
+        <span><i class="bi bi-people" aria-hidden="true"></i> Usuários</span>
         <strong><?= e((string) $stats['users']) ?></strong>
     </article>
     <?php endif; ?>
     <article class="metric-card">
-        <span>Notícias</span>
+        <span><i class="bi bi-newspaper" aria-hidden="true"></i> Notícias</span>
         <strong><?= e((string) $stats['news']) ?></strong>
     </article>
     <article class="metric-card">
-        <span>Pendentes</span>
+        <span><i class="bi bi-hourglass-split" aria-hidden="true"></i> Notícias pendentes</span>
         <strong><?= e((string) $stats['pending_news']) ?></strong>
     </article>
     <?php if ($canViewSensitiveDashboard ?? false): ?>
     <article class="metric-card">
-        <span>Comentários</span>
+        <span><i class="bi bi-chat-left-text" aria-hidden="true"></i> Comentários</span>
         <strong><?= e((string) $stats['comments']) ?></strong>
     </article>
     <?php endif; ?>
     <?php if ($canViewSensitiveDashboard ?? false): ?>
         <article class="metric-card">
-            <span>Online agora</span>
+            <span><i class="bi bi-circle-fill" aria-hidden="true"></i> Online agora</span>
             <strong><?= e((string) ($stats['online_users_count'] ?? 0)) ?></strong>
         </article>
     <?php endif; ?>
@@ -424,3 +449,4 @@
     </div>
 </section>
 <?php endif; ?>
+</div>

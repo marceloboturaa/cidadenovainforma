@@ -30,6 +30,9 @@ class DashboardController
         $canManageAnnouncements = Announcement::canManage($user);
 
         View::render('admin/dashboard', [
+            'canViewCertificates' => \App\Core\AdminNavigation::allows('/admin/education/certificates'),
+            'canViewCertificateCenter' => \App\Core\AdminNavigation::allows('/admin/education/certificate-center'),
+            'canViewEducation' => \App\Core\AdminNavigation::allows('/admin/education'),
             'stats' => Stats::dashboard($user),
             'showsAllLogs' => $canViewSensitiveDashboard,
             'canViewSensitiveDashboard' => $canViewSensitiveDashboard,
