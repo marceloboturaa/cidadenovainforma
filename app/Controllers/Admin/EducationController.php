@@ -101,7 +101,7 @@ class EducationController
     public function certificateReport(): void
     {
         Middleware::auth();
-        if (!$this->canManageAll() && !$this->canTeach()) {
+        if (!\App\Core\AdminNavigation::allows('/admin/education/certificate-report')) {
             http_response_code(403);
             View::render('errors/403');
             return;
@@ -141,7 +141,7 @@ class EducationController
     public function certificateAdministration(): void
     {
         Middleware::auth();
-        if (!Auth::can('certificates.manage') && !Auth::can('certificates.issue') && !Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])) {
+        if (!\App\Core\AdminNavigation::allows('/admin/education/certificate-administration')) {
             http_response_code(403);
             View::render('errors/403');
             return;

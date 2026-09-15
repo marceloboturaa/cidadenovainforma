@@ -28,6 +28,15 @@ class AdminNavigation
             return false;
         }
 
+        if ($path === '/admin/education/certificates' && Auth::hasRole('estudante')) {
+            return true;
+        }
+        if (in_array($path, ['/admin/education/certificate-center', '/admin/education/certificate-report', '/admin/education/certificate-administration'], true)) {
+            if (Auth::hasRole('estudante') || !Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor'])) {
+                return false;
+            }
+        }
+
         $permissions = match ($path) {
             '/admin/users' => ['users.manage'],
             '/admin/news' => ['news.create', 'news.manage', 'news.approve'],
@@ -54,8 +63,7 @@ class AdminNavigation
         }
 
         return match ($path) {
-            '/admin/education/certificate-center' => Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor', 'delegado-emissor']) || Auth::can('education.teach') || Auth::can('certificates.issue') || Auth::can('certificates.manage'),
-            '/admin/education/certificate-report' => Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor']) || Auth::can('education.teach'),
+            '/admin/education/certificate-center', '/admin/education/certificate-report' => Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor']),
             '/admin/authorizations' => Auth::hasRole('master'),
             '/admin/menu', '/admin/backups' => ($user['role_slug'] ?? '') === 'master',
             '/admin/institution-pages' => Auth::hasRole(['master', 'admin']) || (bool) InstitutionPage::manageableForUser((int) $user['id'], false),

@@ -38,12 +38,21 @@ namespace {
         }
         $reportAccess = in_array($role, ['admin', 'admin-local', 'diretor', 'professor'], true);
         check(AdminNavigation::allows('/admin/education/certificate-report') === $reportAccess, 'Report role access');
-        $hubAccess = $reportAccess || $role === 'delegado-emissor';
+        $hubAccess = $reportAccess;
         check(AdminNavigation::allows('/admin/education/certificate-center') === $hubAccess, 'Central access by role');
         check(isset(AdminNavigation::visibleGroups()['Cursos e certificados']) === $hubAccess, 'Course group follows hub access');
         Auth::$permissions = ['education.teach', 'news.create', 'certificates.issue'];
-        foreach (['/admin/news', '/admin/education/manage', '/admin/education/certificate-center'] as $path) {
+        foreach (['/admin/news', '/admin/education/manage'] as $path) {
             check(AdminNavigation::allows($path), "Explicit permission must allow $path");
+        }
+        check(AdminNavigation::allows('/admin/education/certificate-center') === $hubAccess, 'Central requires a teacher or administrator role even with permissions');
+    }
+    foreach (['estudante', 'estudante,professor'] as $roles) {
+        Auth::$account = ['id' => 1, 'role_slug' => 'estudante', 'role_slugs' => $roles];
+        Auth::$permissions = ['education.teach', 'certificates.issue', 'certificates.manage'];
+        check(AdminNavigation::allows('/admin/education/certificates'), 'Students retain personal certificates');
+        foreach (['/admin/education/certificate-center', '/admin/education/certificate-report', '/admin/education/certificate-administration'] as $path) {
+            check(!AdminNavigation::allows($path), 'Students cannot access certificate management: ' . $path);
         }
     }
     Auth::$account = ['id' => 1, 'role_slug' => 'usuario', 'role_slugs' => 'usuario'];
