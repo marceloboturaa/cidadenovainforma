@@ -8,23 +8,22 @@ $metrics = [
 ];
 ?>
 <div class="certificate-hub">
-    <header class="certificate-hub-hero">
-        <div class="certificate-hub-hero-copy">
-            <span class="certificate-hub-eyebrow"><i class="bi bi-award" aria-hidden="true"></i> Ensino e eventos</span>
+    <header class="page-heading">
+        <div class="certificate-hub-heading-copy">
+            <p>Ensino e eventos</p>
             <h1>Central de certificados</h1>
             <p><?= $ownCoursesOnly ? 'Seus cursos, suas solicitações e cada conquista dos seus alunos em um só lugar.' : 'Acompanhe emissões, organize solicitações e gerencie os certificados em um só lugar.' ?></p>
-            <div class="certificate-hub-hero-actions">
-                <?php if ($canViewCourses): ?><a class="btn certificate-hub-primary" href="#certificate-hub-courses"><i class="bi bi-journal-bookmark" aria-hidden="true"></i> <?= $ownCoursesOnly ? 'Ver meus cursos' : 'Ver cursos' ?></a><?php endif; ?>
-                <a class="btn certificate-hub-secondary" href="<?= e(url('/admin/education/certificates')) ?>"><i class="bi bi-person-badge" aria-hidden="true"></i> Meus certificados</a>
+            <div class="heading-actions">
+                <?php if ($canViewCourses): ?><a class="btn btn-primary icon-btn" href="#certificate-hub-courses"><i class="bi bi-journal-bookmark" aria-hidden="true"></i> <?= $ownCoursesOnly ? 'Ver meus cursos' : 'Ver cursos' ?></a><?php endif; ?>
+                <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/certificates')) ?>"><i class="bi bi-person-badge" aria-hidden="true"></i> Meus certificados</a>
             </div>
         </div>
-        <div class="certificate-hub-hero-seal" aria-hidden="true"><i class="bi bi-patch-check"></i><span>Aprender. Concluir. Reconhecer.</span></div>
     </header>
 
     <?php if ($canViewCourses): ?>
-    <section class="certificate-hub-metrics" aria-label="Resumo dos certificados">
+    <section class="metric-grid certificate-hub-metrics" aria-label="Resumo dos certificados">
         <?php foreach ($metrics as $key => [$label, $hint, $icon]): ?>
-        <a class="certificate-hub-metric is-<?= e($key) ?>" href="<?= e(url('/admin/education/certificate-report?status=' . $key)) ?>">
+        <a class="metric-card certificate-hub-metric is-<?= e($key) ?>" href="<?= e(url('/admin/education/certificate-report?status=' . $key)) ?>">
             <div class="certificate-hub-metric-top"><span><?= e($label) ?></span><i class="bi bi-<?= e($icon) ?>" aria-hidden="true"></i></div>
             <strong><?= e(number_format($totals[$key], 0, ',', '.')) ?></strong>
             <div class="certificate-hub-metric-bottom"><small><?= e($hint) ?></small><i class="bi bi-arrow-up-right" aria-hidden="true"></i></div>
@@ -40,19 +39,19 @@ $metrics = [
     </aside>
     <?php endif; ?>
 
-    <section class="certificate-hub-section" id="certificate-hub-courses">
-        <header class="certificate-hub-section-heading">
-            <div><span class="certificate-hub-kicker">Gestão por curso</span><h2><?= $ownCoursesOnly ? 'Meus cursos' : 'Cursos' ?> <span class="certificate-hub-count"><?= count($courses) ?></span></h2><p>Configure a emissão e acompanhe as solicitações de cada turma.</p></div>
+    <section class="panel certificate-hub-section" id="certificate-hub-courses">
+        <header class="section-heading certificate-hub-section-heading">
+            <div><span class="education-kicker">Gestão por curso</span><h2><?= $ownCoursesOnly ? 'Meus cursos' : 'Cursos' ?> <span class="certificate-hub-count"><?= count($courses) ?></span></h2><p>Configure a emissão e acompanhe as solicitações de cada turma.</p></div>
         </header>
         <?php if (!$courses): ?>
-        <div class="certificate-hub-empty"><i class="bi bi-journal-bookmark" aria-hidden="true"></i><h3>Nenhum curso por aqui</h3><p>Os cursos sob sua responsabilidade aparecerão nesta área.</p></div>
+        <div class="empty-state certificate-hub-empty"><i class="bi bi-journal-bookmark" aria-hidden="true"></i><h3>Nenhum curso por aqui</h3><p>Os cursos sob sua responsabilidade aparecerão nesta área.</p></div>
         <?php else: ?>
         <div class="certificate-hub-course-grid">
             <?php foreach ($courses as $course):
                 $mode = empty($course['certificate_enabled']) ? 'disabled' : (!empty($course['certificate_auto_release']) ? 'auto' : 'manual');
                 $modeLabels = ['disabled' => 'Emissão desativada', 'auto' => 'Liberação automática', 'manual' => 'Revisão da equipe'];
             ?>
-            <article class="certificate-hub-course">
+            <article class="education-course-card certificate-hub-course">
                 <div class="certificate-hub-course-top"><span class="certificate-hub-course-icon"><i class="bi bi-mortarboard" aria-hidden="true"></i></span><span class="certificate-hub-badge is-<?= e($mode) ?>"><?= e($modeLabels[$mode]) ?></span></div>
                 <h3><?= e($course['title']) ?></h3>
                 <div class="certificate-hub-course-numbers">
@@ -72,8 +71,8 @@ $metrics = [
     </section>
     <?php endif; ?>
 
-    <section class="certificate-hub-section">
-        <header class="certificate-hub-section-heading"><div><span class="certificate-hub-kicker">Acesso rápido</span><h2>Explore outras áreas</h2><p>Encontre a ferramenta certa para cada tipo de certificado.</p></div></header>
+    <section class="panel certificate-hub-section">
+        <header class="section-heading certificate-hub-section-heading"><div><span class="education-kicker">Acesso rápido</span><h2>Explore outras áreas</h2><p>Encontre a ferramenta certa para cada tipo de certificado.</p></div></header>
         <div class="certificate-hub-shortcuts">
             <?php
             $shortcuts = [];
@@ -84,7 +83,7 @@ $metrics = [
             }
             $shortcuts[] = ['qr-code-scan', 'Verificação pública', 'Consulte a autenticidade pelo código do documento.', '/certificados'];
             foreach ($shortcuts as [$icon, $label, $description, $path]): ?>
-            <a class="certificate-hub-shortcut" href="<?= e(url($path)) ?>"<?= $path === '/certificados' ? ' target="_blank" rel="noopener"' : '' ?>>
+            <a class="education-course-card certificate-hub-shortcut" href="<?= e(url($path)) ?>"<?= $path === '/certificados' ? ' target="_blank" rel="noopener"' : '' ?>>
                 <span class="certificate-hub-shortcut-icon"><i class="bi bi-<?= e($icon) ?>" aria-hidden="true"></i></span>
                 <div><h3><?= e($label) ?></h3><p><?= e($description) ?></p></div><i class="bi bi-arrow-up-right" aria-hidden="true"></i>
             </a>
