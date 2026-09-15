@@ -19,6 +19,7 @@ $statusLabels = [
         <h1>Certificados digitais</h1>
     </div>
     <div class="heading-actions">
+        <a class="btn btn-outline-secondary" href="<?= e(url('/admin/education/certificate-center')) ?>">Central de certificados</a>
         <?php if (!empty($canIssueCertificates)): ?>
             <a class="btn btn-primary icon-btn" href="<?= e(url('/admin/education/manage')) ?>"><i class="bi bi-journal-plus" aria-hidden="true"></i>Certificado de curso</a>
             <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/recognitions')) ?>"><i class="bi bi-stars" aria-hidden="true"></i>Reconhecimentos</a>

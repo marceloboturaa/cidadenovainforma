@@ -138,7 +138,7 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
             <?php elseif (!$certificatePendingReview): ?>
                 <a class="btn btn-outline-primary icon-btn" href="<?= e($verificationUrl) ?>" target="_blank" rel="noopener"><i class="bi bi-patch-check" aria-hidden="true"></i>Verificar certificado</a>
             <?php endif; ?>
-            <?php if (!$isCertificatePreview && !empty($isManagedCertificate) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
+            <?php if (!$isCertificatePreview && !empty($isManagedCertificate) && ($canDeleteCertificate ?? true) && !$isRecognitionCertificate && ($certificate['status'] ?? 'issued') !== 'deleted'): ?>
                 <form class="inline-form" method="post" action="<?= e(url('/admin/education/certificate/status')) ?>" onsubmit="return confirm('Excluir este certificado? Ele deixara de aparecer nas listas.');">
                     <?= csrf_field() ?>
                     <input type="hidden" name="certificate_id" value="<?= e((string) ($certificate['id'] ?? 0)) ?>">

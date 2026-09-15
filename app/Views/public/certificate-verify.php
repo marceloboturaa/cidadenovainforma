@@ -1,144 +1,40 @@
 <?php
-$issuedAt = !empty($certificate['issued_at'] ?? null)
-    ? date('d/m/Y', strtotime((string) $certificate['issued_at']))
-    : null;
-$verificationUrl = !empty($certificate['verification_code'] ?? null)
-    ? url('/certificado/' . $certificate['verification_code'])
-    : url('/certificado/validar');
-$courseNature = trim((string) ($certificate['certificate_course_nature'] ?? '')) ?: 'Curso Livre de Capacitação Profissional';
-$courseModality = trim((string) ($certificate['certificate_modality'] ?? ''));
-$approvalCriteria = trim((string) ($certificate['certificate_approval_criteria'] ?? ''));
-$legalText = trim((string) ($certificate['certificate_legal_text'] ?? ''));
-$institutionName = trim((string) ($certificate['certificate_institution_name'] ?? '')) ?: 'Cidade Nova Informa';
-$institutionCity = trim((string) ($certificate['certificate_institution_city'] ?? ''));
-$institutionCnpj = trim((string) ($certificate['certificate_institution_cnpj'] ?? ''));
-$institutionSite = trim((string) ($certificate['certificate_institution_site'] ?? ''));
-$objectives = trim((string) ($certificate['certificate_objectives'] ?? ''));
-$competencies = array_values(array_filter(array_map('trim', preg_split('/\R/u', (string) ($certificate['certificate_competencies'] ?? '')) ?: [])));
-$responsibleName = trim((string) ($certificate['certificate_responsible_name'] ?? '')) ?: trim((string) ($certificate['teacher_name'] ?? ''));
-$responsibleCredential = trim((string) ($certificate['certificate_responsible_credential'] ?? ''));
-$hasCurriculum = $objectives !== '' || $competencies || $responsibleName !== '' || $responsibleCredential !== '' || $courseModality !== '' || $approvalCriteria !== '';
-$certificateStatus = $certificate['status'] ?? 'issued';
-$certificateIsValid = $certificateStatus === 'issued';
-$isRecognitionCertificate = ($certificate['certificate_activity_type'] ?? '') === 'reconhecimento';
-$certificateTitle = trim((string) ($certificate['certificate_title'] ?? ''));
-if ($certificateTitle === '') {
-    $certificateTitle = $isRecognitionCertificate ? 'Certificado de reconhecimento' : 'Certificado';
-}
-$activityLabel = $isRecognitionCertificate ? 'Reconhecimento' : 'Curso';
-$recipientLabel = $isRecognitionCertificate ? 'Pessoa reconhecida' : 'Estudante';
-if (($certificate['certificate_activity_type'] ?? '') === 'evento') {
-    $activityLabel = 'Evento';
-    $recipientLabel = ($certificate['certificate_type'] ?? '') === 'coordenacao' ? 'Coordenador(a)' : 'Participante';
-}
-$institutionHeading = $isRecognitionCertificate ? 'Instituição certificadora' : 'Instituição emissora';
+$isValid = ($certificate['status'] ?? '') === 'issued';
+$activity = ($certificate['certificate_activity_type'] ?? '') === 'evento' ? 'Evento' : (($certificate['certificate_activity_type'] ?? '') === 'reconhecimento' ? 'Reconhecimento' : 'Curso');
 ?>
-
 <section class="certificate-verify-page">
     <header class="certificate-verify-header">
-        <span>Validação oficial</span>
-        <h1>Verificar certificado</h1>
-        <p>Consulte se um certificado foi emitido pelo Cidade Nova Informa usando o código impresso no documento.</p>
+        <span>Autenticidade do documento</span><h1>Verificar certificado</h1>
+        <p>Digite o código impresso no certificado ou acesse o QR Code do documento.</p>
     </header>
-
-    <form class="certificate-verify-form" method="get" action="<?= e(url('/certificado/validar')) ?>">
-        <label for="certificate-code">Código do certificado</label>
-        <div>
-            <input id="certificate-code" name="codigo" value="<?= e($code ?? '') ?>" maxlength="48" placeholder="Ex.: A1B2C3D4E5F6" autocomplete="off" required>
-            <button type="submit">Verificar</button>
-        </div>
+    <form class="certificate-verify-form" method="post" action="<?= e(url('/certificado/validar')) ?>">
+        <label for="certificate-code">Código de verificação</label>
+        <div><input id="certificate-code" name="codigo" value="<?= e($code ?? '') ?>" maxlength="48" pattern="[A-Za-z0-9]{8,48}" placeholder="Código do certificado" autocomplete="off" spellcheck="false" required><button type="submit">Verificar</button></div>
     </form>
-
-    <?php if (($code ?? '') !== '' && !$certificate): ?>
-        <article class="certificate-verify-result is-invalid">
-            <span>Não encontrado</span>
-            <h2>Certificado não localizado</h2>
-            <p>Confira se o código foi digitado exatamente como aparece no certificado. Caso a dúvida continue, entre em contato com a instituição.</p>
-        </article>
-    <?php elseif ($certificate): ?>
-        <article class="certificate-verify-result <?= $certificateIsValid ? 'is-valid' : 'is-invalid' ?>">
-            <div class="certificate-verify-status">
-                <span><?= $certificateIsValid ? 'Certificado válido' : 'Certificado não vigente' ?></span>
-                <strong><?= $certificateIsValid ? 'Registro localizado na base oficial' : 'Registro localizado com status: ' . e($certificateStatus) ?></strong>
-            </div>
-            <h2><?= e($certificateTitle) ?></h2>
-            <p><?= e($certificate['course_title'] ?? 'Certificado') ?></p>
-            <dl>
-                <div>
-                    <dt><?= e($recipientLabel) ?></dt>
-                    <dd><?= e($certificate['student_name'] ?? '') ?></dd>
-                </div>
-                <div>
-                    <dt><?= e($activityLabel) ?></dt>
-                    <dd><?= e($certificate['course_title'] ?? '') ?></dd>
-                </div>
-                <?php if ($issuedAt): ?>
-                    <div>
-                        <dt>Data de emissão</dt>
-                        <dd><?= e($issuedAt) ?></dd>
-                    </div>
-                <?php endif; ?>
-                <?php if (!empty($certificate['teacher_name'])): ?>
-                    <div>
-                        <dt>Professor</dt>
-                        <dd><?= e($certificate['teacher_name']) ?></dd>
-                    </div>
-                <?php endif; ?>
-                <?php if ($courseModality !== ''): ?>
-                    <div>
-                        <dt>Modalidade</dt>
-                        <dd><?= e($courseModality) ?></dd>
-                    </div>
-                <?php endif; ?>
-                <div>
-                    <dt>Código</dt>
-                    <dd><?= e($certificate['verification_code'] ?? '') ?></dd>
-                </div>
-            </dl>
-            <?php if ($hasCurriculum): ?>
-                <section class="certificate-verify-curriculum" aria-label="Informações curriculares">
-                    <?php if ($objectives !== ''): ?>
-                        <article>
-                            <h3>Objetivos do curso</h3>
-                            <p><?= nl2br(e($objectives)) ?></p>
-                        </article>
-                    <?php endif; ?>
-                    <?php if ($competencies): ?>
-                        <article>
-                            <h3>Competências desenvolvidas</h3>
-                            <ul>
-                                <?php foreach ($competencies as $competency): ?>
-                                    <li><?= e($competency) ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </article>
-                    <?php endif; ?>
-                    <?php if ($responsibleName !== '' || $responsibleCredential !== ''): ?>
-                        <article>
-                            <h3>Responsável pelo curso</h3>
-                            <?php if ($responsibleName !== ''): ?><p><?= e($responsibleName) ?></p><?php endif; ?>
-                            <?php if ($responsibleCredential !== ''): ?><p><?= e($responsibleCredential) ?></p><?php endif; ?>
-                        </article>
-                    <?php endif; ?>
-                    <?php if ($approvalCriteria !== ''): ?>
-                        <article>
-                            <h3>Critério de aprovação</h3>
-                            <p><?= e($approvalCriteria) ?></p>
-                        </article>
-                    <?php endif; ?>
-                </section>
-            <?php endif; ?>
-            <section class="certificate-verify-institution">
-                <h3><?= e($institutionHeading) ?></h3>
-                <p>
-                    <strong><?= e($institutionName) ?></strong>
-                    <?php if ($institutionCity !== ''): ?><span><?= e($institutionCity) ?></span><?php endif; ?>
-                    <?php if ($institutionCnpj !== ''): ?><span>CNPJ: <?= e($institutionCnpj) ?></span><?php endif; ?>
-                    <?php if ($institutionSite !== ''): ?><span><?= e($institutionSite) ?></span><?php endif; ?>
-                </p>
-                <?php if ($legalText !== ''): ?><small><?= e($legalText) ?></small><?php endif; ?>
-            </section>
-            <a href="<?= e($verificationUrl) ?>">Link permanente de verificação</a>
-        </article>
+    <?php if (($code ?? '') !== ''): ?>
+    <article class="certificate-verify-result <?= $isValid ? 'is-valid' : 'is-invalid' ?>" role="status">
+        <div class="certificate-verify-status"><span><?= $isValid ? 'Certificado válido' : (($certificate['status'] ?? '') === 'revoked' ? 'Certificado revogado' : 'Certificado não localizado') ?></span></div>
+        <?php if ($isValid): ?>
+        <h2><?= e($certificate['document_label']) ?></h2>
+        <dl>
+            <div><dt>Titular — nome abreviado</dt><dd><?= e($certificate['recipient_initials']) ?></dd></div>
+            <div><dt><?= e($activity) ?></dt><dd><?= e($certificate['course_title']) ?></dd></div>
+            <div><dt>Instituição emissora</dt><dd><?= e($certificate['institution_name']) ?></dd></div>
+            <?php if (!empty($certificate['issued_at'])): ?><div><dt>Data de emissão</dt><dd><?= e(date('d/m/Y', strtotime($certificate['issued_at']))) ?></dd></div><?php endif; ?>
+            <div><dt>Código</dt><dd><?= e($certificate['verification_code']) ?></dd></div>
+        </dl>
+        <p>Confira estes dados com o documento apresentado pelo titular. O nome completo fica disponível no certificado, em acesso restrito.</p>
+        <?php elseif (($certificate['status'] ?? '') === 'revoked'): ?>
+        <p>Este certificado não está vigente. Consulte a instituição emissora para esclarecimentos.</p>
+        <?php else: ?>
+        <p>Confira o código no documento. Certificados ainda não liberados não ficam disponíveis nesta consulta.</p>
+        <?php endif; ?>
+    </article>
     <?php endif; ?>
+    <section class="certificate-verify-institution">
+        <h2>Privacidade na consulta</h2>
+        <p>Esta página confirma a autenticidade usando o código do documento. O nome é abreviado, e dados como CPF, e-mail, telefone, notas e motivo de revogação não são exibidos.</p>
+        <p>Compartilhe o código somente com quem precisa verificar o certificado. Para consultar seus documentos completos ou solicitar correção, acesse sua conta e procure a equipe responsável pelo curso ou evento.</p>
+        <a href="<?= e(url('/admin/education/certificates')) ?>">Acessar meus certificados</a>
+    </section>
 </section>

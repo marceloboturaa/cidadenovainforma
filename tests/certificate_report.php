@@ -35,10 +35,16 @@ namespace {
     $insert->execute([27, 2, null, 40, '', 'issued', 'B-27']);
     foreach (['pending', 'revoked', 'deleted', 'draft'] as $i => $status) $insert->execute([28 + $i, 1, 30, null, '', $status, 'HIDDEN-' . $i]);
     $insert->execute([32, 3, 30, null, '', 'issued', 'RECOGNITION']);
+    $pdo->exec('ALTER TABLE education_courses ADD COLUMN active INTEGER DEFAULT 1; ALTER TABLE education_courses ADD COLUMN certificate_enabled INTEGER DEFAULT 1; ALTER TABLE education_courses ADD COLUMN certificate_auto_release INTEGER DEFAULT 0');
     function check($condition, $message) { if (!$condition) throw new RuntimeException($message); }
     $all = Education::certificateReport(null, '', 0, 1);
     check((int) $all['totals']['certificates'] === 27 && (int) $all['totals']['courses'] === 2 && (int) $all['totals']['recipients'] === 2, 'Global totals and status exclusions');
     $own = Education::certificateReport(10, '', 0, 1);
+    $hub = Education::certificateHub(10);
+    check(count($hub) === 1 && (int) $hub[0]['issued'] === 26 && (int) $hub[0]['pending'] === 1, 'Central scoped course counts');
+    check(count(Education::certificateHub(99)) === 0, 'Central hides unrelated courses');
+    check((int) Education::certificateReport(10, '', 0, 1, 'pending')['totals']['certificates'] === 1, 'Teacher pending requests');
+    check((int) Education::certificateReport(20, '', 1, 1, 'pending')['totals']['certificates'] === 0, 'Foreign pending requests hidden');
     check((int) $own['totals']['certificates'] === 26 && count($own['rows']) === 25 && count($own['courses']) === 1, 'Teacher scope includes totals, rows and options');
     $last = Education::certificateReport(10, '', 0, 999);
     check($last['page'] === 2 && count($last['rows']) === 1, 'Pagination bounds');
@@ -53,7 +59,7 @@ namespace {
     foreach ([$own, Education::certificateReport(99, '', 0, 1)] as $report) {
         ob_start(); require dirname(__DIR__) . '/app/Views/admin/education/certificate-report.php'; $html = ob_get_clean();
         check(!str_contains($html, $search), 'Search output escaped');
-        check(str_contains($html, $report['rows'] ? 'Aluno A' : 'Nenhum certificado emitido'), 'Populated and empty view');
+        check(str_contains($html, $report['rows'] ? 'Aluno A' : 'Nenhum certificado encontrado'), 'Populated and empty view');
     }
     echo "Painel: escopo, totais, filtros, paginação e renderização aprovados.\n";
 }

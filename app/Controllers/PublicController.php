@@ -318,14 +318,18 @@ class PublicController
 
     public function verifyCertificate(): void
     {
-        $code = strtoupper(preg_replace('/[^A-Z0-9]/i', '', (string) ($_GET['codigo'] ?? $_GET['code'] ?? '')) ?? '');
-        $certificate = $code !== '' ? Education::certificateByVerificationCode($code) : null;
-        if (!$certificate && str_starts_with($code, 'EVT')) {
+        header('X-Robots-Tag: noindex, nofollow, noarchive');
+        header('Cache-Control: no-store, private');
+        header('Referrer-Policy: no-referrer');
+        $input = $_POST['codigo'] ?? $_GET['codigo'] ?? $_GET['code'] ?? '';
+        $code = is_string($input) ? strtoupper(trim(substr($input, 0, 49))) : '';
+        $validCode = (bool) preg_match('/^[A-Z0-9]{8,48}$/D', $code);
+        $certificate = $validCode ? Education::certificateByVerificationCode($code) : null;
+        if (!$certificate && $validCode && str_starts_with($code, 'EVT')) {
             $certificate = \App\Models\EventCertificate::verify($code);
         }
 
-        $this->logAccess();
-
+        $certificate = \App\Core\CertificatePublicData::project($certificate);
         View::render('public/certificate-verify', [
             'code' => $code,
             'certificate' => $certificate,
@@ -334,6 +338,7 @@ class PublicController
             'pageTitle' => 'Verificar certificado - Cidade Nova Informa',
             'metaDescription' => 'Consulte a autenticidade de certificados emitidos pelo Cidade Nova Informa.',
             'canonicalUrl' => url('/certificado/validar'),
+            'noIndex' => true,
         ], 'public');
     }
 

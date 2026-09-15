@@ -1,15 +1,18 @@
 <?php
-$pageUrl = static fn (int $page): string => url('/admin/education/certificate-report?' . http_build_query(['q' => $search, 'course_id' => $courseId, 'page' => $page]));
+$reportStatus = $reportStatus ?? 'issued';
+$statusLabels = ['issued' => 'Emitidos', 'pending' => 'Aguardando revisão', 'revoked' => 'Revogados'];
+$pageUrl = static fn (int $page): string => url('/admin/education/certificate-report?' . http_build_query(['q' => $search, 'course_id' => $courseId, 'page' => $page, 'status' => $reportStatus]));
 ?>
 <div class="page-heading">
     <div>
         <p>Ensino</p>
-        <h1>Painel de certificados</h1>
-        <p><?= $ownCoursesOnly ? 'Certificados emitidos nos seus cursos.' : 'Certificados emitidos em todos os cursos.' ?></p>
+        <h1><?= e($statusLabels[$reportStatus]) ?></h1>
+        <p><?= $ownCoursesOnly ? 'Certificados dos seus cursos.' : 'Certificados de todos os cursos.' ?></p>
     </div>
+    <a class="btn btn-outline-secondary" href="<?= e(url('/admin/education/certificate-center')) ?>">Central de certificados</a>
 </div>
 <div class="dashboard-grid">
-    <?php foreach (['certificates' => 'Certificados válidos', 'recipients' => 'Destinatários', 'courses' => 'Cursos com certificados'] as $key => $label): ?>
+    <?php foreach (['certificates' => 'Certificados encontrados', 'recipients' => 'Destinatários', 'courses' => 'Cursos com certificados'] as $key => $label): ?>
         <article class="metric-card"><span><?= e($label) ?></span><strong><?= e((string) $report['totals'][$key]) ?></strong><small>Conforme os filtros selecionados</small></article>
     <?php endforeach; ?>
 </div>
@@ -28,19 +31,25 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
                 <?php endforeach; ?>
             </select>
         </div>
+        <div class="col-md-4">
+            <label class="form-label" for="certificate-status">Situação</label>
+            <select class="form-select" id="certificate-status" name="status">
+                <?php foreach ($statusLabels as $value => $label): ?><option value="<?= e($value) ?>" <?= $value === $reportStatus ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
+            </select>
+        </div>
         <div class="col-12">
             <button class="btn btn-primary" type="submit">Filtrar</button>
             <a class="btn btn-outline-secondary" href="<?= e(url('/admin/education/certificate-report')) ?>">Limpar filtros</a>
         </div>
     </form>
-    <div class="section-heading"><h2>Quem recebeu certificado</h2><span><?= e((string) $report['totals']['certificates']) ?> certificado(s)</span></div>
-    <p class="field-hint">A lista mostra certificados emitidos e válidos. A emissão não confirma que o destinatário abriu ou baixou o documento.</p>
+    <div class="section-heading"><h2><?= e($statusLabels[$reportStatus]) ?></h2><span><?= e((string) $report['totals']['certificates']) ?> certificado(s)</span></div>
+    <p class="field-hint"><?= $reportStatus === 'pending' ? 'Abra o certificado para conferir os dados antes de liberar ao estudante.' : 'A emissão não confirma que o destinatário abriu ou baixou o documento.' ?></p>
     <?php if (!$report['rows']): ?>
-        <div class="empty-state">Nenhum certificado emitido encontrado para estes filtros.</div>
+        <div class="empty-state">Nenhum certificado encontrado para estes filtros.</div>
     <?php else: ?>
         <div class="table-responsive">
             <table class="table align-middle">
-                <thead><tr><th scope="col">Destinatário</th><th scope="col">Curso</th><th scope="col">Professor</th><th scope="col">Emissão</th><th scope="col">Código</th><th scope="col">Consulta</th></tr></thead>
+                <thead><tr><th scope="col">Destinatário</th><th scope="col">Curso</th><th scope="col">Professor</th><th scope="col"><?= $reportStatus === 'pending' ? 'Solicitação' : 'Emissão' ?></th><th scope="col">Código</th><th scope="col">Consulta</th></tr></thead>
                 <tbody>
                     <?php foreach ($report['rows'] as $row): ?>
                         <tr>
@@ -49,7 +58,7 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
                             <td><?= e($row['teacher_name'] ?? 'Não atribuído') ?></td>
                             <td><?= e(date('d/m/Y H:i', strtotime($row['issued_at']))) ?></td>
                             <td><?= e($row['verification_code']) ?></td>
-                            <td><a class="btn btn-sm btn-outline-primary" href="<?= e(url('/certificado/' . rawurlencode($row['verification_code']))) ?>" target="_blank" rel="noopener">Verificar</a></td>
+                            <td><a class="btn btn-sm btn-primary" href="<?= e(url('/admin/education/certificate?certificate_id=' . $row['id'])) ?>"><?= $reportStatus === 'pending' ? 'Conferir e liberar' : 'Abrir certificado' ?></a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

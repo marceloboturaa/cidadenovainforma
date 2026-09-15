@@ -33,12 +33,14 @@ namespace {
     foreach (['usuario', 'admin', 'admin-local', 'diretor', 'professor', 'delegado-emissor'] as $role) {
         Auth::$account = ['id' => 1, 'role_slug' => $role, 'role_slugs' => $role];
         Auth::$permissions = [];
-        foreach (['/admin/news', '/admin/users', '/admin/education/manage', '/admin/education/certificate-center', '/admin/forum'] as $path) {
+        foreach (['/admin/news', '/admin/users', '/admin/education/manage', '/admin/education/certificate-administration', '/admin/forum'] as $path) {
             check(!AdminNavigation::allows($path), "$role cannot access $path without permission");
         }
         $reportAccess = in_array($role, ['admin', 'admin-local', 'diretor', 'professor'], true);
         check(AdminNavigation::allows('/admin/education/certificate-report') === $reportAccess, 'Report role access');
-        check(isset(AdminNavigation::visibleGroups()['Cursos e certificados']) === $reportAccess, 'Course group follows report access');
+        $hubAccess = $reportAccess || $role === 'delegado-emissor';
+        check(AdminNavigation::allows('/admin/education/certificate-center') === $hubAccess, 'Central access by role');
+        check(isset(AdminNavigation::visibleGroups()['Cursos e certificados']) === $hubAccess, 'Course group follows hub access');
         Auth::$permissions = ['education.teach', 'news.create', 'certificates.issue'];
         foreach (['/admin/news', '/admin/education/manage', '/admin/education/certificate-center'] as $path) {
             check(AdminNavigation::allows($path), "Explicit permission must allow $path");

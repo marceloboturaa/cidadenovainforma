@@ -111,8 +111,10 @@ class EducationController
         $search = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 180);
         $courseId = max(0, (int) ($_GET['course_id'] ?? 0));
         $page = max(1, (int) ($_GET['page'] ?? 1));
+        $reportStatus = in_array($_GET['status'] ?? '', ['issued', 'pending', 'revoked'], true) ? $_GET['status'] : 'issued';
         View::render('admin/education/certificate-report', [
-            'report' => Education::certificateReport($teacherId, $search, $courseId, $page),
+            'report' => Education::certificateReport($teacherId, $search, $courseId, $page, $reportStatus),
+            'reportStatus' => $reportStatus,
             'search' => $search,
             'courseId' => $courseId,
             'ownCoursesOnly' => $teacherId !== null,
@@ -120,6 +122,23 @@ class EducationController
     }
 
     public function certificateCenter(): void
+    {
+        Middleware::auth();
+        if (!\App\Core\AdminNavigation::allows('/admin/education/certificate-center')) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+        $canViewCourses = $this->canManageAll() || $this->canTeach();
+        View::render('admin/education/certificate-hub', [
+            'courses' => $canViewCourses ? Education::certificateHub($this->canManageAll() ? null : (int) current_user()['id']) : [],
+            'canViewCourses' => $canViewCourses,
+            'ownCoursesOnly' => !$this->canManageAll(),
+            'canAdminister' => Auth::can('certificates.manage') || Auth::can('certificates.issue') || Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor']),
+        ]);
+    }
+
+    public function certificateAdministration(): void
     {
         Middleware::auth();
         if (!Auth::can('certificates.manage') && !Auth::can('certificates.issue') && !Auth::hasRole(['master', 'admin', 'admin-local', 'delegado-emissor'])) {
@@ -277,13 +296,16 @@ class EducationController
     public function certificateStatus(): void
     {
         Middleware::auth();
-        if (!Auth::can('certificates.issue') && !Auth::can('certificates.manage') && !Auth::hasRole(['master', 'admin'])) {
+        $certificate = Education::certificateById((int) ($_POST['certificate_id'] ?? 0));
+        $course = $certificate ? Education::findCourse((int) $certificate['course_id']) : null;
+        $canApproveCourse = ($_POST['action'] ?? '') === 'issue' && ($certificate['status'] ?? '') === 'pending' && $this->canManageCourse($course);
+        if (!$canApproveCourse && !Auth::can('certificates.issue') && !Auth::can('certificates.manage') && !Auth::hasRole(['master', 'admin'])) {
             http_response_code(403);
             View::render('errors/403');
             return;
         }
 
-        $redirectTo = $_SERVER['HTTP_REFERER'] ?? '/admin/education/certificate-center';
+        $redirectTo = '/admin/education/certificate-center';
         $this->validateCsrf($redirectTo);
 
         $certificateId = (int) ($_POST['certificate_id'] ?? 0);
@@ -1966,7 +1988,8 @@ class EducationController
                 return;
             }
 
-            $canViewManaged = Auth::can('certificates.issue') || Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin']);
+            $managedCourse = Education::findCourse((int) $certificate['course_id']);
+            $canViewManaged = $this->canManageCourse($managedCourse) || Auth::can('certificates.issue') || Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin']);
             $isOwner = (int) ($certificate['user_id'] ?? 0) === (int) (current_user()['id'] ?? 0);
             if (!$canViewManaged && !$isOwner) {
                 http_response_code(403);
@@ -1981,14 +2004,20 @@ class EducationController
                 return;
             }
 
+            $status = !empty($certificate['user_id']) && ($course['certificate_activity_type'] ?? '') !== 'reconhecimento'
+                ? Education::certificateStatusForCourseUser((int) $course['id'], (int) $certificate['user_id'])
+                : ['frequency' => 0, 'minimum_frequency' => (int) ($course['certificate_min_frequency'] ?? 0)];
+            $period = !empty($certificate['user_id']) ? Education::certificatePeriodForCourseUser((int) $course['id'], (int) $certificate['user_id']) : [];
+            $certificate = $status['certificate'] ?? $certificate;
             View::render('admin/education/certificate', [
                 'course' => $course,
                 'certificate' => $certificate,
-                'certificateStatus' => ['frequency' => 0, 'minimum_frequency' => (int) ($course['certificate_min_frequency'] ?? 0)],
-                'certificateText' => $this->certificateText($course, $certificate, ['frequency' => 0], ['issued_at' => $certificate['issued_at'] ?? null]),
+                'certificateStatus' => $status,
+                'certificateText' => $this->certificateText($course, $certificate, $status, $period),
                 'certificateProgram' => $this->certificateProgram(Education::modulesForCourse((int) $course['id']), Education::lessonsForCourse((int) $course['id'], 0, true)),
-                'certificatePeriod' => ['enrolled_at' => null, 'completed_at' => null, 'last_attendance_at' => null, 'issued_at' => $certificate['issued_at'] ?? null],
+                'certificatePeriod' => $period,
                 'isManagedCertificate' => $canViewManaged,
+                'canDeleteCertificate' => Auth::can('certificates.issue') || Auth::can('certificates.manage') || Auth::hasRole(['master', 'admin']),
             ]);
             return;
         }

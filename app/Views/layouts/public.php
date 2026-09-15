@@ -32,6 +32,7 @@ $socialImage = $ogImage ?? url('/public/assets/img/institution-hero-community.jp
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php if (!empty($noIndex)): ?><meta name="robots" content="noindex, nofollow, noarchive"><meta name="referrer" content="no-referrer"><?php endif; ?>
     <title><?= e($pageTitle ?? $app['name']) ?></title>
     <link rel="icon" type="image/svg+xml" href="<?= e(url($faviconPath) . '?v=' . $faviconVersion) ?>">
     <meta name="description" content="<?= e($description) ?>">

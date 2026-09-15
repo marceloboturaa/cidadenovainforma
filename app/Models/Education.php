@@ -2561,7 +2561,22 @@ class Education
         ];
     }
 
-    public static function certificateReport(?int $teacherId, string $search, int $courseId, int $page): array
+    public static function certificateHub(?int $teacherId): array
+    {
+        self::ensureSchema();
+        $stmt = Database::connection()->prepare('SELECT c.id, c.title, c.certificate_enabled, c.certificate_auto_release,
+            SUM(CASE WHEN cert.status = "issued" THEN 1 ELSE 0 END) AS issued,
+            SUM(CASE WHEN cert.status = "pending" THEN 1 ELSE 0 END) AS pending,
+            SUM(CASE WHEN cert.status = "revoked" THEN 1 ELSE 0 END) AS revoked
+            FROM education_courses c LEFT JOIN education_certificates cert ON cert.course_id = c.id
+            WHERE c.active = 1 AND c.certificate_activity_type <> "reconhecimento"'
+            . ($teacherId !== null ? ' AND c.teacher_user_id = :teacher' : '')
+            . ' GROUP BY c.id, c.title, c.certificate_enabled, c.certificate_auto_release ORDER BY c.title, c.id');
+        $stmt->execute($teacherId !== null ? ['teacher' => $teacherId] : []);
+        return $stmt->fetchAll();
+    }
+
+    public static function certificateReport(?int $teacherId, string $search, int $courseId, int $page, string $status = 'issued'): array
     {
         self::ensureSchema();
         $db = Database::connection();
@@ -2570,8 +2585,9 @@ class Education
                   LEFT JOIN users student ON student.id = c.user_id
                   LEFT JOIN people person ON person.id = c.person_id
                   LEFT JOIN users teacher ON teacher.id = course.teacher_user_id';
-        $where = ' WHERE c.status = "issued" AND course.certificate_activity_type <> "reconhecimento"';
-        $params = [];
+        $status = in_array($status, ['issued', 'pending', 'revoked'], true) ? $status : 'issued';
+        $where = ' WHERE c.status = :status AND course.certificate_activity_type <> "reconhecimento"';
+        $params = ['status' => $status];
         if ($teacherId !== null) {
             $where .= ' AND course.teacher_user_id = :teacher_id';
             $params['teacher_id'] = $teacherId;
