@@ -602,6 +602,7 @@ CREATE TABLE IF NOT EXISTS education_courses (
     public_access_mode VARCHAR(20) NOT NULL DEFAULT 'hidden',
     playlist_required TINYINT(1) NOT NULL DEFAULT 1,
     certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    certificate_auto_release TINYINT(1) NOT NULL DEFAULT 0,
     certificate_title VARCHAR(180) NULL,
     certificate_heading VARCHAR(180) NULL,
     certificate_text TEXT NULL,

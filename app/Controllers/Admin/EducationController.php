@@ -346,6 +346,7 @@ class EducationController
             ? ($_POST['teacher_user_id'] ?? null)
             : ($this->canTeach() ? $userId : null);
         $visibility = $this->courseVisibilityFromRequest();
+        $this->validateCourseDates($_POST, '/admin/education/manage');
         $id = Education::createCourse(array_merge($_POST, [
             'cover_image' => $this->courseCoverFromRequest(null),
             'public_enabled' => $visibility['public_enabled'],
@@ -379,7 +380,8 @@ class EducationController
         $userId = (int) (current_user()['id'] ?? 0);
         $teacherUserId = $this->canAssignTeacher() ? ($_POST['teacher_user_id'] ?? null) : ($course['teacher_user_id'] ?? null);
         $visibility = $this->courseVisibilityFromRequest();
-        Education::updateCourse((int) $course['id'], array_merge($this->certificateFieldsFromCourse($course), $_POST, [
+        $this->validateCourseDates(array_merge($course, $_POST), '/admin/education/manage?id=' . $course['id']);
+        Education::updateCourse((int) $course['id'], array_merge($course, $this->certificateFieldsFromCourse($course), $_POST, [
             'cover_image' => $this->courseCoverFromRequest($course['cover_image'] ?? null),
             'public_enabled' => $visibility['public_enabled'],
             'public_access_enabled' => $visibility['public_access_enabled'],
@@ -1846,6 +1848,7 @@ class EducationController
 
         $title = trim((string) ($_POST['certificate_title'] ?? ''));
         $text = trim((string) ($_POST['certificate_text'] ?? ''));
+        $this->validateCourseDates(array_merge($course, $_POST), '/admin/education/course?id=' . $course['id'] . '#course-certificate');
         $readyImage = $this->certificateBackgroundFromRequest($course['certificate_ready_image'] ?? null, 'certificate_ready_image', 'certificate_ready_image_upload', 'certificado pronto');
         if (!empty($_POST['certificate_enabled']) && trim((string) $readyImage) === '' && ($title === '' || $text === '')) {
             Session::flash('error', 'Informe o título e o texto do certificado, ou envie a imagem do certificado pronto, para liberar a emissão.');
@@ -1853,7 +1856,11 @@ class EducationController
         }
 
         Education::updateCourse((int) $course['id'], array_merge($course, [
+            'starts_at' => $_POST['starts_at'] ?? $course['starts_at'] ?? null,
+            'ends_at' => $_POST['ends_at'] ?? $course['ends_at'] ?? null,
+            'workload_hours' => $_POST['workload_hours'] ?? $course['workload_hours'] ?? null,
             'certificate_enabled' => !empty($_POST['certificate_enabled']) ? 1 : 0,
+            'certificate_auto_release' => !empty($_POST['certificate_auto_release']) ? 1 : 0,
             'certificate_institution_id' => $_POST['certificate_institution_id'] ?? null,
             'certificate_heading' => trim((string) ($_POST['certificate_heading'] ?? '')),
             'certificate_title' => $title,
@@ -1933,6 +1940,14 @@ class EducationController
             redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
         }
 
+        if (!empty($course['certificate_auto_release'])) {
+            if (($status['certificate']['status'] ?? '') === 'issued') {
+                Session::flash('success', 'Certificado liberado automaticamente.');
+            } else {
+                Session::flash('error', 'Não foi possível liberar o certificado automaticamente. Confira sua matrícula com a equipe.');
+            }
+            redirect('/admin/education/course?id=' . $course['id'] . '#course-certificate');
+        }
         Education::issueCertificate((int) $course['id'], $userId, true);
         Logger::info('education.certificate_requested', 'Certificado solicitado para revisao: ' . ($course['title'] ?? ''), $userId ?: null);
         Session::flash('success', 'Solicitacao enviada. A equipe vai visualizar o certificado e liberar para voce quando estiver aprovado.');
@@ -2725,6 +2740,7 @@ class EducationController
             'certificate_template_id' => $course['certificate_template_id'] ?? null,
             'certificate_activity_type' => $course['certificate_activity_type'] ?? 'curso_livre',
             'certificate_enabled' => $course['certificate_enabled'] ?? 0,
+            'certificate_auto_release' => $course['certificate_auto_release'] ?? 0,
             'certificate_heading' => $course['certificate_heading'] ?? null,
             'certificate_title' => $course['certificate_title'] ?? null,
             'certificate_text' => $course['certificate_text'] ?? null,
@@ -2857,22 +2873,41 @@ class EducationController
         return $text;
     }
 
+    private function validateCourseDates(array $data, string $redirectTo): void
+    {
+        try {
+            \App\Core\CourseCertificateData::validate($data);
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+            redirect($redirectTo);
+        }
+    }
+
     private function certificateText(array $course, array $certificate, array $status, array $period = []): string
     {
         $issuedAt = !empty($certificate['issued_at']) ? date('d/m/Y', strtotime((string) $certificate['issued_at'])) : date('d/m/Y');
         $periodStart = !empty($period['start']) ? date('d/m/Y', strtotime((string) $period['start'])) : $issuedAt;
         $periodEnd = !empty($period['end']) ? date('d/m/Y', strtotime((string) $period['end'])) : $issuedAt;
+        $courseStart = !empty($course['starts_at']) ? date('d/m/Y', strtotime((string) $course['starts_at'])) : '';
+        $courseEnd = !empty($course['ends_at']) ? date('d/m/Y', strtotime((string) $course['ends_at'])) : '';
+        $courseHours = \App\Core\CourseCertificateData::hours($course);
+        $periodStart = $courseStart !== '' ? $courseStart : $periodStart;
+        $periodEnd = $courseEnd !== '' ? $courseEnd : $periodEnd;
         $text = trim((string) ($course['certificate_text'] ?? ''));
         if ($text === '') {
             if (($course['certificate_activity_type'] ?? '') === 'reconhecimento') {
                 return '';
             }
-            $text = 'Certificamos que {student_name} concluiu o curso {course_title}, realizado no periodo de {period_start} a {period_end}, com frequencia de {frequency}.';
+            $text = 'Certificamos que {student_name} concluiu o curso {course_title}, realizado no período de {period_start} a {period_end}'
+                . ($courseHours !== '' ? ', com carga horária total de {course_hours} horas' : '') . ', com frequência de {frequency}.';
         }
 
         return strtr($text, [
             '{student_name}' => (string) ($certificate['student_name'] ?? ''),
             '{course_title}' => (string) ($course['title'] ?? ''),
+            '{course_start_date}' => $courseStart,
+            '{course_end_date}' => $courseEnd,
+            '{course_hours}' => $courseHours,
             '{teacher_name}' => (string) ($course['teacher_name'] ?? ''),
             '{frequency}' => (string) ((int) ($status['frequency'] ?? 0)) . '%',
             '{period_start}' => $periodStart,

@@ -120,6 +120,7 @@ class Education
                 public_access_mode VARCHAR(20) NOT NULL DEFAULT "hidden",
                 playlist_required TINYINT(1) NOT NULL DEFAULT 1,
                 certificate_enabled TINYINT(1) NOT NULL DEFAULT 0,
+                certificate_auto_release TINYINT(1) NOT NULL DEFAULT 0,
                 certificate_title VARCHAR(180) NULL,
                 certificate_heading VARCHAR(180) NULL,
                 certificate_text TEXT NULL,
@@ -527,6 +528,7 @@ class Education
         self::ensureColumn('education_courses', 'public_access_mode', 'VARCHAR(20) NOT NULL DEFAULT "hidden" AFTER public_access_enabled');
         self::ensureColumn('education_courses', 'playlist_required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER public_access_mode');
         self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER playlist_required');
+        self::ensureColumn('education_courses', 'certificate_auto_release', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER certificate_enabled');
         self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
         self::ensureColumn('education_courses', 'certificate_heading', 'VARCHAR(180) NULL AFTER certificate_title');
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
@@ -1215,9 +1217,9 @@ class Education
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO education_courses
-                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, public_access_mode, playlist_required, certificate_enabled, certificate_title, certificate_heading, certificate_text, certificate_font_family, certificate_text_color, certificate_body_background_color, certificate_body_background_enabled, certificate_footer_text_color, certificate_footer_background_color, certificate_footer_background_enabled, certificate_footer_rounded, certificate_background, certificate_ready_image, certificate_min_frequency, certificate_show_heading, certificate_show_text, certificate_show_qr, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_footer_on_back, certificate_hide_responsible, certificate_program_background_enabled, certificate_program_text_color, certificate_program_background_color, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
+                (title, summary, cover_image, certificate_institution_id, certificate_category_id, certificate_template_id, certificate_activity_type, workload_hours, starts_at, ends_at, public_enabled, public_access_enabled, public_access_mode, playlist_required, certificate_enabled, certificate_auto_release, certificate_title, certificate_heading, certificate_text, certificate_font_family, certificate_text_color, certificate_body_background_color, certificate_body_background_enabled, certificate_footer_text_color, certificate_footer_background_color, certificate_footer_background_enabled, certificate_footer_rounded, certificate_background, certificate_ready_image, certificate_min_frequency, certificate_show_heading, certificate_show_text, certificate_show_qr, certificate_show_recipient, certificate_show_nature, certificate_show_modality, certificate_show_period, certificate_show_approval, certificate_show_institution, certificate_show_meta, certificate_show_legal, certificate_course_nature, certificate_modality, certificate_approval_criteria, certificate_legal_text, certificate_institution_name, certificate_institution_city, certificate_institution_cnpj, certificate_institution_site, certificate_objectives, certificate_competencies, certificate_responsible_name, certificate_responsible_credential, certificate_program_enabled, certificate_footer_on_back, certificate_hide_responsible, certificate_program_background_enabled, certificate_program_text_color, certificate_program_background_color, certificate_program_background, certificate_program_extra, certificate_program_columns, teacher_user_id, active, created_by, updated_by, created_at, updated_at)
              VALUES
-                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :public_access_mode, :playlist_required, :certificate_enabled, :certificate_title, :certificate_heading, :certificate_text, :certificate_font_family, :certificate_text_color, :certificate_body_background_color, :certificate_body_background_enabled, :certificate_footer_text_color, :certificate_footer_background_color, :certificate_footer_background_enabled, :certificate_footer_rounded, :certificate_background, :certificate_ready_image, :certificate_min_frequency, :certificate_show_heading, :certificate_show_text, :certificate_show_qr, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_footer_on_back, :certificate_hide_responsible, :certificate_program_background_enabled, :certificate_program_text_color, :certificate_program_background_color, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
+                (:title, :summary, :cover_image, :certificate_institution_id, :certificate_category_id, :certificate_template_id, :certificate_activity_type, :workload_hours, :starts_at, :ends_at, :public_enabled, :public_access_enabled, :public_access_mode, :playlist_required, :certificate_enabled, :certificate_auto_release, :certificate_title, :certificate_heading, :certificate_text, :certificate_font_family, :certificate_text_color, :certificate_body_background_color, :certificate_body_background_enabled, :certificate_footer_text_color, :certificate_footer_background_color, :certificate_footer_background_enabled, :certificate_footer_rounded, :certificate_background, :certificate_ready_image, :certificate_min_frequency, :certificate_show_heading, :certificate_show_text, :certificate_show_qr, :certificate_show_recipient, :certificate_show_nature, :certificate_show_modality, :certificate_show_period, :certificate_show_approval, :certificate_show_institution, :certificate_show_meta, :certificate_show_legal, :certificate_course_nature, :certificate_modality, :certificate_approval_criteria, :certificate_legal_text, :certificate_institution_name, :certificate_institution_city, :certificate_institution_cnpj, :certificate_institution_site, :certificate_objectives, :certificate_competencies, :certificate_responsible_name, :certificate_responsible_credential, :certificate_program_enabled, :certificate_footer_on_back, :certificate_hide_responsible, :certificate_program_background_enabled, :certificate_program_text_color, :certificate_program_background_color, :certificate_program_background, :certificate_program_extra, :certificate_program_columns, :teacher_user_id, 1, :created_by, :updated_by, NOW(), NOW())'
         );
         $stmt->execute(self::coursePayload($data));
 
@@ -1248,6 +1250,7 @@ class Education
                  public_access_mode = :public_access_mode,
                  playlist_required = :playlist_required,
                  certificate_enabled = :certificate_enabled,
+                 certificate_auto_release = :certificate_auto_release,
                  certificate_title = :certificate_title,
                  certificate_heading = :certificate_heading,
                  certificate_text = :certificate_text,
@@ -1958,6 +1961,20 @@ class Education
         $minimumFrequency = (int) ($course['certificate_min_frequency'] ?? 0);
         $courseCompleted = $progress['lesson_count'] > 0 && $progress['completed_count'] >= $progress['lesson_count'];
         $frequencyReady = $minimumFrequency <= 0 || $attendance['frequency'] >= $minimumFrequency;
+        $eligible = !empty($course['certificate_enabled']) && $courseCompleted && $frequencyReady;
+        $certificate = self::certificateForCourseUser($courseId, $userId);
+        if ($eligible && !empty($course['certificate_auto_release']) && self::enrollmentStatus($courseId, $userId) === 'approved') {
+            if (!$certificate) {
+                $certificate = self::issueCertificate($courseId, $userId, false);
+            } elseif (($certificate['status'] ?? '') === 'pending') {
+                $stmt = Database::connection()->prepare('UPDATE education_certificates SET status = "issued", authorized_at = NOW(), issued_at = NOW(), updated_at = NOW() WHERE id = :id AND status = "pending"');
+                $stmt->execute(['id' => $certificate['id']]);
+                if ($stmt->rowCount() > 0) {
+                    self::auditCertificate((int) $certificate['id'], !empty($course['certificate_institution_id']) ? (int) $course['certificate_institution_id'] : null, null, 'automatically_issued', ['status' => 'pending'], ['status' => 'issued']);
+                }
+                $certificate = self::certificateForCourseUser($courseId, $userId);
+            }
+        }
 
         return [
             'enabled' => !empty($course['certificate_enabled']),
@@ -1968,8 +1985,8 @@ class Education
             'frequency' => $attendance['frequency'],
             'minimum_frequency' => $minimumFrequency,
             'frequency_ready' => $frequencyReady,
-            'eligible' => !empty($course['certificate_enabled']) && $courseCompleted && $frequencyReady,
-            'certificate' => self::certificateForCourseUser($courseId, $userId),
+            'eligible' => $eligible,
+            'certificate' => $certificate,
         ];
     }
 
@@ -2590,6 +2607,11 @@ class Education
     public static function certificatesForUser(int $userId): array
     {
         self::ensureSchema();
+        $automatic = Database::connection()->prepare('SELECT c.id FROM education_courses c INNER JOIN education_enrollments e ON e.course_id = c.id WHERE e.user_id = :user AND e.status = "approved" AND c.certificate_enabled = 1 AND c.certificate_auto_release = 1 AND c.active = 1');
+        $automatic->execute(['user' => $userId]);
+        foreach ($automatic->fetchAll(\PDO::FETCH_COLUMN) as $courseId) {
+            self::certificateStatusForCourseUser((int) $courseId, $userId);
+        }
 
         $stmt = Database::connection()->prepare(
             'SELECT education_certificates.*,
@@ -3772,6 +3794,7 @@ class Education
             'public_access_mode' => $publicMode,
             'playlist_required' => array_key_exists('playlist_required', $data) ? (!empty($data['playlist_required']) ? 1 : 0) : 1,
             'certificate_enabled' => !empty($data['certificate_enabled']) ? 1 : 0,
+            'certificate_auto_release' => !empty($data['certificate_auto_release']) ? 1 : 0,
             'certificate_heading' => self::nullable($data['certificate_heading'] ?? null),
             'certificate_title' => self::nullable($data['certificate_title'] ?? null),
             'certificate_text' => self::nullable($data['certificate_text'] ?? null),

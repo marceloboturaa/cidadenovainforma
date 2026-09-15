@@ -59,8 +59,10 @@ $formatCertificateDate = static function (?string $value) use ($issuedAt): strin
     $timestamp = $value ? strtotime($value) : false;
     return $timestamp ? date('d/m/Y', $timestamp) : $issuedAt;
 };
-$periodStart = $formatCertificateDate($certificatePeriod['start'] ?? null);
-$periodEnd = $formatCertificateDate($certificatePeriod['end'] ?? ($certificate['issued_at'] ?? null));
+$periodStart = $formatCertificateDate($course['starts_at'] ?? $certificatePeriod['start'] ?? null);
+$periodEnd = $formatCertificateDate($course['ends_at'] ?? $certificatePeriod['end'] ?? ($certificate['issued_at'] ?? null));
+$courseHours = \App\Core\CourseCertificateData::hours($course);
+$showHours = $courseHours !== '' && !str_contains($certificateTextSearch, 'carga horaria') && !str_contains($certificateTextSearch, 'horas');
 $minimumFrequency = max(75, (int) ($certificateStatus['minimum_frequency'] ?? 0));
 $courseNature = trim((string) ($course['certificate_course_nature'] ?? '')) ?: ($isRecognitionCertificate ? '' : 'Curso Livre de Capacitação Profissional - Formação Continuada');
 $courseModality = trim((string) ($course['certificate_modality'] ?? '')) ?: ($isRecognitionCertificate ? '' : 'Online');
@@ -188,8 +190,9 @@ $hasBottomInfo = $showInstitution || $showIssuedMeta || $showCodeMeta || $showTe
                 <?php if ($showText && trim($certificateText) !== ''): ?>
                     <div class="education-certificate-body"><?= nl2br(e(trim($certificateText))) ?></div>
                 <?php endif; ?>
-                <?php if ($showModality || $showPeriod || $showApproval): ?>
+                <?php if ($showModality || $showPeriod || $showApproval || $showHours): ?>
                     <section class="education-certificate-details" aria-label="Detalhes do certificado">
+                        <?php if ($showHours): ?><span>Carga horária: <?= e($courseHours) ?> horas</span><?php endif; ?>
                         <?php if ($showModality): ?><span>Modalidade: <?= e($courseModality) ?></span><?php endif; ?>
                         <?php if ($showPeriod): ?><span>Realizado de <?= e($periodStart) ?> até <?= e($periodEnd) ?></span><?php endif; ?>
                         <?php if ($showApproval): ?><span><?= e($approvalCriteria) ?></span><?php endif; ?>

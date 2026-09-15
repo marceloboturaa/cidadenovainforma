@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__) . '/app/Core/CourseCertificateData.php';
 function e($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
 function url($value) { return $value; }
 function media_url($value) { return $value; }

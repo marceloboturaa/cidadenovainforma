@@ -530,7 +530,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
         <i class="bi bi-award" aria-hidden="true"></i>
         <span>
             <strong>Certificado do curso</strong>
-            <small><?= !empty($course['certificate_enabled']) ? 'Emissão liberada por solicitação do aluno' : 'Configure o modelo antes de liberar' ?></small>
+            <small><?= !empty($course['certificate_enabled']) ? (!empty($course['certificate_auto_release']) ? 'Liberação automática ao cumprir os requisitos' : 'Emissão por solicitação do aluno') : 'Configure o modelo antes de liberar' ?></small>
         </span>
         <em><?= !empty($course['certificate_enabled']) ? 'Ativo' : 'Opcional' ?></em>
     </summary>
@@ -539,7 +539,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
 <section class="panel education-certificate-panel" id="course-certificate">
     <div class="section-heading">
         <h2>Certificado do curso</h2>
-        <span><?= !empty($course['certificate_enabled']) ? 'Emissão liberada por solicitação do aluno' : 'Configure o modelo antes de liberar' ?></span>
+        <span><?= !empty($course['certificate_enabled']) ? (!empty($course['certificate_auto_release']) ? 'Liberação automática ao cumprir os requisitos' : 'Emissão por solicitação do aluno') : 'Configure o modelo antes de liberar' ?></span>
     </div>
 <?php endif; ?>
 
@@ -568,6 +568,12 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <input type="checkbox" name="certificate_enabled" value="1" <?= checked(!empty($course['certificate_enabled'])) ?>>
                 <span>Liberar certificado quando o aluno concluir o curso</span>
             </label>
+            <label class="forum-check-line grid-span-2">
+                <input type="checkbox" name="certificate_auto_release" value="1" <?= checked(!empty($course['certificate_auto_release'])) ?>>
+                <span>Liberar automaticamente, sem revisão da equipe</span>
+            </label>
+            <small class="field-hint grid-span-2">Com a emissão ativada, o certificado fica disponível ao acessar o curso ou Meus certificados após cumprir a conclusão e a frequência mínima. Solicitações pendentes elegíveis também são liberadas.</small>
+            <?php $periodCourse = $course; require __DIR__ . '/course-period-fields.php'; ?>
             <?php
                 $certificateTextColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_text_color'] ?? '')) ? (string) $course['certificate_text_color'] : '#172033';
                 $certificateBodyBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($course['certificate_body_background_color'] ?? '')) ? (string) $course['certificate_body_background_color'] : '#ffffff';
@@ -582,7 +588,7 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <div>
                     <span>Status</span>
                     <strong><?= !empty($course['certificate_enabled']) ? 'Liberado' : 'Desativado' ?></strong>
-                    <small><?= !empty($course['certificate_enabled']) ? 'Aluno pode solicitar ao concluir.' : 'Ative quando o modelo estiver pronto.' ?></small>
+                    <small><?= !empty($course['certificate_enabled']) ? (!empty($course['certificate_auto_release']) ? 'Liberação automática após conclusão e frequência mínima.' : 'Aluno pode solicitar ao concluir.') : 'Ative quando o modelo estiver pronto.' ?></small>
                 </div>
                 <div>
                     <span>Frente</span>
@@ -687,8 +693,8 @@ if ($isStudentCourseView && function_exists('current_user')) {
                 <div class="certificate-editor-grid">
             <div class="grid-span-2">
                 <label class="form-label">Texto do certificado</label>
-                <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title}, realizado no periodo de {period_start} a {period_end}, com frequencia de {frequency}."><?= e($course['certificate_text'] ?? '') ?></textarea>
-                <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {teacher_name}, {frequency}, {period_start}, {period_end}, {issued_at}, {verification_code}.</small>
+                <textarea class="form-control" name="certificate_text" rows="5" placeholder="Certificamos que {student_name} concluiu o curso {course_title}, realizado de {course_start_date} a {course_end_date}, com carga horária de {course_hours} horas e frequência de {frequency}."><?= e($course['certificate_text'] ?? '') ?></textarea>
+                <small class="field-hint">Campos automáticos: {student_name}, {course_title}, {course_start_date}, {course_end_date}, {course_hours}, {teacher_name}, {frequency}, {period_start}, {period_end}, {issued_at}, {verification_code}. As datas e a carga horária vêm deste curso; escreva “horas” após {course_hours}. {frequency} mostra a frequência em percentual.</small>
             </div>
             <label class="forum-check-line">
                 <input type="checkbox" name="certificate_body_background_enabled" value="1" <?= checked((int) ($course['certificate_body_background_enabled'] ?? 0) === 1) ?>>
