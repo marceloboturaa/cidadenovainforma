@@ -55,6 +55,10 @@ class Auth
             return false;
         }
 
+        if (StudentAccess::applies($user) && !StudentAccess::allowsPermission($permission)) {
+            return false;
+        }
+
         if ($user['role_slug'] === 'master') {
             return true;
         }
@@ -72,7 +76,8 @@ class Auth
 
         $roles = is_array($roles) ? $roles : [$roles];
 
-        return (bool) array_intersect($roles, self::roleSlugs($user));
+        $effectiveRoles = StudentAccess::applies($user) ? ['estudante'] : self::roleSlugs($user);
+        return (bool) array_intersect($roles, $effectiveRoles);
     }
 
     public static function roleSlugs(?array $user = null): array

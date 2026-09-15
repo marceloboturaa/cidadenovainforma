@@ -42,6 +42,13 @@ class Role
     public static function syncPermissions(int $roleId, array $permissionIds): void
     {
         $permissionIds = array_values(array_unique(array_filter(array_map('intval', $permissionIds))));
+        $role = self::find($roleId);
+        if (($role['slug'] ?? '') === 'estudante') {
+            $allowedIds = array_column(array_filter(Permission::all(), static fn (array $permission): bool =>
+                \App\Core\StudentAccess::allowsPermission($permission['slug'])
+            ), 'id');
+            $permissionIds = array_values(array_intersect($permissionIds, $allowedIds));
+        }
         $db = Database::connection();
         $db->beginTransaction();
 

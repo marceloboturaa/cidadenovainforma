@@ -25,6 +25,7 @@ namespace App\Models {
     }
 }
 namespace {
+    require dirname(__DIR__) . '/app/Core/StudentAccess.php';
     require dirname(__DIR__) . '/app/Core/AdminNavigation.php';
     use App\Core\AdminNavigation;
     use App\Core\Auth;

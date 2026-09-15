@@ -785,7 +785,7 @@ class PublicController
             return false;
         }
 
-        $role = Role::findBySlug('estudante') ?: Role::findBySlug('jornalista');
+        $role = Role::findBySlug('estudante');
         if (!$role) {
             return false;
         }

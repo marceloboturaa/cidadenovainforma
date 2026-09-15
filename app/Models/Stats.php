@@ -50,12 +50,14 @@ class Stats
 
     public static function canViewSensitiveInfo(?array $user): bool
     {
-        return (bool) array_intersect(self::roleSlugs($user), self::FULL_DASHBOARD_ROLES);
+        return !\App\Core\StudentAccess::applies($user)
+            && (bool) array_intersect(self::roleSlugs($user), self::FULL_DASHBOARD_ROLES);
     }
 
     public static function canViewEditorialInfo(?array $user): bool
     {
-        return (bool) array_intersect(self::roleSlugs($user), self::EDITORIAL_DASHBOARD_ROLES);
+        return !\App\Core\StudentAccess::applies($user)
+            && (bool) array_intersect(self::roleSlugs($user), self::EDITORIAL_DASHBOARD_ROLES);
     }
 
     private static function roleSlugs(?array $user): array

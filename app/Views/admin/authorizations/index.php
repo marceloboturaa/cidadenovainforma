@@ -30,12 +30,16 @@
         <?php if (($selectedRole['slug'] ?? '') === 'master'): ?>
             <div class="empty-state">O cargo MASTER tem acesso total e não pode ser alterado por este painel.</div>
         <?php elseif ($selectedRole): ?>
+            <?php if (($selectedRole['slug'] ?? '') === 'estudante'): ?>
+                <p class="alert alert-info">Estudantes acessam cursos e atividades, certificados próprios e sua conta. Permissões administrativas ficam bloqueadas, inclusive quando há outros cargos na mesma conta.</p>
+            <?php endif; ?>
             <form method="post" action="<?= e(url('/admin/authorizations')) ?>" class="user-stacked-form">
                 <?= csrf_field() ?>
                 <input type="hidden" name="role_id" value="<?= e((string) $selectedRole['id']) ?>">
 
                 <div class="responsibility-options">
                     <?php foreach ($permissions as $permission): ?>
+                        <?php if (($selectedRole['slug'] ?? '') === 'estudante' && !\App\Core\StudentAccess::allowsPermission($permission['slug'])) { continue; } ?>
                         <label>
                             <input type="checkbox" name="permission_ids[]" value="<?= e((string) $permission['id']) ?>" <?= checked(in_array((int) $permission['id'], $selectedPermissionIds, true)) ?>>
                             <span>

@@ -86,7 +86,7 @@ class AuthController
             redirect('/register' . ($courseId ? '?course_id=' . $courseId : ''));
         }
 
-        $role = Role::findBySlug('jornalista');
+        $role = Role::findBySlug($courseId ? 'estudante' : 'jornalista');
         if (!$role) {
             Session::flash('error', 'Não foi possível criar o cadastro agora.');
             redirect('/register');

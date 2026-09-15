@@ -28,8 +28,8 @@ class AdminNavigation
             return false;
         }
 
-        if ($path === '/admin/education/certificates' && Auth::hasRole('estudante')) {
-            return true;
+        if (StudentAccess::applies($user)) {
+            return StudentAccess::allowsRoute('GET', $path);
         }
         if (in_array($path, ['/admin/education/certificate-center', '/admin/education/certificate-report', '/admin/education/certificate-administration'], true)) {
             if (Auth::hasRole('estudante') || !Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor'])) {
