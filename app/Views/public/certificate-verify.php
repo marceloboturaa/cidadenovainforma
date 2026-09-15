@@ -17,7 +17,7 @@ $activity = ($certificate['certificate_activity_type'] ?? '') === 'evento' ? 'Ev
         <?php if ($isValid): ?>
         <h2><?= e($certificate['document_label']) ?></h2>
         <dl>
-            <div><dt>Titular — nome abreviado</dt><dd><?= e($certificate['recipient_initials']) ?></dd></div>
+            <div><dt>Titular — nome parcialmente oculto</dt><dd><?= e($certificate['recipient_masked_name']) ?></dd></div>
             <div><dt><?= e($activity) ?></dt><dd><?= e($certificate['course_title']) ?></dd></div>
             <div><dt>Instituição emissora</dt><dd><?= e($certificate['institution_name']) ?></dd></div>
             <?php if (!empty($certificate['issued_at'])): ?><div><dt>Data de emissão</dt><dd><?= e(date('d/m/Y', strtotime($certificate['issued_at']))) ?></dd></div><?php endif; ?>
@@ -33,7 +33,7 @@ $activity = ($certificate['certificate_activity_type'] ?? '') === 'evento' ? 'Ev
     <?php endif; ?>
     <section class="certificate-verify-institution">
         <h2>Privacidade na consulta</h2>
-        <p>Esta página confirma a autenticidade usando o código do documento. O nome é abreviado, e dados como CPF, e-mail, telefone, notas e motivo de revogação não são exibidos.</p>
+        <p>Esta página confirma a autenticidade usando o código do documento. São exibidos o primeiro e o terceiro nome, quando houver; os demais são substituídos por asteriscos. CPF, e-mail, telefone, notas e motivo de revogação não são exibidos.</p>
         <p>Compartilhe o código somente com quem precisa verificar o certificado. Para consultar seus documentos completos ou solicitar correção, acesse sua conta e procure a equipe responsável pelo curso ou evento.</p>
         <a href="<?= e(url('/admin/education/certificates')) ?>">Acessar meus certificados</a>
     </section>
