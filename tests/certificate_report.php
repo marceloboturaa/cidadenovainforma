@@ -22,8 +22,17 @@ namespace {
     require dirname(__DIR__) . '/app/Models/Announcement.php';
     require dirname(__DIR__) . '/app/Models/CertificateNotification.php';
     use App\Models\Education;
-    $pdo = new PDO('sqlite::memory:', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
-    $pdo->sqliteCreateFunction('CONCAT', fn (...$args) => implode('', $args));
+    if (in_array('--mysql', $argv ?? [], true)) {
+        $config = require dirname(__DIR__) . '/config/database.php';
+        $pdo = new PDO('mysql:host=' . $config['host'] . ';port=' . $config['port'] . ';charset=utf8mb4', $config['username'], $config['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false]);
+        $testDatabase = 'cni_report_test_' . bin2hex(random_bytes(6));
+        $pdo->exec('CREATE DATABASE `' . $testDatabase . '`');
+        register_shutdown_function(static function () use ($pdo, $testDatabase) { $pdo->exec('DROP DATABASE `' . $testDatabase . '`'); });
+        $pdo->exec('USE `' . $testDatabase . '`');
+    } else {
+        $pdo = new PDO('sqlite::memory:', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+        $pdo->sqliteCreateFunction('CONCAT', fn (...$args) => implode('', $args));
+    }
     \App\Core\Database::$db = new \App\Core\ReportDatabase($pdo);
     $pdo->exec('CREATE TABLE education_courses (id INTEGER, title TEXT, teacher_user_id INTEGER, certificate_activity_type TEXT);
         CREATE TABLE users (id INTEGER, name TEXT);
@@ -43,6 +52,14 @@ namespace {
         CREATE TABLE certificate_notifications (certificate_id INTEGER PRIMARY KEY, email_sent_at TEXT, email_attempted_at TEXT, email_attempts INTEGER, last_error TEXT);
         INSERT INTO certificate_notifications VALUES (1,"2026-09-15 12:00:00","2026-09-15 12:00:00",1,NULL), (2,NULL,"2026-09-15 12:00:00",2,"Falha de envio");');
     $all = Education::certificateReport(null, '', 0, 1);
+    foreach (['all', 'issued', 'pending', 'revoked'] as $certificateState) {
+        foreach (['', 'sent', 'pending', 'failed', 'unavailable', 'not_released'] as $mailState) {
+            $combination = Education::certificateReport(null, '', 0, 1, $certificateState, $mailState);
+            check(is_array($combination['rows']), 'Every filter combination must execute');
+        }
+    }
+    check((int) Education::certificateReport(null, '', 0, 1, 'issued', 'not_released')['totals']['certificates'] === 0, 'Issued plus not released returns empty results');
+    check((int) Education::certificateReport(null, '', 0, 1, 'all', 'not_released')['totals']['certificates'] === 2, 'All statuses finds pending and revoked without deleted or drafts');
     check((int) $all['totals']['certificates'] === 27 && (int) $all['totals']['courses'] === 2 && (int) $all['totals']['recipients'] === 2, 'Global totals and status exclusions');
     $own = Education::certificateReport(10, '', 0, 1);
     check((int) $all['totals']['email_sent'] === 1 && (int) $all['totals']['email_failed'] === 1 && (int) $all['totals']['email_pending'] === 24 && (int) $all['totals']['email_unavailable'] === 1, 'Email totals cover all pages and distinguish unavailable recipients');
@@ -72,5 +89,8 @@ namespace {
         check(!str_contains($html, $search), 'Search output escaped');
         check(str_contains($html, $report['rows'] ? 'Aluno A' : 'Nenhum certificado encontrado'), 'Populated and empty view');
     }
+    $reportError = 'Falha de consulta: referência test';
+    ob_start(); require dirname(__DIR__) . '/app/Views/admin/education/certificate-report.php'; $html = ob_get_clean();
+    check(str_contains($html, $reportError) && !str_contains($html, 'Nenhum certificado encontrado') && !str_contains($html, 'Certificados encontrados'), 'Failure must not masquerade as empty data');
     echo "Painel: escopo, totais, filtros, paginação e renderização aprovados.\n";
 }

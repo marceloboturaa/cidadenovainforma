@@ -2670,9 +2670,9 @@ class Education
                   LEFT JOIN people person ON person.id = c.person_id
                   LEFT JOIN users teacher ON teacher.id = course.teacher_user_id
                   LEFT JOIN certificate_notifications notice ON notice.certificate_id = c.id';
-        $status = in_array($status, ['issued', 'pending', 'revoked'], true) ? $status : 'issued';
-        $where = ' WHERE c.status = :status AND course.certificate_activity_type <> "reconhecimento"';
-        $params = ['status' => $status];
+        $status = in_array($status, ['all', 'issued', 'pending', 'revoked'], true) ? $status : 'issued';
+        $where = ' WHERE c.status IN ("issued", "pending", "revoked") AND course.certificate_activity_type <> "reconhecimento"';
+        $params = [];
         if ($teacherId !== null) {
             $where .= ' AND course.teacher_user_id = :teacher_id';
             $params['teacher_id'] = $teacherId;
@@ -2680,6 +2680,10 @@ class Education
         $courses = $db->prepare('SELECT DISTINCT course.id, course.title' . $from . $where . ' ORDER BY course.title, course.id');
         $courses->execute($params);
         $courseOptions = $courses->fetchAll();
+        if ($status !== 'all') {
+            $where .= ' AND c.status = :status';
+            $params['status'] = $status;
+        }
         if ($courseId > 0) {
             $where .= ' AND course.id = :course_id';
             $params['course_id'] = $courseId;
@@ -2710,7 +2714,7 @@ class Education
         $totals = $summary->fetch();
         $pages = max(1, (int) ceil((int) $totals['certificates'] / 25));
         $page = max(1, min($pages, $page));
-        $rows = $db->prepare('SELECT c.id, c.verification_code, c.issued_at, c.authorized_at,
+        $rows = $db->prepare('SELECT c.id, c.status AS certificate_status, c.verification_code, c.issued_at, c.authorized_at,
             student.email AS recipient_email, notice.email_sent_at, notice.email_attempted_at,
             COALESCE(notice.email_attempts, 0) AS email_attempts, notice.last_error,
             ' . $emailState . ' AS email_status,

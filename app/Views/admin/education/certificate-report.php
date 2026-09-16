@@ -1,8 +1,9 @@
 <?php
 $reportStatus = $reportStatus ?? 'issued';
 $emailStatus = $emailStatus ?? '';
+$reportError = $reportError ?? null;
 $emailLabels = ['sent' => 'Enviado ao serviço de e-mail', 'pending' => 'Pendente de envio', 'failed' => 'Falha no envio', 'unavailable' => 'Sem conta ativa para envio', 'not_released' => 'Certificado não liberado'];
-$statusLabels = ['issued' => 'Emitidos', 'pending' => 'Aguardando revisão', 'revoked' => 'Revogados'];
+$statusLabels = ['all' => 'Todas as situações', 'issued' => 'Emitidos', 'pending' => 'Aguardando revisão', 'revoked' => 'Revogados'];
 $pageUrl = static fn (int $page): string => url('/admin/education/certificate-report?' . http_build_query(['q' => $search, 'course_id' => $courseId, 'page' => $page, 'status' => $reportStatus, 'email_status' => $emailStatus]));
 ?>
 <div class="page-heading">
@@ -13,19 +14,22 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
     </div>
     <a class="btn btn-outline-secondary" href="<?= e(url('/admin/education/certificate-center')) ?>">Central de certificados</a>
 </div>
+<?php if ($reportError): ?><div class="alert alert-danger" role="alert"><?= e($reportError) ?></div><?php endif; ?>
+<?php if (!$reportError): ?>
 <div class="dashboard-grid">
     <?php foreach (['certificates' => 'Certificados encontrados', 'recipients' => 'Destinatários', 'courses' => 'Cursos com certificados'] as $key => $label): ?>
         <article class="metric-card"><span><?= e($label) ?></span><strong><?= e((string) $report['totals'][$key]) ?></strong><small>Conforme os filtros selecionados</small></article>
     <?php endforeach; ?>
 </div>
+<?php endif; ?>
 <section class="panel">
     <h2>Avisos de certificado por e-mail</h2>
     <p>Confira o envio do link do certificado para cada estudante. “Enviado” significa que o serviço de e-mail aceitou a mensagem; não confirma entrega na caixa de entrada ou leitura.</p>
-    <div class="dashboard-grid">
+    <?php if (!$reportError): ?><div class="dashboard-grid">
         <?php foreach ($emailLabels as $state => $label): ?>
             <article class="metric-card"><span><?= e($label) ?></span><strong><?= (int) ($report['totals']['email_' . $state] ?? 0) ?></strong><small>Conforme os filtros; inclui todas as páginas</small></article>
         <?php endforeach; ?>
-    </div>
+    </div><?php endif; ?>
     <p class="field-hint">Este relatório mostra certificados existentes. Alunos sem certificado emitido não estão incluídos. Pendências e falhas são processadas pela rotina de avisos configurada na hospedagem.</p>
     <form method="get" action="<?= e(url('/admin/education/certificate-report')) ?>" class="row g-3 mb-4">
         <div class="col-md-5">
@@ -59,10 +63,14 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
             <a class="btn btn-outline-secondary" href="<?= e(url('/admin/education/certificate-report')) ?>">Limpar filtros</a>
         </div>
     </form>
+    <?php if (!$reportError): ?>
     <div class="section-heading"><h2><?= e($statusLabels[$reportStatus]) ?></h2><span><?= e((string) $report['totals']['certificates']) ?> certificado(s)</span></div>
     <p class="field-hint"><?= $reportStatus === 'pending' ? 'Abra o certificado para conferir os dados antes de liberar ao estudante.' : 'A emissão não confirma que o destinatário abriu ou baixou o documento.' ?></p>
     <?php if (!$report['rows']): ?>
         <div class="empty-state">Nenhum certificado encontrado para estes filtros.</div>
+        <?php if ($reportStatus === 'issued' && $emailStatus === 'not_released'): ?>
+            <p>“Emitidos” e “Certificado não liberado” são situações incompatíveis. Selecione “Todas as situações” no filtro Situação para consultar os certificados não liberados.</p>
+        <?php endif; ?>
     <?php else: ?>
         <form id="notify-selected-certificates" method="post" action="<?= e(url('/admin/education/certificate/notify-selected')) ?>" class="heading-actions">
             <?= csrf_field() ?>
@@ -85,7 +93,7 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
                             <td><?= e($row['course_title']) ?></td>
                             <td><?= e($row['teacher_name'] ?? 'Não atribuído') ?></td>
                             <td><?= e(date('d/m/Y H:i', strtotime($row['issued_at']))) ?></td>
-                            <td><?= e($row['verification_code']) ?></td>
+                            <td><?= e($row['verification_code']) ?><br><small><?= e($statusLabels[$row['certificate_status']]) ?></small></td>
                             <td>
                                 <strong><?= e($emailLabels[$row['email_status']]) ?></strong>
                                 <?php if ($row['email_sent_at']): ?><br><small>Envio aceito em <?= e(date('d/m/Y H:i', strtotime($row['email_sent_at']))) ?></small><?php endif; ?>
@@ -101,7 +109,7 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
                                     <small>Intervalo mínimo de 15 minutos entre tentativas.</small>
                                 <?php endif; ?>
                             </td>
-                            <td><a class="btn btn-sm btn-primary" href="<?= e(url('/admin/education/certificate?certificate_id=' . $row['id'])) ?>"><?= $reportStatus === 'pending' ? 'Conferir e liberar' : 'Abrir certificado' ?></a></td>
+                            <td><a class="btn btn-sm btn-primary" href="<?= e(url('/admin/education/certificate?certificate_id=' . $row['id'])) ?>"><?= $row['certificate_status'] === 'pending' ? 'Conferir e liberar' : 'Abrir certificado' ?></a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -112,6 +120,7 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
             <span>Página <?= e((string) $report['page']) ?> de <?= e((string) $report['pages']) ?></span>
             <?php if ($report['page'] < $report['pages']): ?><a class="btn btn-outline-secondary" href="<?= e($pageUrl($report['page'] + 1)) ?>">Próxima</a><?php endif; ?>
         </nav>
+    <?php endif; ?>
     <?php endif; ?>
 </section>
 <script>

@@ -111,10 +111,20 @@ class EducationController
         $search = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 180);
         $courseId = max(0, (int) ($_GET['course_id'] ?? 0));
         $page = max(1, (int) ($_GET['page'] ?? 1));
-        $reportStatus = in_array($_GET['status'] ?? '', ['issued', 'pending', 'revoked'], true) ? $_GET['status'] : 'issued';
+        $reportStatus = in_array($_GET['status'] ?? '', ['all', 'issued', 'pending', 'revoked'], true) ? $_GET['status'] : 'issued';
         $emailStatus = in_array($_GET['email_status'] ?? '', ['sent', 'pending', 'failed', 'unavailable', 'not_released'], true) ? $_GET['email_status'] : '';
+        $reportError = null;
+        try {
+            $report = Education::certificateReport($teacherId, $search, $courseId, $page, $reportStatus, $emailStatus);
+        } catch (\Throwable $exception) {
+            $reference = uniqid('cert-report-');
+            error_log('[' . $reference . '] Certificate report failed: ' . $exception->getMessage());
+            $reportError = 'Não foi possível consultar os certificados. A falha foi registrada no log PHP da hospedagem. Referência: ' . $reference;
+            $report = ['totals' => ['certificates' => 0, 'recipients' => 0, 'courses' => 0], 'rows' => [], 'courses' => [], 'page' => 1, 'pages' => 1];
+        }
         View::render('admin/education/certificate-report', [
-            'report' => Education::certificateReport($teacherId, $search, $courseId, $page, $reportStatus, $emailStatus),
+            'report' => $report,
+            'reportError' => $reportError,
             'emailStatus' => $emailStatus,
             'reportStatus' => $reportStatus,
             'search' => $search,
