@@ -81,6 +81,14 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
                                 <br><small><?= (int) $row['email_attempts'] ?> tentativa(s)</small>
                                 <?php if ($row['email_attempted_at']): ?><br><small>Última tentativa: <?= e(date('d/m/Y H:i', strtotime($row['email_attempted_at']))) ?></small><?php endif; ?>
                                 <?php if ($row['email_status'] === 'failed'): ?><br><small><?= e($row['last_error']) ?></small><?php endif; ?>
+                                <?php if (in_array($row['email_status'], ['pending', 'failed'], true)): ?>
+                                    <form method="post" action="<?= e(url('/admin/education/certificate/notify')) ?>">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="certificate_id" value="<?= (int) $row['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary"><?= $row['email_status'] === 'failed' ? 'Tentar avisar novamente' : 'Avisar estudante' ?></button>
+                                    </form>
+                                    <small>Intervalo mínimo de 15 minutos entre tentativas.</small>
+                                <?php endif; ?>
                             </td>
                             <td><a class="btn btn-sm btn-primary" href="<?= e(url('/admin/education/certificate?certificate_id=' . $row['id'])) ?>"><?= $reportStatus === 'pending' ? 'Conferir e liberar' : 'Abrir certificado' ?></a></td>
                         </tr>

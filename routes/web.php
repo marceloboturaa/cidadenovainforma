@@ -215,6 +215,8 @@ $router->post('/admin/education/lesson', [EducationController::class, 'storeLess
 $router->post('/admin/education/lesson/update', [EducationController::class, 'updateLesson']);
 $router->post('/admin/education/lesson/notify', [EducationController::class, 'notifyLesson']);
 $router->post('/admin/education/course/close', [EducationController::class, 'closeCourse']);
+$router->post('/admin/education/course/reopen', [EducationController::class, 'reopenCourse']);
+$router->post('/admin/education/certificate/notify', [EducationController::class, 'notifyCertificate']);
 $router->post('/admin/education/lesson/delete', [EducationController::class, 'deleteLesson']);
 $router->get('/admin/education/lesson', [EducationController::class, 'lesson']);
 $router->post('/admin/education/forum/topic', [EducationController::class, 'storeForumTopic']);

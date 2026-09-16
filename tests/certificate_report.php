@@ -65,6 +65,7 @@ namespace {
     check((int) Education::certificateReport(null, "' OR 1=1 --", 0, 1)['totals']['certificates'] === 0, 'Search is parameterized');
     function e($value) { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
     function url($value) { return $value; }
+    function csrf_field() { return '<input type="hidden" name="_token" value="test">'; }
     $search = '<script>alert(1)</script>'; $courseId = 0; $ownCoursesOnly = true;
     foreach ([$own, Education::certificateReport(99, '', 0, 1)] as $report) {
         ob_start(); require dirname(__DIR__) . '/app/Views/admin/education/certificate-report.php'; $html = ob_get_clean();

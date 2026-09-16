@@ -1960,6 +1960,14 @@ class Education
         return $actions;
     }
 
+    public static function reopenCourse(int $courseId, int $teacherId): bool
+    {
+        self::ensureSchema();
+        $stmt = Database::connection()->prepare('UPDATE education_courses SET closed_at = NULL, closed_by = NULL, updated_by = :teacher, updated_at = NOW() WHERE id = :id AND closed_at IS NOT NULL');
+        $stmt->execute(['teacher' => $teacherId, 'id' => $courseId]);
+        return $stmt->rowCount() > 0;
+    }
+
     public static function closeCourse(int $courseId, int $teacherId): array
     {
         self::ensureSchema();

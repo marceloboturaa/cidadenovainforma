@@ -120,6 +120,18 @@ class CertificateNotification
         }
     }
 
+    public static function deliveryStatus(int $certificateId): string
+    {
+        self::ensureSchema();
+        $stmt = Database::connection()->prepare('SELECT email_sent_at, last_error FROM certificate_notifications WHERE certificate_id = :id');
+        $stmt->execute(['id' => $certificateId]);
+        $notice = $stmt->fetch();
+        if (!empty($notice['email_sent_at'])) {
+            return 'sent';
+        }
+        return !empty($notice['last_error']) ? 'failed' : 'pending';
+    }
+
     public static function processPending(int $limit = 50): array
     {
         Education::ensureSchema();

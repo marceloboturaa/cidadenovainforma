@@ -760,6 +760,58 @@ class EducationController
         redirect('/admin/education/course?id=' . $lesson['course_id']);
     }
 
+    public function notifyCertificate(): void
+    {
+        Middleware::auth();
+        $returnTo = '/admin/education/certificate-report';
+        $this->validateCsrf($returnTo);
+        $certificate = Education::certificateById((int) ($_POST['certificate_id'] ?? 0));
+        if (!$certificate || !$this->canManageCourse(Education::findCourse((int) $certificate['course_id']))) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+        $returnTo .= '?course_id=' . (int) $certificate['course_id'];
+        if ($certificate['status'] !== 'issued' || empty($certificate['user_id'])) {
+            Session::flash('error', 'O aviso exige um certificado liberado e vinculado à conta do estudante.');
+            redirect($returnTo);
+        }
+        try {
+            \App\Models\CertificateNotification::notify((int) $certificate['id']);
+            $status = \App\Models\CertificateNotification::deliveryStatus((int) $certificate['id']);
+            Session::flash($status === 'sent' ? 'success' : 'error', match ($status) {
+                'sent' => 'O aviso deste certificado foi aceito pelo serviço de e-mail. Envios já concluídos não são repetidos.',
+                'failed' => 'O aviso ainda não foi enviado. Confira o endereço e a configuração de e-mail. Aguarde 15 minutos entre tentativas.',
+                default => 'O envio permanece pendente. Confira se a conta está ativa e aguarde 15 minutos entre tentativas.',
+            });
+        } catch (\Throwable $exception) {
+            error_log('Manual certificate notification failed for #' . (int) $certificate['id'] . ': ' . $exception->getMessage());
+            Session::flash('error', 'Não foi possível enviar o aviso. Consulte o log de erros do servidor.');
+        }
+        redirect($returnTo);
+    }
+
+    public function reopenCourse(): void
+    {
+        Middleware::auth();
+        $course = $this->courseFromQuery();
+        if (!$this->canManageCourse($course)) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
+        $returnTo = '/admin/education/course?id=' . $course['id'];
+        $this->validateCsrf($returnTo);
+        try {
+            $changed = Education::reopenCourse((int) $course['id'], (int) current_user()['id']);
+            Session::flash('success', $changed ? 'Curso reativado. Os certificados já emitidos foram preservados.' : 'Este curso já está aberto.');
+        } catch (\Throwable $exception) {
+            error_log('Course reopening failed for #' . (int) $course['id'] . ': ' . $exception->getMessage());
+            Session::flash('error', 'Não foi possível reativar o curso. Consulte o log de erros do servidor.');
+        }
+        redirect($returnTo);
+    }
+
     public function closeCourse(): void
     {
         Middleware::auth();

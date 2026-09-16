@@ -42,4 +42,10 @@ try {
     check(!$pdo->inTransaction(), 'Failed closure rolls back');
     check(!$pdo->query('SELECT closed_at FROM education_courses')->fetchColumn(), 'Failed closure leaves course open');
 }
-echo "Course closure: threshold, enrollment, teacher, notification, revocation and idempotency passed.\n";
+$pdo->exec('ALTER TABLE education_courses ADD updated_by INTEGER; UPDATE education_courses SET closed_at="2026-09-16 10:00:00", closed_by=99');
+$before = $pdo->query('SELECT * FROM education_certificates ORDER BY id')->fetchAll();
+check(\App\Models\Education::reopenCourse(1, 99), 'Closed course reopens');
+check(!\App\Models\Education::reopenCourse(1, 99), 'Reopening is idempotent');
+check(!$pdo->query('SELECT closed_at FROM education_courses')->fetchColumn(), 'Closure cleared');
+check($pdo->query('SELECT * FROM education_certificates ORDER BY id')->fetchAll() === $before, 'Reopening preserves certificates');
+echo "Course closure and reopening: threshold, enrollment, teacher, notification, revocation and idempotency passed.\n";

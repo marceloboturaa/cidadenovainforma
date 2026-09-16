@@ -152,7 +152,14 @@ if ($isStudentCourseView && function_exists('current_user')) {
 <?php endif; ?>
 
 <?php if (!empty($course['closed_at'])): ?>
-    <section class="panel"><strong>Curso encerrado</strong><p>O professor encerrou este curso. Os certificados dos alunos elegíveis estão disponíveis em Meus certificados.</p></section>
+    <section class="panel"><strong>Curso encerrado</strong><p>O professor encerrou este curso. Os certificados dos alunos elegíveis estão disponíveis em Meus certificados.</p>
+        <?php if ($canManage && !$publicCourseView): ?>
+            <form method="post" action="<?= e(url('/admin/education/course/reopen?id=' . $course['id'])) ?>" onsubmit="return confirm('Reativar este curso? Os certificados já emitidos serão preservados.');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-primary">Reativar curso</button>
+            </form>
+        <?php endif; ?>
+    </section>
 <?php elseif ($canManage && !$publicCourseView): ?>
     <section class="panel">
         <h2>Encerrar curso</h2>
