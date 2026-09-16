@@ -54,6 +54,10 @@ namespace {
         \App\Models\Education::$calls = 0;
         try { $controller->notifyCertificate(); } catch (RedirectResult $e) {}
         if (\App\Models\CertificateNotification::$calls !== $expected) throw new RuntimeException('Notification authorization failure');
+        \App\Models\CertificateNotification::$calls = 0;
+        $_POST['certificate_ids'] = [1, 2, 1];
+        try { $controller->notifySelectedCertificates(); } catch (RedirectResult $e) {}
+        if (\App\Models\CertificateNotification::$calls !== $expected * 2) throw new RuntimeException('Selected notification authorization or deduplication failure');
         try { $controller->reopenCourse(); } catch (RedirectResult $e) {}
         if (\App\Models\Education::$calls !== $expected) throw new RuntimeException('Reopening authorization failure');
     }

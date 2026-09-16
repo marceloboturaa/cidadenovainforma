@@ -64,13 +64,24 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
     <?php if (!$report['rows']): ?>
         <div class="empty-state">Nenhum certificado encontrado para estes filtros.</div>
     <?php else: ?>
+        <form id="notify-selected-certificates" method="post" action="<?= e(url('/admin/education/certificate/notify-selected')) ?>" class="heading-actions">
+            <?= csrf_field() ?>
+            <label><input type="checkbox" id="select-page-certificates"> Selecionar todos desta página</label>
+            <button type="submit" class="btn btn-primary" id="notify-selected-button" disabled>Avisar selecionados (0)</button>
+            <span>Selecione até 25 avisos pendentes ou com falha nesta página.</span>
+        </form>
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead><tr><th scope="col">Destinatário</th><th scope="col">Curso</th><th scope="col">Professor</th><th scope="col"><?= $reportStatus === 'pending' ? 'Solicitação' : 'Emissão' ?></th><th scope="col">Código</th><th scope="col">Aviso por e-mail</th><th scope="col">Consulta</th></tr></thead>
                 <tbody>
                     <?php foreach ($report['rows'] as $row): ?>
                         <tr>
-                            <td><?= e($row['recipient_name']) ?><br><small><?= e($row['recipient_email'] ?: 'Sem e-mail cadastrado') ?></small></td>
+                            <td>
+                                <?php if (in_array($row['email_status'], ['pending', 'failed'], true)): ?>
+                                    <input type="checkbox" class="certificate-selection" form="notify-selected-certificates" name="certificate_ids[]" value="<?= (int) $row['id'] ?>" aria-label="<?= e('Selecionar certificado de ' . $row['recipient_name']) ?>">
+                                <?php endif; ?>
+                                <?= e($row['recipient_name']) ?><br><small><?= e($row['recipient_email'] ?: 'Sem e-mail cadastrado') ?></small>
+                            </td>
                             <td><?= e($row['course_title']) ?></td>
                             <td><?= e($row['teacher_name'] ?? 'Não atribuído') ?></td>
                             <td><?= e(date('d/m/Y H:i', strtotime($row['issued_at']))) ?></td>
@@ -103,3 +114,29 @@ $pageUrl = static fn (int $page): string => url('/admin/education/certificate-re
         </nav>
     <?php endif; ?>
 </section>
+<script>
+(() => {
+    const form = document.getElementById('notify-selected-certificates');
+    if (!form) return;
+    const boxes = [...document.querySelectorAll('.certificate-selection')];
+    const all = document.getElementById('select-page-certificates');
+    const button = document.getElementById('notify-selected-button');
+    const update = () => {
+        const count = boxes.filter(box => box.checked).length;
+        button.disabled = count === 0;
+        button.textContent = `Avisar selecionados (${count})`;
+        all.disabled = boxes.length === 0;
+        all.checked = count > 0 && count === boxes.length;
+        all.indeterminate = count > 0 && count < boxes.length;
+    };
+    all.addEventListener('change', () => { boxes.forEach(box => box.checked = all.checked); update(); });
+    boxes.forEach(box => box.addEventListener('change', update));
+    form.addEventListener('submit', event => {
+        if (!boxes.some(box => box.checked)) { event.preventDefault(); return; }
+        button.disabled = true;
+        button.textContent = 'Enviando avisos…';
+    });
+    window.addEventListener('pageshow', update);
+    update();
+})();
+</script>

@@ -760,6 +760,49 @@ class EducationController
         redirect('/admin/education/course?id=' . $lesson['course_id']);
     }
 
+    public function notifySelectedCertificates(): void
+    {
+        Middleware::auth();
+        $returnTo = '/admin/education/certificate-report';
+        $this->validateCsrf($returnTo);
+        $input = $_POST['certificate_ids'] ?? [];
+        if (!is_array($input) || !$input || count($input) > 25) {
+            Session::flash('error', 'Selecione de 1 a 25 certificados por envio.');
+            redirect($returnTo);
+        }
+        $certificates = [];
+        // Validate the entire selection before sending any message.
+        foreach ($input as $value) {
+            $id = is_scalar($value) ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
+            $certificate = $id ? Education::certificateById($id) : null;
+            if (!$certificate || !$this->canManageCourse(Education::findCourse((int) $certificate['course_id']))) {
+                http_response_code(403);
+                View::render('errors/403');
+                return;
+            }
+            $certificates[(int) $id] = $certificate;
+        }
+        $counts = ['sent' => 0, 'failed' => 0, 'pending' => 0, 'skipped' => 0];
+        foreach ($certificates as $id => $certificate) {
+            if ($certificate['status'] !== 'issued' || empty($certificate['user_id'])) {
+                $counts['skipped']++;
+                continue;
+            }
+            try {
+                \App\Models\CertificateNotification::notify($id);
+                $counts[\App\Models\CertificateNotification::deliveryStatus($id)]++;
+            } catch (\Throwable $exception) {
+                $counts['failed']++;
+                error_log('Selected certificate notification failed for #' . $id . ': ' . $exception->getMessage());
+            }
+        }
+        Session::flash($counts['failed'] || $counts['pending'] ? 'error' : 'success',
+            'Avisos selecionados: ' . $counts['sent'] . ' com envio aceito (inclui envios anteriores), '
+            . $counts['failed'] . ' com falha, ' . $counts['pending'] . ' pendente(s) e ' . $counts['skipped']
+            . ' não elegível(is). Envios concluídos não se repetem; aguarde 15 minutos entre tentativas.');
+        redirect($returnTo);
+    }
+
     public function notifyCertificate(): void
     {
         Middleware::auth();
