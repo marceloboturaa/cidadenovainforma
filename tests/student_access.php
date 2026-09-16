@@ -39,6 +39,8 @@ namespace {
             ['GET', '/admin/education/students/report/export', false],
             ['POST', '/admin/education/certificate/status', false],
             ['GET', '/admin/new-management-page', false],
+            ['GET', '/admin/library-events', false],
+            ['POST', '/admin/library-events/update', false],
         ] as [$method, $uri, $allowed]) {
             $router = new \App\Core\Router();
             $register = strtolower($method);
@@ -51,5 +53,18 @@ namespace {
         }
     }
     check(!StudentAccess::applies(['role_slug' => 'professor']), 'Teacher remains independent');
+    foreach (['voluntario', 'estudante,voluntario', 'voluntario,estudante', 'estudante,equipe'] as $roles) {
+        $account = ['role_slug' => explode(',', $roles)[0], 'role_slugs' => $roles];
+        \App\Core\Auth::$account = $account;
+        check(!StudentAccess::applies($account), 'Volunteers retain role permissions');
+        foreach ([['GET', '/admin/library-events'], ['POST', '/admin/library-events/update'], ['GET', '/admin/library-events/participants']] as [$method, $uri]) {
+            $router = new \App\Core\Router();
+            $register = strtolower($method);
+            $router->$register($uri, [ProbeController::class, 'action']);
+            ProbeController::$calls = 0;
+            $router->dispatch($method, $uri);
+            check(ProbeController::$calls === 1, "Volunteer reaches event controller: $roles $method $uri");
+        }
+    }
     echo "Student routes, mixed roles and dashboard restrictions passed.\n";
 }

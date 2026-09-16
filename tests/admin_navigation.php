@@ -57,6 +57,16 @@ namespace {
         }
     }
     Auth::$account = ['id' => 1, 'role_slug' => 'usuario', 'role_slugs' => 'usuario'];
+    foreach (['voluntario', 'estudante,voluntario', 'estudante,equipe'] as $roles) {
+        Auth::$account = ['id' => 1, 'role_slug' => explode(',', $roles)[0], 'role_slugs' => $roles];
+        Auth::$permissions = ['events.manage', 'event_participants.manage'];
+        check(AdminNavigation::allows('/admin/library-events'), 'Volunteer sees events');
+        check(AdminNavigation::allows('/admin/registrations'), 'Volunteer sees registrations');
+        check(!AdminNavigation::allows('/admin/users'), 'Volunteer gains no user management access');
+        Auth::$permissions = [];
+        check(!AdminNavigation::allows('/admin/library-events'), 'Event permission is still required');
+    }
+    Auth::$account = ['id' => 1, 'role_slug' => 'usuario', 'role_slugs' => 'usuario'];
     Auth::$permissions = [];
     \App\Models\Document::$access = true;
     \App\Models\InstitutionPage::$access = true;
