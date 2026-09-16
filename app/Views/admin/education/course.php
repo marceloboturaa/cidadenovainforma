@@ -151,6 +151,22 @@ if ($isStudentCourseView && function_exists('current_user')) {
     </section>
 <?php endif; ?>
 
+<?php if (!empty($course['closed_at'])): ?>
+    <section class="panel"><strong>Curso encerrado</strong><p>O professor encerrou este curso. Os certificados dos alunos elegíveis estão disponíveis em Meus certificados.</p></section>
+<?php elseif ($canManage && !$publicCourseView): ?>
+    <section class="panel">
+        <h2>Encerrar curso</h2>
+        <p>Libera o certificado e envia um aviso por e-mail aos alunos com matrícula aprovada e mais de 75% das aulas obrigatórias concluídas. Exatamente 75% não é suficiente.</p>
+        <p class="field-hint">O encerramento considera o progresso atual dos alunos e mantém os materiais acessíveis.</p>
+        <?php if (!empty($course['certificate_auto_release'])): ?><p class="field-hint">A liberação automática por conclusão também está ativa. Desmarque “Liberar automaticamente, sem revisão da equipe” nas configurações do certificado se quiser liberar somente pela ação do professor.</p><?php endif; ?>
+        <form method="post" action="<?= e(url('/admin/education/course/close?id=' . $course['id'])) ?>" onsubmit="return confirm('Encerrar o curso e liberar os certificados dos alunos com mais de 75% das aulas obrigatórias concluídas?');">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-primary" <?= empty($course['certificate_enabled']) ? 'disabled' : '' ?>>Encerrar curso</button>
+        </form>
+        <?php if (empty($course['certificate_enabled'])): ?><p class="field-hint">Configure e ative o certificado abaixo para encerrar o curso.</p><?php endif; ?>
+    </section>
+<?php endif; ?>
+
 <?php if ($courseAnnouncements): ?>
     <section class="panel education-course-alerts">
         <div class="section-heading">

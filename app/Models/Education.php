@@ -529,6 +529,8 @@ class Education
         self::ensureColumn('education_courses', 'playlist_required', 'TINYINT(1) NOT NULL DEFAULT 1 AFTER public_access_mode');
         self::ensureColumn('education_courses', 'certificate_enabled', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER playlist_required');
         self::ensureColumn('education_courses', 'certificate_auto_release', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER certificate_enabled');
+        self::ensureColumn('education_courses', 'closed_at', 'DATETIME NULL');
+        self::ensureColumn('education_courses', 'closed_by', 'BIGINT UNSIGNED NULL');
         self::ensureColumn('education_courses', 'certificate_title', 'VARCHAR(180) NULL AFTER certificate_enabled');
         self::ensureColumn('education_courses', 'certificate_heading', 'VARCHAR(180) NULL AFTER certificate_title');
         self::ensureColumn('education_courses', 'certificate_text', 'TEXT NULL AFTER certificate_title');
@@ -1950,6 +1952,62 @@ class Education
         }
 
         return $actions;
+    }
+
+    public static function closeCourse(int $courseId, int $teacherId): array
+    {
+        self::ensureSchema();
+        $db = Database::connection();
+        $issued = [];
+        $db->beginTransaction();
+        try {
+            $lock = $db->prepare('SELECT * FROM education_courses WHERE id = :id FOR UPDATE');
+            $lock->execute(['id' => $courseId]);
+            $course = $lock->fetch();
+            if (!$course || empty($course['certificate_enabled'])) {
+                throw new \InvalidArgumentException('Configure e ative o certificado antes de encerrar o curso.');
+            }
+            if (!empty($course['closed_at'])) {
+                $db->commit();
+                return ['already_closed' => true, 'issued' => 0];
+            }
+            $students = $db->prepare('SELECT DISTINCT e.user_id FROM education_enrollments e INNER JOIN users u ON u.id = e.user_id WHERE e.course_id = :id AND e.status = "approved" AND u.active = 1');
+            $students->execute(['id' => $courseId]);
+            foreach ($students->fetchAll() as $student) {
+                $userId = (int) $student['user_id'];
+                $progress = self::courseProgressForUser($courseId, $userId);
+                // Compare exact counts: exactly 75% does not qualify.
+                if ($progress['lesson_count'] === 0 || $progress['completed_count'] * 100 <= $progress['lesson_count'] * 75) {
+                    continue;
+                }
+                $certificate = self::certificateForCourseUser($courseId, $userId);
+                if (!$certificate) {
+                    $certificate = self::issueCertificate($courseId, $userId, true);
+                }
+                if (!$certificate || $certificate['status'] !== 'pending') {
+                    continue;
+                }
+                $update = $db->prepare('UPDATE education_certificates SET status = "issued", authorized_by = :teacher, issued_by = :issuer, authorized_at = NOW(), issued_at = NOW(), updated_at = NOW() WHERE id = :id AND status = "pending"');
+                $update->execute(['teacher' => $teacherId, 'issuer' => $teacherId, 'id' => $certificate['id']]);
+                if ($update->rowCount() > 0) {
+                    $issued[] = (int) $certificate['id'];
+                    self::auditCertificate((int) $certificate['id'], null, $teacherId, 'course_closed', ['status' => 'pending'], ['status' => 'issued', 'completed_count' => $progress['completed_count'], 'lesson_count' => $progress['lesson_count']]);
+                }
+            }
+            $db->prepare('UPDATE education_courses SET closed_at = NOW(), closed_by = :teacher, updated_at = NOW() WHERE id = :id')->execute(['teacher' => $teacherId, 'id' => $courseId]);
+            $db->commit();
+        } catch (\Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $exception;
+        }
+        // Notify only after all certificates and the closure have been committed.
+        // The notification worker recovers failures or interrupted requests.
+        foreach ($issued as $certificateId) {
+            CertificateNotification::notify($certificateId);
+        }
+        return ['already_closed' => false, 'issued' => count($issued)];
     }
 
     public static function certificateStatusForCourseUser(int $courseId, int $userId): array

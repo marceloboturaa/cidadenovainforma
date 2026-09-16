@@ -1,5 +1,23 @@
 # Avisos de certificado pronto
 
+## Encerramento pelo professor
+
+Na página do curso, **Encerrar curso** registra o encerramento e libera certificados
+para alunos ativos, com matrícula aprovada e mais de 75% das aulas obrigatórias
+ativas concluídas. Exatamente 75% não atende à regra. O certificado deve estar
+ativado. Certificados revogados ou excluídos não são reativados. Repetir a ação
+não repete a emissão. Aulas e materiais continuam acessíveis.
+
+Os certificados são gravados em uma transação antes das tentativas de envio.
+A rotina abaixo recupera falhas de e-mail e interrupções após essa gravação.
+O encerramento considera o progresso no momento do clique; não é uma avaliação
+contínua pelo limite de 75%. A opção existente de liberação automática por conclusão
+continua independente: desmarque-a se quiser aguardar a ação do professor.
+As colunas `closed_at` e `closed_by` são criadas automaticamente, ou pela migração
+`database/update_course_closure.sql`. Validação: `php tests/course_closure.php`.
+
+## Envio dos avisos
+
 Ao emitir ou aprovar um certificado de curso para um usuário cadastrado, o sistema
 cria um aviso privado com o botão **Abrir certificado** e tenta enviar um e-mail.
 Também cobre a liberação automática e certificados de reconhecimento vinculados

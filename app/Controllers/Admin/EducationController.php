@@ -758,6 +758,25 @@ class EducationController
         redirect('/admin/education/course?id=' . $lesson['course_id']);
     }
 
+    public function closeCourse(): void
+    {
+        Middleware::auth();
+        $this->authorizeManage();
+        $course = $this->courseFromQuery();
+        $this->authorizeCourseManage($course);
+        $returnTo = '/admin/education/course?id=' . $course['id'];
+        $this->validateCsrf($returnTo);
+        try {
+            $result = Education::closeCourse((int) $course['id'], (int) current_user()['id']);
+            Session::flash('success', $result['already_closed']
+                ? 'Este curso já foi encerrado.'
+                : 'Curso encerrado. ' . $result['issued'] . ' certificado(s) liberado(s). Os avisos por e-mail são enviados pelo serviço configurado; falhas ficam para nova tentativa pela rotina de avisos.');
+        } catch (\InvalidArgumentException $exception) {
+            Session::flash('error', $exception->getMessage());
+        }
+        redirect($returnTo);
+    }
+
     public function notifyLesson(): void
     {
         Middleware::auth();

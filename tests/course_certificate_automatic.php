@@ -5,8 +5,12 @@ namespace App\Core {
         public function __construct(public \PDO $pdo) {}
         public function exec($sql) { return 0; }
         public function quote($value) { return $this->pdo->quote($value); }
+        public function beginTransaction() { return $this->pdo->beginTransaction(); }
+        public function commit() { return $this->pdo->commit(); }
+        public function rollBack() { return $this->pdo->rollBack(); }
+        public function inTransaction() { return $this->pdo->inTransaction(); }
         public function query($sql) { return $this->pdo->query(str_starts_with($sql, 'SHOW ') ? 'SELECT 1' : $sql); }
-        public function prepare($sql) { return $this->pdo->prepare(str_replace('INSERT IGNORE', 'INSERT OR IGNORE', $sql)); }
+        public function prepare($sql) { return $this->pdo->prepare(str_replace(['INSERT IGNORE', ' FOR UPDATE'], ['INSERT OR IGNORE', ''], $sql)); }
     }
 }
 namespace App\Models {
