@@ -19,6 +19,8 @@ namespace App\Core {
 }
 namespace {
     require dirname(__DIR__) . '/app/Models/Education.php';
+    require dirname(__DIR__) . '/app/Models/Announcement.php';
+    require dirname(__DIR__) . '/app/Models/CertificateNotification.php';
     use App\Models\Education;
     $pdo = new PDO('sqlite::memory:', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
     $pdo->sqliteCreateFunction('CONCAT', fn (...$args) => implode('', $args));
@@ -37,9 +39,17 @@ namespace {
     $insert->execute([32, 3, 30, null, '', 'issued', 'RECOGNITION']);
     $pdo->exec('ALTER TABLE education_courses ADD COLUMN active INTEGER DEFAULT 1; ALTER TABLE education_courses ADD COLUMN certificate_enabled INTEGER DEFAULT 1; ALTER TABLE education_courses ADD COLUMN certificate_auto_release INTEGER DEFAULT 0');
     function check($condition, $message) { if (!$condition) throw new RuntimeException($message); }
+    $pdo->exec('ALTER TABLE users ADD email TEXT; ALTER TABLE users ADD active INTEGER DEFAULT 1;
+        CREATE TABLE certificate_notifications (certificate_id INTEGER PRIMARY KEY, email_sent_at TEXT, email_attempted_at TEXT, email_attempts INTEGER, last_error TEXT);
+        INSERT INTO certificate_notifications VALUES (1,"2026-09-15 12:00:00","2026-09-15 12:00:00",1,NULL), (2,NULL,"2026-09-15 12:00:00",2,"Falha de envio");');
     $all = Education::certificateReport(null, '', 0, 1);
     check((int) $all['totals']['certificates'] === 27 && (int) $all['totals']['courses'] === 2 && (int) $all['totals']['recipients'] === 2, 'Global totals and status exclusions');
     $own = Education::certificateReport(10, '', 0, 1);
+    check((int) $all['totals']['email_sent'] === 1 && (int) $all['totals']['email_failed'] === 1 && (int) $all['totals']['email_pending'] === 24 && (int) $all['totals']['email_unavailable'] === 1, 'Email totals cover all pages and distinguish unavailable recipients');
+    $sent = Education::certificateReport(10, '', 0, 1, 'issued', 'sent');
+    check(count($sent['rows']) === 1 && $sent['rows'][0]['email_sent_at'] === '2026-09-15 12:00:00', 'Sent filter and timestamp');
+    check((int) Education::certificateReport(20, '', 1, 1, 'issued', 'sent')['totals']['certificates'] === 0, 'Email filter cannot bypass teacher scope');
+    check((int) Education::certificateReport(10, '', 0, 1, 'pending')['totals']['email_not_released'] === 1, 'Pending certificates are not mistaken for pending emails');
     $hub = Education::certificateHub(10);
     check(count($hub) === 1 && (int) $hub[0]['issued'] === 26 && (int) $hub[0]['pending'] === 1, 'Central scoped course counts');
     check(count(Education::certificateHub(99)) === 0, 'Central hides unrelated courses');

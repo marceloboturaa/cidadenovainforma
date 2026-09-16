@@ -112,8 +112,10 @@ class EducationController
         $courseId = max(0, (int) ($_GET['course_id'] ?? 0));
         $page = max(1, (int) ($_GET['page'] ?? 1));
         $reportStatus = in_array($_GET['status'] ?? '', ['issued', 'pending', 'revoked'], true) ? $_GET['status'] : 'issued';
+        $emailStatus = in_array($_GET['email_status'] ?? '', ['sent', 'pending', 'failed', 'unavailable', 'not_released'], true) ? $_GET['email_status'] : '';
         View::render('admin/education/certificate-report', [
-            'report' => Education::certificateReport($teacherId, $search, $courseId, $page, $reportStatus),
+            'report' => Education::certificateReport($teacherId, $search, $courseId, $page, $reportStatus, $emailStatus),
+            'emailStatus' => $emailStatus,
             'reportStatus' => $reportStatus,
             'search' => $search,
             'courseId' => $courseId,

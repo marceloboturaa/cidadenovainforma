@@ -14,6 +14,7 @@ $metrics = [
             <h1>Central de certificados</h1>
             <p><?= $ownCoursesOnly ? 'Seus cursos, suas solicitações e cada conquista dos seus alunos em um só lugar.' : 'Acompanhe emissões, organize solicitações e gerencie os certificados em um só lugar.' ?></p>
             <div class="heading-actions">
+                <?php if ($canViewCourses): ?><a class="btn btn-outline-primary" href="<?= e(url('/admin/education/certificate-report')) ?>">Conferir envios por e-mail</a><?php endif; ?>
                 <?php if ($canViewCourses): ?><a class="btn btn-primary icon-btn" href="#certificate-hub-courses"><i class="bi bi-journal-bookmark" aria-hidden="true"></i> <?= $ownCoursesOnly ? 'Ver meus cursos' : 'Ver cursos' ?></a><?php endif; ?>
                 <a class="btn btn-outline-primary icon-btn" href="<?= e(url('/admin/education/certificates')) ?>"><i class="bi bi-person-badge" aria-hidden="true"></i> Meus certificados</a>
             </div>

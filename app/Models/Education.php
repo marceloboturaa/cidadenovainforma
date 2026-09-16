@@ -2651,15 +2651,17 @@ class Education
         return $stmt->fetchAll();
     }
 
-    public static function certificateReport(?int $teacherId, string $search, int $courseId, int $page, string $status = 'issued'): array
+    public static function certificateReport(?int $teacherId, string $search, int $courseId, int $page, string $status = 'issued', string $emailStatus = ''): array
     {
         self::ensureSchema();
+        CertificateNotification::ensureSchema();
         $db = Database::connection();
         $from = ' FROM education_certificates c
                   INNER JOIN education_courses course ON course.id = c.course_id
                   LEFT JOIN users student ON student.id = c.user_id
                   LEFT JOIN people person ON person.id = c.person_id
-                  LEFT JOIN users teacher ON teacher.id = course.teacher_user_id';
+                  LEFT JOIN users teacher ON teacher.id = course.teacher_user_id
+                  LEFT JOIN certificate_notifications notice ON notice.certificate_id = c.id';
         $status = in_array($status, ['issued', 'pending', 'revoked'], true) ? $status : 'issued';
         $where = ' WHERE c.status = :status AND course.certificate_activity_type <> "reconhecimento"';
         $params = ['status' => $status];
@@ -2680,15 +2682,30 @@ class Education
             $params['recipient'] = '%' . $search . '%';
             $params['code'] = '%' . $search . '%';
         }
+        $emailState = 'CASE WHEN c.status <> "issued" THEN "not_released"
+            WHEN notice.email_sent_at IS NOT NULL THEN "sent"
+            WHEN student.id IS NULL OR student.active <> 1 THEN "unavailable"
+            WHEN notice.last_error IS NOT NULL THEN "failed" ELSE "pending" END';
+        if (in_array($emailStatus, ['sent', 'pending', 'failed', 'unavailable', 'not_released'], true)) {
+            $where .= ' AND (' . $emailState . ') = :email_status';
+            $params['email_status'] = $emailStatus;
+        }
+        $emailCounts = '';
+        foreach (['sent', 'pending', 'failed', 'unavailable', 'not_released'] as $state) {
+            $emailCounts .= ', COALESCE(SUM(CASE WHEN (' . $emailState . ') = "' . $state . '" THEN 1 ELSE 0 END), 0) AS email_' . $state;
+        }
         $summary = $db->prepare('SELECT COUNT(*) AS certificates, COUNT(DISTINCT c.course_id) AS courses,
             COUNT(DISTINCT CASE WHEN c.user_id IS NOT NULL THEN CONCAT("user:", c.user_id)
                 WHEN c.person_id IS NOT NULL THEN CONCAT("person:", c.person_id)
-                ELSE CONCAT("certificate:", c.id) END) AS recipients' . $from . $where);
+                ELSE CONCAT("certificate:", c.id) END) AS recipients' . $emailCounts . $from . $where);
         $summary->execute($params);
         $totals = $summary->fetch();
         $pages = max(1, (int) ceil((int) $totals['certificates'] / 25));
         $page = max(1, min($pages, $page));
         $rows = $db->prepare('SELECT c.id, c.verification_code, c.issued_at, c.authorized_at,
+            student.email AS recipient_email, notice.email_sent_at, notice.email_attempted_at,
+            COALESCE(notice.email_attempts, 0) AS email_attempts, notice.last_error,
+            ' . $emailState . ' AS email_status,
             course.title AS course_title, teacher.name AS teacher_name, ' . $recipient . ' AS recipient_name'
             . $from . $where . ' ORDER BY c.issued_at DESC, c.id DESC LIMIT 25 OFFSET ' . (($page - 1) * 25));
         $rows->execute($params);
