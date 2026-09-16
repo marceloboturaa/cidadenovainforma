@@ -773,6 +773,9 @@ class EducationController
                 : 'Curso encerrado. ' . $result['issued'] . ' certificado(s) liberado(s). Os avisos por e-mail são enviados pelo serviço configurado; falhas ficam para nova tentativa pela rotina de avisos.');
         } catch (\InvalidArgumentException $exception) {
             Session::flash('error', $exception->getMessage());
+        } catch (\Throwable $exception) {
+            error_log('Course closure failed for course #' . (int) $course['id'] . ': ' . $exception->getMessage());
+            Session::flash('error', 'Não foi possível concluir o encerramento. Confira o estado do curso antes de tentar novamente. O detalhe da falha foi registrado no log de erros do servidor.');
         }
         redirect($returnTo);
     }

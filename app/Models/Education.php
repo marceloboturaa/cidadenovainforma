@@ -6,8 +6,13 @@ use App\Core\Database;
 
 class Education
 {
+    private static bool $schemaReady = false;
+
     public static function ensureSchema(): void
     {
+        if (self::$schemaReady) {
+            return;
+        }
         $db = Database::connection();
 
         $db->exec(
@@ -677,6 +682,7 @@ class Education
             self::ensureColumn($table, 'corrected_by', 'BIGINT UNSIGNED NULL AFTER feedback');
             self::ensureColumn($table, 'corrected_at', 'DATETIME NULL AFTER corrected_by');
         }
+        self::$schemaReady = true;
     }
 
     public static function coursesForManagement(?int $teacherUserId = null): array
@@ -1957,6 +1963,8 @@ class Education
     public static function closeCourse(int $courseId, int $teacherId): array
     {
         self::ensureSchema();
+        // User::find() is used during issuance; prepare its schema before BEGIN too.
+        User::ensureRoleSchema();
         $db = Database::connection();
         $issued = [];
         $db->beginTransaction();

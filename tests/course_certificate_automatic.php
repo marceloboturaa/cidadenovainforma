@@ -3,7 +3,12 @@ namespace App\Core {
     class Database { public static $db; public static function connection() { return self::$db; } }
     class CertificateTestDatabase {
         public function __construct(public \PDO $pdo) {}
-        public function exec($sql) { return 0; }
+        public function exec($sql) {
+            if ($this->pdo->inTransaction() && preg_match('/^\s*(CREATE|ALTER|DROP)\b/i', $sql)) {
+                throw new \RuntimeException('Schema DDL inside transaction would implicitly commit on MySQL.');
+            }
+            return 0;
+        }
         public function quote($value) { return $this->pdo->quote($value); }
         public function beginTransaction() { return $this->pdo->beginTransaction(); }
         public function commit() { return $this->pdo->commit(); }
@@ -19,6 +24,7 @@ namespace App\Models {
         public static function notify(int $id): bool { self::$calls[] = $id; return true; }
     }
     class User {
+        public static function ensureRoleSchema(): void {}
         public static function find($id) { return ['name' => 'Estudante Teste']; }
     }
 }
