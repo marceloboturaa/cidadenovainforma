@@ -66,6 +66,12 @@ namespace {
         Auth::$permissions = [];
         check(!AdminNavigation::allows('/admin/library-events'), 'Event permission is still required');
     }
+    foreach (['master', 'admin', 'admin-local', 'professor'] as $seniorRole) {
+        Auth::$account = ['id' => 1, 'role_slug' => $seniorRole, 'role_slugs' => $seniorRole . ',estudante'];
+        Auth::$permissions = ['certificates.manage'];
+        check(AdminNavigation::allows('/admin/education/certificate-center'), 'Student enrollment cannot hide the senior role panel');
+        check(AdminNavigation::allows('/admin/education/certificate-administration'), 'Authorized senior role retains certificate administration');
+    }
     foreach (['estudante,jornalista', 'estudante,colunista', 'jornalista,estudante', 'estudante,editor-jornalistico'] as $roles) {
         Auth::$account = ['id' => 1, 'role_slug' => explode(',', $roles)[0], 'role_slugs' => $roles];
         Auth::$permissions = ['education.view'];

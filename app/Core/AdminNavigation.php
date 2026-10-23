@@ -32,7 +32,7 @@ class AdminNavigation
             return StudentAccess::allowsRoute('GET', $path);
         }
         if (in_array($path, ['/admin/education/certificate-center', '/admin/education/certificate-report', '/admin/education/certificate-administration'], true)) {
-            if (Auth::hasRole('estudante') || !Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor'])) {
+            if (!Auth::hasRole(['master', 'admin', 'admin-local', 'diretor', 'professor'])) {
                 return false;
             }
         }

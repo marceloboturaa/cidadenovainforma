@@ -411,6 +411,13 @@ class UserController
         }
 
         $currentRoleSlugs = $this->roleSlugs(User::roleIds((int) $user['id']));
+        foreach (User::roleIds((int) $user['id']) as $currentRoleId) {
+            $currentRole = Role::find($currentRoleId);
+            if (!$currentRole || !$this->canAssignRole($currentRole)) {
+                Session::flash('error', 'Voce so pode alterar usuarios de nivel inferior ao seu.');
+                redirect('/admin/users');
+            }
+        }
         if (in_array('master', $currentRoleSlugs, true)) {
             Session::flash('error', 'O cargo MASTER não pode ser alterado por esta tela.');
             redirect('/admin/users');
@@ -576,7 +583,15 @@ class UserController
             return false;
         }
 
-        return ($role['slug'] ?? '') !== 'master';
+        if (($role['slug'] ?? '') === 'master') {
+            return false;
+        }
+        if (\App\Core\Auth::hasRole('master')) {
+            return true;
+        }
+        $actorRole = Role::findBySlug((string) (current_user()['role_slug'] ?? ''));
+        return $actorRole && isset($role['level'])
+            && (int) $role['level'] < (int) $actorRole['level'];
     }
 
     private function assignableRoleIds(mixed $value): array

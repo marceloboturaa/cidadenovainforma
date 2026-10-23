@@ -53,6 +53,11 @@ namespace {
         }
     }
     check(!StudentAccess::applies(['role_slug' => 'professor']), 'Teacher remains independent');
+    foreach (['master', 'admin', 'admin-local'] as $seniorRole) {
+        $account = ['role_slug' => $seniorRole, 'role_slugs' => $seniorRole . ',estudante'];
+        check(!StudentAccess::applies($account), 'Senior role determines the panel');
+        check(\App\Models\Stats::canViewSensitiveInfo($account), 'Administrative dashboard remains available');
+    }
     foreach (['estudante,jornalista', 'estudante,colunista', 'jornalista,estudante'] as $roles) {
         check(!StudentAccess::applies(['role_slug' => 'estudante', 'role_slugs' => $roles]), 'Student may hold an editorial function');
     }

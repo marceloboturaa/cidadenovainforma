@@ -2,6 +2,7 @@
 $currentUser = current_user();
 $isMaster = ($currentUser['role_slug'] ?? '') === 'master';
 $canAssignRoles = \App\Core\Auth::hasRole(['master', 'admin']);
+$assignableRoleIds = array_map(static fn (array $role): int => (int) $role['id'], $roles);
 $canRequestProfileUpdate = in_array($currentUser['role_slug'] ?? '', ['master', 'admin'], true);
 $totalUsers = count($users);
 $activeUsers = count(array_filter($users, fn (array $user): bool => (bool) ($user['active'] ?? false)));
@@ -355,7 +356,7 @@ $onlineCount = count($onlineUserIds ?? []);
                                         <?php endif; ?>
                                     </section>
 
-                                <?php if ($canAssignRoles && !in_array('master', $itemRoleSlugs, true) && (int) $item['id'] !== (int) ($currentUser['id'] ?? 0)): ?>
+                                <?php if ($canAssignRoles && !array_diff($selectedRoleIds, $assignableRoleIds) && !in_array('master', $itemRoleSlugs, true) && (int) $item['id'] !== (int) ($currentUser['id'] ?? 0)): ?>
                                     <section class="user-action-panel">
                                         <h3>Cargos</h3>
                                         <form method="post" action="<?= e(url('/admin/users/role?id=' . $item['id'])) ?>" class="user-stacked-form">
