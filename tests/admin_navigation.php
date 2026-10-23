@@ -48,7 +48,7 @@ namespace {
         }
         check(AdminNavigation::allows('/admin/education/certificate-center') === $hubAccess, 'Central requires a teacher or administrator role even with permissions');
     }
-    foreach (['estudante', 'estudante,professor'] as $roles) {
+    foreach (['estudante', 'estudante,usuario'] as $roles) {
         Auth::$account = ['id' => 1, 'role_slug' => 'estudante', 'role_slugs' => $roles];
         Auth::$permissions = ['education.teach', 'certificates.issue', 'certificates.manage'];
         check(AdminNavigation::allows('/admin/education/certificates'), 'Students retain personal certificates');
@@ -57,7 +57,7 @@ namespace {
         }
     }
     Auth::$account = ['id' => 1, 'role_slug' => 'usuario', 'role_slugs' => 'usuario'];
-    foreach (['voluntario', 'estudante,voluntario', 'estudante,equipe'] as $roles) {
+    foreach (['voluntario', 'estudante,voluntario', 'estudante,equipe', 'professor,estudante', 'admin,estudante'] as $roles) {
         Auth::$account = ['id' => 1, 'role_slug' => explode(',', $roles)[0], 'role_slugs' => $roles];
         Auth::$permissions = ['events.manage', 'event_participants.manage'];
         check(AdminNavigation::allows('/admin/library-events'), 'Volunteer sees events');
@@ -65,6 +65,23 @@ namespace {
         check(!AdminNavigation::allows('/admin/users'), 'Volunteer gains no user management access');
         Auth::$permissions = [];
         check(!AdminNavigation::allows('/admin/library-events'), 'Event permission is still required');
+    }
+    foreach (['estudante,jornalista', 'estudante,colunista', 'jornalista,estudante', 'estudante,editor-jornalistico'] as $roles) {
+        Auth::$account = ['id' => 1, 'role_slug' => explode(',', $roles)[0], 'role_slugs' => $roles];
+        Auth::$permissions = ['education.view'];
+        check(!AdminNavigation::allows('/admin/news'), 'Editorial role still requires news authorization');
+        foreach (['news.create', 'news.manage', 'news.approve'] as $permission) {
+            Auth::$permissions = ['education.view', $permission];
+            check(AdminNavigation::allows('/admin/news'), 'Authorized student sees news: ' . $roles);
+            $paths = array_merge(...array_values(AdminNavigation::visibleGroups()));
+            check(in_array('/admin/news', array_column($paths, 0), true), 'News appears in the menu');
+            foreach (['/admin/users', '/admin/categories', '/admin/tags', '/admin/library-events', '/admin/education/manage'] as $path) {
+                check(!AdminNavigation::allows($path), 'Extra role grants no unrelated access: ' . $path);
+            }
+        }
+        Auth::$permissions = ['education.view'];
+        $paths = array_merge(...array_values(AdminNavigation::visibleGroups()));
+        check(!in_array('/admin/news', array_column($paths, 0), true), 'Removing authorization hides news again');
     }
     Auth::$account = ['id' => 1, 'role_slug' => 'usuario', 'role_slugs' => 'usuario'];
     Auth::$permissions = [];

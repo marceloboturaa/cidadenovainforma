@@ -1,6 +1,7 @@
 <?php
 $currentUser = current_user();
 $isMaster = ($currentUser['role_slug'] ?? '') === 'master';
+$canAssignRoles = \App\Core\Auth::hasRole(['master', 'admin']);
 $canRequestProfileUpdate = in_array($currentUser['role_slug'] ?? '', ['master', 'admin'], true);
 $totalUsers = count($users);
 $activeUsers = count(array_filter($users, fn (array $user): bool => (bool) ($user['active'] ?? false)));
@@ -280,7 +281,7 @@ $onlineCount = count($onlineUserIds ?? []);
             <?php foreach ($users as $item): ?>
                 <?php
                 $itemRoleSlugs = array_filter(explode(',', (string) ($item['role_slugs'] ?? $item['role_slug'] ?? '')));
-                $selectedRoleIds = $isMaster ? \App\Models\User::roleIds((int) $item['id']) : [];
+                $selectedRoleIds = $canAssignRoles ? \App\Models\User::roleIds((int) $item['id']) : [];
                 $selectedPages = $userResponsibilities[(int) $item['id']] ?? [];
                 $canManageAccess = $isMaster && !in_array('master', $itemRoleSlugs, true) && (int) $item['id'] !== (int) ($currentUser['id'] ?? 0);
                 $initial = strtoupper(substr((string) ($item['name'] ?? 'U'), 0, 1));
@@ -354,7 +355,7 @@ $onlineCount = count($onlineUserIds ?? []);
                                         <?php endif; ?>
                                     </section>
 
-                                <?php if ($canManageAccess): ?>
+                                <?php if ($canAssignRoles && !in_array('master', $itemRoleSlugs, true) && (int) $item['id'] !== (int) ($currentUser['id'] ?? 0)): ?>
                                     <section class="user-action-panel">
                                         <h3>Cargos</h3>
                                         <form method="post" action="<?= e(url('/admin/users/role?id=' . $item['id'])) ?>" class="user-stacked-form">
@@ -384,6 +385,8 @@ $onlineCount = count($onlineUserIds ?? []);
                                         </form>
                                     </section>
 
+                                <?php endif; ?>
+                                <?php if ($canManageAccess): ?>
                                     <section class="user-action-panel">
                                         <h3>Status</h3>
                                         <p><?= $item['active'] ? 'Este usuário pode acessar o painel.' : 'Este usuário está bloqueado no login.' ?></p>

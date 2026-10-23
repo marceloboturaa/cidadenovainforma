@@ -2,17 +2,16 @@
 
 namespace App\Core;
 
-/** Volunteers retain their assigned permissions when also enrolled as students. */
+/** The student restriction applies only to accounts without additional functions. */
 class StudentAccess
 {
     public static function applies(?array $user): bool
     {
         $roles = array_map('trim', explode(',', (string) ($user['role_slugs'] ?? '')));
         $roles[] = $user['role_slug'] ?? '';
-        if (array_intersect(['voluntario', 'equipe'], $roles)) {
-            return false;
-        }
-        return in_array('estudante', $roles, true);
+        $roles = array_values(array_unique(array_filter($roles)));
+        return in_array('estudante', $roles, true)
+            && !array_diff($roles, ['estudante', 'usuario']);
     }
 
     public static function allowsPermission(string $permission): bool

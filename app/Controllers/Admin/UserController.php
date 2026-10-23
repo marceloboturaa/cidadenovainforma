@@ -384,7 +384,11 @@ class UserController
     public function updateRole(): void
     {
         Middleware::permission('users.manage');
-        $this->masterOnly();
+        if (!\App\Core\Auth::hasRole(['master', 'admin'])) {
+            http_response_code(403);
+            View::render('errors/403');
+            return;
+        }
         $this->validateCsrf();
 
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -568,9 +572,7 @@ class UserController
 
     private function canAssignRole(array $role): bool
     {
-        $current = current_user();
-
-        if (($current['role_slug'] ?? '') !== 'master') {
+        if (!\App\Core\Auth::hasRole(['master', 'admin'])) {
             return false;
         }
 

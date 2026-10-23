@@ -23,7 +23,7 @@ namespace {
         public function action(): void { self::$calls++; }
     }
     $_SERVER['SCRIPT_NAME'] = '/index.php';
-    foreach (['estudante', 'estudante,professor', 'master,estudante'] as $roles) {
+    foreach (['estudante', 'estudante,usuario'] as $roles) {
         $account = ['role_slug' => explode(',', $roles)[0], 'role_slugs' => $roles];
         \App\Core\Auth::$account = $account;
         check(StudentAccess::applies($account), 'Student ceiling applies to mixed roles');
@@ -53,10 +53,13 @@ namespace {
         }
     }
     check(!StudentAccess::applies(['role_slug' => 'professor']), 'Teacher remains independent');
-    foreach (['voluntario', 'estudante,voluntario', 'voluntario,estudante', 'estudante,equipe'] as $roles) {
+    foreach (['estudante,jornalista', 'estudante,colunista', 'jornalista,estudante'] as $roles) {
+        check(!StudentAccess::applies(['role_slug' => 'estudante', 'role_slugs' => $roles]), 'Student may hold an editorial function');
+    }
+    foreach (['voluntario', 'estudante,voluntario', 'voluntario,estudante', 'estudante,equipe', 'estudante,professor', 'master,estudante', 'estudante,admin', 'estudante,editor-jornalistico'] as $roles) {
         $account = ['role_slug' => explode(',', $roles)[0], 'role_slugs' => $roles];
         \App\Core\Auth::$account = $account;
-        check(!StudentAccess::applies($account), 'Volunteers retain role permissions');
+        check(!StudentAccess::applies($account), 'Additional functions retain role permissions');
         foreach ([['GET', '/admin/library-events'], ['POST', '/admin/library-events/update'], ['GET', '/admin/library-events/participants']] as [$method, $uri]) {
             $router = new \App\Core\Router();
             $register = strtolower($method);
