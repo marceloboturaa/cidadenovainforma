@@ -100,6 +100,10 @@ namespace {
         check(AdminNavigation::allows($path), "Master access to $path");
         check(AdminNavigation::contains($path), "Route guard includes $path");
     }
+    foreach (['master', 'admin', 'admin-local', 'editor', 'colunista', 'estudante'] as $role) {
+        Auth::$account = ['id' => 1, 'role_slug' => $role, 'role_slugs' => $role];
+        check(AdminNavigation::allows('/admin/news-redirects') === in_array($role, ['master', 'admin', 'admin-local'], true), 'Redirect management access: ' . $role);
+    }
     check(!AdminNavigation::allows('/admin/unknown'), 'Unknown menu items are denied');
     echo "Menu: perfis, permissões concedidas/retiradas, grupos vazios e acessos individuais validados.\n";
 }

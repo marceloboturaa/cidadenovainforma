@@ -562,6 +562,9 @@ class PublicController
         $news = News::findPublishedBySlug($_GET['slug'] ?? '');
 
         if (!$news) {
+            if (\App\Models\NewsRedirect::redirectMissing()) {
+                return;
+            }
             http_response_code(404);
             View::render('errors/404', [], 'public');
             return;

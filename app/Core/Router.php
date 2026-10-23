@@ -54,6 +54,9 @@ class Router
         }
 
         if (!$handler) {
+            if ($method === 'GET' && \App\Models\NewsRedirect::redirectMissing()) {
+                return;
+            }
             http_response_code(404);
             View::render('errors/404', [], 'auth');
             return;

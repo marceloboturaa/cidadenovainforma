@@ -15,6 +15,7 @@ use App\Controllers\Admin\LatexController;
 use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\MediaController;
 use App\Controllers\Admin\NewsController;
+use App\Controllers\Admin\NewsRedirectController;
 use App\Controllers\Admin\PersonController;
 use App\Controllers\Admin\TagController;
 use App\Controllers\Admin\UserController;
@@ -135,6 +136,9 @@ $router->post('/admin/institution-pages/update', [InstitutionPageController::cla
 $router->post('/admin/institution-pages/visibility', [InstitutionPageController::class, 'visibility']);
 
 $router->get('/admin/news', [NewsController::class, 'index']);
+$router->get('/admin/news-redirects', [NewsRedirectController::class, 'index']);
+$router->post('/admin/news-redirects', [NewsRedirectController::class, 'save']);
+$router->post('/admin/news-redirects/delete', [NewsRedirectController::class, 'delete']);
 $router->get('/admin/news/create', [NewsController::class, 'create']);
 $router->post('/admin/news', [NewsController::class, 'store']);
 $router->get('/admin/news/edit', [NewsController::class, 'edit']);
