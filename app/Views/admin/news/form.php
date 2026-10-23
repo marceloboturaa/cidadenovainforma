@@ -22,6 +22,17 @@ $status = $newsItem['status'] ?? 'draft';
                 <input class="form-control form-control-lg" id="news-title" name="title" value="<?= e($newsItem['title'] ?? '') ?>" required maxlength="220" placeholder="Titulo principal da materia">
             </div>
 
+            <?php if ($isEdit): ?>
+                <div class="mt-3">
+                    <label class="form-label" for="news-slug">Link da matéria</label>
+                    <div class="input-group">
+                        <span class="input-group-text">/noticia/</span>
+                        <input class="form-control" id="news-slug" name="slug" value="<?= e($newsItem['slug']) ?>" maxlength="220" <?= empty($canEditSlug) ? 'disabled' : '' ?>>
+                    </div>
+                    <p class="field-hint">O link é mantido ao salvar, publicar ou alterar o título. Apenas Master, Admin, Admin-local e o criador da matéria podem alterá-lo manualmente. Alterar o link pode invalidar endereços já compartilhados.</p>
+                </div>
+            <?php endif; ?>
+
             <div class="editor-summary-row">
                 <label class="form-label mt-3" for="news-summary">Resumo</label>
                 <textarea class="form-control" id="news-summary" name="summary" rows="5" maxlength="1200" placeholder="Resumo para a capa, compartilhamento e contexto da materia"><?= e($newsItem['summary'] ?? '') ?></textarea>

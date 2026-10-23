@@ -96,6 +96,7 @@ class NewsController
             'tags' => Tag::namesForNews((int) $newsItem['id']),
             'action' => url('/admin/news/update?id=' . $newsItem['id']),
             'title' => 'Editar notícia',
+            'canEditSlug' => $this->canEditSlug($newsItem),
             'visibilityLabels' => News::VISIBILITY_LABELS,
             'coverSizeLabels' => News::COVER_SIZE_LABELS,
         ]);
@@ -114,7 +115,7 @@ class NewsController
             $data['public_visibility'] = $newsItem['public_visibility'] ?? News::VISIBILITY_LISTED;
         }
         $data['author_id'] = $this->authorIdFromRequest((int) $newsItem['author_id']);
-        $data['slug'] = News::uniqueSlug($data['title'], (int) $newsItem['id']);
+        $data['slug'] = $this->slugAfterEdit($newsItem);
         $data['status'] = $this->nextStatusAfterEdit($newsItem);
         $data['published_at'] = $this->publishedAtFromRequest() ?: $newsItem['published_at'];
         $data['cover_image'] = $this->coverImageFromRequest($newsItem['cover_image']);
@@ -401,6 +402,32 @@ class NewsController
             View::render('errors/403');
             exit;
         }
+    }
+
+    private function canEditSlug(array $newsItem): bool
+    {
+        return Auth::hasRole(['master', 'admin', 'admin-local'])
+            || (int) $newsItem['author_id'] === (int) current_user()['id'];
+    }
+
+    private function slugAfterEdit(array $newsItem): string
+    {
+        $existing = (string) $newsItem['slug'];
+        if (!$this->canEditSlug($newsItem) || !is_string($_POST['slug'] ?? null)) {
+            return $existing;
+        }
+
+        $input = trim($_POST['slug']);
+        if ($input === '' || !preg_match('/[a-z0-9]/i', iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $input) ?: '')) {
+            return $existing;
+        }
+
+        $requested = slugify($input);
+        if ($requested === '' || $requested === $existing) {
+            return $existing;
+        }
+
+        return News::uniqueSlug(substr($requested, 0, 220), (int) $newsItem['id']);
     }
 
     private function canArchive(array $newsItem): bool
