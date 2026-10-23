@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="<?= e(versioned_asset_url('/public/assets/css/admin/news-redirects.css')) ?>">
 <div class="page-heading"><div><p>Conteúdo</p><h1>Links quebrados</h1></div></div>
 <section class="panel">
     <h2>Vincular link a uma matéria</h2>
@@ -7,18 +8,38 @@
         <label class="form-label" for="source-path">Link antigo ou quebrado</label>
         <input class="form-control" id="source-path" name="source_path" maxlength="1000" placeholder="/noticia/link-antigo" value="<?= e(is_string($_GET['source'] ?? null) ? $_GET['source'] : '') ?>" required>
         <p class="field-hint">Cole o link completo deste site ou o caminho. Use endereços sem ? ou #.</p>
-        <label class="form-label mt-3" for="redirect-news">Matéria publicada de destino</label>
-        <select class="form-select" id="redirect-news" name="news_id" required>
-            <option value="">Selecione a matéria</option>
+        <fieldset class="redirect-picker mt-3" data-article-picker>
+            <legend>Matéria publicada de destino</legend>
+            <div data-article-search-box hidden>
+                <label class="form-label" for="article-search">Pesquisar matéria</label>
+                <input class="form-control" type="search" id="article-search" placeholder="Digite o título, número ou link da matéria" autocomplete="off" aria-controls="article-results">
+                <p class="field-hint" data-result-count role="status" aria-live="polite"></p>
+            </div>
+            <div class="redirect-picker-results" id="article-results">
             <?php foreach ($articles as $article): ?>
-                <option value="<?= e((string) $article['id']) ?>"><?= e($article['title'] . ' — /noticia/' . $article['slug']) ?></option>
+                <label class="redirect-article" data-article-option>
+                    <input type="radio" name="news_id" value="<?= e((string) $article['id']) ?>" required <?= checked((int) ($selectedNewsId ?? 0) === (int) $article['id']) ?>>
+                    <span>
+                        <strong><?= e($article['title']) ?></strong>
+                        <small>#<?= e((string) $article['id']) ?> · <?= e(url('/noticia/' . $article['slug'])) ?></small>
+                    </span>
+                </label>
             <?php endforeach; ?>
-        </select>
+            </div>
+            <p data-no-articles hidden>Nenhuma matéria encontrada. Tente outra palavra do título ou do link.</p>
+            <button class="btn btn-sm btn-outline-secondary mt-2" type="button" data-more-articles hidden>Mostrar mais matérias</button>
+            <div class="redirect-selected mt-3" data-selected-article hidden>
+                <span>Destino selecionado</span>
+                <strong data-selected-title></strong>
+                <a data-selected-link target="_blank" rel="noopener">Abrir matéria <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+            </div>
+        </fieldset>
         <p class="field-hint">Para trocar o destino de um link cadastrado, informe o mesmo link e escolha outra matéria. O destino acompanha futuras alterações no link da matéria.</p>
         <button class="btn btn-primary mt-3" <?= !$articles ? 'disabled' : '' ?>>Salvar redirecionamento</button>
         <?php if (!$articles): ?><p>Não há matérias publicadas disponíveis.</p><?php endif; ?>
     </form>
 </section>
+<script src="<?= e(versioned_asset_url('/public/assets/js/news-redirects.js')) ?>" defer></script>
 <section class="panel mt-3">
     <h2>Links cadastrados</h2>
     <?php if (!$redirects): ?><p>Nenhum redirecionamento cadastrado.</p><?php endif; ?>

@@ -26,8 +26,17 @@ class NewsRedirectController
     public function index(): void
     {
         $this->authorize();
+        $redirects = NewsRedirect::all();
+        $selectedNewsId = null;
+        foreach ($redirects as $item) {
+            if ($item['source_path'] === ($_GET['source'] ?? null)) {
+                $selectedNewsId = (int) $item['news_id'];
+                break;
+            }
+        }
         View::render('admin/news-redirects/index', [
-            'redirects' => NewsRedirect::all(),
+            'redirects' => $redirects,
+            'selectedNewsId' => $selectedNewsId,
             'articles' => Database::connection()->query('SELECT id, title, slug FROM news WHERE status = "published" ORDER BY title')->fetchAll(),
         ]);
     }
